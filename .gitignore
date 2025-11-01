@@ -1,0 +1,17 @@
+# Django
+__pycache__/
+*.py[cod]
+*.sqlite3
+/media/
+.env
+venv/
+
+# Angular
+node_modules/
+dist/
+.angular/
+
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
