@@ -1,0 +1,43 @@
+/* ===========================
+   LIGHT THEME
+   =========================== */
+
+:root {
+    /* BRAND COLORS */
+    --color-primary-dark: #0D3B2A;
+    --color-primary: #2E7D32;
+    --color-secondary: #81C784;
+    --color-accent: #F4C430;
+
+    /* TEXT */
+    --text-color: #333333;
+    --text-muted: #555555;
+
+    /* BACKGROUND */
+    --bg-color: #FAF7F0;
+    --bg-alt: #F5F0E6;
+    --header-bg: #ffffff;
+    --card-bg: #ffffff;
+
+    --header-glass-bg: rgba(255, 255, 255, 0.55);
+    --header-glass-border: rgba(255, 255, 255, 0.3);
+
+    /* BORDERS */
+    --border-color: rgba(0, 0, 0, 0.1);
+
+    /* STATES */
+    --success: #2E7D32;
+    --warning: #F4C430;
+    --error: #C62828;
+
+    /* CALL TO ACTION */
+    --cta-bg: var(--color-primary);
+    --cta-text: #ffffff;
+    --cta-hover: #256628;
+}
+
+/* Apply background/text automatically */
+body {
+    background: var(--bg-color);
+    color: var(--text-color);
+}

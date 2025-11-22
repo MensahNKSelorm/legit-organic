@@ -1,0 +1,93 @@
+<header class="navbar" [ngClass]="{ 'scrolled': isScrolled }">
+  <div class="nav-container">
+
+    <!-- LOGO -->
+    <a class="logo" routerLink="/" aria-label="Go to homepage">
+      <img [src]="logo" class="logo-img" alt="Legit Organic Logo">
+    </a>
+
+    <!-- NAV LINKS -->
+    <nav class="nav-links" [ngClass]="{ 'open': menuOpen }">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+      <a routerLink="/about" routerLinkActive="active">About Us</a>
+      <a routerLink="/products" routerLinkActive="active">Products</a>
+      <a routerLink="/recipes" routerLinkActive="active">Recipes</a>
+      <a routerLink="/blog" routerLinkActive="active">Blog</a>
+      <a routerLink="/contact" routerLinkActive="active">Contact</a>
+    </nav>
+
+    <!-- ACTIONS -->
+    <div class="nav-actions">
+
+      <!-- SHOP NOW (desktop only) -->
+      <button class="nav-cta desktop-only">
+        Shop Now
+      </button>
+
+      <!-- THEME TOGGLE (Apple-style, medium) -->
+      <button class="theme-toggle" type="button" (click)="toggleTheme()">
+        <div class="toggle-pill" [ngClass]="{ 'dark': isDark }">
+          <!-- Left icon (Sun) -->
+          <div class="toggle-icon left" [ngClass]="{ 'inactive': isDark }">
+            <svg class="icon-svg" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm-10 6h2a1 1 0 000-2H2a1 1 0 000 2zm18 0h2a1 1 0 000-2h-2a1 1 0 000 2zM11 2v2a1 1 0 002 0V2a1 1 0 10-2 0zm0 18v2a1 1 0 002 0v-2a1 1 0 10-2 0zm-5.01-15.42a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41L5.99 4.58zm12.37 12.37a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41l-1.06-1.06zM19.42 5.99a1 1 0 000-1.41 1 1 0 00-1.41 0l-1.06 1.06a1 1 0 001.41 1.41l1.06-1.06zM7.05 18.36a1 1 0 10-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41l-1.06-1.06z" />
+            </svg>
+          </div>
+
+          <!-- Right icon (Moon) -->
+          <div class="toggle-icon right" [ngClass]="{ 'inactive': !isDark }">
+            <svg class="icon-svg" viewBox="0 0 24 24">
+              <path fill="currentColor"
+                d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z" />
+            </svg>
+          </div>
+
+          <!-- Sliding thumb -->
+          <div class="toggle-thumb" [ngClass]="{ 'dark': isDark }">
+            <div class="thumb-inner">
+              <svg *ngIf="!isDark" class="icon-svg" viewBox="0 0 24 24">
+                <path fill="currentColor"
+                  d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm-10 6h2a1 1 0 000-2H2a1 1 0 000 2zm18 0h2a1 1 0 000-2h-2a1 1 0 000 2zM11 2v2a1 1 0 002 0V2a1 1 0 10-2 0zm0 18v2a1 1 0 002 0v-2a1 1 0 10-2 0zm-5.01-15.42a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41L5.99 4.58zm12.37 12.37a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41l-1.06-1.06zM19.42 5.99a1 1 0 000-1.41 1 1 0 00-1.41 0l-1.06 1.06a1 1 0 001.41 1.41l1.06-1.06zM7.05 18.36a1 1 0 10-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41l-1.06-1.06z" />
+              </svg>
+
+              <svg *ngIf="isDark" class="icon-svg" viewBox="0 0 24 24">
+                <path fill="currentColor"
+                  d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </button>
+
+      <!-- PROFILE ICON + DROPDOWN -->
+      <div class="profile-wrapper" (click)="toggleProfileMenu()">
+        <span class="profile-icon" [ngClass]="{ 'logged-in': isLoggedIn }">
+          👤
+        </span>
+
+        <div class="profile-dropdown" *ngIf="showProfileMenu">
+          <ng-container *ngIf="!isLoggedIn; else loggedInMenu">
+            <a routerLink="/login">Login</a>
+            <a routerLink="/signup">Sign Up</a>
+          </ng-container>
+
+          <ng-template #loggedInMenu>
+            <a routerLink="/account">My Profile</a>
+            <a routerLink="/orders">Orders</a>
+            <a (click)="logout()">Logout</a>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- MOBILE MENU TOGGLE -->
+      <button class="menu-toggle" type="button" (click)="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+    </div>
+
+  </div>
+</header>

@@ -1,0 +1,46 @@
+/* ===========================
+   DARK THEME
+   =========================== */
+
+.dark-theme {
+    /* BRAND COLORS */
+    --color-primary-dark: #0D5B42;
+    --color-primary: #3DAF4A;
+    --color-secondary: #A5D6A7;
+    --color-accent: #FFD54F;
+
+    /* TEXT */
+    --text-color: #F5F5F5;
+    --text-muted: #CCCCCC;
+
+    /* BACKGROUND */
+    --bg-color: #0F0F0F;
+    --bg-alt: #1A1A1A;
+    --header-bg: #121212;
+    --card-bg: #1C1C1C;
+
+    --header-glass-bg: rgba(255, 255, 255, 0);
+    --header-glass-border: rgba(255, 255, 255, 0.3);
+
+    /* BORDERS */
+    --border-color: rgba(255, 255, 255, 0.1);
+
+    /* STATES */
+    --success: #4CAF50;
+    --warning: #FFEB3B;
+    --error: #EF5350;
+
+    /* CALL TO ACTION */
+    --cta-bg: var(--color-primary);
+    /* Bright green still pops */
+    --cta-text: #ffffff;
+    --cta-hover: #3DAF4A;
+
+
+}
+
+/* Dark theme applies automatically when .dark-theme is on <body> */
+.dark-theme body {
+    background: var(--bg-color);
+    color: var(--text-color);
+}
