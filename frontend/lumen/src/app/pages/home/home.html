@@ -1,78 +1,30 @@
-<div class="homepage">
+<section class="hero-section">
 
-  <!-- 1. HERO SECTION -->
-  <section class="hero-section">
-    <div class="hero-content">
-      <h1>Fresh. Reliable. Truly Organic.</h1>
-      <p>Connecting Ghanaian farmers to your table.</p>
-      <div class="hero-buttons">
-        <button class="primary-btn">Shop Now</button>
-        <button class="secondary-btn">Learn More</button>
+  <div class="hero-bg">
+
+    <div class="hero-row">
+      <div class="hero-track" #track>
+        <img *ngFor="let img of loop1" [src]="img" loading="lazy">
       </div>
     </div>
-  </section>
 
-  <!-- 2. FEATURED PRODUCTS -->
-  <section class="featured-products-section">
-    <h2>Featured Products</h2>
-    <div class="products-grid">
-      <!-- product cards later -->
+    <div class="hero-row">
+      <div class="hero-track" #track>
+        <img *ngFor="let img of loop2" [src]="img" loading="lazy">
+      </div>
     </div>
-  </section>
 
-  <!-- 3. WHY CHOOSE US -->
-  <section class="why-us-section">
-    <h2>Why Choose Us</h2>
-    <div class="why-us-cards">
-      <!-- icons + 3–4 reasons -->
+    <div class="hero-bg-overlay"></div>
+  </div>
+
+  <div class="hero-content">
+    <h1 class="hero-title">Fresh. Reliable. Truly Organic.</h1>
+    <p class="hero-subtitle">Connecting Ghanaian farmers to your table.</p>
+  
+    <div class="hero-buttons">
+      <button class="primary-btn hero-btn">Shop Now</button>
+      <button class="secondary-btn hero-btn">Learn More</button>
     </div>
-  </section>
+  </div>
 
-  <!-- 4. FEATURED RECIPES -->
-  <section class="featured-recipes-section">
-    <h2>Featured Recipes</h2>
-    <div class="recipes-slider">
-      <!-- slider cards later -->
-    </div>
-  </section>
-
-  <!-- 5. BLOG HIGHLIGHTS -->
-  <section class="blog-highlights-section">
-    <h2>Latest From Our Blog</h2>
-    <div class="blog-grid">
-      <!-- blog cards later -->
-    </div>
-  </section>
-
-  <!-- 6. MEET OUR FARMERS -->
-  <section class="farmers-section">
-    <h2>Meet Our Farmers</h2>
-    <div class="farmers-grid">
-      <!-- farmer profiles later -->
-    </div>
-  </section>
-
-  <!-- 7. TESTIMONIALS -->
-  <section class="testimonials-section">
-    <h2>What Our Customers Say</h2>
-    <div class="testimonials-slider">
-      <!-- horizontal sliding cards -->
-    </div>
-  </section>
-
-  <!-- 8. NEWSLETTER SIGNUP -->
-  <section class="newsletter-section">
-    <h2>Join Our Newsletter</h2>
-    <p>Stay updated with new products, recipes, and blogs.</p>
-    <div class="newsletter-form">
-      <input type="email" placeholder="Enter your email" />
-      <button>Subscribe</button>
-    </div>
-  </section>
-
-  <!-- 9. FOOTER -->
-  <footer class="footer-section">
-    <p>© 2025 Legit Organic Limited. All rights reserved.</p>
-  </footer>
-
-</div>
+</section>

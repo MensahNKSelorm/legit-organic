@@ -4,6 +4,7 @@ import {RouterLink, RouterLinkActive} from '@angular/router';
 
 @Component({
   selector: 'app-header',
+  standalone: true,
   imports: [
     NgClass,
     RouterLink,
@@ -11,7 +12,7 @@ import {RouterLink, RouterLinkActive} from '@angular/router';
     CommonModule,
   ],
   templateUrl: './header.html',
-  styleUrl: './header.scss',
+  styleUrls: ['./header.scss',],
 })
 export class Header {
   isLoggedIn = false;
@@ -19,6 +20,7 @@ export class Header {
   showProfileMenu = false;
   menuOpen = false;
   isScrolled = false;
+  isClosingProfile = false;
 
   lightLogo = 'assets/images/logo-lightmode.svg';
   darkLogo = 'assets/images/logo-darkmode.svg';
@@ -31,8 +33,26 @@ export class Header {
     this.menuOpen = !this.menuOpen;
   }
 
+  /** 
+   * Clean helper function — runs fade-out animation, then removes from DOM
+   */
+  private closeProfileMenuWithAnimation() {
+    if (!this.showProfileMenu) return; // already closed
+
+    this.isClosingProfile = true;
+
+    setTimeout(() => {
+      this.showProfileMenu = false;
+      this.isClosingProfile = false;
+    }, 200); // must match dropdown-exit duration
+  }
+
   toggleProfileMenu() {
-    this.showProfileMenu = !this.showProfileMenu;
+    if (this.showProfileMenu) {
+      this.closeProfileMenuWithAnimation();
+    } else {
+      this.showProfileMenu = true;
+    }
   }
 
   toggleTheme() {
@@ -42,13 +62,22 @@ export class Header {
 
   logout() {
     this.isLoggedIn = false;
-    this.showProfileMenu = false;
-    // later: integrate with real auth
+    this.closeProfileMenuWithAnimation();
   }
-  
+
   @HostListener('window:scroll')
   onScroll() {
     const threshold = 10;
     this.isScrolled = window.scrollY > threshold;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const clickedInsideProfile = target.closest('.profile-wrapper');
+
+    if (!clickedInsideProfile) {
+      this.closeProfileMenuWithAnimation();
+    }
   }
 }

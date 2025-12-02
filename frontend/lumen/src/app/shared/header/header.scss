@@ -207,48 +207,95 @@
       }
     }
 
-    .profile-wrapper {
-      position: relative;
-      cursor: pointer;
-
-      .profile-icon {
-        font-size: 1.6rem;
-        transition: color 0.2s ease, transform 0.1s ease;
-
-        &.logged-in {
-          color: var(--color-primary);
-        }
-
-        &:hover {
-          transform: translateY(-1px);
-        }
-      }
-
-      .profile-dropdown {
-        position: absolute;
-        top: 40px;
-        right: 0;
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-md);
-        border-radius: 8px;
-        padding: 8px 0;
-        min-width: 160px;
-        z-index: 2000;
-
-        a {
-          display: block;
-          padding: 10px 14px;
-          color: var(--text-color);
-          text-decoration: none;
-          font-size: 0.9rem;
-
-          &:hover {
-            background: var(--bg-alt);
+        .profile-wrapper {
+          position: relative;
+          cursor: pointer;
+    
+          .profile-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+    
+            color: var(--profile-not-logged);
+            transition: color 0.25s ease, transform 0.15s ease;
+    
+            &.logged-in {
+              color: var(--profile-logged);
+            }
+    
+            &:hover {
+              transform: translateY(-1px);
+            }
+    
+            .profile-svg {
+              width: 22px;
+              height: 22px;
+            }
+          }
+    
+          .profile-dropdown {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 180px;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+    
+            /* start slightly up & invisible, then fade in */
+            opacity: 0;
+            transform: translateY(-6px);
+            animation: dropdown-enter 0.25s ease forwards;
+    
+            &.closing {
+              animation: dropdown-exit 0.2s ease forwards;
+            }
+    
+            a {
+              display: block;
+              padding: 12px 16px;
+              color: var(--text-color);
+              text-decoration: none;
+              font-size: 0.92rem;
+              transition: background 0.2s ease, padding-left 0.2s ease;
+    
+              &:hover {
+                background: var(--bg-alt);
+                padding-left: 20px;
+              }
+            }
           }
         }
-      }
-    }
+    
+        /* these can stay where they are (global) */
+        @keyframes dropdown-enter {
+          from {
+            opacity: 0;
+            transform: translateY(-6px);
+          }
+    
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+    
+        @keyframes dropdown-exit {
+          from {
+            opacity: 1;
+            transform: translateY(0);
+          }
+    
+          to {
+            opacity: 0;
+            transform: translateY(-6px);
+          }
+        }
   }
 
   .menu-toggle {
