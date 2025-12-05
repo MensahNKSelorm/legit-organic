@@ -49,6 +49,30 @@ export class Home implements OnInit, AfterViewInit {
       ease: "power2.out",
     });
 
+    // HERO TEXT REVEAL ANIMATION
+    const tl = gsap.timeline({ delay: 0.2 });
+
+    tl.from(".hero-title", {
+      y: 40,
+      opacity: 0,
+      duration: 1.2,
+      ease: "power3.out"
+    })
+    .from(".hero-subtitle", {
+      y: 30,
+      opacity: 0,
+      duration: 1.1,
+      ease: "power3.out"
+    }, "-=0.6")
+    .from(".hero-btn", {
+      y: 20,
+      opacity: 0,
+      duration: 0.9,
+      ease: "power3.out",
+      stagger: 0.15
+    }, "-=0.7");
+
+
     // Infinite horizontal scroll loops
     this.tracks.forEach((trackRef, index) => {
       const el = trackRef.nativeElement;
@@ -59,7 +83,7 @@ export class Home implements OnInit, AfterViewInit {
 
       gsap.to(el, {
         x: index === 0 ? -width : width,
-        duration: 45,     // reduced CPU load + smooth
+        duration: 45,
         ease: "none",
         repeat: -1,
         modifiers: {
@@ -67,6 +91,14 @@ export class Home implements OnInit, AfterViewInit {
         }
       });
     });
+
+    gsap.to(".hero-underline", {
+      width: "100%",
+      duration: 1,
+      ease: "power3.out",
+      delay: 1.4
+    });
+
 
     const update = () => {
       this.smoothScroll.lenis.raf(performance.now());
