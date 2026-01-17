@@ -1,0 +1,57 @@
+/* ===========================
+   LIGHT THEME (SEMANTIC)
+   =========================== */
+
+:root {
+    /* ===== BACKGROUNDS ===== */
+    --bg-main: var(--soft-organic-cream);
+    --bg-section: var(--soft-organic-cream);
+    --bg-card: var(--beige);
+
+    /* ===== TEXT ===== */
+    --text-main: var(--charcoal);
+    --text-title: var(--deep-forest-green);
+    --text-muted: rgba(0, 0, 0, 0.6);
+    --text-accent: var(--leaf-green);
+
+    /* ===== BORDERS ===== */
+    --border-soft: rgba(0, 0, 0, 0.1);
+
+    /* ===== BUTTONS ===== */
+    --btn-primary-bg: var(--leaf-green);
+    --btn-primary-text: #ffffff;
+
+    --btn-secondary-bg: transparent;
+    --btn-secondary-text: var(--leaf-green);
+    --btn-secondary-border: var(--leaf-green);
+
+    /* ===== HEADER ===== */
+    --header-glass-bg: rgba(255, 255, 255, 0.55);
+    --header-glass-border: rgba(255, 255, 255, 0.3);
+
+    /* ===== STATES ===== */
+    --success: var(--leaf-green);
+    --warning: var(--ghana-gold);
+    --error: #C62828;
+
+    /* NAV */
+    --nav-text: var(--text-main);
+    --nav-active: var(--ghana-gold);
+
+    /* SURFACES */
+    --bg-alt: var(--beige);
+
+    /* CTA */
+    --cta-bg: var(--leaf-green);
+    --cta-text: #ffffff;
+    --cta-hover: #256628;
+
+    /* ICONS */
+    --icon-color: var(--text-main);
+}
+
+body {
+    background: var(--bg-main);
+    color: var(--text-main);
+}
+

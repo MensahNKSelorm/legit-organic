@@ -1,0 +1,166 @@
+.hero-section {
+    position: relative;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+    padding: var(--section-padding-lg) 1.5rem;
+    margin: 0;
+}
+
+/* Background with 2 stacked rows */
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1
+}
+
+/* Each row takes half the height */
+.hero-row {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+/* The moving strip */
+.hero-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    height: 100%;
+    will-change: transform;
+}
+
+/* Images inside the track */
+.hero-row img {
+    width: 350px;
+    height: 100%;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+}
+
+.hero-bg-overlay {
+    background: rgba(20, 20, 20, 0.35);
+    z-index: 2;
+}
+
+.hero-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0.4),
+            rgba(255, 255, 255, 0.7));
+    pointer-events: none;
+}
+
+/* Centered text */
+.hero-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 9;
+    max-width: 800px;
+    padding: 0 20px;
+    color: #111;
+}
+
+.hero-title {
+    font-size: clamp(2.2rem, 4vw, 4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: #fafafa;
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+
+    span {
+        color: #2f7a3d;
+        /* Leaf green brand color */
+    }
+
+    .hero-highlight {
+        position: relative;
+        display: inline-block;
+
+    }
+}
+
+.underline-container {
+    display: block;
+    height: 24px;
+}
+
+.underline-wave {
+    margin-top: 6px;
+    display: block;
+}
+
+.underline-wave path {
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+}
+
+.hero-subtitle {
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    line-height: 1.6;
+    margin-bottom: 35px;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+    color: #f0f0f0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* BUTTONS */
+.hero-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+
+    button {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+}
+
+.primary-btn {
+    background: #2f7a3d;
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 2px solid #2f7a3d;
+    color: #2f7a3d;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.primary-btn:hover {
+    background: #256431;
+}
+
+.secondary-btn:hover {
+    background: #2f7a3d;
+    color: #fff;
+}
+
+.hero-title,
+.hero-subtitle,
+.hero-btn {
+    will-change: transform, opacity;
+}

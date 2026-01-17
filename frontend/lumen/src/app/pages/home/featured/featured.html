@@ -1,0 +1,31 @@
+<section class="featured-section" id="featured">
+    <div class="featured-container">
+
+        <div class="featured-header">
+            <p class="featured-eyebrow">Featured Products</p>
+            <h2 class="featured-title">Fresh From Trusted Farmers</h2>
+            <p class="featured-subtitle">
+                Carefully selected essential Ghanaian staples — clean, organic and locally sourced.
+            </p>
+        </div>
+
+        <div class="featured-grid">
+            <article class="product-card" *ngFor="let item of featuredProducts">
+                <div class="product-image-wrapper">
+                    <img [src]="item.image" alt="{{ item.name }}" />
+                </div>
+
+                <div class="product-info">
+                    <h3>{{ item.name }}</h3>
+                    <p class="desc">{{ item.description }}</p>
+
+                    <div class="product-bottom">
+                        <p class="price">₵{{ item.price }}</p>
+                        <button class="btn btn-primary btn-sm">View</button>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+    </div>
+</section>

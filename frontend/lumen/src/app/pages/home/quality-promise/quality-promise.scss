@@ -1,0 +1,49 @@
+.quality-promise-section {
+    padding: var(--section-padding) 1.5rem;
+    background: var(--bg-section);
+}
+
+.quality-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.quality-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+
+.quality-title {
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    margin-bottom: 0.6rem;
+}
+
+.quality-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.quality-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+}
+
+.quality-item {
+    background: var(--bg-card);
+    padding: 1.8rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+
+    h3 {
+        font-size: 1.05rem;
+        margin-bottom: 0.4rem;
+    }
+
+    p {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.55;
+    }
+}

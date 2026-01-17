@@ -1,0 +1,48 @@
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            Fresh. Reliable.<br />
+            <span class="hero-highlight">
+                Truly Organic.
+                <span class="underline-container">
+                    <svg class="underline-wave" width="240" height="24" viewBox="0 0 240 24">
+                        <defs>
+                            <linearGradient id="organicGradient" x1="0" y1="0" x2="240" y2="0">
+                                <stop offset="0%" stop-color="#2E7D32" />
+                                <stop offset="100%" stop-color="#F4C430" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M5 15 C 60 5, 140 25, 235 12" stroke="url(#organicGradient)" stroke-width="4"
+                            fill="none" stroke-linecap="round" />
+                    </svg>
+                </span>
+            </span>
+        </h1>
+
+        <p class="hero-subtitle">
+            High-quality organic rice, vegetables, grains, and Ghanaian produce directly from verified farmers.
+            We bring the earth's best to your table.
+        </p>
+
+        <div class="hero-buttons">
+            <button class="primary-btn hero-btn">Shop Now</button>
+            <button class="secondary-btn hero-btn">Learn More</button>
+        </div>
+    </div>
+
+    <div class="hero-bg">
+        <div class="hero-row">
+            <div class="hero-track" #track>
+                <img *ngFor="let img of loop1; let i = index" [src]="img" [attr.loading]="i === 0 ? 'eager' : 'lazy'">
+            </div>
+        </div>
+
+        <div class="hero-row">
+            <div class="hero-track" #track>
+                <img *ngFor="let img of loop2; let i = index" [src]="img" [attr.loading]="i === 0 ? 'eager' : 'lazy'">
+            </div>
+        </div>
+
+        <div class="hero-bg-overlay"></div>
+    </div>
+</section>

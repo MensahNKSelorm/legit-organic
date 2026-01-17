@@ -1,0 +1,19 @@
+/* ===========================
+   CARD SYSTEM
+   =========================== */
+
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+}
+
+.card-hover {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-strong);
+    }
+}

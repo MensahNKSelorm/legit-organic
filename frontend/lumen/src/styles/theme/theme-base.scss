@@ -1,0 +1,56 @@
+/* =============================
+   BASE TOKENS (ALWAYS LOADED)
+   ============================= */
+
+:root {
+    /* ===== BRAND PALETTE (RAW) ===== */
+    --deep-forest-green: #0D3B2A;
+    --leaf-green: #2E7D32;
+    --light-leaf-green: #81C784;
+    --ghana-gold: #F4C430;
+
+    --charcoal: #333333;
+    --soft-organic-cream: #FAF7F0;
+    --beige: #F5F0E6;
+
+    --sand: #E6D8BD;
+    --earth-brown: #5B3E31;
+    --mist-white: #FEFCF7;
+    --dark-gold: #C59F2C;
+
+    /* ===== SPACING SCALE ===== */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+
+    /* ===== RADIUS ===== */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 18px;
+
+    /* ===== SHADOWS (NEUTRAL) ===== */
+    --shadow-soft: 0 14px 30px rgba(0, 0, 0, 0.06);
+    --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.14);
+
+    /* ===== TYPOGRAPHY ===== */
+    --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    /* ===== LAYOUT ===== */
+    --section-padding: 5rem;
+    --logo-size: 2.5rem;
+
+    /* ===== SECTION PADDING VARIANTS ===== */
+    --section-padding-sm: 4rem;
+    --section-padding: 15rem;
+    --section-padding-lg: 6.5rem;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-main);
+}

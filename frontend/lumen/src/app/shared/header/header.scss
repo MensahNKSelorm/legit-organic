@@ -62,14 +62,14 @@
 
     a {
       text-decoration: none;
-      color: var(--text-color);
+      color: var(--nav-text);
       font-weight: 500;
       font-size: 0.95rem;
       transition: color 0.2s ease;
 
       &.active,
       &:hover {
-        color: var(--color-accent);
+        color: var(--nav-active);
       }
     }
 
@@ -79,7 +79,7 @@
       right: 16px;
       flex-direction: column;
       align-items: flex-start;
-      background: var(--card-bg);
+      background: var(--bg-card);
       padding: 16px;
       border-radius: 8px;
       box-shadow: var(--shadow-md);
@@ -96,25 +96,6 @@
     display: flex;
     align-items: center;
     gap: 16px;
-
-    .nav-cta {
-      padding: 8px 18px;
-      border-radius: 999px;
-      background: var(--cta-bg);
-      color: var(--cta-text);
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.9rem;
-      box-shadow: var(--shadow-sm);
-      transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-
-      &:hover {
-        background: var(--cta-hover);
-        box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
-      }
-    }
 
     /* THEME TOGGLE SLIDER */
     .theme-toggle {
@@ -137,7 +118,7 @@
       padding: 0 6px;
       box-sizing: border-box;
       transition: background 0.25s ease;
-      color: var(--text-color);
+      color: var(--icon-color);
 
       &.dark {
         background: rgba(255, 255, 255, 0.12);
@@ -185,7 +166,7 @@
 
         &.dark {
           transform: translateX(40px);
-          background: var(--color-primary);
+          background: var(--icon-color);
         }
 
         .thumb-inner {
@@ -197,11 +178,6 @@
             width: 18px;
             height: 18px;
             color: #000;
-
-            /* For dark thumb, make inner icon white */
-            :root & {
-              color: #000;
-            }
           }
         }
       }
@@ -309,7 +285,7 @@
     span {
       width: 22px;
       height: 2px;
-      background: var(--text-color);
+      background: var(--icon-color);
       display: block;
     }
 

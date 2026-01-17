@@ -1,0 +1,71 @@
+/* ===========================
+   BUTTON SYSTEM
+   =========================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+
+    padding: 0.6rem 1.2rem;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+
+    will-change: transform;
+}
+
+/* ===== PRIMARY BUTTON ===== */
+
+.btn-primary {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    box-shadow: var(--shadow-soft);
+
+    &:hover {
+        background: var(--cta-hover);
+        box-shadow: var(--shadow-strong);
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-soft);
+    }
+}
+
+/* ===== SECONDARY BUTTON ===== */
+
+.btn-secondary {
+    background: transparent;
+    color: var(--btn-secondary-text);
+    border: 1px solid var(--btn-secondary-border);
+
+    &:hover {
+        background: var(--bg-alt);
+    }
+}
+
+/* ===== SIZE MODIFIERS ===== */
+
+.btn-sm {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+}
+
+.btn-lg {
+    padding: 0.8rem 1.6rem;
+    font-size: 1rem;
+}

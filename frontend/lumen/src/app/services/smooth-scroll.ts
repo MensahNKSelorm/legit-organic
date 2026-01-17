@@ -1,9 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import Lenis from 'lenis';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class SmoothScrollService {
   public lenis!: Lenis;
 
@@ -13,19 +11,14 @@ export class SmoothScrollService {
     this.zone.runOutsideAngular(() => {
 
       this.lenis = new Lenis({
-        lerp: 0.08,             // smoothness
-        wheelMultiplier: 1.1,   // scroll speed
-        touchMultiplier: 1.2,   // touch scroll (phones)
-        duration: 1.2,          // optional — scroll duration
-        easing: (t) => t        // default easing
+        lerp: 0.08,             // Smoothness
+        wheelMultiplier: 1.1,   // Faster scroll
+        touchMultiplier: 1.2,   // Touch devices
+        duration: 1.2,          // Scroll duration
+        easing: (t) => t        // Default easing
       });
 
-      const raf = (time: number) => {
-        this.lenis.raf(time);
-        requestAnimationFrame(raf);
-      };
-
-      requestAnimationFrame(raf);
+      console.log("LENIS INIT FIRED");
     });
   }
 }

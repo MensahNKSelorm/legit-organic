@@ -1,0 +1,60 @@
+/* ===========================
+   DARK THEME
+   =========================== */
+
+.dark-theme {
+    /* ===== BACKGROUNDS ===== */
+    --bg-main: #0F0F0F;
+    --bg-section: #121212;
+    --bg-card: #1C1C1C;
+
+    /* ===== TEXT ===== */
+    --text-main: #F5F5F5;
+    --text-title: var(--mist-white);
+    --text-muted: #CCCCCC;
+    --text-accent: var(--light-leaf-green);
+
+    /* ===== BORDERS ===== */
+    --border-soft: rgba(255, 255, 255, 0.1);
+
+    /* ===== BUTTONS ===== */
+    --btn-primary-bg: var(--leaf-green);
+    --btn-primary-text: #ffffff;
+
+    --btn-secondary-bg: transparent;
+    --btn-secondary-text: var(--leaf-green);
+    --btn-secondary-border: var(--leaf-green);
+
+    /* ===== HEADER ===== */
+    --header-glass-bg: rgba(0, 0, 0, 0.4);
+    --header-glass-border: rgba(255, 255, 255, 0.15);
+
+    /* ===== SHADOWS ===== */
+    --shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.5);
+    --shadow-strong: 0 12px 30px rgba(0, 0, 0, 0.8);
+
+    /* ===== STATES ===== */
+    --success: #4CAF50;
+    --warning: #FFD54F;
+    --error: #EF5350;
+
+    /* NAV */
+    --nav-text: var(--text-main);
+    --nav-active: var(--ghana-gold);
+
+    /* SURFACES */
+    --bg-alt: #2A2A2A;
+
+    /* CTA */
+    --cta-bg: var(--leaf-green);
+    --cta-text: #ffffff;
+    --cta-hover: #3DAF4A;
+
+    /* ICONS */
+    --icon-color: var(--text-main);
+}
+
+.dark-theme body {
+    background: var(--bg-main);
+    color: var(--text-main);
+}
