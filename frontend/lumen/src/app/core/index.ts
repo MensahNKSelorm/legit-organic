@@ -1,2 +1,2 @@
-// Core services
-export { SmoothScrollService } from './services/scroll.service';
+// Core module barrel export
+// Services, guards, and interceptors will be exported here

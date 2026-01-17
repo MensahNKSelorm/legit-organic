@@ -1,22 +1,13 @@
-import { CommonModule, NgClass } from '@angular/common';
-import { AfterViewInit, Component } from '@angular/core';
-import gsap from 'gsap';
-import _ScrollTrigger from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(_ScrollTrigger)
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-why-us',
-  imports: [
-    CommonModule,
-    NgClass
-  ],
+  imports: [CommonModule],
   templateUrl: './why-us.html',
   styleUrl: './why-us.scss',
 })
-  
-
-export class WhyUs implements AfterViewInit {
+export class WhyUs {
   whyFeatures = [
     {
       icon: 'organic',
@@ -39,40 +30,4 @@ export class WhyUs implements AfterViewInit {
       text: 'From where it was grown to how it was handled, we aim to show you the full story behind every Legit Organic product.',
     },
   ];
-
-  ngAfterViewInit(): void {
-    gsap.context(() => {
-
-      // Header
-      gsap.from('.why-header', {
-        scrollTrigger: {
-          trigger: '.why-section',
-          start: 'top 80%',
-        },
-        y: 24,
-        opacity: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-        clearProps: 'transform',
-      });
-
-      // Cards (animate individually)
-      gsap.utils.toArray<HTMLElement>('.why-card').forEach((card, i) => {
-        gsap.from(card, {
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 85%',
-          },
-          y: 24,
-          opacity: 0,
-          duration: 0.7,
-          ease: 'power3.out',
-          delay: i * 0.05,
-          clearProps: 'transform',
-        });
-      });
-
-    });
-  }
-
 }
