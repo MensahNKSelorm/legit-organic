@@ -3,12 +3,12 @@ import { Component, AfterViewInit, ViewChildren, ElementRef, QueryList, OnInit }
 import gsap from "gsap";
 import { SmoothScrollService } from '@app/core';
 import ScrollTrigger from 'gsap/ScrollTrigger';
-import { Hero } from './hero/hero';
-import { WhyUs } from './why-us/why-us';
-import { QualityPromise } from './quality-promise/quality-promise';
-import { Recipes } from './recipes/recipes';
-import { PrimaryCta } from './primary-cta/primary-cta';
-import { Featured } from './featured/featured';
+import { Hero } from '../../sections/hero/hero';
+import { WhyUs } from '../../sections/why-us/why-us';
+import { QualityPromise } from '../../sections/quality-promise/quality-promise';
+import { Recipes } from '../../sections/recipes/recipes';
+import { PrimaryCta } from '../../sections/primary-cta/primary-cta';
+import { Featured } from '../../sections/featured/featured';
 
 gsap.registerPlugin(ScrollTrigger)
 
