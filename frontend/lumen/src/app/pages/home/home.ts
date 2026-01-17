@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, ViewChildren, ElementRef, QueryList, OnInit } from '@angular/core';
 import gsap from "gsap";
-import { SmoothScrollService } from '../../services/smooth-scroll';
+import { SmoothScrollService } from '@app/core';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import { Hero } from './hero/hero';
 import { WhyUs } from './why-us/why-us';
