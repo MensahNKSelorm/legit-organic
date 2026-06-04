@@ -5,25 +5,41 @@ from .models import Cart, CartItem, Order, OrderItem
 class CartItemInline(admin.TabularInline):
     model = CartItem
     extra = 0
+    readonly_fields = ['product', 'quantity']
 
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
-    list_display = ['user', 'created_at', 'updated_at']
-    search_fields = ['user__email']
+    list_display = ['user', 'item_count', 'created_at']
+    readonly_fields = ['user', 'created_at', 'updated_at']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name']
     inlines = [CartItemInline]
+
+    @admin.display(description='Items')
+    def item_count(self, obj):
+        return obj.items.count()
 
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ['unit_price']
+    readonly_fields = ['product', 'quantity', 'unit_price']
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'status', 'total_amount', 'created_at']
     list_filter = ['status']
-    search_fields = ['user__email', 'delivery_address']
+    search_fields = ['user__email', 'user__first_name']
     list_editable = ['status']
+    readonly_fields = ['user', 'total_amount', 'created_at', 'updated_at']
     inlines = [OrderItemInline]
+    fieldsets = (
+        ('Order Info', {
+            'fields': ('user', 'status', 'total_amount', 'delivery_address'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )

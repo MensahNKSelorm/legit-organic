@@ -5,6 +5,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf.urls.static import static
 from django.conf import settings
 
+admin.site.site_header = "Legit Organic Admin"
+admin.site.site_title = "Legit Organic"
+admin.site.index_title = "Content Management"
+
 
 def health(request):
     return JsonResponse({'status': 'ok', 'service': 'legitorganic-api'})

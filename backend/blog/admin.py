@@ -11,8 +11,30 @@ class BlogCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'category', 'is_published', 'published_at', 'created_at']
-    list_filter = ['is_published', 'category']
-    search_fields = ['title', 'content', 'tags']
-    prepopulated_fields = {'slug': ('title',)}
+    list_display = [
+        'title', 'author', 'category', 'is_published', 'published_at', 'created_at',
+    ]
+    list_filter = ['is_published', 'category', 'author']
+    search_fields = ['title', 'content', 'excerpt']
     list_editable = ['is_published']
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'published_at'
+    fieldsets = (
+        ('Content', {
+            'fields': ('title', 'slug', 'excerpt', 'content'),
+        }),
+        ('Media', {
+            'fields': ('cover_image',),
+        }),
+        ('Meta', {
+            'fields': ('author', 'category', 'tags'),
+        }),
+        ('Publishing', {
+            'fields': ('is_published', 'published_at'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )

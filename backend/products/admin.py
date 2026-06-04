@@ -11,8 +11,33 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'unit', 'is_featured', 'is_available', 'created_at']
-    list_filter = ['is_featured', 'is_available', 'category']
+    list_display = [
+        'name', 'category', 'price', 'unit', 'region',
+        'is_featured', 'is_available', 'created_at',
+    ]
+    list_filter = ['category', 'is_featured', 'is_available', 'region']
     search_fields = ['name', 'description', 'region']
-    prepopulated_fields = {'slug': ('name',)}
     list_editable = ['is_featured', 'is_available']
+    prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('name', 'slug', 'description', 'category'),
+        }),
+        ('Pricing', {
+            'fields': ('price', 'unit'),
+        }),
+        ('Origin', {
+            'fields': ('region', 'badge'),
+        }),
+        ('Media', {
+            'fields': ('image',),
+        }),
+        ('Status', {
+            'fields': ('is_featured', 'is_available'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
