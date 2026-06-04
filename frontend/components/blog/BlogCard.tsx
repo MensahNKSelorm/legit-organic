@@ -1,9 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import type { BlogPost } from '@/types'
-
-interface BlogCardProps {
-  post: BlogPost
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GH', {
@@ -13,66 +10,74 @@ function formatDate(iso: string) {
   })
 }
 
-function parseTags(tags: string): string[] {
-  return tags
-    .split(',')
-    .map((t) => t.trim())
-    .filter(Boolean)
+function readingTime(excerpt: string): string {
+  const words = excerpt.trim().split(/\s+/).length
+  return `${Math.max(3, Math.ceil((words * 8) / 200))} min read`
 }
 
-export default function BlogCard({ post }: BlogCardProps) {
-  const tags = parseTags(post.tags)
-  const initials = post.author_name ? post.author_name[0].toUpperCase() : '?'
-
+export default function BlogCard({ post }: { post: BlogPost }) {
   return (
-    <article className="group bg-mist-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 border border-sand flex flex-col">
-      {/* Cover placeholder */}
-      <div className="h-48 bg-gradient-to-br from-forest-green/10 to-leaf-green/20 flex items-center justify-center relative overflow-hidden">
-        <span className="text-6xl opacity-30">📰</span>
-        <span className="absolute top-3 left-3 bg-ghana-gold text-forest-green text-xs font-bold px-3 py-1 rounded-full">
-          {post.category.name}
-        </span>
-      </div>
-
-      {/* Body */}
-      <div className="p-8 flex flex-col flex-1">
-        {/* Meta */}
-        <div className="flex items-center gap-3 text-xs text-charcoal/50 mb-3">
-          <span>{formatDate(post.published_at)}</span>
-        </div>
-
-        <Link href={`/blog/${post.slug}`}>
-          <h3 className="font-display text-xl font-bold text-forest-green mb-3 group-hover:text-leaf-green transition-colors line-clamp-2 leading-snug">
-            {post.title}
-          </h3>
-        </Link>
-
-        <p className="text-charcoal/70 text-sm leading-relaxed line-clamp-3 flex-1 mb-5">
-          {post.excerpt}
-        </p>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between border-t border-sand pt-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-leaf-green/20 flex items-center justify-center text-leaf-green text-xs font-bold">
-              {initials}
-            </div>
-            <span className="text-xs text-charcoal/60">{post.author_name}</span>
-          </div>
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {tags.slice(0, 2).map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs text-leaf-green bg-leaf-green/10 px-2 py-0.5 rounded-full"
-                >
-                  #{tag}
-                </span>
-              ))}
+    <Link href={`/blog/${post.slug}`} className="group block h-full">
+      <article className="bg-mist-white dark:bg-[#1f2937] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-sand dark:border-[#374151] flex flex-col h-full">
+        {/* Cover */}
+        <div className="relative h-48 overflow-hidden shrink-0">
+          {post.cover_image ? (
+            <Image
+              src={post.cover_image}
+              alt={post.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="h-full bg-gradient-to-br from-forest-green/20 to-leaf-green/30 flex items-center justify-center">
+              <svg
+                viewBox="0 0 24 24"
+                width="48"
+                height="48"
+                fill="none"
+                stroke="#0D3B2A"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ opacity: 0.2 }}
+              >
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+              </svg>
             </div>
           )}
+          <span className="absolute top-3 left-3 bg-[#F4C430]/90 text-[#0D3B2A] text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+            {post.category.name}
+          </span>
         </div>
-      </div>
-    </article>
+
+        {/* Body */}
+        <div className="p-6 flex flex-col flex-1">
+          <div className="flex items-center gap-2 text-xs text-charcoal/50 dark:text-[#9ca3af] mb-3">
+            <span>{formatDate(post.published_at)}</span>
+            <span>·</span>
+            <span>{readingTime(post.excerpt)}</span>
+          </div>
+
+          <h3 className="font-display text-xl font-bold text-forest-green dark:text-[#faf7f0] mb-3 group-hover:text-leaf-green dark:group-hover:text-[#81C784] transition-colors line-clamp-2 leading-snug">
+            {post.title}
+          </h3>
+
+          <p className="text-charcoal/70 dark:text-[#d1d5db] text-sm leading-relaxed line-clamp-2 flex-1 mb-5">
+            {post.excerpt}
+          </p>
+
+          <div className="flex items-center gap-2 pt-4 border-t border-sand dark:border-[#374151]">
+            <div className="w-7 h-7 rounded-full bg-[#F4C430]/30 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] text-xs font-bold shrink-0">
+              {post.author_name ? post.author_name[0].toUpperCase() : '?'}
+            </div>
+            <span className="text-xs text-charcoal/60 dark:text-[#9ca3af] truncate">
+              {post.author_name}
+            </span>
+          </div>
+        </div>
+      </article>
+    </Link>
   )
 }
