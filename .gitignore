@@ -1,0 +1,51 @@
+# ====================================
+# Django / Python
+# ====================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pytest_cache/
+*.sqlite3
+*.log
+*.pot
+*.pyc
+db.sqlite3
+
+# Virtual environment
+venv/
+env/
+.env
+
+# Media uploads (optional)
+media/
+
+# Byte-compiled / cache
+*.egg-info/
+.eggs/
+
+# Django collected static files
+staticfiles/
+static/
+
+# ====================================
+# Angular
+# ====================================
+node_modules/
+dist/
+.angular/
+tmp/
+out-tsc/
+
+# Angular environment files
+src/environments/environment*.ts
+
+# ====================================
+# OS / Editor files
+# ====================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
