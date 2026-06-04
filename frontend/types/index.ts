@@ -89,6 +89,12 @@ export interface User {
   created_at: string
 }
 
+export interface ProductDetail extends Product {
+  ingredients?: string
+  storage_tips?: string
+  nutritional_info?: string
+}
+
 export interface AuthTokens {
   access: string
   refresh: string

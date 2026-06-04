@@ -1,4 +1,4 @@
-import type { Product, Category, BlogPost, BlogCategory, Recipe, User } from '@/types'
+import type { Product, ProductDetail, Category, BlogPost, BlogCategory, Recipe, User } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -99,7 +99,7 @@ export const api = {
   products: {
     featured: () => fetchAPI<Product[]>('/api/products/featured/'),
     list: (params?: string) => fetchAPI<Product[]>(`/api/products/${params ? '?' + params : ''}`),
-    detail: (slug: string) => fetchAPI<Product>(`/api/products/${slug}/`),
+    detail: (slug: string) => fetchAPI<ProductDetail>(`/api/products/${slug}/`),
     categories: () => fetchAPI<Category[]>('/api/products/categories/'),
   },
   blog: {
