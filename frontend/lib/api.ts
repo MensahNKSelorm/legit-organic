@@ -1,63 +1,36 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import type { Product, Category, BlogPost, BlogCategory, Recipe } from '@/types'
 
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("access_token");
-}
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-interface RequestOptions extends RequestInit {
-  skipAuth?: boolean;
-}
-
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { skipAuth = false, ...fetchOptions } = options;
-
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...fetchOptions.headers,
-  };
-
-  if (!skipAuth) {
-    const token = getAuthToken();
-    if (token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-    }
-  }
-
-  const response = await fetch(`${API_BASE_URL}/api${path}`, {
-    ...fetchOptions,
-    headers,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ detail: "An unexpected error occurred" }));
-    const message =
-      errorData.detail ?? errorData.message ?? `Request failed with status ${response.status}`;
-    throw new Error(message);
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
+async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    ...options,
+  })
+  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  return res.json()
 }
 
 export const api = {
-  get: <T>(path: string, options?: RequestOptions) =>
-    request<T>(path, { method: "GET", ...options }),
+  products: {
+    featured: () => fetchAPI<Product[]>('/api/products/featured/'),
+    list: (params?: string) => fetchAPI<Product[]>(`/api/products/${params ? '?' + params : ''}`),
+    detail: (slug: string) => fetchAPI<Product>(`/api/products/${slug}/`),
+    categories: () => fetchAPI<Category[]>('/api/products/categories/'),
+  },
+  blog: {
+    list: (params?: string) => fetchAPI<BlogPost[]>(`/api/blog/${params ? '?' + params : ''}`),
+    detail: (slug: string) => fetchAPI<BlogPost>(`/api/blog/${slug}/`),
+    categories: () => fetchAPI<BlogCategory[]>('/api/blog/categories/'),
+  },
+  recipes: {
+    default: () => fetchAPI<Recipe[]>('/api/recipes/default/'),
+    list: () => fetchAPI<Recipe[]>('/api/recipes/'),
+    detail: (slug: string) => fetchAPI<Recipe>(`/api/recipes/${slug}/`),
+  },
+}
 
-  post: <T>(path: string, body: unknown, options?: RequestOptions) =>
-    request<T>(path, { method: "POST", body: JSON.stringify(body), ...options }),
-
-  put: <T>(path: string, body: unknown, options?: RequestOptions) =>
-    request<T>(path, { method: "PUT", body: JSON.stringify(body), ...options }),
-
-  patch: <T>(path: string, body: unknown, options?: RequestOptions) =>
-    request<T>(path, { method: "PATCH", body: JSON.stringify(body), ...options }),
-
-  delete: <T>(path: string, options?: RequestOptions) =>
-    request<T>(path, { method: "DELETE", ...options }),
-};
-
-export default api;
+export default api

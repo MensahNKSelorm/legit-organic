@@ -1,19 +1,29 @@
-import Link from "next/link";
-import type { BlogPost } from "@/types";
+import Link from 'next/link'
+import type { BlogPost } from '@/types'
 
 interface BlogCardProps {
-  post: BlogPost;
+  post: BlogPost
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  return new Date(iso).toLocaleDateString('en-GH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+function parseTags(tags: string): string[] {
+  return tags
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
 }
 
 export default function BlogCard({ post }: BlogCardProps) {
+  const tags = parseTags(post.tags)
+  const initials = post.author_name ? post.author_name[0].toUpperCase() : '?'
+
   return (
     <article className="group bg-mist-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 border border-sand flex flex-col">
       {/* Cover placeholder */}
@@ -28,9 +38,7 @@ export default function BlogCard({ post }: BlogCardProps) {
       <div className="p-8 flex flex-col flex-1">
         {/* Meta */}
         <div className="flex items-center gap-3 text-xs text-charcoal/50 mb-3">
-          <span>{formatDate(post.publishedAt)}</span>
-          <span>·</span>
-          <span>{post.readingTime} min read</span>
+          <span>{formatDate(post.published_at)}</span>
         </div>
 
         <Link href={`/blog/${post.slug}`}>
@@ -47,24 +55,24 @@ export default function BlogCard({ post }: BlogCardProps) {
         <div className="flex items-center justify-between border-t border-sand pt-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-leaf-green/20 flex items-center justify-center text-leaf-green text-xs font-bold">
-              {post.author.firstName[0]}
+              {initials}
             </div>
-            <span className="text-xs text-charcoal/60">
-              {post.author.firstName} {post.author.lastName}
-            </span>
+            <span className="text-xs text-charcoal/60">{post.author_name}</span>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {post.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="text-xs text-leaf-green bg-leaf-green/10 px-2 py-0.5 rounded-full"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs text-leaf-green bg-leaf-green/10 px-2 py-0.5 rounded-full"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </article>
-  );
+  )
 }
