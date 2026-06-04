@@ -1,28 +1,33 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import type { Metadata } from 'next'
+import './globals.css'
+import { AuthProvider } from '@/lib/auth'
+import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   title: {
     default: "Legit Organic — Rebuilding Trust in Ghana's Food Ecosystem",
-    template: "%s | Legit Organic",
+    template: '%s | Legit Organic',
   },
   description:
     "Ghana's premier organic food marketplace. Traceable, certified-organic produce sourced directly from verified Ghanaian farmers — delivered with integrity.",
-  keywords: ["organic food Ghana", "organic produce", "Ghanaian farmers", "farm to table Ghana", "certified organic"],
+  keywords: [
+    'organic food Ghana',
+    'organic produce',
+    'Ghanaian farmers',
+    'farm to table Ghana',
+    'certified organic',
+  ],
   openGraph: {
-    type: "website",
-    locale: "en_GH",
-    siteName: "Legit Organic",
+    type: 'website',
+    locale: 'en_GH',
+    siteName: 'Legit Organic',
   },
-};
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <head>
@@ -34,10 +39,12 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
-  );
+  )
 }
