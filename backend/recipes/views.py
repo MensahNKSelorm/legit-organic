@@ -1,19 +1,22 @@
-from rest_framework import viewsets, permissions
+from rest_framework import generics
 from .models import Recipe
-from .serializers import RecipeSerializer, RecipeDetailSerializer
+from .serializers import RecipeListSerializer, RecipeDetailSerializer
 
 
-class RecipeViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = RecipeSerializer
+class RecipeListView(generics.ListAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeListSerializer
+    permission_classes = []
 
-    def get_queryset(self):
-        qs = Recipe.objects.all()
-        is_default = self.request.query_params.get('default')
-        if is_default:
-            qs = qs.filter(is_default=True)
-        return qs
 
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return RecipeDetailSerializer
-        return RecipeSerializer
+class RecipeDetailView(generics.RetrieveAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeDetailSerializer
+    permission_classes = []
+    lookup_field = 'slug'
+
+
+class DefaultRecipesView(generics.ListAPIView):
+    queryset = Recipe.objects.filter(is_default=True)
+    serializer_class = RecipeListSerializer
+    permission_classes = []

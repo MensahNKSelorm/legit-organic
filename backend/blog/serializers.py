@@ -8,18 +8,24 @@ class BlogCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug']
 
 
-class BlogPostSerializer(serializers.ModelSerializer):
-    author_email = serializers.CharField(source='author.email', read_only=True)
-    category_name = serializers.CharField(source='category.name', read_only=True)
+class BlogPostListSerializer(serializers.ModelSerializer):
+    author_name = serializers.SerializerMethodField()
+    category = BlogCategorySerializer(read_only=True)
+
+    def get_author_name(self, obj):
+        if obj.author:
+            name = f"{obj.author.first_name} {obj.author.last_name}".strip()
+            return name or obj.author.email
+        return ''
 
     class Meta:
         model = BlogPost
         fields = ['id', 'title', 'slug', 'excerpt', 'cover_image',
-                  'author', 'author_email', 'category', 'category_name',
-                  'tags', 'is_published', 'published_at', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'slug', 'created_at', 'updated_at']
+                  'author_name', 'category', 'tags', 'is_published',
+                  'published_at', 'created_at']
+        read_only_fields = ['id', 'slug', 'created_at']
 
 
-class BlogPostDetailSerializer(BlogPostSerializer):
-    class Meta(BlogPostSerializer.Meta):
-        fields = BlogPostSerializer.Meta.fields + ['content']
+class BlogPostDetailSerializer(BlogPostListSerializer):
+    class Meta(BlogPostListSerializer.Meta):
+        fields = BlogPostListSerializer.Meta.fields + ['content', 'updated_at']
