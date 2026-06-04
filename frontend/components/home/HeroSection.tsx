@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Button from "@/components/ui/Button";
 
 /* 10 background images cycle independently at a faster cadence */
 const heroImages = [
@@ -181,20 +180,45 @@ export default function HeroSection() {
               </p>
 
               {/* CTAs */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-                <Link href={slide.ctaHref}>
-                  <Button size="lg" variant="primary">
-                    {slide.cta}
-                  </Button>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center" }}>
+                <Link
+                  href={slide.ctaHref}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0.75rem 2rem",
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    borderRadius: "0.5rem",
+                    minHeight: "48px",
+                    backgroundColor: "#F4C430",
+                    color: "#0D3B2A",
+                    whiteSpace: "nowrap",
+                    transition: "background-color 0.2s",
+                  }}
+                >
+                  {slide.cta}
                 </Link>
-                <Link href="/about">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-white/60 text-white hover:border-white hover:bg-white/10"
-                  >
-                    Our Story
-                  </Button>
+                <Link
+                  href="/about"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0.75rem 2rem",
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    borderRadius: "0.5rem",
+                    minHeight: "48px",
+                    backgroundColor: "transparent",
+                    border: "2px solid white",
+                    color: "white",
+                    whiteSpace: "nowrap",
+                    transition: "background-color 0.2s",
+                  }}
+                >
+                  Our Story
                 </Link>
               </div>
             </div>

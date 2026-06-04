@@ -75,10 +75,10 @@ export default function FeaturedProducts() {
         {products.map((product) => (
           <article
             key={product.id}
-            className="group bg-mist-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5 border border-sand flex flex-col"
+            className="group bg-mist-white dark:bg-[#1f2937] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5 border border-sand dark:border-[#374151] flex flex-col min-h-[420px]"
           >
             {/* Product image */}
-            <div className="relative h-52 overflow-hidden bg-beige">
+            <div className="relative h-52 overflow-hidden bg-beige dark:bg-[#374151]">
               <Image
                 src={product.image}
                 alt={product.name}
@@ -93,25 +93,34 @@ export default function FeaturedProducts() {
 
             {/* Content */}
             <div className="p-6 flex flex-col flex-1">
-              <span className="text-leaf-green text-xs font-semibold uppercase tracking-wide">
-                {product.category} · {product.region}
-              </span>
-              <h3 className="font-display text-lg font-bold text-forest-green mt-2 mb-3">
+              {/* Product name — wraps freely, never bleeds into price row */}
+              <h3 className="font-display text-lg font-bold text-forest-green dark:text-[#faf7f0] break-words w-full mb-2">
                 {product.name}
               </h3>
-              <p className="text-charcoal/70 text-sm leading-relaxed mb-5 flex-1 line-clamp-3">
+
+              {/* Category tag — fixed-height container so cards stay aligned */}
+              <div className="min-h-[28px] flex items-center mb-3">
+                <span className="inline-block text-xs bg-[#F5F0E6] dark:bg-[#374151] text-[#2e7d32] dark:text-[#81C784] rounded-full px-3 py-1 font-semibold uppercase tracking-wide">
+                  {product.category} · {product.region}
+                </span>
+              </div>
+
+              {/* Description fills remaining space */}
+              <p className="text-charcoal/70 dark:text-[#d1d5db] text-sm leading-relaxed flex-1 line-clamp-3">
                 {product.description}
               </p>
-              <div className="flex items-center justify-between pt-4 border-t border-sand">
-                <div>
-                  <span className="font-bold text-forest-green text-xl">{product.price}</span>
-                  <span className="text-charcoal/50 text-xs ml-1">{product.unit}</span>
+
+              {/* Price + button — always pinned to bottom */}
+              <div className="flex items-end justify-between mt-4 pt-4 border-t border-[#E6D8BD] dark:border-[#374151]">
+                <div className="flex flex-col">
+                  <span className="font-bold text-[#2E7D32] dark:text-[#81C784] text-xl leading-tight">{product.price}</span>
+                  <span className="text-xs text-[#5B3E31] dark:text-[#E6D8BD] max-w-[80px] leading-snug mt-0.5">{product.unit}</span>
                 </div>
                 <Link
                   href="/products"
-                  className="text-xs font-semibold text-ghana-gold bg-ghana-gold/10 hover:bg-ghana-gold hover:text-forest-green px-4 py-2 rounded-lg transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C] transition-colors whitespace-nowrap"
                 >
-                  View →
+                  View <span aria-hidden>→</span>
                 </Link>
               </div>
             </div>

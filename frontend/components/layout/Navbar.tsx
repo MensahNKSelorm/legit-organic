@@ -36,13 +36,11 @@ export default function Navbar() {
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [darkMode,  setDarkMode]  = useState(false);
 
-  /* ── Scroll detection + theme init ────────────────────────── */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    /* Load persisted theme preference */
     const saved = localStorage.getItem("theme");
     const isDark = saved === "dark";
     setDarkMode(isDark);
@@ -59,22 +57,35 @@ export default function Navbar() {
   };
 
   /*
-    onDark = true  → navbar is transparent, sitting over the dark hero image
-                     → everything must be white so it's visible
-    onDark = false → navbar has the light/mist-white backdrop (scrolled)
-                     → everything switches to Deep Forest Green
+    transparent (not scrolled) → always over dark hero image → everything white
+    scrolled light mode        → white bg → forest green text
+    scrolled dark mode         → dark bg  → white text
   */
-  const onDark = !scrolled;
+  const transparent = !scrolled;
 
-  /* Shared token classes for the two auth buttons */
-  const btnBase = "px-5 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap";
+  const btnBase = "px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap";
+
+  /* Nav link text color */
+  const linkColor = transparent
+    ? "text-white hover:text-white/80"
+    : "text-[#0D3B2A] hover:text-[#2e7d32] dark:text-[#F9FAFB] dark:hover:text-white";
+
+  /* Theme toggle color */
+  const toggleColor = transparent
+    ? "text-white hover:bg-white/15"
+    : "text-[#0D3B2A] hover:bg-[#f5f0e6] dark:text-[#F9FAFB] dark:hover:bg-[#333]";
+
+  /* Login button color */
+  const loginColor = transparent
+    ? "text-white hover:text-white/70"
+    : "text-[#0D3B2A] hover:text-[#0D3B2A]/70 dark:text-[#F9FAFB] dark:hover:text-white/70";
 
   return (
     <header
       className={[
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         scrolled
-          ? "bg-mist-white/95 backdrop-blur-md shadow-sm border-b border-sand dark:bg-[#1a1a1a]/95 dark:border-[#333]"
+          ? "bg-mist-white/95 backdrop-blur-md shadow-sm border-b border-sand dark:bg-[#111827]/95 dark:border-[#333]"
           : "bg-transparent",
       ].join(" ")}
     >
@@ -85,7 +96,7 @@ export default function Navbar() {
         {/* ── Logo ──────────────────────────────────────────────── */}
         <Link href="/" className="shrink-0 flex items-center" aria-label="Legit Organic — Home">
           <Image
-            src={onDark ? "/images/logo-darkmode.svg" : "/images/logo-lightmode.svg"}
+            src={(!scrolled || darkMode) ? "/images/logo-darkmode.svg" : "/images/logo-lightmode.svg"}
             alt="Legit Organic"
             width={160}
             height={44}
@@ -103,11 +114,10 @@ export default function Navbar() {
                 className={[
                   "font-medium text-sm transition-colors duration-200 whitespace-nowrap relative",
                   "after:absolute after:-bottom-0.5 after:left-0 after:w-0 after:h-px",
-                  "after:bg-ghana-gold after:transition-all after:duration-200 hover:after:w-full",
-                  onDark
-                    ? "text-white hover:text-white"
-                    : "text-forest-green hover:text-leaf-green",
+                  "after:bg-[#F4C430] after:transition-all after:duration-200 hover:after:w-full",
+                  linkColor,
                 ].join(" ")}
+                style={transparent ? { color: "#ffffff" } : undefined}
               >
                 {link.label}
               </Link>
@@ -124,25 +134,18 @@ export default function Navbar() {
             aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             className={[
               "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-              onDark
-                ? "text-white hover:bg-white/15"
-                : "text-forest-green hover:bg-beige dark:hover:bg-[#333]",
+              toggleColor,
             ].join(" ")}
+            style={transparent ? { color: "#ffffff" } : undefined}
           >
-            {/* Sun = currently in light mode; Moon = currently in dark mode */}
             {darkMode ? <SunIcon /> : <MoonIcon />}
           </button>
 
-          {/* Login — outlined, scroll-aware border + text color */}
+          {/* Login — no border, text only */}
           <Link
             href="/login"
-            className={[
-              btnBase,
-              "border-2",
-              onDark
-                ? "border-white text-white hover:bg-white/10"
-                : "border-forest-green text-forest-green hover:bg-beige dark:hover:bg-[#333]",
-            ].join(" ")}
+            className={`${btnBase} ${loginColor}`}
+            style={transparent ? { color: "#ffffff" } : undefined}
           >
             Login
           </Link>
@@ -150,7 +153,7 @@ export default function Navbar() {
           {/* Sign Up — always gold filled */}
           <Link
             href="/signup"
-            className={`${btnBase} bg-ghana-gold text-forest-green hover:bg-dark-gold shadow-sm`}
+            className={`${btnBase} bg-[#F4C430] text-[#0D3B2A] hover:bg-[#c59f2c]`}
           >
             Sign Up
           </Link>
@@ -171,9 +174,10 @@ export default function Navbar() {
               key={idx}
               className={[
                 "block w-5 h-0.5 rounded-full transition-all duration-300 origin-center",
-                onDark ? "bg-white" : "bg-forest-green",
+                transparent ? "bg-white" : "bg-[#0D3B2A] dark:bg-[#F9FAFB]",
                 extra,
               ].join(" ")}
+              style={transparent ? { backgroundColor: "#ffffff" } : undefined}
             />
           ))}
         </button>
@@ -183,7 +187,7 @@ export default function Navbar() {
       <div
         className={[
           "md:hidden overflow-hidden transition-all duration-300 ease-in-out",
-          "bg-mist-white border-t border-sand dark:bg-[#1a1a1a] dark:border-[#333]",
+          "bg-mist-white border-t border-sand dark:bg-[#111827] dark:border-[#333]",
           menuOpen ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0",
         ].join(" ")}
       >
@@ -193,7 +197,7 @@ export default function Navbar() {
               <Link
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="block py-3 px-4 text-forest-green dark:text-[#faf7f0] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
+                className="block py-3 px-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
               >
                 {link.label}
               </Link>
@@ -204,7 +208,7 @@ export default function Navbar() {
           <li>
             <button
               onClick={toggleTheme}
-              className="w-full text-left flex items-center gap-3 py-3 px-4 text-forest-green dark:text-[#faf7f0] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
+              className="w-full text-left flex items-center gap-3 py-3 px-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
             >
               {darkMode ? <SunIcon /> : <MoonIcon />}
               {darkMode ? "Light mode" : "Dark mode"}
@@ -215,14 +219,14 @@ export default function Navbar() {
             <Link
               href="/login"
               onClick={() => setMenuOpen(false)}
-              className="flex-1 text-center text-forest-green font-semibold py-2 px-4 rounded-full border-2 border-forest-green hover:bg-forest-green hover:text-mist-white transition-colors text-sm"
+              className="flex-1 text-center text-[#0D3B2A] dark:text-[#F9FAFB] font-semibold py-2 px-4 rounded-lg hover:opacity-70 transition-opacity text-sm"
             >
               Login
             </Link>
             <Link
               href="/signup"
               onClick={() => setMenuOpen(false)}
-              className="flex-1 text-center bg-ghana-gold text-forest-green font-semibold py-2 px-4 rounded-full hover:bg-dark-gold transition-colors text-sm"
+              className="flex-1 text-center bg-[#F4C430] text-[#0D3B2A] font-semibold py-2 px-4 rounded-lg hover:bg-[#c59f2c] transition-colors text-sm"
             >
               Sign Up
             </Link>
