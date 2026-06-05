@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { api } from '@/lib/api'
 import type { RecipeWithPairings } from '@/types'
 import RecipeDetailActions from '@/components/recipes/RecipeDetailActions'
+import { getMediaUrl } from '@/lib/media'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -43,10 +44,12 @@ function formatTime(minutes: number): string {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
+
 export default async function RecipeDetailPage({ params }: Props) {
   const { slug } = await params
   const recipe = await api.recipes.detail(slug).catch(() => notFound())
   const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, color: '#6b7280' }
+  const coverSrc = getMediaUrl(recipe.cover_image)
 
   return (
     <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
@@ -66,9 +69,9 @@ export default async function RecipeDetailPage({ params }: Props) {
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <div className="relative overflow-hidden" style={{ backgroundColor: '#0D3B2A', minHeight: '280px' }}>
-        {recipe.cover_image && (
+        {coverSrc && (
           <Image
-            src={recipe.cover_image}
+            src={coverSrc}
             alt={recipe.title}
             fill
             className="object-cover opacity-25"

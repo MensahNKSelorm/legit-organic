@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import type { Product } from '@/types'
 import ProductCard from '@/components/products/ProductCard'
 import ProductTabs from '@/components/products/ProductTabs'
+import { getMediaUrl } from '@/lib/media'
 
 const PLACEHOLDERS = [
   '/images/products/p1.webp',
@@ -79,7 +80,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const product = await api.products.detail(slug).catch(() => notFound())
 
-  const imageSrc = product.image || PLACEHOLDERS[product.id % PLACEHOLDERS.length]
+  const imageSrc = getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
 
   // Related products — same category, excluding this product
   let related: Product[] = []

@@ -5,6 +5,7 @@ import { api } from '@/lib/api'
 import type { BlogPost, BlogCategory } from '@/types'
 import BlogCard from '@/components/blog/BlogCard'
 import BlogCategoryFilter from '@/components/blog/BlogCategoryFilter'
+import { getMediaUrl } from '@/lib/media'
 
 export const metadata: Metadata = {
   title: 'Blog — Health, Food Safety & Nutrition',
@@ -77,7 +78,7 @@ export default async function BlogPage({ searchParams }: Props) {
                 <div className="relative h-64 md:h-auto md:min-h-[300px] overflow-hidden">
                   {featured.cover_image ? (
                     <Image
-                      src={featured.cover_image}
+                      src={getMediaUrl(featured.cover_image) || ''}
                       alt={featured.title}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"

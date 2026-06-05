@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { BlogPost } from '@/types'
+import { getMediaUrl } from '@/lib/media'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GH', {
@@ -15,22 +16,8 @@ function readingTime(excerpt: string): string {
   return `${Math.max(3, Math.ceil((words * 8) / 200))} min read`
 }
 
-function getImageSrc(image: string | null | undefined): string | null {
-  if (!image) return null
-  if (image.startsWith('http://localhost:8000/media/')) {
-    return image.replace('http://localhost:8000/media/', '/api/media/')
-  }
-  if (image.startsWith('http://127.0.0.1:8000/media/')) {
-    return image.replace('http://127.0.0.1:8000/media/', '/api/media/')
-  }
-  if (image.startsWith('/media/')) {
-    return `/api/media/${image.replace('/media/', '')}`
-  }
-  return image
-}
-
 export default function BlogCard({ post }: { post: BlogPost }) {
-  const coverSrc = getImageSrc(post.cover_image)
+  const coverSrc = getMediaUrl(post.cover_image)
   return (
     <Link href={`/blog/${post.slug}`} className="group block h-full">
       <article className="bg-mist-white dark:bg-[#1f2937] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-sand dark:border-[#374151] flex flex-col h-full">

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Recipe } from '@/types'
+import { getMediaUrl } from '@/lib/media'
 
 const difficultyConfig: Record<string, { label: string; classes: string }> = {
   easy:   { label: 'Easy',     classes: 'text-[#2E7D32] bg-[#2E7D32]/10' },
@@ -15,23 +16,9 @@ function formatTime(minutes: number): string {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
-function getImageSrc(image: string | null | undefined): string | null {
-  if (!image) return null
-  if (image.startsWith('http://localhost:8000/media/')) {
-    return image.replace('http://localhost:8000/media/', '/api/media/')
-  }
-  if (image.startsWith('http://127.0.0.1:8000/media/')) {
-    return image.replace('http://127.0.0.1:8000/media/', '/api/media/')
-  }
-  if (image.startsWith('/media/')) {
-    return `/api/media/${image.replace('/media/', '')}`
-  }
-  return image
-}
-
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
   const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, classes: 'text-charcoal/60 bg-charcoal/10' }
-  const coverSrc = getImageSrc(recipe.cover_image)
+  const coverSrc = getMediaUrl(recipe.cover_image)
   const totalTime = recipe.prep_time + recipe.cook_time
 
   return (

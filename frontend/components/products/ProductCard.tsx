@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Product } from '@/types'
+import { getMediaUrl } from '@/lib/media'
 
 interface ProductCardProps {
   product: Product
@@ -13,22 +14,8 @@ const PLACEHOLDERS = [
   '/images/products/p4.webp',
 ]
 
-function getImageSrc(image: string | null, id: number): string {
-  if (!image) return PLACEHOLDERS[id % PLACEHOLDERS.length]
-  if (image.startsWith('http://localhost:8000/media/')) {
-    return image.replace('http://localhost:8000/media/', '/api/media/')
-  }
-  if (image.startsWith('http://127.0.0.1:8000/media/')) {
-    return image.replace('http://127.0.0.1:8000/media/', '/api/media/')
-  }
-  if (image.startsWith('/media/')) {
-    return `/api/media/${image.replace('/media/', '')}`
-  }
-  return image
-}
-
 export default function ProductCard({ product }: ProductCardProps) {
-  const imageSrc = getImageSrc(product.image, product.id)
+  const imageSrc = getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
 
   return (
     <article className="group bg-mist-white dark:bg-[#1f2937] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5 border border-sand dark:border-[#374151] flex flex-col min-h-[420px]">

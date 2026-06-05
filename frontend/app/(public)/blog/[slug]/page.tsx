@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import type { BlogPost } from '@/types'
+import { getMediaUrl } from '@/lib/media'
 import BlogCard from '@/components/blog/BlogCard'
 
 // ---------------------------------------------------------------------------
@@ -55,6 +56,7 @@ function readingTime(text: string): string {
   return `${Math.max(1, Math.ceil(words / 200))} min read`
 }
 
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -63,6 +65,7 @@ export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params
 
   const post = await api.blog.detail(slug).catch(() => notFound())
+  const coverSrc = getMediaUrl(post.cover_image)
 
   let related: BlogPost[] = []
   try {
@@ -102,9 +105,9 @@ export default async function BlogPostPage({ params }: Props) {
         className="relative overflow-hidden"
         style={{ backgroundColor: '#0D3B2A', minHeight: '340px' }}
       >
-        {post.cover_image && (
+        {coverSrc && (
           <Image
-            src={post.cover_image}
+            src={coverSrc}
             alt={post.title}
             fill
             className="object-cover opacity-25"
