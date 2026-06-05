@@ -19,6 +19,10 @@ const footerLinks = {
     { label: "My Recipes",  href: "/my-recipes" },
     { label: "Profile",     href: "/profile" },
   ],
+  Legal: [
+    { label: "Privacy Policy",    href: "/privacy-policy" },
+    { label: "Terms of Service",  href: "/terms-of-service" },
+  ],
 };
 
 export default function Footer() {
@@ -28,7 +32,7 @@ export default function Footer() {
         className="page-container max-w-7xl mx-auto px-6 lg:px-8"
         style={{ paddingTop: "5rem", paddingBottom: "4rem" }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
 
           {/* Brand column */}
           <div className="lg:col-span-1">
@@ -118,10 +122,10 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Legit Organic Limited. All rights reserved.
           </p>
           <div style={{ display: "flex", gap: "1.5rem" }}>
-            <Link href="/privacy" className="text-light-leaf hover:text-mist-white transition-colors" style={{ fontSize: "0.75rem" }}>
+            <Link href="/privacy-policy" className="text-light-leaf hover:text-mist-white transition-colors" style={{ fontSize: "0.75rem" }}>
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-light-leaf hover:text-mist-white transition-colors" style={{ fontSize: "0.75rem" }}>
+            <Link href="/terms-of-service" className="text-light-leaf hover:text-mist-white transition-colors" style={{ fontSize: "0.75rem" }}>
               Terms of Service
             </Link>
           </div>
