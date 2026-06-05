@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 
 const navLinks = [
@@ -44,6 +45,9 @@ function ChevronDown() {
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
 
+  const pathname = usePathname()
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
+
   const [scrolled,     setScrolled]     = useState(false)
   const [menuOpen,     setMenuOpen]     = useState(false)
   const [darkMode,     setDarkMode]     = useState(false)
@@ -81,7 +85,7 @@ export default function Navbar() {
     localStorage.setItem('theme', next ? 'dark' : 'light')
   }
 
-  const transparent = !scrolled
+  const transparent = !scrolled && !isAuthPage
 
   const btnBase = 'px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap'
 
@@ -105,7 +109,7 @@ export default function Navbar() {
     <header
       className={[
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        scrolled
+        !transparent
           ? 'bg-mist-white/95 backdrop-blur-md shadow-sm border-b border-sand dark:bg-[#111827]/95 dark:border-[#333]'
           : 'bg-transparent',
       ].join(' ')}
@@ -117,7 +121,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="shrink-0 flex items-center" aria-label="Legit Organic — Home">
           <Image
-            src={(!scrolled || darkMode) ? '/images/logo-darkmode.svg' : '/images/logo-lightmode.svg'}
+            src={(transparent || darkMode) ? '/images/logo-darkmode.svg' : '/images/logo-lightmode.svg'}
             alt="Legit Organic"
             width={160}
             height={44}

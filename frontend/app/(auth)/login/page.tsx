@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/lib/auth'
 
 // ---------------------------------------------------------------------------
@@ -82,12 +83,22 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <span className="w-10 h-10 rounded-full bg-forest-green flex items-center justify-center text-ghana-gold font-bold">
-              LO
-            </span>
-            <span className="font-display text-2xl font-bold text-forest-green">Legit Organic</span>
-          </Link>
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/images/logo-lightmode.svg"
+              alt="Legit Organic"
+              width={120}
+              height={60}
+              className="dark:hidden"
+            />
+            <Image
+              src="/images/logo-darkmode.svg"
+              alt="Legit Organic"
+              width={120}
+              height={60}
+              className="hidden dark:block"
+            />
+          </div>
           <h1 className="font-display text-3xl font-bold text-forest-green">Welcome back</h1>
           <p className="text-charcoal/60 mt-2 text-sm">Sign in to your account to continue</p>
         </div>
@@ -103,9 +114,9 @@ export default function LoginPage() {
           </button>
 
           <div className="relative flex items-center mb-6">
-            <div className="flex-1 border-t border-sand" />
-            <span className="px-3 text-xs text-charcoal/40 bg-mist-white">or continue with email</span>
-            <div className="flex-1 border-t border-sand" />
+            <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
+            <span className="px-3 text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">or continue with email</span>
+            <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
           </div>
 
           {error && (
@@ -127,6 +138,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 required
+                tabIndex={1}
                 className={inputClass}
               />
             </div>
@@ -137,6 +149,7 @@ export default function LoginPage() {
                 <label className="block text-sm font-semibold text-charcoal/80">Password</label>
                 <Link
                   href="/forgot-password"
+                  tabIndex={-1}
                   className="text-xs text-leaf-green hover:text-forest-green transition-colors"
                 >
                   Forgot password?
@@ -150,6 +163,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
+                  tabIndex={2}
                   className={`${inputClass} pr-12`}
                 />
                 <button
@@ -166,6 +180,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
+              tabIndex={3}
               className="w-full bg-ghana-gold text-forest-green font-semibold py-3 rounded-xl hover:bg-dark-gold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {loading ? <Spinner /> : 'Sign In'}
