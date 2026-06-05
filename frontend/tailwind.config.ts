@@ -23,7 +23,7 @@ const config: Config = {
         "mist-white": "#FEFCF7",
       },
       fontFamily: {
-        display: ['"Playfair Display"', "Georgia", "serif"],
+        display: ['"Fraunces"', "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
       },
       backgroundImage: {
