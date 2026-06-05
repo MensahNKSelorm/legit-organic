@@ -14,10 +14,10 @@ export default function ContactPage() {
           <span className="text-ghana-gold text-sm font-semibold uppercase tracking-widest">
             Get in Touch
           </span>
-          <h1 className="font-display text-5xl font-bold text-mist-white mt-3 mb-5">
+          <h1 className="font-display text-5xl font-bold text-white mt-3 mb-5">
             We&apos;re Here to Help
           </h1>
-          <p className="text-light-leaf text-lg leading-relaxed" style={{ maxWidth: "40rem", margin: "0 auto" }}>
+          <p className="text-white/80 text-lg leading-relaxed" style={{ maxWidth: "40rem", margin: "0 auto" }}>
             Questions about an order, interest in becoming a partner farmer, or a press inquiry —
             our team responds within 24 hours.
           </p>
@@ -93,7 +93,7 @@ export default function ContactPage() {
                 <label className="block text-xs font-semibold text-charcoal/70 mb-1.5">
                   Subject
                 </label>
-                <select className="w-full px-4 py-2.5 rounded-xl border border-sand bg-cream text-charcoal text-sm focus:outline-none focus:border-leaf-green focus:ring-1 focus:ring-leaf-green transition-colors">
+                <select className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-[#333333] dark:text-white text-sm focus:outline-none focus:border-leaf-green focus:ring-1 focus:ring-leaf-green transition-colors">
                   <option>General Inquiry</option>
                   <option>Farmer Partnership</option>
                   <option>Press / Media</option>

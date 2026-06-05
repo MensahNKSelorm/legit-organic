@@ -49,10 +49,10 @@ export default async function BlogPage({ searchParams }: Props) {
           <span className="text-ghana-gold text-xs font-bold uppercase tracking-widest">
             THE LEGIT ORGANIC BLOG
           </span>
-          <h1 className="font-display text-4xl lg:text-5xl font-bold text-mist-white mt-3 mb-5">
+          <h1 className="font-display text-4xl lg:text-5xl font-bold text-white mt-3 mb-5">
             Health, Food &amp; Farming Insights
           </h1>
-          <p className="text-light-leaf text-lg leading-relaxed max-w-xl mx-auto">
+          <p className="text-white/80 text-lg leading-relaxed max-w-xl mx-auto">
             Research-backed articles on organic food, food safety in Ghana, nutrition, and
             sustainable farming.
           </p>

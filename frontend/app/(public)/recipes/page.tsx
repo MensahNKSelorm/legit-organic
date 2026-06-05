@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import SectionWrapper from '@/components/ui/SectionWrapper'
-import RecipeCard from '@/components/recipes/RecipeCard'
+import Link from 'next/link'
+import { api } from '@/lib/api'
 import type { Recipe } from '@/types'
+import RecipeCard from '@/components/recipes/RecipeCard'
 
 export const metadata: Metadata = {
   title: 'Recipes — Traditional Ghanaian Cuisine with Organic Ingredients',
@@ -9,93 +10,63 @@ export const metadata: Metadata = {
     'Discover authentic Ghanaian recipes made with certified organic ingredients. From Jollof Rice to Fufu — real food, the way it should taste.',
 }
 
-const recipes: Recipe[] = [
-  {
-    id: 1,
-    title: 'Fufu & Light Soup',
-    slug: 'fufu-light-soup',
-    description:
-      'A classic Ghanaian comfort dish — smooth pounded fufu served with a light, fragrant soup made from garden eggs, tomatoes, and your choice of protein.',
-    cover_image: null,
-    prep_time: 30,
-    cook_time: 60,
-    servings: 4,
-    difficulty: 'medium',
-    is_default: true,
-    created_at: '2025-01-15T00:00:00Z',
-  },
-  {
-    id: 2,
-    title: 'One-Pot Jollof Rice',
-    slug: 'one-pot-jollof-rice',
-    description:
-      'The pride of Ghanaian cuisine — smoky, rich Jollof rice with Legit Organic jasmine rice, fresh tomatoes, and natural Ghanaian spices.',
-    cover_image: null,
-    prep_time: 20,
-    cook_time: 45,
-    servings: 6,
-    difficulty: 'easy',
-    is_default: true,
-    created_at: '2025-02-10T00:00:00Z',
-  },
-  {
-    id: 3,
-    title: 'Kontomire Stew (Palava Sauce)',
-    slug: 'kontomire-stew-palava-sauce',
-    description:
-      'A rich, hearty stew made with organic cocoyam leaves, smoked fish, and garden eggs — served over boiled yam or rice. A West African classic.',
-    cover_image: null,
-    prep_time: 25,
-    cook_time: 40,
-    servings: 4,
-    difficulty: 'medium',
-    is_default: false,
-    created_at: '2025-03-05T00:00:00Z',
-  },
-  {
-    id: 4,
-    title: 'Groundnut Soup with Organic Chicken',
-    slug: 'groundnut-soup-organic-chicken',
-    description:
-      'Creamy, nutty groundnut soup prepared with free-range organic chicken, fresh tomatoes, and a warming blend of Ghanaian spices.',
-    cover_image: null,
-    prep_time: 20,
-    cook_time: 55,
-    servings: 6,
-    difficulty: 'medium',
-    is_default: false,
-    created_at: '2025-03-20T00:00:00Z',
-  },
-]
+export default async function RecipesPage() {
+  let recipes: Recipe[] = []
+  try {
+    recipes = await api.recipes.default()
+  } catch {
+    // API unavailable — render empty state
+  }
 
-export default function RecipesPage() {
   return (
-    <>
+    <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
+
+      {/* ── Hero ─────────────────────────────────────────────── */}
       <div style={{ backgroundColor: '#0D3B2A', paddingTop: '9rem', paddingBottom: '5rem' }}>
         <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <span className="text-ghana-gold text-sm font-semibold uppercase tracking-widest">
-            In the Kitchen
+          <span className="text-ghana-gold text-xs font-bold uppercase tracking-widest">
+            FROM OUR KITCHEN
           </span>
-          <h1 className="font-display text-5xl font-bold text-mist-white mt-3 mb-5">
-            Organic Ghanaian Recipes
+          <h1 className="font-display text-4xl lg:text-5xl font-bold text-white mt-3 mb-5">
+            Recipes &amp; Meal Ideas
           </h1>
-          <p
-            className="text-light-leaf text-lg leading-relaxed"
-            style={{ maxWidth: '40rem', margin: '0 auto' }}
-          >
-            Traditional flavours, pure ingredients. Every recipe uses produce available on Legit
-            Organic — so you can cook it fresh.
+          <p className="text-white/80 text-lg leading-relaxed max-w-xl mx-auto mb-8">
+            Curated Ghanaian recipes using our organic ingredients — cook better, eat better.
           </p>
+          <Link
+            href="/recipes/builder"
+            className="inline-flex items-center gap-2 bg-[#F4C430] text-[#0D3B2A] font-semibold px-7 py-3 rounded-xl hover:bg-[#c59f2c] transition-colors text-sm"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Build Your Own Recipe
+          </Link>
         </div>
       </div>
 
-      <SectionWrapper background="cream">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {recipes.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
-          ))}
-        </div>
-      </SectionWrapper>
-    </>
+      {/* ── Recipes grid ─────────────────────────────────────── */}
+      <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
+        {recipes.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {recipes.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-24">
+            <p className="text-charcoal/40 dark:text-[#9ca3af] text-lg mb-6">
+              Recipes coming soon — check back shortly.
+            </p>
+            <Link
+              href="/recipes/builder"
+              className="inline-block bg-[#F4C430] text-[#0D3B2A] font-semibold px-7 py-3 rounded-xl hover:bg-[#c59f2c] transition-colors text-sm"
+            >
+              Build Your Own Recipe
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

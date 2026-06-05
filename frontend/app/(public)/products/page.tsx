@@ -42,11 +42,11 @@ export default async function ProductsPage({
           <span className="text-ghana-gold text-sm font-semibold uppercase tracking-widest">
             From the Farm
           </span>
-          <h1 className="font-display text-5xl font-bold text-mist-white mt-3 mb-5">
+          <h1 className="font-display text-5xl font-bold text-white mt-3 mb-5">
             Our Organic Products
           </h1>
           <p
-            className="text-light-leaf text-lg leading-relaxed"
+            className="text-white/80 text-lg leading-relaxed"
             style={{ maxWidth: '40rem', margin: '0 auto' }}
           >
             Sourced directly from verified Ghanaian farmers — grown without synthetic pesticides,

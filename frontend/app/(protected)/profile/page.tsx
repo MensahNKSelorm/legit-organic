@@ -1,16 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import SectionWrapper from '@/components/ui/SectionWrapper'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import type { UserRecipe } from '@/types'
 
 type Tab = 'personal' | 'recipes' | 'orders'
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 export default function ProfilePage() {
   const { user, logout, updateUser } = useAuth()
 
   const [activeTab, setActiveTab] = useState<Tab>('personal')
+
+  // ── Personal info form ──────────────────────────────────────
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
@@ -18,6 +30,13 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [saveError, setSaveError] = useState('')
+
+  // ── My Recipes tab ──────────────────────────────────────────
+  const [myRecipes, setMyRecipes] = useState<UserRecipe[]>([])
+  const [recipesLoading, setRecipesLoading] = useState(false)
+  const [recipesError, setRecipesError] = useState<string | null>(null)
+  const [recipesLoaded, setRecipesLoaded] = useState(false)
+  const [deletingRecipeId, setDeletingRecipeId] = useState<number | null>(null)
 
   // Sync form with user from context
   useEffect(() => {
@@ -28,6 +47,17 @@ export default function ProfilePage() {
       setAddress(user.delivery_address ?? '')
     }
   }, [user])
+
+  // Lazy-load recipes on first tab activation
+  useEffect(() => {
+    if (activeTab === 'recipes' && !recipesLoaded) {
+      setRecipesLoading(true)
+      api.recipes.myRecipes.list()
+        .then((data) => { setMyRecipes(data); setRecipesLoaded(true) })
+        .catch((e) => setRecipesError(e instanceof Error ? e.message : 'Failed to load recipes'))
+        .finally(() => setRecipesLoading(false))
+    }
+  }, [activeTab, recipesLoaded])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,6 +78,20 @@ export default function ProfilePage() {
       setSaveStatus('error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDeleteRecipe(id: number) {
+    if (!confirm('Delete this recipe?')) return
+    setDeletingRecipeId(id)
+    setRecipesError(null)
+    try {
+      await api.recipes.myRecipes.delete(id)
+      setMyRecipes((prev) => prev.filter((r) => r.id !== id))
+    } catch (e) {
+      setRecipesError(e instanceof Error ? e.message : 'Failed to delete recipe')
+    } finally {
+      setDeletingRecipeId(null)
     }
   }
 
@@ -116,6 +160,7 @@ export default function ProfilePage() {
 
           {/* Main panel */}
           <div className="md:col-span-2 bg-mist-white rounded-2xl p-8 border border-sand">
+
             {/* ── Personal Info tab ── */}
             {activeTab === 'personal' && (
               <>
@@ -217,16 +262,93 @@ export default function ProfilePage() {
 
             {/* ── My Recipes tab ── */}
             {activeTab === 'recipes' && (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-4">🍽️</div>
-                <h2 className="font-display text-xl font-bold text-forest-green mb-2">
-                  My Recipes
-                </h2>
-                <p className="text-charcoal/60 text-sm max-w-xs mx-auto">
-                  Recipe management is coming soon. You&apos;ll be able to save and create your
-                  own organic recipes here.
-                </p>
-              </div>
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-display text-xl font-bold text-forest-green">
+                    My Recipes
+                  </h2>
+                  <Link
+                    href="/recipes/builder"
+                    className="text-xs font-semibold bg-ghana-gold text-forest-green px-4 py-2 rounded-xl hover:bg-dark-gold transition-colors"
+                  >
+                    + New Recipe
+                  </Link>
+                </div>
+
+                {recipesError && (
+                  <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                    {recipesError}
+                  </div>
+                )}
+
+                {recipesLoading ? (
+                  <div className="text-center py-12 text-charcoal/40 text-sm">
+                    Loading your recipes…
+                  </div>
+                ) : myRecipes.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 rounded-full bg-[#F4C430]/20 flex items-center justify-center mx-auto mb-4">
+                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F4C430" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+                        <path d="M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+                      </svg>
+                    </div>
+                    <p className="font-semibold text-forest-green mb-1">No saved recipes yet</p>
+                    <p className="text-charcoal/60 text-sm mb-5">
+                      You haven&apos;t saved any recipes yet.
+                    </p>
+                    <Link
+                      href="/recipes"
+                      className="text-sm font-semibold text-leaf-green hover:underline"
+                    >
+                      Browse Recipes
+                    </Link>
+                  </div>
+                ) : (
+                  <ul className="space-y-3">
+                    {myRecipes.map((recipe) => (
+                      <li
+                        key={recipe.id}
+                        className="flex items-start justify-between gap-4 p-4 rounded-xl border border-sand bg-cream hover:border-leaf-green/40 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-forest-green text-sm leading-snug mb-0.5 truncate">
+                            {recipe.name}
+                          </p>
+                          {recipe.base_recipes.length > 0 && (
+                            <p className="text-xs text-charcoal/50 truncate">
+                              Built from:{' '}
+                              <span className="text-charcoal/70">
+                                {recipe.base_recipes.map((r) => r.title).join(', ')}
+                              </span>
+                            </p>
+                          )}
+                          <p className="text-xs text-charcoal/40 mt-1">
+                            {recipe.ingredients.length} ingredient{recipe.ingredients.length !== 1 ? 's' : ''}
+                            {' · '}
+                            {formatDate(recipe.created_at)}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <Link
+                            href={`/recipes/builder?edit=${recipe.id}`}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-forest-green text-mist-white hover:opacity-90 transition-opacity"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteRecipe(recipe.id)}
+                            disabled={deletingRecipeId === recipe.id}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          >
+                            {deletingRecipeId === recipe.id ? '…' : 'Delete'}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
 
             {/* ── Order History tab ── */}

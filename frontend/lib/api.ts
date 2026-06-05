@@ -1,4 +1,9 @@
-import type { Product, ProductDetail, Category, BlogPost, BlogCategory, Recipe, User } from '@/types'
+import type {
+  Product, ProductDetail, Category,
+  BlogPost, BlogCategory,
+  Recipe, RecipeWithPairings, UserRecipe,
+  User,
+} from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -74,6 +79,7 @@ async function fetchWithAuth<T>(endpoint: string, options?: RequestInit): Promis
   }
 
   if (!res.ok) await parseError(res)
+  if (res.status === 204) return null as T
   return res.json()
 }
 
@@ -89,6 +95,20 @@ export interface RegisterData {
   last_name: string
   password: string
   password_confirm: string
+}
+
+export interface CreateUserRecipeData {
+  name: string
+  description?: string
+  base_recipe_ids?: number[]
+  ingredients: {
+    name: string
+    product_id?: number | null
+    quantity: string
+    unit: string
+    notes?: string
+    order?: number
+  }[]
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +130,23 @@ export const api = {
   recipes: {
     default: () => fetchAPI<Recipe[]>('/api/recipes/default/'),
     list: () => fetchAPI<Recipe[]>('/api/recipes/'),
-    detail: (slug: string) => fetchAPI<Recipe>(`/api/recipes/${slug}/`),
+    detail: (slug: string) => fetchAPI<RecipeWithPairings>(`/api/recipes/${slug}/`),
+    myRecipes: {
+      list: () => fetchWithAuth<UserRecipe[]>('/api/recipes/my-recipes/'),
+      get: (id: number) => fetchWithAuth<UserRecipe>(`/api/recipes/my-recipes/${id}/`),
+      create: (data: CreateUserRecipeData) =>
+        fetchWithAuth<UserRecipe>('/api/recipes/my-recipes/create/', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }),
+      update: (id: number, data: Partial<CreateUserRecipeData>) =>
+        fetchWithAuth<UserRecipe>(`/api/recipes/my-recipes/${id}/`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        }),
+      delete: (id: number) =>
+        fetchWithAuth<void>(`/api/recipes/my-recipes/${id}/`, { method: 'DELETE' }),
+    },
   },
   auth: {
     login: (email: string, password: string) =>

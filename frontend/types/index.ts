@@ -45,9 +45,17 @@ export interface BlogPost {
   updated_at?: string
 }
 
+export interface IngredientProduct {
+  id: number
+  name: string
+  slug: string
+  price: string
+  unit: string
+}
+
 export interface RecipeIngredient {
   id: number
-  product: number | null
+  product: IngredientProduct | null
   name: string
   quantity: string
   unit: string
@@ -76,6 +84,40 @@ export interface Recipe {
   ingredients?: RecipeIngredient[]
   steps?: RecipeStep[]
   updated_at?: string
+}
+
+export interface RecipePairing {
+  id: number
+  suggested_recipe: Recipe
+  label: string
+  order: number
+}
+
+export interface RecipeWithPairings extends Recipe {
+  ingredients: RecipeIngredient[]
+  steps: RecipeStep[]
+  pairings: RecipePairing[]
+}
+
+export interface UserRecipeIngredient {
+  id?: number
+  product: IngredientProduct | null
+  name: string
+  quantity: number
+  unit: string
+  notes: string
+  order: number
+}
+
+export interface UserRecipe {
+  id: number
+  name: string
+  description: string
+  base_recipes: Recipe[]
+  ingredients: UserRecipeIngredient[]
+  is_saved: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface User {

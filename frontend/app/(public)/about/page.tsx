@@ -17,10 +17,10 @@ export default function AboutPage() {
           <span className="text-ghana-gold text-sm font-semibold uppercase tracking-widest">
             Our Story
           </span>
-          <h1 className="font-display text-5xl font-bold text-mist-white mt-3 mb-6">
+          <h1 className="font-display text-5xl font-bold text-white mt-3 mb-6">
             Built on Trust, Grown in Ghana
           </h1>
-          <p className="text-light-leaf text-lg leading-relaxed" style={{ maxWidth: "40rem", margin: "0 auto" }}>
+          <p className="text-white/80 text-lg leading-relaxed" style={{ maxWidth: "40rem", margin: "0 auto" }}>
             Legit Organic was founded in 2022 by a team of Ghanaian agronomists, nutritionists,
             and tech entrepreneurs who were frustrated by the lack of transparency in the local
             food supply chain.
