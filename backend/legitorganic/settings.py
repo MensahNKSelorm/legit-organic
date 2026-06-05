@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    # unfold (must come before django.contrib.admin)
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
     # django
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,6 +57,97 @@ INSTALLED_APPS = [
     'recipes',
     'orders',
 ]
+
+UNFOLD = {
+    "SITE_TITLE": "Legit Organic",
+    "SITE_HEADER": "Legit Organic Admin",
+    "SITE_URL": "/",
+    "SITE_ICON": None,
+    "SITE_LOGO": None,
+    "SITE_SYMBOL": "eco",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "THEME": "light",
+    "COLORS": {
+        "primary": {
+            "50": "240 253 244",
+            "100": "220 252 231",
+            "200": "187 247 208",
+            "300": "134 239 172",
+            "400": "74 222 128",
+            "500": "34 197 94",
+            "600": "22 163 74",
+            "700": "15 118 52",
+            "800": "13 59 42",
+            "900": "10 45 32",
+            "950": "5 25 18",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Content",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Products",
+                        "icon": "shopping_basket",
+                        "link": "/admin/products/product/",
+                    },
+                    {
+                        "title": "Categories",
+                        "icon": "category",
+                        "link": "/admin/products/category/",
+                    },
+                    {
+                        "title": "Blog Posts",
+                        "icon": "article",
+                        "link": "/admin/blog/blogpost/",
+                    },
+                    {
+                        "title": "Blog Categories",
+                        "icon": "folder",
+                        "link": "/admin/blog/blogcategory/",
+                    },
+                    {
+                        "title": "Recipes",
+                        "icon": "restaurant_menu",
+                        "link": "/admin/recipes/recipe/",
+                    },
+                ],
+            },
+            {
+                "title": "Orders",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Orders",
+                        "icon": "receipt_long",
+                        "link": "/admin/orders/order/",
+                    },
+                    {
+                        "title": "Carts",
+                        "icon": "shopping_cart",
+                        "link": "/admin/orders/cart/",
+                    },
+                ],
+            },
+            {
+                "title": "Users",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "people",
+                        "link": "/admin/users/user/",
+                    },
+                ],
+            },
+        ],
+    },
+}
 
 AUTH_USER_MODEL = 'users.User'
 

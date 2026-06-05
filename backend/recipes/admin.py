@@ -1,21 +1,22 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 from .models import Recipe, RecipeIngredient, RecipeStep, RecipePairing, UserRecipe, UserRecipeIngredient
 
 
-class RecipeIngredientInline(admin.TabularInline):
+class RecipeIngredientInline(TabularInline):
     model = RecipeIngredient
     extra = 3
     fields = ['name', 'product', 'quantity', 'unit', 'notes']
 
 
-class RecipeStepInline(admin.TabularInline):
+class RecipeStepInline(TabularInline):
     model = RecipeStep
     extra = 3
     ordering = ['step_number']
     fields = ['step_number', 'instruction', 'image']
 
 
-class RecipePairingInline(admin.TabularInline):
+class RecipePairingInline(TabularInline):
     model = RecipePairing
     fk_name = 'base_recipe'
     extra = 2
@@ -23,7 +24,7 @@ class RecipePairingInline(admin.TabularInline):
 
 
 @admin.register(Recipe)
-class RecipeAdmin(admin.ModelAdmin):
+class RecipeAdmin(ModelAdmin):
     list_display = [
         'title', 'is_default', 'created_by', 'difficulty',
         'prep_time', 'cook_time', 'created_at',
@@ -51,14 +52,14 @@ class RecipeAdmin(admin.ModelAdmin):
     )
 
 
-class UserRecipeIngredientInline(admin.TabularInline):
+class UserRecipeIngredientInline(TabularInline):
     model = UserRecipeIngredient
     extra = 3
     fields = ['name', 'product', 'quantity', 'unit', 'notes', 'order']
 
 
 @admin.register(UserRecipe)
-class UserRecipeAdmin(admin.ModelAdmin):
+class UserRecipeAdmin(ModelAdmin):
     list_display = ['name', 'user', 'is_saved', 'created_at']
     list_filter = ['is_saved']
     search_fields = ['name', 'user__email']
