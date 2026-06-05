@@ -15,17 +15,32 @@ function formatTime(minutes: number): string {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
+function getImageSrc(image: string | null | undefined): string | null {
+  if (!image) return null
+  if (image.startsWith('http://localhost:8000/media/')) {
+    return image.replace('http://localhost:8000/media/', '/api/media/')
+  }
+  if (image.startsWith('http://127.0.0.1:8000/media/')) {
+    return image.replace('http://127.0.0.1:8000/media/', '/api/media/')
+  }
+  if (image.startsWith('/media/')) {
+    return `/api/media/${image.replace('/media/', '')}`
+  }
+  return image
+}
+
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
   const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, classes: 'text-charcoal/60 bg-charcoal/10' }
+  const coverSrc = getImageSrc(recipe.cover_image)
   const totalTime = recipe.prep_time + recipe.cook_time
 
   return (
     <article className="group bg-mist-white dark:bg-[#1f2937] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-sand dark:border-[#374151] flex flex-col">
       {/* Cover */}
       <div className="relative h-52 overflow-hidden shrink-0">
-        {recipe.cover_image ? (
+        {coverSrc ? (
           <Image
-            src={recipe.cover_image}
+            src={coverSrc}
             alt={recipe.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"

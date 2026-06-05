@@ -10,6 +10,20 @@ const PLACEHOLDERS = [
   '/images/products/p4.webp',
 ]
 
+function getImageSrc(image: string | null, id: number): string {
+  if (!image) return PLACEHOLDERS[id % PLACEHOLDERS.length]
+  if (image.startsWith('http://localhost:8000/media/')) {
+    return image.replace('http://localhost:8000/media/', '/api/media/')
+  }
+  if (image.startsWith('http://127.0.0.1:8000/media/')) {
+    return image.replace('http://127.0.0.1:8000/media/', '/api/media/')
+  }
+  if (image.startsWith('/media/')) {
+    return `/api/media/${image.replace('/media/', '')}`
+  }
+  return image
+}
+
 interface FeaturedProductsProps {
   products: Product[]
 }
@@ -37,7 +51,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.map((product, index) => {
-            const imageSrc = product.image || PLACEHOLDERS[index % PLACEHOLDERS.length]
+            const imageSrc = getImageSrc(product.image, product.id)
             return (
               <article
                 key={product.id}
