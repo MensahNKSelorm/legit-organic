@@ -102,6 +102,16 @@ UNFOLD = {
                         "link": "/admin/products/category/",
                     },
                     {
+                        "title": "Regions",
+                        "icon": "location_on",
+                        "link": "/admin/products/region/",
+                    },
+                    {
+                        "title": "Badges",
+                        "icon": "label",
+                        "link": "/admin/products/badge/",
+                    },
+                    {
                         "title": "Blog Posts",
                         "icon": "article",
                         "link": "/admin/blog/blogpost/",

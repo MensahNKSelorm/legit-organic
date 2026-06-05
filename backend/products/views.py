@@ -1,6 +1,6 @@
 from rest_framework import generics
-from .models import Category, Product
-from .serializers import CategorySerializer, ProductSerializer
+from .models import Badge, Category, Product, Region
+from .serializers import BadgeSerializer, CategorySerializer, ProductSerializer, RegionSerializer
 
 
 class CategoryListView(generics.ListAPIView):
@@ -9,12 +9,24 @@ class CategoryListView(generics.ListAPIView):
     permission_classes = []
 
 
+class RegionListView(generics.ListAPIView):
+    queryset = Region.objects.filter(is_active=True)
+    serializer_class = RegionSerializer
+    permission_classes = []
+
+
+class BadgeListView(generics.ListAPIView):
+    queryset = Badge.objects.filter(is_active=True)
+    serializer_class = BadgeSerializer
+    permission_classes = []
+
+
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
     permission_classes = []
 
     def get_queryset(self):
-        qs = Product.objects.filter(is_available=True).select_related('category')
+        qs = Product.objects.filter(is_available=True).select_related('category', 'region', 'badge')
         featured = self.request.query_params.get('featured')
         category = self.request.query_params.get('category')
         if featured:
@@ -25,13 +37,13 @@ class ProductListView(generics.ListAPIView):
 
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.filter(is_available=True).select_related('category')
+    queryset = Product.objects.filter(is_available=True).select_related('category', 'region', 'badge')
     serializer_class = ProductSerializer
     permission_classes = []
     lookup_field = 'slug'
 
 
 class FeaturedProductsView(generics.ListAPIView):
-    queryset = Product.objects.filter(is_featured=True, is_available=True).select_related('category')
+    queryset = Product.objects.filter(is_featured=True, is_available=True).select_related('category', 'region', 'badge')
     serializer_class = ProductSerializer
     permission_classes = []

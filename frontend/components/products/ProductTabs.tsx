@@ -52,7 +52,7 @@ export default function ProductTabs({ product }: { product: ProductDetail }) {
               <p className="text-xs font-semibold text-charcoal/50 dark:text-[#9ca3af] uppercase tracking-wide mb-1">
                 Region
               </p>
-              <p className="font-semibold text-forest-green dark:text-[#81C784]">{product.region}</p>
+              <p className="font-semibold text-forest-green dark:text-[#81C784]">{product.region?.name}</p>
             </div>
             <div className="bg-beige dark:bg-[#374151] rounded-xl p-4">
               <p className="text-xs font-semibold text-charcoal/50 dark:text-[#9ca3af] uppercase tracking-wide mb-1">

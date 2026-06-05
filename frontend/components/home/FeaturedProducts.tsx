@@ -56,7 +56,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                   />
                   {product.badge && (
                     <span className="absolute top-3 left-3 bg-forest-green text-ghana-gold text-xs font-bold px-2.5 py-1 rounded-full z-10">
-                      {product.badge}
+                      {product.badge.name}
                     </span>
                   )}
                 </div>
@@ -69,7 +69,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
 
                   <div className="min-h-[28px] flex items-center mb-3">
                     <span className="inline-block text-xs bg-[#F5F0E6] dark:bg-[#374151] text-[#2e7d32] dark:text-[#81C784] rounded-full px-3 py-1 font-semibold uppercase tracking-wide">
-                      {product.category.name} · {product.region}
+                      {product.category.name} · {product.region?.name}
                     </span>
                   </div>
 

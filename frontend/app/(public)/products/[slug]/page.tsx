@@ -130,7 +130,7 @@ export default async function ProductDetailPage({ params }: Props) {
               />
               {product.badge && (
                 <span className="absolute top-4 left-4 bg-forest-green text-ghana-gold text-sm font-bold px-3 py-1.5 rounded-full z-10 shadow">
-                  {product.badge}
+                  {product.badge.name}
                 </span>
               )}
             </div>
@@ -142,7 +142,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {/* Category · Region pill */}
             <div className="mb-4">
               <span className="inline-block text-xs bg-[#F5F0E6] dark:bg-[#374151] text-[#2e7d32] dark:text-[#81C784] rounded-full px-3 py-1 font-semibold uppercase tracking-wide">
-                {product.category.name} · {product.region}
+                {product.category.name} · {product.region?.name}
               </span>
             </div>
 

@@ -6,6 +6,20 @@ export interface Category {
   image: string | null
 }
 
+export interface Region {
+  id: number
+  name: string
+  slug: string
+  country: string
+}
+
+export interface Badge {
+  id: number
+  name: string
+  slug: string
+  color: string
+}
+
 export interface Product {
   id: number
   name: string
@@ -13,10 +27,10 @@ export interface Product {
   description: string
   price: string
   unit: string
-  region: string
+  region: Region | null
   category: Category
   image: string | null
-  badge: string
+  badge: Badge | null
   is_featured: boolean
   is_available: boolean
   created_at: string
