@@ -1,5 +1,6 @@
 import secrets
 from rest_framework import generics, permissions, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -87,3 +88,59 @@ class ResendVerificationView(APIView):
             )
 
         return Response({'message': 'Verification email sent.'}, status=status.HTTP_200_OK)
+
+
+class GoogleAuthView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.data.get('token')
+        if not token:
+            return Response(
+                {'error': 'Token is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        from .google_auth import verify_google_token
+        google_data = verify_google_token(token)
+
+        if not google_data:
+            return Response(
+                {'error': 'Invalid Google token'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        email = google_data['email']
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'first_name': google_data['first_name'],
+                'last_name': google_data['last_name'],
+                'email_verified': google_data['email_verified'],
+                'is_active': True,
+            }
+        )
+
+        if not created:
+            user.first_name = user.first_name or google_data['first_name']
+            user.last_name = user.last_name or google_data['last_name']
+            if google_data['email_verified']:
+                user.email_verified = True
+            user.save()
+
+        if created:
+            try:
+                from .emails import send_welcome_email
+                send_welcome_email(user)
+            except Exception:
+                pass
+
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': UserSerializer(user).data,
+        })
