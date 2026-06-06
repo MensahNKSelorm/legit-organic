@@ -152,6 +152,41 @@ export interface ProductDetail extends Product {
   nutritional_info?: string
 }
 
+export interface CartItem {
+  product: Product
+  quantity: number
+}
+
+export interface Cart {
+  items: CartItem[]
+  total: number
+  itemCount: number
+}
+
+export interface OrderItemData {
+  product: {
+    id: number
+    name: string
+    slug: string
+    price: string
+    unit: string
+  }
+  quantity: number
+  unit_price: string
+  subtotal: string
+}
+
+export interface Order {
+  id: number
+  reference: string
+  status: string
+  payment_status: string
+  total_amount: string
+  delivery_address: string
+  items: OrderItemData[]
+  created_at: string
+}
+
 export interface AuthTokens {
   access: string
   refresh: string

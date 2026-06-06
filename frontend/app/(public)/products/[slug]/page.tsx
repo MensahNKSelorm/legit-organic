@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import type { Product } from '@/types'
 import ProductCard from '@/components/products/ProductCard'
 import ProductTabs from '@/components/products/ProductTabs'
+import AddToCartButton from '@/components/products/AddToCartButton'
 import { getMediaUrl } from '@/lib/media'
 
 const PLACEHOLDERS = [
@@ -168,18 +169,8 @@ export default async function ProductDetailPage({ params }: Props) {
 
             {/* Action buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="relative group flex-1">
-                <button
-                  disabled
-                  className="w-full bg-[#F4C430] text-[#0D3B2A] font-semibold px-6 py-3 rounded-xl opacity-70 cursor-not-allowed"
-                  aria-disabled="true"
-                >
-                  Add to Cart
-                </button>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#0D3B2A] text-mist-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
-                  Coming soon — ordering opens soon
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-[#0D3B2A]" />
-                </div>
+              <div className="flex-1">
+                <AddToCartButton product={product} />
               </div>
 
               <div className="relative group flex-1">

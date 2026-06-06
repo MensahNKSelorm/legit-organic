@@ -2,7 +2,7 @@ import type {
   Product, ProductDetail, Category,
   BlogPost, BlogCategory,
   Recipe, RecipeWithPairings, UserRecipe,
-  User,
+  User, Order,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -181,6 +181,20 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
+  },
+  orders: {
+    create: (data: { items: { product_id: number; quantity: number }[]; delivery_address: string }) =>
+      fetchWithAuth<Order>('/api/orders/create/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    verifyPayment: (reference: string) =>
+      fetchWithAuth<Order>('/api/orders/verify-payment/', {
+        method: 'POST',
+        body: JSON.stringify({ reference }),
+      }),
+    myOrders: () => fetchWithAuth<Order[]>('/api/orders/my-orders/'),
+    detail: (reference: string) => fetchWithAuth<Order>(`/api/orders/${reference}/`),
   },
 }
 

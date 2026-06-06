@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
+import CartIcon from '@/components/cart/CartIcon'
 
 const navLinks = [
   { label: 'Home',     href: '/' },
@@ -162,6 +163,9 @@ export default function Navbar() {
           >
             {darkMode ? <SunIcon /> : <MoonIcon />}
           </button>
+
+          {/* Cart icon */}
+          <CartIcon isTransparent={transparent} />
 
           {isAuthenticated && user ? (
             /* ── Authenticated: avatar + dropdown ── */

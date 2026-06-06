@@ -33,6 +33,8 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'hello@legitorganic.com')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://legitorganic.com')
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
+PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"
