@@ -45,7 +45,7 @@ export default function ProductTabs({ product }: { product: ProductDetail }) {
                 Category
               </p>
               <p className="font-semibold text-forest-green dark:text-[#81C784]">
-                {product.category.name}
+                {product.category?.name}
               </p>
             </div>
             <div className="bg-beige dark:bg-[#374151] rounded-xl p-4">

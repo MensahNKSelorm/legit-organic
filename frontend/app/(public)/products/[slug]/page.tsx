@@ -86,7 +86,7 @@ export default async function ProductDetailPage({ params }: Props) {
   // Related products — same category, excluding this product
   let related: Product[] = []
   try {
-    const same = await api.products.list('category=' + product.category.slug)
+    const same = await api.products.list('category=' + product.category?.slug)
     related = same.filter((p) => p.slug !== slug).slice(0, 3)
   } catch {
     // ignore
@@ -143,7 +143,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {/* Category · Region pill */}
             <div className="mb-4">
               <span className="inline-block text-xs bg-[#F5F0E6] dark:bg-[#374151] text-[#2e7d32] dark:text-[#81C784] rounded-full px-3 py-1 font-semibold uppercase tracking-wide">
-                {product.category.name} · {product.region?.name}
+                {product.category?.name} · {product.region?.name}
               </span>
             </div>
 
