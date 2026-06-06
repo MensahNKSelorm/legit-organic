@@ -2,6 +2,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export function getMediaUrl(image: string | null | undefined, fallback?: string): string {
   if (!image) return fallback || ''
+  if (image.startsWith('https://')) return image
   if (image.startsWith('http://localhost:8000/media/')) {
     return image.replace('http://localhost:8000/media/', '/api/media/')
   }
