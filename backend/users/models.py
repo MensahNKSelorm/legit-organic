@@ -31,6 +31,9 @@ class User(AbstractUser):
     delivery_address = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    email_verified = models.BooleanField(default=False)
+    email_verification_token = models.CharField(max_length=100, blank=True)
+    email_verification_sent_at = models.DateTimeField(null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

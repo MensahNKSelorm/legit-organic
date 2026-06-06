@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import resend
 from dotenv import load_dotenv
 
 
@@ -25,6 +26,11 @@ load_dotenv(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-key')
+
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
+resend.api_key = RESEND_API_KEY
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@legitorganic.com')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://legitorganic.com')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"
