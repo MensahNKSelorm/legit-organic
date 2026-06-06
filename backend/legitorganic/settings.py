@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-key')
 
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 resend.api_key = RESEND_API_KEY
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@legitorganic.com')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'hello@legitorganic.com')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://legitorganic.com')
 
 # SECURITY WARNING: don't run with debug turned on in production!
