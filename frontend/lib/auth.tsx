@@ -29,6 +29,7 @@ interface AuthContextType {
   ) => Promise<void>
   logout: () => void
   updateUser: (data: Partial<User>) => void
+  resendVerification: () => Promise<void>
 }
 
 // ---------------------------------------------------------------------------
@@ -92,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('access_token', access)
       localStorage.setItem('refresh_token', refresh)
       setUser(userData)
-      router.push('/profile')
+      router.push(`/check-email?email=${encodeURIComponent(email)}`)
     },
     [router]
   )
@@ -108,6 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => (prev ? { ...prev, ...data } : null))
   }, [])
 
+  const resendVerification = useCallback(async () => {
+    await api.auth.resendVerification()
+  }, [])
+
   return (
     <AuthContext.Provider
       value={{
@@ -118,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         updateUser,
+        resendVerification,
       }}
     >
       {children}

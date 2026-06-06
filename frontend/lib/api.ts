@@ -164,6 +164,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    verifyEmail: (token: string) =>
+      fetchAPI<{ message: string }>(`/api/users/verify-email/?token=${token}`),
+    resendVerification: () =>
+      fetchWithAuth<{ message: string }>('/api/users/resend-verification/', { method: 'POST' }),
   },
   users: {
     me: () => fetchWithAuth<User>('/api/users/me/'),

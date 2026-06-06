@@ -143,6 +143,7 @@ export interface User {
   delivery_address?: string
   avatar?: string | null
   created_at: string
+  email_verified: boolean
 }
 
 export interface ProductDetail extends Product {

@@ -63,3 +63,27 @@ class VerifyEmailView(APIView):
         user.save()
 
         return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+
+
+class ResendVerificationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.email_verified:
+            return Response({'message': 'Email is already verified.'}, status=status.HTTP_200_OK)
+
+        token = secrets.token_urlsafe(32)
+        user.email_verification_token = token
+        user.email_verification_sent_at = timezone.now()
+        user.save()
+
+        try:
+            send_verification_email(user, token)
+        except Exception:
+            return Response(
+                {'error': 'Failed to send verification email. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({'message': 'Verification email sent.'}, status=status.HTTP_200_OK)
