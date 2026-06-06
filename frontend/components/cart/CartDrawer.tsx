@@ -42,10 +42,8 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
       {/* Backdrop */}
       <div
         className={[
-          'fixed inset-0 z-40 transition-all duration-300',
-          open
-            ? 'bg-black/40 backdrop-blur-sm pointer-events-auto'
-            : 'bg-transparent pointer-events-none',
+          'fixed inset-0 z-40 bg-black/40 transition-opacity duration-300',
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         ].join(' ')}
         onClick={onClose}
         aria-hidden
@@ -64,7 +62,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         ].join(' ')}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#E6D8BD] dark:border-[#374151]">
+        <div className="shrink-0 flex items-center justify-between px-6 py-5 border-b border-[#E6D8BD] dark:border-[#374151]">
           <h2 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-[#faf7f0]">
             Your Cart
           </h2>
@@ -170,7 +168,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="px-6 py-5 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
+          <div className="shrink-0 px-6 py-5 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
             <div className="flex items-center justify-between mb-4">
               <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
               <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
