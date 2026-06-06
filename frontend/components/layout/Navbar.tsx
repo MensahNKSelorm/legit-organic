@@ -46,7 +46,8 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
 
   const pathname = usePathname()
-  const isAuthPage = pathname === '/login' || pathname === '/signup'
+  const isAuthPage = pathname === '/login' || pathname === '/signup' ||
+                     pathname === '/check-email' || pathname === '/verify-email'
 
   const [scrolled,     setScrolled]     = useState(false)
   const [menuOpen,     setMenuOpen]     = useState(false)
