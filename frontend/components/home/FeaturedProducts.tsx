@@ -56,7 +56,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                   />
                   {product.badge && (
                     <span className="absolute top-3 left-3 bg-forest-green text-ghana-gold text-xs font-bold px-2.5 py-1 rounded-full z-10">
-                      {product.badge.name}
+                      {product.badge?.name}
                     </span>
                   )}
                 </div>
