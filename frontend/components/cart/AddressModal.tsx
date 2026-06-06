@@ -97,22 +97,26 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
 
     setSaving(true)
     setApiError('')
+
+    const formData: AddressData = {
+      house_number: houseNumber.trim(),
+      street_address: streetAddress.trim(),
+      city: city.trim(),
+      delivery_region: deliveryRegion,
+      phone_number: phoneNumber.replace(/\s/g, ''),
+    }
+
     try {
-      const updated = await api.users.updateProfile({
-        house_number: houseNumber.trim(),
-        street_address: streetAddress.trim(),
-        city: city.trim(),
-        delivery_region: deliveryRegion,
-        phone_number: phoneNumber.replace(/\s/g, ''),
+      await api.users.updateProfile(formData)
+      updateUser({
+        street_address: formData.street_address,
+        house_number: formData.house_number,
+        city: formData.city,
+        delivery_region: formData.delivery_region,
+        phone_number: formData.phone_number,
       })
-      updateUser(updated)
-      onSave({
-        house_number: houseNumber.trim(),
-        street_address: streetAddress.trim(),
-        city: city.trim(),
-        delivery_region: deliveryRegion,
-        phone_number: phoneNumber.replace(/\s/g, ''),
-      })
+      onSave(formData)
+      onClose()
     } catch (err: unknown) {
       setApiError(err instanceof Error ? err.message : 'Failed to save address.')
     } finally {

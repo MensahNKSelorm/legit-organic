@@ -31,6 +31,7 @@ export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
   const [showAddressModal, setShowAddressModal] = useState(false)
 
   const initiateOrder = async (deliveryAddress: string) => {
+    setIsLoading(true)
     try {
       console.log('User:', user?.email)
       console.log('Token:', localStorage.getItem('access_token')?.slice(0, 20))
@@ -92,14 +93,18 @@ export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
       return
     }
 
-    setIsLoading(true)
     await initiateOrder(buildDeliveryAddress(user))
   }
 
-  const handleAddressSaved = (addressData: AddressData) => {
+  const handleAddressSaved = (addressData: any) => {
+    const deliveryAddress = [
+      addressData.house_number,
+      addressData.street_address,
+      addressData.city,
+      addressData.delivery_region,
+    ].filter(Boolean).join(', ')
     setShowAddressModal(false)
-    setIsLoading(true)
-    initiateOrder(buildDeliveryAddress(addressData))
+    initiateOrder(deliveryAddress)
   }
 
   return (
