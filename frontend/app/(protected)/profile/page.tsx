@@ -109,6 +109,7 @@ export default function ProfilePage() {
     setSaveError('')
     try {
       const updated = await api.users.updateProfile({
+        email: user!.email,
         first_name: firstName,
         last_name: lastName,
         phone_number: phone.replace(/\s/g, ''),
