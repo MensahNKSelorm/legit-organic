@@ -107,6 +107,14 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
     }
 
     try {
+      console.log('AddressModal payload:', JSON.stringify({
+        email: user?.email,
+        house_number: formData.house_number,
+        street_address: formData.street_address,
+        city: formData.city,
+        delivery_region: formData.delivery_region,
+        phone_number: formData.phone_number,
+      }))
       await api.users.updateProfile({ ...formData, email: user?.email })
       updateUser({
         street_address: formData.street_address,
