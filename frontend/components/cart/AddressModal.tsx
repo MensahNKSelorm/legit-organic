@@ -107,7 +107,7 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
     }
 
     try {
-      await api.users.updateProfile(formData)
+      await api.users.updateProfile({ ...formData, email: user?.email })
       updateUser({
         street_address: formData.street_address,
         house_number: formData.house_number,
