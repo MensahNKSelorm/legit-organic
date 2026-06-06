@@ -26,6 +26,9 @@ export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
     setIsLoading(true)
 
     try {
+      console.log('User:', user?.email)
+      console.log('Token:', localStorage.getItem('access_token')?.slice(0, 20))
+
       // Create pending order on backend
       const orderData = await api.orders.create({
         items: items.map((item) => ({
@@ -65,9 +68,10 @@ export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
         handler.openIframe()
       }
       document.body.appendChild(script)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error)
-      alert('Failed to create order. Please try again.')
+      const message = error?.message || error?.detail || JSON.stringify(error)
+      alert(`Failed to create order: ${message}`)
       setIsLoading(false)
     }
   }
