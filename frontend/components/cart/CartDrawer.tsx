@@ -20,7 +20,7 @@ const PLACEHOLDERS = [
 ]
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
-  const { items, total, updateQuantity, removeItem } = useCart()
+  const { items, total, itemCount, updateQuantity, removeItem } = useCart()
   const drawerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -39,33 +39,43 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — full screen, z-40 */}
       <div
         className={[
-          'fixed inset-0 z-40 bg-black/40 transition-opacity duration-300',
+          'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300',
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         ].join(' ')}
         onClick={onClose}
         aria-hidden
       />
 
-      {/* Drawer */}
+      {/* Drawer panel — fixed, full viewport height, flex column */}
       <div
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
         aria-label="Shopping cart"
         className={[
-          'fixed top-0 right-0 h-full w-full max-w-md z-50 flex flex-col',
-          'bg-[#FAF7F0] dark:bg-[#111827] shadow-2xl transition-transform duration-300 ease-in-out',
+          'fixed top-0 right-0 z-50',
+          'h-screen w-full max-w-md',
+          'flex flex-col overflow-hidden',
+          'bg-[#FAF7F0] dark:bg-[#111827] shadow-2xl',
+          'transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : 'translate-x-full',
         ].join(' ')}
       >
-        {/* Header */}
+        {/* 1. Header — flex-shrink-0 */}
         <div className="shrink-0 flex items-center justify-between px-6 py-5 border-b border-[#E6D8BD] dark:border-[#374151]">
-          <h2 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-[#faf7f0]">
-            Your Cart
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-[#faf7f0]">
+              Your Cart
+            </h2>
+            {itemCount > 0 && (
+              <span className="text-sm font-semibold text-[#5B3E31] dark:text-[#9ca3af]">
+                ({itemCount} {itemCount === 1 ? 'item' : 'items'})
+              </span>
+            )}
+          </div>
           <button
             onClick={onClose}
             aria-label="Close cart"
@@ -75,7 +85,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           </button>
         </div>
 
-        {/* Body */}
+        {/* 2. Items list — flex-1, scrollable */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
@@ -103,7 +113,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 const subtotal = (parseFloat(item.product.price) * item.quantity).toFixed(2)
                 return (
                   <li key={item.product.id} className="flex gap-4 py-4 border-b border-[#E6D8BD] dark:border-[#374151] last:border-0">
-                    {/* Image */}
+                    {/* Product image */}
                     <div className="relative w-[60px] h-[60px] rounded-xl overflow-hidden bg-[#F5F0E6] dark:bg-[#374151] shrink-0">
                       <Image
                         src={imageSrc}
@@ -166,25 +176,23 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           )}
         </div>
 
-        {/* Footer */}
-        {items.length > 0 && (
-          <div className="shrink-0 px-6 py-5 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
-              <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
-                GH₵ {total.toFixed(2)}
-              </span>
-            </div>
-            <CheckoutButton onClose={onClose} />
-            <Link
-              href="/products"
-              onClick={onClose}
-              className="block text-center mt-3 text-sm text-[#5B3E31] dark:text-[#9ca3af] hover:text-[#0D3B2A] dark:hover:text-[#faf7f0] transition-colors"
-            >
-              Continue Shopping
-            </Link>
+        {/* 3. Footer — flex-shrink-0, always at bottom */}
+        <div className="shrink-0 px-6 py-5 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
+            <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
+              GH₵ {total.toFixed(2)}
+            </span>
           </div>
-        )}
+          <CheckoutButton onClose={onClose} />
+          <Link
+            href="/products"
+            onClick={onClose}
+            className="block text-center mt-3 text-sm text-[#5B3E31] dark:text-[#9ca3af] hover:text-[#0D3B2A] dark:hover:text-[#faf7f0] transition-colors"
+          >
+            Continue Shopping
+          </Link>
+        </div>
       </div>
     </>
   )
