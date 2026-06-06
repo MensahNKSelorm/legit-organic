@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from .promo_models import PromoCode  # noqa: F401 — registers with orders app
 
 
 class Cart(models.Model):
@@ -48,9 +49,18 @@ class Order(models.Model):
         max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending'
     )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    promo_code = models.ForeignKey(
+        PromoCode, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='orders',
+    )
     delivery_address = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def final_amount(self):
+        return self.total_amount - self.discount_amount
 
     def __str__(self):
         return f"Order {self.reference} — {self.user} ({self.status})"

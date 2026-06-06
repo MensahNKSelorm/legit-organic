@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 from rest_framework import serializers
 from .models import Cart, CartItem, Order, OrderItem
+from .promo_models import PromoCode
 from products.models import Product
 
 
@@ -44,14 +45,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    promo_code = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
             'id', 'reference', 'status', 'payment_status', 'total_amount',
-            'delivery_address', 'items', 'created_at',
+            'discount_amount', 'promo_code', 'delivery_address', 'items', 'created_at',
         ]
         read_only_fields = ['id', 'reference', 'created_at']
+
+    def get_promo_code(self, obj):
+        return obj.promo_code.code if obj.promo_code_id else None
 
 
 class CreateOrderItemSerializer(serializers.Serializer):
@@ -62,6 +67,7 @@ class CreateOrderItemSerializer(serializers.Serializer):
 class CreateOrderSerializer(serializers.Serializer):
     items = CreateOrderItemSerializer(many=True)
     delivery_address = serializers.CharField(required=False, allow_blank=True, default='')
+    promo_code = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_items(self, items):
         if not items:
@@ -72,6 +78,7 @@ class CreateOrderSerializer(serializers.Serializer):
         user = self.context['request'].user
         items_data = validated_data['items']
         delivery_address = validated_data.get('delivery_address', '')
+        promo_code_str = validated_data.get('promo_code', '').strip().upper()
 
         if not delivery_address:
             parts = [
@@ -92,6 +99,7 @@ class CreateOrderSerializer(serializers.Serializer):
             status='pending',
             payment_status='pending',
             total_amount=0,
+            discount_amount=0,
         )
 
         for item_data in items_data:
@@ -107,5 +115,21 @@ class CreateOrderSerializer(serializers.Serializer):
             total += unit_price * quantity
 
         order.total_amount = total
-        order.save(update_fields=['total_amount'])
+        update_fields = ['total_amount', 'discount_amount']
+
+        if promo_code_str:
+            try:
+                promo = PromoCode.objects.get(code=promo_code_str)
+                is_valid, _ = promo.is_valid(float(total))
+                if is_valid:
+                    discount = Decimal(str(promo.calculate_discount(float(total))))
+                    order.promo_code = promo
+                    order.discount_amount = discount
+                    promo.times_used += 1
+                    promo.save(update_fields=['times_used'])
+                    update_fields.append('promo_code')
+            except PromoCode.DoesNotExist:
+                pass
+
+        order.save(update_fields=update_fields)
         return order

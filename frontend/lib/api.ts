@@ -2,7 +2,7 @@ import type {
   Product, ProductDetail, Category,
   BlogPost, BlogCategory,
   Recipe, RecipeWithPairings, UserRecipe,
-  User, Order,
+  User, Order, PromoCode,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -183,7 +183,7 @@ export const api = {
       }),
   },
   orders: {
-    create: (data: { items: { product_id: number; quantity: number }[]; delivery_address: string }) =>
+    create: (data: { items: { product_id: number; quantity: number }[]; delivery_address: string; promo_code?: string }) =>
       fetchWithAuth<Order>('/api/orders/create/', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -192,6 +192,11 @@ export const api = {
       fetchWithAuth<Order>('/api/orders/verify-payment/', {
         method: 'POST',
         body: JSON.stringify({ reference }),
+      }),
+    validatePromo: (code: string, order_amount: number) =>
+      fetchWithAuth<PromoCode>('/api/orders/validate-promo/', {
+        method: 'POST',
+        body: JSON.stringify({ code, order_amount }),
       }),
     myOrders: () => fetchWithAuth<Order[]>('/api/orders/my-orders/'),
     detail: (reference: string) => fetchWithAuth<Order>(`/api/orders/${reference}/`),

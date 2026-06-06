@@ -10,6 +10,7 @@ import AddressModal, { type AddressData } from './AddressModal'
 
 interface CheckoutButtonProps {
   onClose: () => void
+  promoCode?: string
 }
 
 function buildDeliveryAddress(data: {
@@ -23,7 +24,7 @@ function buildDeliveryAddress(data: {
     .join(', ')
 }
 
-export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
+export default function CheckoutButton({ onClose, promoCode }: CheckoutButtonProps) {
   const { user } = useAuth()
   const { items, clearCart } = useCart()
   const router = useRouter()
@@ -42,6 +43,7 @@ export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
           quantity: item.quantity,
         })),
         delivery_address: deliveryAddress,
+        promo_code: promoCode || undefined,
       }) as Order
 
       const script = document.createElement('script')

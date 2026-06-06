@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
 import { getMediaUrl } from '@/lib/media'
+import { api } from '@/lib/api'
+import type { PromoCode } from '@/types'
 import CheckoutButton from './CheckoutButton'
 
 interface CartDrawerProps {
@@ -23,6 +25,11 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { items, total, itemCount, updateQuantity, removeItem } = useCart()
   const drawerRef = useRef<HTMLDivElement>(null)
 
+  const [promoCode, setPromoCode] = useState('')
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null)
+  const [promoError, setPromoError] = useState('')
+  const [promoLoading, setPromoLoading] = useState(false)
+
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
     else document.body.style.overflow = ''
@@ -36,6 +43,26 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return
+    setPromoLoading(true)
+    setPromoError('')
+    try {
+      const result = await api.orders.validatePromo(promoCode.trim(), total)
+      setAppliedPromo(result)
+    } catch (err: unknown) {
+      setPromoError(err instanceof Error ? err.message : 'Invalid promo code.')
+    } finally {
+      setPromoLoading(false)
+    }
+  }
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null)
+    setPromoCode('')
+    setPromoError('')
+  }
 
   return (
     <>
@@ -176,15 +203,77 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           )}
         </div>
 
-        {/* 3. Footer — flex-shrink-0, always at bottom */}
-        <div className="shrink-0 px-6 py-5 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
-            <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
-              GH₵ {total.toFixed(2)}
-            </span>
+        {/* 3. Promo code section — shrink-0, above footer */}
+        {items.length > 0 && (
+          <div className="shrink-0 px-6 py-4 border-t border-[#E6D8BD] dark:border-[#374151]">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => {
+                  setPromoCode(e.target.value.toUpperCase())
+                  setPromoError('')
+                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyPromo() }}
+                placeholder="Promo code"
+                disabled={!!appliedPromo}
+                className="flex-1 px-3 py-2 rounded-lg border border-[#E6D8BD] bg-[#FAF7F0] text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] dark:bg-[#1f2937] dark:border-[#374151] dark:text-[#faf7f0] disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+              <button
+                onClick={handleApplyPromo}
+                disabled={promoLoading || !!appliedPromo || !promoCode.trim()}
+                className="px-4 py-2 rounded-lg bg-[#0D3B2A] text-[#F4C430] text-sm font-semibold hover:bg-[#0a2e20] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {promoLoading ? '…' : 'Apply'}
+              </button>
+            </div>
+            {promoError && (
+              <p className="mt-2 text-xs text-red-500">{promoError}</p>
+            )}
+            {appliedPromo && (
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs text-[#2E7D32] dark:text-[#81C784] font-medium">
+                  {appliedPromo.code} — {appliedPromo.message}
+                </span>
+                <button
+                  onClick={handleRemovePromo}
+                  className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors ml-2 shrink-0"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
           </div>
-          <CheckoutButton onClose={onClose} />
+        )}
+
+        {/* 4. Footer — flex-shrink-0, always at bottom */}
+        <div className="shrink-0 px-6 py-5 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
+          {appliedPromo ? (
+            <div className="mb-4 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[#5B3E31] dark:text-[#9ca3af]">Subtotal</span>
+                <span className="text-sm text-[#0D3B2A] dark:text-[#faf7f0]">GH₵ {total.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">Discount ({appliedPromo.code})</span>
+                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">−GH₵ {appliedPromo.discount_amount.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between pt-1.5 border-t border-[#E6D8BD] dark:border-[#374151]">
+                <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
+                <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
+                  GH₵ {appliedPromo.final_amount.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
+              <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
+                GH₵ {total.toFixed(2)}
+              </span>
+            </div>
+          )}
+          <CheckoutButton onClose={onClose} promoCode={appliedPromo?.code} />
           <Link
             href="/products"
             onClick={onClose}

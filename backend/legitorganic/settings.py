@@ -159,6 +159,11 @@ UNFOLD = {
                         "icon": "shopping_cart",
                         "link": "/admin/orders/cart/",
                     },
+                    {
+                        "title": "Promo Codes",
+                        "icon": "local_offer",
+                        "link": "/admin/orders/promocode/",
+                    },
                 ],
             },
             {

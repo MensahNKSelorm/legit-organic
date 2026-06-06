@@ -4,6 +4,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Cart, CartItem, Order
+from .promo_models import PromoCode
 from .serializers import (
     CartSerializer, CartItemSerializer,
     OrderSerializer, CreateOrderSerializer,
@@ -84,6 +85,41 @@ class VerifyPaymentView(APIView):
         order.save(update_fields=['payment_status', 'status', 'paystack_id'])
 
         return Response(OrderSerializer(order).data)
+
+
+class ValidatePromoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        code = request.data.get('code', '').strip().upper()
+        order_amount = float(request.data.get('order_amount', 0))
+
+        try:
+            promo = PromoCode.objects.get(code=code)
+        except PromoCode.DoesNotExist:
+            return Response(
+                {'error': 'Invalid promo code.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        is_valid, message = promo.is_valid(order_amount)
+        if not is_valid:
+            return Response(
+                {'error': message},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        discount = promo.calculate_discount(order_amount)
+
+        return Response({
+            'code': promo.code,
+            'ambassador_name': promo.ambassador_name,
+            'discount_type': promo.discount_type,
+            'discount_value': float(promo.discount_value),
+            'discount_amount': float(discount),
+            'final_amount': round(order_amount - float(discount), 2),
+            'message': f'Promo code applied! You save GH₵{discount:.2f}',
+        })
 
 
 class UserOrderListView(generics.ListAPIView):

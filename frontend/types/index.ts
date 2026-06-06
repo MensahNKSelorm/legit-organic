@@ -185,9 +185,21 @@ export interface Order {
   status: string
   payment_status: string
   total_amount: string
+  discount_amount?: string
+  promo_code?: string
   delivery_address: string
   items: OrderItemData[]
   created_at: string
+}
+
+export interface PromoCode {
+  code: string
+  ambassador_name: string
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  discount_amount: number
+  final_amount: number
+  message: string
 }
 
 export interface AuthTokens {
