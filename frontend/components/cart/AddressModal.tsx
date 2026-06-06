@@ -115,7 +115,12 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
         delivery_region: formData.delivery_region,
         phone_number: formData.phone_number,
       }))
-      await api.users.updateProfile({ ...formData, email: user?.email })
+      await api.users.updateProfile({
+        ...formData,
+        email: user?.email,
+        first_name: user?.first_name || '',
+        last_name: user?.last_name || '',
+      })
       updateUser({
         street_address: formData.street_address,
         house_number: formData.house_number,
