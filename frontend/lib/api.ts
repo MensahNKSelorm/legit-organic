@@ -168,6 +168,11 @@ export const api = {
       fetchAPI<{ message: string }>(`/api/users/verify-email/?token=${token}`),
     resendVerification: () =>
       fetchWithAuth<{ message: string }>('/api/users/resend-verification/', { method: 'POST' }),
+    googleAuth: (token: string) =>
+      fetchAPI<{ access: string; refresh: string; user: User }>('/api/users/google/', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      }),
   },
   users: {
     me: () => fetchWithAuth<User>('/api/users/me/'),

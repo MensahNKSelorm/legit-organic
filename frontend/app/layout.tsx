@@ -4,6 +4,7 @@ import { AuthProvider } from '@/lib/auth'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import VerificationBanner from '@/components/ui/VerificationBanner'
+import GoogleProvider from '@/components/providers/GoogleProvider'
 
 export const metadata: Metadata = {
   title: {
@@ -40,12 +41,14 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <AuthProvider>
-          <Navbar />
-          <VerificationBanner />
-          <main>{children}</main>
-          <Footer />
-        </AuthProvider>
+        <GoogleProvider>
+          <AuthProvider>
+            <Navbar />
+            <VerificationBanner />
+            <main>{children}</main>
+            <Footer />
+          </AuthProvider>
+        </GoogleProvider>
       </body>
     </html>
   )

@@ -27,6 +27,7 @@ interface AuthContextType {
     firstName: string,
     lastName: string
   ) => Promise<void>
+  googleLogin: (token: string) => Promise<void>
   logout: () => void
   updateUser: (data: Partial<User>) => void
   resendVerification: () => Promise<void>
@@ -109,6 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => (prev ? { ...prev, ...data } : null))
   }, [])
 
+  const googleLogin = useCallback(
+    async (token: string) => {
+      const data = await api.auth.googleAuth(token)
+      localStorage.setItem('access_token', data.access)
+      localStorage.setItem('refresh_token', data.refresh)
+      setUser(data.user)
+      router.push('/profile')
+    },
+    [router]
+  )
+
   const resendVerification = useCallback(async () => {
     await api.auth.resendVerification()
   }, [])
@@ -121,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         login,
         register,
+        googleLogin,
         logout,
         updateUser,
         resendVerification,
