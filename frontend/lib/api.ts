@@ -176,7 +176,7 @@ export const api = {
   },
   users: {
     me: () => fetchWithAuth<User>('/api/users/me/'),
-    updateProfile: (data: Partial<Omit<User, 'id' | 'email' | 'created_at'>>) =>
+    updateProfile: (data: Partial<Omit<User, 'id' | 'created_at'>>) =>
       fetchWithAuth<User>('/api/users/me/', {
         method: 'PUT',
         body: JSON.stringify(data),
