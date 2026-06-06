@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from .models import User
 
@@ -5,9 +6,22 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'phone_number',
-                  'delivery_address', 'avatar', 'created_at', 'email_verified']
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'phone_number',
+            'street_address', 'house_number', 'city', 'delivery_region',
+            'avatar', 'created_at', 'email_verified',
+        ]
         read_only_fields = ['id', 'created_at', 'email_verified']
+
+    def validate_phone_number(self, value):
+        if not value:
+            return value
+        pattern = r'^(\+233|0)[0-9]{9}$'
+        if not re.match(pattern, value.replace(' ', '')):
+            raise serializers.ValidationError(
+                'Enter a valid Ghana phone number e.g. +233244123456 or 0244123456'
+            )
+        return value
 
 
 class RegisterSerializer(serializers.ModelSerializer):

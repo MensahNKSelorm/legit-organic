@@ -6,9 +6,21 @@ import { useAuth } from '@/lib/auth'
 import { useCart } from '@/lib/cart'
 import { api } from '@/lib/api'
 import type { Order } from '@/types'
+import AddressModal, { type AddressData } from './AddressModal'
 
 interface CheckoutButtonProps {
   onClose: () => void
+}
+
+function buildDeliveryAddress(data: {
+  house_number?: string
+  street_address?: string
+  city?: string
+  delivery_region?: string
+}): string {
+  return [data.house_number, data.street_address, data.city, data.delivery_region]
+    .filter(Boolean)
+    .join(', ')
 }
 
 export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
@@ -16,36 +28,28 @@ export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
   const { items, clearCart } = useCart()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [showAddressModal, setShowAddressModal] = useState(false)
 
-  const handleCheckout = async () => {
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    setIsLoading(true)
-
+  const initiateOrder = async (deliveryAddress: string) => {
     try {
       console.log('User:', user?.email)
       console.log('Token:', localStorage.getItem('access_token')?.slice(0, 20))
 
-      // Create pending order on backend
       const orderData = await api.orders.create({
         items: items.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
         })),
-        delivery_address: user.delivery_address || '',
+        delivery_address: deliveryAddress,
       }) as Order
 
-      // Load Paystack inline script
       const script = document.createElement('script')
       script.src = 'https://js.paystack.co/v1/inline.js'
       script.onload = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (window as any).PaystackPop.setup({
           key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
-          email: user.email,
+          email: user!.email,
           amount: Math.round(parseFloat(orderData.total_amount) * 100),
           currency: 'GHS',
           ref: orderData.reference,
@@ -76,13 +80,43 @@ export default function CheckoutButton({ onClose }: CheckoutButtonProps) {
     }
   }
 
+  const handleCheckout = async () => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    const hasAddress = user.street_address && user.city && user.delivery_region
+    if (!hasAddress) {
+      setShowAddressModal(true)
+      return
+    }
+
+    setIsLoading(true)
+    await initiateOrder(buildDeliveryAddress(user))
+  }
+
+  const handleAddressSaved = (addressData: AddressData) => {
+    setShowAddressModal(false)
+    setIsLoading(true)
+    initiateOrder(buildDeliveryAddress(addressData))
+  }
+
   return (
-    <button
-      onClick={handleCheckout}
-      disabled={isLoading || items.length === 0}
-      className="w-full bg-[#0D3B2A] text-[#F4C430] font-semibold py-3 rounded-xl hover:bg-[#0a2e20] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-    >
-      {isLoading ? 'Processing…' : 'Checkout'}
-    </button>
+    <>
+      <button
+        onClick={handleCheckout}
+        disabled={isLoading || items.length === 0}
+        className="w-full bg-[#0D3B2A] text-[#F4C430] font-semibold py-3 rounded-xl hover:bg-[#0a2e20] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isLoading ? 'Processing…' : 'Checkout'}
+      </button>
+
+      <AddressModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSave={handleAddressSaved}
+      />
+    </>
   )
 }

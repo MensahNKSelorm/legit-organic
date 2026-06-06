@@ -61,7 +61,7 @@ class CreateOrderItemSerializer(serializers.Serializer):
 
 class CreateOrderSerializer(serializers.Serializer):
     items = CreateOrderItemSerializer(many=True)
-    delivery_address = serializers.CharField()
+    delivery_address = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_items(self, items):
         if not items:
@@ -71,7 +71,16 @@ class CreateOrderSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = self.context['request'].user
         items_data = validated_data['items']
-        delivery_address = validated_data['delivery_address']
+        delivery_address = validated_data.get('delivery_address', '')
+
+        if not delivery_address:
+            parts = [
+                getattr(user, 'house_number', ''),
+                getattr(user, 'street_address', ''),
+                getattr(user, 'city', ''),
+                getattr(user, 'delivery_region', ''),
+            ]
+            delivery_address = ', '.join(p for p in parts if p)
 
         reference = f"LO-{uuid.uuid4().hex[:12].upper()}"
         total = Decimal('0')

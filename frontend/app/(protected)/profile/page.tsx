@@ -5,15 +5,22 @@ import Link from 'next/link'
 import SectionWrapper from '@/components/ui/SectionWrapper'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
-import type { UserRecipe } from '@/types'
+import type { UserRecipe, Order } from '@/types'
 
 type Tab = 'personal' | 'recipes' | 'orders'
 
+const GHANA_REGIONS = [
+  'Ahafo', 'Ashanti', 'Bono', 'Bono East', 'Central', 'Eastern',
+  'Greater Accra', 'North East', 'Northern', 'Oti', 'Savannah',
+  'Upper East', 'Upper West', 'Volta', 'Western', 'Western North',
+  'International',
+]
+
+const PHONE_RE = /^(\+233|0)[0-9]{9}$/
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    year: 'numeric', month: 'short', day: 'numeric',
   })
 }
 
@@ -23,20 +30,31 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>('personal')
 
   // ── Personal info form ──────────────────────────────────────
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [firstName, setFirstName]         = useState('')
+  const [lastName, setLastName]           = useState('')
+  const [phone, setPhone]                 = useState('')
+  const [phoneError, setPhoneError]       = useState('')
+  const [streetAddress, setStreetAddress] = useState('')
+  const [houseNumber, setHouseNumber]     = useState('')
+  const [city, setCity]                   = useState('')
+  const [deliveryRegion, setDeliveryRegion] = useState('')
+
+  const [saving, setSaving]       = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [saveError, setSaveError] = useState('')
+  const [saveError, setSaveError]   = useState('')
 
   // ── My Recipes tab ──────────────────────────────────────────
-  const [myRecipes, setMyRecipes] = useState<UserRecipe[]>([])
+  const [myRecipes, setMyRecipes]         = useState<UserRecipe[]>([])
   const [recipesLoading, setRecipesLoading] = useState(false)
-  const [recipesError, setRecipesError] = useState<string | null>(null)
+  const [recipesError, setRecipesError]   = useState<string | null>(null)
   const [recipesLoaded, setRecipesLoaded] = useState(false)
   const [deletingRecipeId, setDeletingRecipeId] = useState<number | null>(null)
+
+  // ── Order History tab ───────────────────────────────────────
+  const [orders, setOrders]             = useState<Order[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [ordersError, setOrdersError]   = useState<string | null>(null)
+  const [ordersLoaded, setOrdersLoaded] = useState(false)
 
   // Sync form with user from context
   useEffect(() => {
@@ -44,11 +62,14 @@ export default function ProfilePage() {
       setFirstName(user.first_name)
       setLastName(user.last_name)
       setPhone(user.phone_number ?? '')
-      setAddress(user.delivery_address ?? '')
+      setStreetAddress(user.street_address ?? '')
+      setHouseNumber(user.house_number ?? '')
+      setCity(user.city ?? '')
+      setDeliveryRegion(user.delivery_region ?? '')
     }
   }, [user])
 
-  // Lazy-load recipes on first tab activation
+  // Lazy-load recipes
   useEffect(() => {
     if (activeTab === 'recipes' && !recipesLoaded) {
       setRecipesLoading(true)
@@ -59,8 +80,30 @@ export default function ProfilePage() {
     }
   }, [activeTab, recipesLoaded])
 
+  // Lazy-load orders
+  useEffect(() => {
+    if (activeTab === 'orders' && !ordersLoaded) {
+      setOrdersLoading(true)
+      api.orders.myOrders()
+        .then((data) => { setOrders(data); setOrdersLoaded(true) })
+        .catch((e) => setOrdersError(e instanceof Error ? e.message : 'Failed to load orders'))
+        .finally(() => setOrdersLoading(false))
+    }
+  }, [activeTab, ordersLoaded])
+
+  const validatePhone = (value: string): boolean => {
+    if (!value) { setPhoneError(''); return true }
+    if (!PHONE_RE.test(value.replace(/\s/g, ''))) {
+      setPhoneError('Enter a valid Ghana phone number e.g. +233244123456 or 0244123456')
+      return false
+    }
+    setPhoneError('')
+    return true
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validatePhone(phone)) return
     setSaving(true)
     setSaveStatus('idle')
     setSaveError('')
@@ -68,8 +111,11 @@ export default function ProfilePage() {
       const updated = await api.users.updateProfile({
         first_name: firstName,
         last_name: lastName,
-        phone_number: phone,
-        delivery_address: address,
+        phone_number: phone.replace(/\s/g, ''),
+        street_address: streetAddress,
+        house_number: houseNumber,
+        city,
+        delivery_region: deliveryRegion,
       })
       updateUser(updated)
       setSaveStatus('success')
@@ -98,16 +144,17 @@ export default function ProfilePage() {
   const initials = user
     ? `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase()
     : '?'
-
   const fullName = user ? `${user.first_name} ${user.last_name}`.trim() : ''
 
-  const inputClass =
-    'w-full px-4 py-2.5 rounded-xl border border-sand bg-cream text-charcoal text-sm focus:outline-none focus:border-leaf-green focus:ring-1 focus:ring-leaf-green transition-colors'
+  const inputBase =
+    'w-full px-4 py-2.5 rounded-xl border bg-cream text-charcoal text-sm focus:outline-none focus:ring-1 transition-colors'
+  const inputOk  = `${inputBase} border-sand focus:border-leaf-green focus:ring-leaf-green`
+  const inputErr = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-400`
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'personal', label: 'Account Details' },
-    { id: 'recipes', label: 'My Recipes' },
-    { id: 'orders', label: 'Order History' },
+    { id: 'recipes',  label: 'My Recipes' },
+    { id: 'orders',   label: 'Order History' },
   ]
 
   return (
@@ -121,6 +168,7 @@ export default function ProfilePage() {
 
       <SectionWrapper background="cream">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+
           {/* Sidebar */}
           <div className="bg-mist-white rounded-2xl p-6 border border-sand h-fit">
             <div className="flex flex-col items-center text-center mb-6">
@@ -159,114 +207,181 @@ export default function ProfilePage() {
           </div>
 
           {/* Main panel */}
-          <div className="md:col-span-2 bg-mist-white rounded-2xl p-8 border border-sand">
+          <div className="md:col-span-2 space-y-6">
 
             {/* ── Personal Info tab ── */}
             {activeTab === 'personal' && (
               <>
-                <h2 className="font-display text-xl font-bold text-forest-green mb-6">
-                  Account Details
-                </h2>
+                {/* Personal info card */}
+                <div className="bg-mist-white rounded-2xl p-8 border border-sand">
+                  <h2 className="font-display text-xl font-bold text-forest-green mb-6">
+                    Account Details
+                  </h2>
 
-                {saveStatus === 'success' && (
-                  <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-                    Changes saved successfully.
-                  </div>
-                )}
-                {saveStatus === 'error' && (
-                  <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                    {saveError}
-                  </div>
-                )}
+                  {saveStatus === 'success' && (
+                    <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+                      Changes saved successfully.
+                    </div>
+                  )}
+                  {saveStatus === 'error' && (
+                    <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                      {saveError}
+                    </div>
+                  )}
 
-                <form onSubmit={handleSave} className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
+                  <form onSubmit={handleSave} noValidate className="space-y-5">
+                    {/* Name row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                          First Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          required
+                          className={inputOk}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                          Last Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          required
+                          className={inputOk}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
                     <div>
                       <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
-                        First Name
+                        Email Address
                       </label>
                       <input
-                        type="text"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className={inputClass}
+                        type="email"
+                        value={user?.email ?? ''}
+                        readOnly
+                        className={`${inputOk} opacity-60 cursor-not-allowed`}
                       />
+                      <p className="mt-1 text-xs text-charcoal/40">Email cannot be changed.</p>
                     </div>
+
+                    {/* Phone */}
                     <div>
                       <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
-                        Last Name
+                        Phone Number
                       </label>
                       <input
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className={inputClass}
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => { setPhone(e.target.value); setPhoneError('') }}
+                        onBlur={(e) => validatePhone(e.target.value)}
+                        placeholder="+233244123456 or 0244123456"
+                        className={phoneError ? inputErr : inputOk}
                       />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={user?.email ?? ''}
-                      readOnly
-                      className={`${inputClass} opacity-60 cursor-not-allowed`}
-                    />
-                    <p className="mt-1 text-xs text-charcoal/40">Email cannot be changed.</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+233 XX XXX XXXX"
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
-                      Delivery Address
-                    </label>
-                    <textarea
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      rows={3}
-                      placeholder="Street, City, Region"
-                      className={`${inputClass} resize-none`}
-                    />
-                  </div>
-
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="bg-ghana-gold text-forest-green font-semibold px-8 py-3 rounded-xl hover:bg-dark-gold transition-colors disabled:opacity-60 flex items-center gap-2"
-                    >
-                      {saving && (
-                        <span className="inline-block w-4 h-4 border-2 border-forest-green border-t-transparent rounded-full animate-spin" />
+                      {phoneError ? (
+                        <p className="mt-1 text-xs text-red-500">{phoneError}</p>
+                      ) : (
+                        <p className="mt-1 text-xs text-charcoal/40">
+                          Format: +233244123456 or 0244123456
+                        </p>
                       )}
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
+                    </div>
+
+                    {/* Delivery Address section */}
+                    <div className="border-t border-sand pt-5">
+                      <h3 className="font-semibold text-forest-green mb-4">Delivery Address</h3>
+
+                      <div className="space-y-4">
+                        {/* House number */}
+                        <div>
+                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                            House / Apartment Number
+                          </label>
+                          <input
+                            type="text"
+                            value={houseNumber}
+                            onChange={(e) => setHouseNumber(e.target.value)}
+                            placeholder="e.g. A14, Flat 3"
+                            className={inputOk}
+                          />
+                        </div>
+
+                        {/* Street address */}
+                        <div>
+                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                            Street Address
+                          </label>
+                          <input
+                            type="text"
+                            value={streetAddress}
+                            onChange={(e) => setStreetAddress(e.target.value)}
+                            placeholder="e.g. 12 Independence Ave"
+                            className={inputOk}
+                          />
+                        </div>
+
+                        {/* City */}
+                        <div>
+                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                            City
+                          </label>
+                          <input
+                            type="text"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            placeholder="e.g. Accra"
+                            className={inputOk}
+                          />
+                        </div>
+
+                        {/* Region */}
+                        <div>
+                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                            Region
+                          </label>
+                          <select
+                            value={deliveryRegion}
+                            onChange={(e) => setDeliveryRegion(e.target.value)}
+                            className={inputOk}
+                          >
+                            <option value="">Select region…</option>
+                            {GHANA_REGIONS.map((r) => (
+                              <option key={r} value={r}>{r}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="bg-ghana-gold text-forest-green font-semibold px-8 py-3 rounded-xl hover:bg-dark-gold transition-colors disabled:opacity-60 flex items-center gap-2"
+                      >
+                        {saving && (
+                          <span className="inline-block w-4 h-4 border-2 border-forest-green border-t-transparent rounded-full animate-spin" />
+                        )}
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </>
             )}
 
             {/* ── My Recipes tab ── */}
             {activeTab === 'recipes' && (
-              <>
+              <div className="bg-mist-white rounded-2xl p-8 border border-sand">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display text-xl font-bold text-forest-green">
-                    My Recipes
-                  </h2>
+                  <h2 className="font-display text-xl font-bold text-forest-green">My Recipes</h2>
                   <Link
                     href="/recipes/builder"
                     className="text-xs font-semibold bg-ghana-gold text-forest-green px-4 py-2 rounded-xl hover:bg-dark-gold transition-colors"
@@ -282,9 +397,7 @@ export default function ProfilePage() {
                 )}
 
                 {recipesLoading ? (
-                  <div className="text-center py-12 text-charcoal/40 text-sm">
-                    Loading your recipes…
-                  </div>
+                  <div className="text-center py-12 text-charcoal/40 text-sm">Loading your recipes…</div>
                 ) : myRecipes.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-12 h-12 rounded-full bg-[#F4C430]/20 flex items-center justify-center mx-auto mb-4">
@@ -294,13 +407,8 @@ export default function ProfilePage() {
                       </svg>
                     </div>
                     <p className="font-semibold text-forest-green mb-1">No saved recipes yet</p>
-                    <p className="text-charcoal/60 text-sm mb-5">
-                      You haven&apos;t saved any recipes yet.
-                    </p>
-                    <Link
-                      href="/recipes"
-                      className="text-sm font-semibold text-leaf-green hover:underline"
-                    >
+                    <p className="text-charcoal/60 text-sm mb-5">You haven&apos;t saved any recipes yet.</p>
+                    <Link href="/recipes" className="text-sm font-semibold text-leaf-green hover:underline">
                       Browse Recipes
                     </Link>
                   </div>
@@ -348,22 +456,84 @@ export default function ProfilePage() {
                     ))}
                   </ul>
                 )}
-              </>
+              </div>
             )}
 
             {/* ── Order History tab ── */}
             {activeTab === 'orders' && (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-4">📦</div>
-                <h2 className="font-display text-xl font-bold text-forest-green mb-2">
-                  Order History
-                </h2>
-                <p className="text-charcoal/60 text-sm max-w-xs mx-auto">
-                  Order tracking is coming soon. Your past orders will appear here once the shop
-                  goes live.
-                </p>
+              <div className="bg-mist-white rounded-2xl p-8 border border-sand">
+                <h2 className="font-display text-xl font-bold text-forest-green mb-6">Order History</h2>
+
+                {ordersError && (
+                  <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                    {ordersError}
+                  </div>
+                )}
+
+                {ordersLoading ? (
+                  <div className="text-center py-12 text-charcoal/40 text-sm">Loading your orders…</div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-5xl mb-4">📦</div>
+                    <p className="font-semibold text-forest-green mb-2">No orders yet</p>
+                    <p className="text-charcoal/60 text-sm max-w-xs mx-auto mb-5">
+                      Your order history will appear here after your first purchase.
+                    </p>
+                    <Link href="/products" className="text-sm font-semibold text-leaf-green hover:underline">
+                      Browse Products
+                    </Link>
+                  </div>
+                ) : (
+                  <ul className="space-y-4">
+                    {orders.map((order) => (
+                      <li
+                        key={order.id}
+                        className="p-5 rounded-xl border border-sand bg-cream"
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div>
+                            <p className="font-semibold text-forest-green text-sm font-mono">
+                              {order.reference}
+                            </p>
+                            <p className="text-xs text-charcoal/50 mt-0.5">
+                              {formatDate(order.created_at)}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 items-center shrink-0">
+                            <span className={[
+                              'text-xs font-semibold px-2.5 py-1 rounded-full',
+                              order.payment_status === 'success'
+                                ? 'bg-green-100 text-green-700'
+                                : order.payment_status === 'failed'
+                                ? 'bg-red-100 text-red-600'
+                                : 'bg-yellow-100 text-yellow-700',
+                            ].join(' ')}>
+                              {order.payment_status}
+                            </span>
+                            <span className="text-xs text-charcoal/50 capitalize">{order.status}</span>
+                          </div>
+                        </div>
+                        <ul className="space-y-1 mb-3">
+                          {order.items.map((item, idx) => (
+                            <li key={idx} className="flex justify-between text-xs text-charcoal/70">
+                              <span>{item.product.name} × {item.quantity}</span>
+                              <span className="font-semibold">GH₵{parseFloat(item.subtotal).toFixed(2)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="flex justify-between items-center pt-3 border-t border-sand">
+                          <span className="text-xs text-charcoal/50">Total</span>
+                          <span className="font-bold text-[#2E7D32] text-sm">
+                            GH₵{parseFloat(order.total_amount).toFixed(2)}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
+
           </div>
         </div>
       </SectionWrapper>

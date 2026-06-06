@@ -140,7 +140,10 @@ export interface User {
   first_name: string
   last_name: string
   phone_number?: string
-  delivery_address?: string
+  street_address?: string
+  house_number?: string
+  city?: string
+  delivery_region?: string
   avatar?: string | null
   created_at: string
   email_verified: boolean
