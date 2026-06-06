@@ -20,8 +20,9 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name',
-                                       'phone_number', 'delivery_address',
-                                       'avatar')}),
+                                       'phone_number', 'avatar')}),
+        ('Delivery Address', {'fields': ('house_number', 'street_address',
+                                          'city', 'delivery_region')}),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser',
                        'groups', 'user_permissions'),
