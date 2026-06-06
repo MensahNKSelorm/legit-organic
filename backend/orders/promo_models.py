@@ -54,5 +54,5 @@ class PromoCode(models.Model):
 
     def calculate_discount(self, order_amount):
         if self.discount_type == self.DISCOUNT_PERCENTAGE:
-            return round(order_amount * self.discount_value / 100, 2)
-        return min(self.discount_value, order_amount)
+            return round(float(order_amount) * float(self.discount_value) / 100, 2)
+        return min(float(self.discount_value), float(order_amount))
