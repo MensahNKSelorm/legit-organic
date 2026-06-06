@@ -134,3 +134,12 @@ html.dark .text-charcoal\/60 { color: rgba(250, 247, 240, 0.6); }
 .hero-text-enter {
   animation: hero-text-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+@keyframes whatsapp-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+}
+.whatsapp-pulse {
+  animation: whatsapp-pulse 2s infinite;
+}
