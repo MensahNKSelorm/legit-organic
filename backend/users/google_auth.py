@@ -7,7 +7,7 @@ def verify_google_token(token: str) -> dict | None:
         response = requests.get(
             'https://oauth2.googleapis.com/tokeninfo',
             params={'id_token': token},
-            timeout=10
+            timeout=10,
         )
         if response.status_code != 200:
             return None

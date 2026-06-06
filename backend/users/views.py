@@ -8,6 +8,7 @@ from django.utils import timezone
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer
 from .emails import send_welcome_email, send_verification_email
+from .google_auth import verify_google_token
 
 
 class RegisterView(generics.CreateAPIView):
@@ -64,6 +65,51 @@ class VerifyEmailView(APIView):
         user.save()
 
         return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+
+
+class GoogleAuthView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        token = request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        google_data = verify_google_token(token)
+        if not google_data:
+            return Response({'error': 'Invalid Google token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = google_data['email']
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'first_name': google_data['first_name'],
+                'last_name': google_data['last_name'],
+                'email_verified': google_data['email_verified'],
+                'is_active': True,
+            },
+        )
+
+        if not created:
+            user.first_name = user.first_name or google_data['first_name']
+            user.last_name = user.last_name or google_data['last_name']
+            if google_data['email_verified']:
+                user.email_verified = True
+            user.save()
+
+        if created:
+            try:
+                send_welcome_email(user)
+            except Exception:
+                pass
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': UserSerializer(user).data,
+        })
 
 
 class ResendVerificationView(APIView):
