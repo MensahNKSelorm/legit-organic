@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import resend
 from dotenv import load_dotenv
+from django.templatetags.static import static
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -81,8 +82,8 @@ UNFOLD = {
     "SITE_TITLE": "Legit Organic",
     "SITE_HEADER": "Legit Organic Admin",
     "SITE_URL": "https://legitorganic.com",
-    "SITE_ICON": None,
-    "SITE_LOGO": None,
+    "SITE_ICON": lambda request: static("images/logo-darkmode.svg"),
+    "SITE_LOGO": lambda request: static("images/logo-darkmode.svg"),
     "SITE_SYMBOL": "eco",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
