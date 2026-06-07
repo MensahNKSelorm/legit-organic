@@ -273,7 +273,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               </span>
             </div>
           )}
-          <CheckoutButton onClose={onClose} promoCode={appliedPromo?.code} />
+          <CheckoutButton onClose={onClose} promoCode={appliedPromo?.code} appliedPromo={appliedPromo} />
           <Link
             href="/products"
             onClick={onClose}
