@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { api } from '@/lib/api'
 import type { Product, BlogPost, Recipe } from '@/types'
 import HeroSection from '@/components/home/HeroSection'
