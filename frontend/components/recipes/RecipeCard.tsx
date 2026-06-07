@@ -3,6 +3,8 @@ import Image from 'next/image'
 import type { Recipe } from '@/types'
 import { getMediaUrl } from '@/lib/media'
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim()
+
 const difficultyConfig: Record<string, { label: string; classes: string }> = {
   easy:   { label: 'Easy',     classes: 'text-[#2E7D32] bg-[#2E7D32]/10' },
   medium: { label: 'Medium',   classes: 'text-[#F4C430] bg-[#F4C430]/10' },
@@ -57,7 +59,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         </Link>
 
         <p className="text-charcoal/70 dark:text-[#d1d5db] text-sm leading-relaxed line-clamp-2 flex-1 mb-4">
-          {recipe.description}
+          {stripHtml(recipe.description)}
         </p>
 
         {/* Meta */}

@@ -97,6 +97,8 @@ export interface Recipe {
   servings: number
   difficulty: string
   is_default: boolean
+  nutritional_score?: number
+  video_url?: string
   created_at: string
   ingredients?: RecipeIngredient[]
   steps?: RecipeStep[]

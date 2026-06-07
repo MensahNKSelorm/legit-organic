@@ -38,10 +38,17 @@ class RecipeAdmin(ModelAdmin):
     inlines = [RecipeIngredientInline, RecipeStepInline, RecipePairingInline]
     fieldsets = (
         ('Basic Info', {
-            'fields': ('title', 'slug', 'description', 'cover_image'),
+            'fields': ('title', 'slug', 'description'),
+        }),
+        ('Media', {
+            'fields': ('cover_image', 'video_url'),
         }),
         ('Details', {
             'fields': ('prep_time', 'cook_time', 'servings', 'difficulty'),
+        }),
+        ('Nutrition', {
+            'fields': ('nutritional_score',),
+            'classes': ('collapse',),
         }),
         ('Attribution', {
             'fields': ('is_default', 'created_by'),

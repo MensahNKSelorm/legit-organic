@@ -44,6 +44,14 @@ function formatTime(minutes: number): string {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
+function getEmbedUrl(url: string): string {
+  const watchMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/)
+  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`
+  const shortMatch = url.match(/youtu\.be\/([^?]+)/)
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`
+  return url
+}
+
 
 export default async function RecipeDetailPage({ params }: Props) {
   const { slug } = await params
@@ -143,6 +151,61 @@ export default async function RecipeDetailPage({ params }: Props) {
 
           {/* Left: ingredients + steps */}
           <div className="space-y-12">
+
+            {/* Nutritional score */}
+            {recipe.nutritional_score && recipe.nutritional_score > 0 ? (
+              <div className="p-4 bg-[#F5F0E6] dark:bg-gray-800 rounded-xl">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-[#0D3B2A] dark:text-white">
+                    Nutritional Score
+                  </span>
+                  <span
+                    className="text-sm font-bold"
+                    style={{
+                      color: recipe.nutritional_score >= 80 ? '#2E7D32'
+                           : recipe.nutritional_score >= 60 ? '#F4C430'
+                           : '#E65100',
+                    }}
+                  >
+                    {recipe.nutritional_score}/100
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div
+                    className="h-3 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${recipe.nutritional_score}%`,
+                      backgroundColor: recipe.nutritional_score >= 80 ? '#2E7D32'
+                                     : recipe.nutritional_score >= 60 ? '#F4C430'
+                                     : '#E65100',
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Poor</span>
+                  <span>Good</span>
+                  <span>Excellent</span>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Video */}
+            {recipe.video_url && (
+              <div>
+                <h3 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-4">
+                  How to Prepare
+                </h3>
+                <div className="relative aspect-video rounded-2xl overflow-hidden">
+                  <iframe
+                    src={getEmbedUrl(recipe.video_url)}
+                    title="Recipe video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Ingredients */}
             {recipe.ingredients.length > 0 && (

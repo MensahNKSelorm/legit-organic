@@ -19,6 +19,14 @@ class Recipe(models.Model):
     cook_time = models.PositiveIntegerField(default=0, help_text='In minutes')
     servings = models.PositiveIntegerField(default=1)
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='easy')
+    nutritional_score = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Nutritional score out of 100'
+    )
+    video_url = models.URLField(
+        blank=True,
+        help_text='YouTube or video URL for recipe preparation video'
+    )
     is_default = models.BooleanField(default=False, help_text='Curated by Legit Organic')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,

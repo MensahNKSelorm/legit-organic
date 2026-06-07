@@ -12,6 +12,8 @@ const PLACEHOLDERS = [
 ]
 
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim()
+
 interface FeaturedProductsProps {
   products: Product[]
 }
@@ -74,7 +76,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                   </div>
 
                   <p className="text-charcoal/70 dark:text-[#d1d5db] text-sm leading-relaxed flex-1 line-clamp-3">
-                    {product.description}
+                    {stripHtml(product.description)}
                   </p>
 
                   <div className="flex items-end justify-between mt-4 pt-4 border-t border-[#E6D8BD] dark:border-[#374151]">
