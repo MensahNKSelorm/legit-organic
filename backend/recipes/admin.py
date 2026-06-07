@@ -1,17 +1,19 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin, TabularInline
 from .models import Recipe, RecipeIngredient, RecipeStep, RecipePairing, UserRecipe, UserRecipeIngredient
+from .forms import RecipeStepForm
 
 
 class RecipeIngredientInline(TabularInline):
     model = RecipeIngredient
-    extra = 3
+    extra = 1
     fields = ['name', 'product', 'quantity', 'unit', 'notes']
 
 
 class RecipeStepInline(TabularInline):
     model = RecipeStep
-    extra = 3
+    form = RecipeStepForm
+    extra = 1
     ordering = ['step_number']
     fields = ['step_number', 'instruction', 'image']
 
