@@ -83,6 +83,10 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        from django.conf import settings
+        return f"{settings.FRONTEND_URL}/products/{self.slug}"
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)

@@ -28,6 +28,7 @@ class BadgeAdmin(ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
+    show_full_result_count = True
     list_display = [
         'name', 'category', 'price', 'unit', 'region',
         'is_featured', 'is_available', 'created_at',

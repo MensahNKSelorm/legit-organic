@@ -42,6 +42,10 @@ class BlogPost(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        from django.conf import settings
+        return f"{settings.FRONTEND_URL}/blog/{self.slug}"
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)

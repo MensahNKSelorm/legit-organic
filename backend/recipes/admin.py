@@ -25,6 +25,7 @@ class RecipePairingInline(TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(ModelAdmin):
+    view_on_site = True
     list_display = [
         'title', 'is_default', 'created_by', 'difficulty',
         'prep_time', 'cook_time', 'created_at',
