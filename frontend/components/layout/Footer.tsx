@@ -3,8 +3,8 @@ import Link from "next/link";
 const footerLinks = {
   Company: [
     { label: "About Us",       href: "/about" },
-    { label: "Our Farmers",    href: "/farmers" },
-    { label: "Sustainability", href: "/sustainability" },
+    { label: "Our Farmers",    href: "#" },
+    { label: "Sustainability", href: "#" },
     { label: "Contact",        href: "/contact" },
   ],
   Explore: [
