@@ -82,14 +82,9 @@ UNFOLD = {
     "SITE_TITLE": "Legit Organic",
     "SITE_HEADER": "Legit Organic Admin",
     "SITE_URL": "https://legitorganic.com",
-    "SITE_ICON": {
-        "light": lambda request: static("images/logo-darkmode.svg"),
-        "dark": lambda request: static("images/logo-lightmode.svg"),
-    },
-    "SITE_LOGO": {
-        "light": lambda request: static("images/logo-darkmode.svg"),
-        "dark": lambda request: static("images/logo-lightmode.svg"),
-    },
+    "SITE_ICON": lambda request: static("images/logo-darkmode.svg"),
+    "SITE_LOGO": lambda request: static("images/logo-darkmode.svg"),
+    "SITE_FAVICON": lambda request: static("images/logo-darkmode.svg"),
     "SITE_SYMBOL": "eco",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
