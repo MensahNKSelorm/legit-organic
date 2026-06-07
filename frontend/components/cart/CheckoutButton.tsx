@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { useCart } from '@/lib/cart'
 import type { PromoCode } from '@/types'
 import AddressModal, { type AddressData } from './AddressModal'
+import GuestOrderModal, { type GuestData } from './GuestOrderModal'
 
 interface CheckoutButtonProps {
   onClose: () => void
@@ -24,13 +24,38 @@ function buildDeliveryAddress(data: {
     .join(', ')
 }
 
+function buildWhatsAppUrl(
+  customerLine: string,
+  itemsList: string,
+  discountLine: string,
+  finalTotal: number,
+  deliveryAddress: string
+): string {
+  const message = `Hello Legit Organic! 🌿
+
+I'd like to place an order:
+
+${customerLine}
+
+*Order Details:*
+${itemsList}${discountLine}
+
+*Total:* GH₵${finalTotal.toFixed(2)}
+
+*Delivery Address:* ${deliveryAddress || 'To be confirmed'}
+
+Please send me the MoMo payment details. Thank you!`
+
+  return `https://wa.me/233539569260?text=${encodeURIComponent(message)}`
+}
+
 export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPromo }: CheckoutButtonProps) {
   const { user } = useAuth()
   const { items, total } = useCart()
-  const router = useRouter()
   const [showAddressModal, setShowAddressModal] = useState(false)
+  const [showGuestModal, setShowGuestModal] = useState(false)
 
-  const openWhatsApp = (deliveryAddress: string) => {
+  const buildOrderLines = () => {
     const itemsList = items
       .map(
         (item) =>
@@ -45,29 +70,18 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
 
     const finalTotal = appliedPromo ? appliedPromo.final_amount : total
 
-    const message = `Hello Legit Organic! 🌿
+    return { itemsList, discountLine, finalTotal }
+  }
 
-I'd like to place an order:
-
-*Customer:* ${user!.first_name} ${user!.last_name}
-*Email:* ${user!.email}
-
-*Order Details:*
-${itemsList}${discountLine}
-
-*Total:* GH₵${finalTotal.toFixed(2)}
-
-*Delivery Address:* ${deliveryAddress || 'To be confirmed'}
-
-Please send me the MoMo payment details. Thank you!`
-
-    const whatsappUrl = `https://wa.me/233539569260?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, '_blank')
+  const openWhatsApp = (deliveryAddress: string) => {
+    const { itemsList, discountLine, finalTotal } = buildOrderLines()
+    const customerLine = `*Customer:* ${user!.first_name} ${user!.last_name}\n*Email:* ${user!.email}`
+    window.open(buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress), '_blank')
   }
 
   const handleWhatsAppOrder = () => {
     if (!user) {
-      router.push('/login')
+      setShowGuestModal(true)
       return
     }
 
@@ -83,6 +97,15 @@ Please send me the MoMo payment details. Thank you!`
   const handleAddressSaved = (addressData: AddressData) => {
     setShowAddressModal(false)
     openWhatsApp(buildDeliveryAddress(addressData))
+  }
+
+  const handleGuestSubmit = (guestData: GuestData) => {
+    setShowGuestModal(false)
+
+    const deliveryAddress = buildDeliveryAddress(guestData)
+    const { itemsList, discountLine, finalTotal } = buildOrderLines()
+    const customerLine = `*Customer:* ${guestData.first_name} ${guestData.last_name}\n*Phone:* ${guestData.phone_number}`
+    window.open(buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress), '_blank')
   }
 
   return (
@@ -102,6 +125,12 @@ Please send me the MoMo payment details. Thank you!`
         isOpen={showAddressModal}
         onClose={() => setShowAddressModal(false)}
         onSave={handleAddressSaved}
+      />
+
+      <GuestOrderModal
+        isOpen={showGuestModal}
+        onClose={() => setShowGuestModal(false)}
+        onSubmit={handleGuestSubmit}
       />
     </>
   )
