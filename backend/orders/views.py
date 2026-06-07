@@ -84,6 +84,12 @@ class VerifyPaymentView(APIView):
         order.status = 'processing'
         order.save(update_fields=['payment_status', 'status', 'paystack_id'])
 
+        try:
+            from users.emails import send_order_confirmation_email
+            send_order_confirmation_email(order.user, order)
+        except Exception:
+            pass  # Never let email failure break the payment confirmation
+
         return Response(OrderSerializer(order).data)
 
 
