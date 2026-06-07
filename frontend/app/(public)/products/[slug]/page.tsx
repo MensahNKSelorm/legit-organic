@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
@@ -38,19 +41,6 @@ function LeafIcon() {
       <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
     </svg>
   )
-}
-
-// ---------------------------------------------------------------------------
-// Static params
-// ---------------------------------------------------------------------------
-
-export async function generateStaticParams() {
-  try {
-    const products = await api.products.list()
-    return products.map((p) => ({ slug: p.slug }))
-  } catch {
-    return []
-  }
 }
 
 // ---------------------------------------------------------------------------
