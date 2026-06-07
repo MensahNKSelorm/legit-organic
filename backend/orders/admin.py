@@ -30,26 +30,39 @@ class OrderItemInline(TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
-    list_display = ['reference', 'user', 'status', 'payment_status',
-                    'total_amount', 'discount_amount', 'promo_code',
-                    'created_at']
-    list_filter = ['status', 'payment_status', 'created_at']
-    search_fields = ['reference', 'user__email', 'user__first_name',
-                     'user__last_name', 'delivery_address']
+    list_display = ['reference', 'get_customer', 'status', 'payment_status',
+                    'order_source', 'total_amount', 'created_at']
+    list_filter = ['status', 'payment_status', 'order_source', 'created_at']
+    search_fields = ['reference', 'user__email', 'user__first_name', 'user__last_name',
+                     'guest_name', 'guest_phone', 'guest_email', 'delivery_address']
     list_editable = ['status']
     ordering = ['-created_at']
     readonly_fields = ['reference', 'paystack_id', 'created_at', 'updated_at']
     inlines = [OrderItemInline]
     fieldsets = (
         ('Order Info', {
-            'fields': ('user', 'status', 'total_amount', 'discount_amount',
-                       'promo_code', 'delivery_address'),
+            'fields': ('user', 'status', 'payment_status', 'order_source',
+                       'total_amount', 'discount_amount', 'promo_code', 'delivery_address'),
+        }),
+        ('Guest Details', {
+            'fields': ('guest_name', 'guest_phone', 'guest_email'),
+            'classes': ('collapse',),
+        }),
+        ('Payment', {
+            'fields': ('reference', 'paystack_id'),
+            'classes': ('collapse',),
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',),
         }),
     )
+
+    @admin.display(description='Customer')
+    def get_customer(self, obj):
+        if obj.user:
+            return f"{obj.user.first_name} {obj.user.last_name} ({obj.user.email})"
+        return f"{obj.guest_name} - Guest ({obj.guest_phone})"
 
 
 @admin.register(PromoCode)

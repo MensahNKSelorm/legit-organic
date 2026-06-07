@@ -26,6 +26,7 @@ class CartItem(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('whatsapp_pending', 'WhatsApp Pending - Awaiting Payment'),
         ('paid', 'Paid'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
@@ -40,7 +41,11 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders'
     )
     reference = models.CharField(max_length=100, unique=True)
     paystack_id = models.CharField(max_length=100, blank=True)
@@ -55,6 +60,14 @@ class Order(models.Model):
         on_delete=models.SET_NULL, related_name='orders',
     )
     delivery_address = models.TextField()
+    guest_name = models.CharField(max_length=200, blank=True)
+    guest_phone = models.CharField(max_length=20, blank=True)
+    guest_email = models.CharField(max_length=255, blank=True)
+    order_source = models.CharField(
+        max_length=20,
+        choices=[('paystack', 'Paystack'), ('whatsapp', 'WhatsApp')],
+        default='whatsapp',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -63,7 +76,8 @@ class Order(models.Model):
         return self.total_amount - self.discount_amount
 
     def __str__(self):
-        return f"Order {self.reference} — {self.user} ({self.status})"
+        customer = str(self.user) if self.user else self.guest_name or 'Guest'
+        return f"Order {self.reference} — {customer} ({self.status})"
 
 
 class OrderItem(models.Model):

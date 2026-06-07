@@ -183,8 +183,26 @@ export const api = {
       }),
   },
   orders: {
-    create: (data: { items: { product_id: number; quantity: number }[]; delivery_address: string; promo_code?: string }) =>
+    create: (data: {
+      items: { product_id: number; quantity: number }[]
+      delivery_address: string
+      promo_code?: string
+      order_source?: string
+    }) =>
       fetchWithAuth<Order>('/api/orders/create/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    createGuest: (data: {
+      items: { product_id: number; quantity: number }[]
+      delivery_address: string
+      guest_name: string
+      guest_phone: string
+      guest_email?: string
+      order_source: string
+      promo_code?: string
+    }) =>
+      fetchAPI<Order>('/api/orders/create/', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
