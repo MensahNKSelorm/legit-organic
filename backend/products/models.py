@@ -77,6 +77,18 @@ class Product(models.Model):
     )
     is_featured = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
+    storage_tips = models.TextField(
+        blank=True,
+        help_text='Storage and handling instructions e.g. Keep refrigerated, use within 7 days'
+    )
+    nutritional_info = models.TextField(
+        blank=True,
+        help_text='Nutritional information e.g. Per 100g: Calories 350kcal, Protein 8g, Carbs 75g'
+    )
+    nutritional_score = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Nutritional score out of 100'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

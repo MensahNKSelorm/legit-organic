@@ -79,19 +79,10 @@ export default function ProductTabs({ product }: { product: ProductDetail }) {
           {product.storage_tips ? (
             <p>{product.storage_tips}</p>
           ) : (
-            <>
-              <p>Store in a cool, dry place away from direct sunlight and heat sources.</p>
-              <ul className="list-disc list-inside space-y-1.5 ml-2">
-                <li>Keep away from moisture and humidity</li>
-                <li>Transfer to an airtight container after opening</li>
-                <li>Refrigerate perishable items promptly upon delivery</li>
-                <li>Use within the recommended period after opening</li>
-                <li>Keep out of reach of children and pets</li>
-              </ul>
-              <p className="text-sm text-charcoal/40 dark:text-[#6b7280] mt-4">
-                Product-specific storage guidance will be added soon.
-              </p>
-            </>
+            <p>
+              Store in a cool, dry place away from direct sunlight. Once opened, keep in an
+              airtight container and consume within the recommended period.
+            </p>
           )}
         </div>
       )}
@@ -99,22 +90,41 @@ export default function ProductTabs({ product }: { product: ProductDetail }) {
       {/* Nutrition */}
       {active === 'nutrition' && (
         <div className="text-charcoal/70 dark:text-[#d1d5db] leading-relaxed space-y-4">
+          {/* Score indicator — top-right */}
+          {product.nutritional_score && product.nutritional_score > 0 ? (
+            <div className="flex justify-end">
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-lg"
+                  style={{
+                    backgroundColor:
+                      product.nutritional_score >= 80
+                        ? '#2E7D32'
+                        : product.nutritional_score >= 60
+                        ? '#F4C430'
+                        : '#E65100',
+                    color:
+                      product.nutritional_score >= 60 && product.nutritional_score < 80
+                        ? '#0D3B2A'
+                        : '#ffffff',
+                  }}
+                >
+                  {product.nutritional_score}
+                </div>
+                <p className="text-xs text-charcoal/50 dark:text-[#9ca3af] text-center leading-tight">
+                  Nutritional<br />Score
+                </p>
+              </div>
+            </div>
+          ) : null}
+
           {product.nutritional_info ? (
             <p>{product.nutritional_info}</p>
           ) : (
-            <>
-              <p>
-                This product is certified organic and cultivated without synthetic pesticides,
-                herbicides, or artificial fertilisers.
-              </p>
-              <p>
-                Organic farming preserves natural nutrient profiles, meaning you get the full
-                benefit of what nature intended — no chemical residues, no artificial additives.
-              </p>
-              <p className="text-sm text-charcoal/40 dark:text-[#6b7280]">
-                Full nutritional breakdown per serving will be available soon.
-              </p>
-            </>
+            <p>
+              Detailed nutritional information coming soon. All our products are certified
+              organic with no synthetic additives or preservatives.
+            </p>
           )}
         </div>
       )}

@@ -84,7 +84,7 @@ UNFOLD = {
     "SITE_SYMBOL": "eco",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
-    "THEME": "dark",
+    "THEME": "auto",
     "COLORS": {
         "primary": {
             "50": "240 253 244",

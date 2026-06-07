@@ -54,6 +54,10 @@ class ProductAdmin(ModelAdmin):
         ('Status', {
             'fields': ('is_featured', 'is_available'),
         }),
+        ('Nutrition & Storage', {
+            'fields': ('nutritional_score', 'nutritional_info', 'storage_tips'),
+            'classes': ('collapse',),
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',),

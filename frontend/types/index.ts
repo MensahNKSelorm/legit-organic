@@ -33,6 +33,9 @@ export interface Product {
   badge: Badge | null
   is_featured: boolean
   is_available: boolean
+  storage_tips?: string
+  nutritional_info?: string
+  nutritional_score?: number
   created_at: string
   updated_at: string
 }
@@ -151,8 +154,6 @@ export interface User {
 
 export interface ProductDetail extends Product {
   ingredients?: string
-  storage_tips?: string
-  nutritional_info?: string
 }
 
 export interface CartItem {
