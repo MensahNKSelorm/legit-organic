@@ -87,7 +87,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://tiktok.com/@legitorganicltd"
+                href="https://tiktok.com/@legit.organic.ltd"
                 aria-label="Follow us on TikTok"
                 target="_blank"
                 rel="noopener noreferrer"
