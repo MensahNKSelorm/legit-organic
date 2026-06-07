@@ -84,7 +84,13 @@ UNFOLD = {
     "SITE_URL": "https://legitorganic.com",
     "SITE_ICON": lambda request: static("images/logo-lightmode.svg"),
     "SITE_LOGO": lambda request: static("images/logo-lightmode.svg"),
-    "SITE_FAVICON": lambda request: static("images/logo-lightmode.svg"),
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "type": "image/svg+xml",
+            "href": lambda request: static("images/logo-lightmode.svg"),
+        },
+    ],
     "SITE_SYMBOL": "eco",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
