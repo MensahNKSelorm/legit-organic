@@ -37,7 +37,10 @@ export default function ProductTabs({ product }: { product: ProductDetail }) {
       {/* Details */}
       {active === 'details' && (
         <div className="space-y-6 text-charcoal/70 dark:text-[#d1d5db] leading-relaxed">
-          <p>{product.description}</p>
+          <div
+            className="prose prose-green max-w-none dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div className="bg-beige dark:bg-[#374151] rounded-xl p-4">
@@ -77,7 +80,10 @@ export default function ProductTabs({ product }: { product: ProductDetail }) {
       {active === 'storage' && (
         <div className="text-charcoal/70 dark:text-[#d1d5db] leading-relaxed space-y-4">
           {product.storage_tips ? (
-            <p>{product.storage_tips}</p>
+            <div
+              className="prose prose-green max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: product.storage_tips }}
+            />
           ) : (
             <p>
               Store in a cool, dry place away from direct sunlight. Once opened, keep in an
@@ -90,36 +96,54 @@ export default function ProductTabs({ product }: { product: ProductDetail }) {
       {/* Nutrition */}
       {active === 'nutrition' && (
         <div className="text-charcoal/70 dark:text-[#d1d5db] leading-relaxed space-y-4">
-          {/* Score indicator — top-right */}
+          {/* Nutritional score — horizontal progress bar */}
           {product.nutritional_score && product.nutritional_score > 0 ? (
-            <div className="flex justify-end">
-              <div className="flex flex-col items-center gap-1">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-lg"
+            <div className="mb-6 p-4 bg-[#F5F0E6] dark:bg-gray-800 rounded-xl">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-[#0D3B2A] dark:text-white">
+                  Nutritional Score
+                </span>
+                <span
+                  className="text-sm font-bold"
                   style={{
+                    color:
+                      product.nutritional_score >= 80
+                        ? '#2E7D32'
+                        : product.nutritional_score >= 60
+                        ? '#F4C430'
+                        : '#E65100',
+                  }}
+                >
+                  {product.nutritional_score}/100
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div
+                  className="h-3 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${product.nutritional_score}%`,
                     backgroundColor:
                       product.nutritional_score >= 80
                         ? '#2E7D32'
                         : product.nutritional_score >= 60
                         ? '#F4C430'
                         : '#E65100',
-                    color:
-                      product.nutritional_score >= 60 && product.nutritional_score < 80
-                        ? '#0D3B2A'
-                        : '#ffffff',
                   }}
-                >
-                  {product.nutritional_score}
-                </div>
-                <p className="text-xs text-charcoal/50 dark:text-[#9ca3af] text-center leading-tight">
-                  Nutritional<br />Score
-                </p>
+                />
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>Poor</span>
+                <span>Good</span>
+                <span>Excellent</span>
               </div>
             </div>
           ) : null}
 
           {product.nutritional_info ? (
-            <p>{product.nutritional_info}</p>
+            <div
+              className="prose prose-green max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: product.nutritional_info }}
+            />
           ) : (
             <p>
               Detailed nutritional information coming soon. All our products are certified

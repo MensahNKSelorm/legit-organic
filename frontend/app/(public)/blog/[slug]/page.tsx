@@ -76,7 +76,6 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   const content = post.content ?? ''
-  const paragraphs = content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
 
   return (
     <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
@@ -143,17 +142,11 @@ export default async function BlogPostPage({ params }: Props) {
 
           {/* Left: article body */}
           <div>
-            {paragraphs.length > 0 ? (
-              <div className="space-y-5">
-                {paragraphs.map((para, i) => (
-                  <p
-                    key={i}
-                    className="text-charcoal/80 dark:text-[#d1d5db] leading-relaxed text-[1.0625rem]"
-                  >
-                    {para}
-                  </p>
-                ))}
-              </div>
+            {content ? (
+              <div
+                className="prose prose-green max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
             ) : (
               <div className="space-y-5 text-charcoal/70 dark:text-[#d1d5db]">
                 <p className="text-lg leading-relaxed">{post.excerpt}</p>

@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 class Category(models.Model):
@@ -53,7 +54,7 @@ class Badge(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
-    description = models.TextField(blank=True)
+    description = CKEditor5Field(blank=True, config_name='extends')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     unit = models.CharField(max_length=50, blank=True, help_text='e.g. 5kg bag')
     region = models.ForeignKey(
@@ -77,12 +78,12 @@ class Product(models.Model):
     )
     is_featured = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
-    storage_tips = models.TextField(
-        blank=True,
+    storage_tips = CKEditor5Field(
+        blank=True, config_name='default',
         help_text='Storage and handling instructions e.g. Keep refrigerated, use within 7 days'
     )
-    nutritional_info = models.TextField(
-        blank=True,
+    nutritional_info = CKEditor5Field(
+        blank=True, config_name='default',
         help_text='Nutritional information e.g. Per 100g: Calories 350kcal, Protein 8g, Carbs 75g'
     )
     nutritional_score = models.PositiveSmallIntegerField(

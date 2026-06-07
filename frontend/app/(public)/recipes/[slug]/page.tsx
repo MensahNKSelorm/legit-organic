@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const recipe = await api.recipes.detail(slug)
     return {
       title: `${recipe.title} | Legit Organic Recipes`,
-      description: recipe.description.slice(0, 160),
+      description: recipe.description.replace(/<[^>]*>/g, '').slice(0, 160),
     }
   } catch {
     return { title: 'Recipe Not Found' }
@@ -191,9 +191,10 @@ export default async function RecipeDetailPage({ params }: Props) {
                       <span className="shrink-0 w-9 h-9 rounded-full bg-[#F4C430] text-[#0D3B2A] font-bold text-sm flex items-center justify-center">
                         {step.step_number}
                       </span>
-                      <p className="text-charcoal/80 dark:text-[#d1d5db] leading-relaxed pt-1.5">
-                        {step.instruction}
-                      </p>
+                      <div
+                        className="prose prose-green max-w-none dark:prose-invert pt-1.5"
+                        dangerouslySetInnerHTML={{ __html: step.instruction }}
+                      />
                     </li>
                   ))}
                 </ol>

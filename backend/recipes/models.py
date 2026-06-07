@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 class Recipe(models.Model):
@@ -12,7 +13,7 @@ class Recipe(models.Model):
 
     title = models.CharField(max_length=300)
     slug = models.SlugField(unique=True, blank=True)
-    description = models.TextField(blank=True)
+    description = CKEditor5Field(blank=True, config_name='default')
     cover_image = models.ImageField(upload_to='recipes/', blank=True, null=True)
     prep_time = models.PositiveIntegerField(default=0, help_text='In minutes')
     cook_time = models.PositiveIntegerField(default=0, help_text='In minutes')
@@ -57,7 +58,7 @@ class RecipeIngredient(models.Model):
 class RecipeStep(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='steps')
     step_number = models.PositiveIntegerField()
-    instruction = models.TextField()
+    instruction = CKEditor5Field(config_name='default')
     image = models.ImageField(upload_to='recipe_steps/', blank=True, null=True)
 
     class Meta:

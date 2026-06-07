@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const product = await api.products.detail(slug)
     return {
       title: product.name,
-      description: product.description.slice(0, 160),
+      description: product.description.replace(/<[^>]*>/g, '').slice(0, 160),
     }
   } catch {
     return { title: 'Product Not Found' }
@@ -151,9 +151,10 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
 
             {/* Description */}
-            <p className="text-charcoal/70 dark:text-[#d1d5db] leading-relaxed mb-6">
-              {product.description}
-            </p>
+            <div
+              className="prose prose-green max-w-none dark:prose-invert mb-6"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
 
             <div className="border-t border-[#E6D8BD] dark:border-[#374151] mb-6" />
 

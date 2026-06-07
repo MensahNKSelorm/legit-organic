@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 class BlogCategory(models.Model):
@@ -22,7 +23,7 @@ class BlogCategory(models.Model):
 class BlogPost(models.Model):
     title = models.CharField(max_length=300)
     slug = models.SlugField(unique=True, blank=True)
-    content = models.TextField()
+    content = CKEditor5Field(config_name='extends')
     excerpt = models.TextField(blank=True)
     cover_image = models.ImageField(upload_to='blog/', blank=True, null=True)
     author = models.ForeignKey(

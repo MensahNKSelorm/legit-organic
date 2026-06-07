@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @config "../tailwind.config.ts";
 
 /* Tell Tailwind v4 that dark: targets elements inside html.dark */

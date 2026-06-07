@@ -5,6 +5,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf.urls.static import static
 from django.conf import settings
 
+
 admin.site.site_header = "Legit Organic Admin"
 admin.site.site_title = "Legit Organic"
 admin.site.index_title = "Content Management"
@@ -30,6 +31,7 @@ urlpatterns = [
     path('api/blog/', include('blog.urls')),
     path('api/recipes/', include('recipes.urls')),
     path('api/orders/', include('orders.urls')),
+    path('ckeditor5/', include('django_ckeditor_5.urls')),
 ]
 
 if settings.DEBUG:
