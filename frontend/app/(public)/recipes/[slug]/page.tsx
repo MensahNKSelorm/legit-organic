@@ -7,16 +7,10 @@ import type { RecipeWithPairings } from '@/types'
 import RecipeDetailActions from '@/components/recipes/RecipeDetailActions'
 import { getMediaUrl } from '@/lib/media'
 
-type Props = { params: Promise<{ slug: string }> }
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-export async function generateStaticParams() {
-  try {
-    const recipes = await api.recipes.list()
-    return recipes.map((r) => ({ slug: r.slug }))
-  } catch {
-    return []
-  }
-}
+type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
