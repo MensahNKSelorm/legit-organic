@@ -34,9 +34,6 @@ export default function CheckoutButton({ onClose, promoCode }: CheckoutButtonPro
   const initiateOrder = async (deliveryAddress: string) => {
     setIsLoading(true)
     try {
-      console.log('User:', user?.email)
-      console.log('Token:', localStorage.getItem('access_token')?.slice(0, 20))
-
       const orderData = await api.orders.create({
         items: items.map((item) => ({
           product_id: item.product.id,
