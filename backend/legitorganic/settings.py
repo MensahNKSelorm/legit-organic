@@ -78,13 +78,13 @@ INSTALLED_APPS = [
 UNFOLD = {
     "SITE_TITLE": "Legit Organic",
     "SITE_HEADER": "Legit Organic Admin",
-    "SITE_URL": "/",
+    "SITE_URL": "https://legitorganic.com",
     "SITE_ICON": None,
     "SITE_LOGO": None,
     "SITE_SYMBOL": "eco",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
-    "THEME": "light",
+    "THEME": "dark",
     "COLORS": {
         "primary": {
             "50": "240 253 244",
@@ -174,6 +174,36 @@ UNFOLD = {
                         "title": "Users",
                         "icon": "people",
                         "link": "/admin/users/user/",
+                    },
+                ],
+            },
+            {
+                "title": "Website",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Visit Live Site",
+                        "icon": "open_in_new",
+                        "link": "https://legitorganic.com",
+                        "target": "_blank",
+                    },
+                    {
+                        "title": "View Products",
+                        "icon": "storefront",
+                        "link": "https://legitorganic.com/products",
+                        "target": "_blank",
+                    },
+                    {
+                        "title": "View Blog",
+                        "icon": "article",
+                        "link": "https://legitorganic.com/blog",
+                        "target": "_blank",
+                    },
+                    {
+                        "title": "View Recipes",
+                        "icon": "restaurant_menu",
+                        "link": "https://legitorganic.com/recipes",
+                        "target": "_blank",
                     },
                 ],
             },
