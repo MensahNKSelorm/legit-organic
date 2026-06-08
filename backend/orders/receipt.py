@@ -10,6 +10,7 @@ from reportlab.lib.enums import TA_CENTER
 from django.http import HttpResponse
 from django.utils import timezone
 import io
+import urllib.request
 
 FOREST_GREEN = HexColor('#0D3B2A')
 GHANA_GOLD   = HexColor('#F4C430')
@@ -35,32 +36,44 @@ def generate_receipt_pdf(order):
     story = []
 
     # ── Header ───────────────────────────────────────────────────────────────
-    story.append(HRFlowable(
-        width='100%', thickness=8, color=FOREST_GREEN, spaceAfter=0.4 * cm,
-    ))
-
-    story.append(Paragraph(
-        'LEGIT ORGANIC',
-        ParagraphStyle(
-            'co',
-            alignment=TA_CENTER,
-            spaceAfter=2,
-            fontName='Helvetica-Bold',
-            fontSize=24,
-            textColor=FOREST_GREEN,
-        ),
-    ))
-    story.append(Paragraph(
-        'LIMITED',
-        ParagraphStyle(
-            'ltd',
-            alignment=TA_CENTER,
-            spaceAfter=4,
-            fontName='Helvetica-Bold',
-            fontSize=14,
-            textColor=GHANA_GOLD,
-        ),
-    ))
+    try:
+        import cairosvg
+        from reportlab.platypus import Image as RLImage
+        logo_url  = 'https://api.legitorganic.com/static/images/logo-lightmode.svg'
+        svg_data  = urllib.request.urlopen(logo_url, timeout=5).read()
+        png_data  = cairosvg.svg2png(bytestring=svg_data, output_width=300)
+        logo_buf  = io.BytesIO(png_data)
+        logo_img  = RLImage(logo_buf, width=6 * cm, height=3 * cm, kind='proportional')
+        logo_img.hAlign = 'CENTER'
+        story.append(Spacer(1, 0.3 * cm))
+        story.append(logo_img)
+        story.append(Spacer(1, 0.3 * cm))
+    except Exception:
+        story.append(HRFlowable(
+            width='100%', thickness=8, color=FOREST_GREEN, spaceAfter=0.4 * cm,
+        ))
+        story.append(Paragraph(
+            'LEGIT ORGANIC',
+            ParagraphStyle(
+                'co',
+                alignment=TA_CENTER,
+                spaceAfter=2,
+                fontName='Helvetica-Bold',
+                fontSize=24,
+                textColor=FOREST_GREEN,
+            ),
+        ))
+        story.append(Paragraph(
+            'LIMITED',
+            ParagraphStyle(
+                'ltd',
+                alignment=TA_CENTER,
+                spaceAfter=4,
+                fontName='Helvetica-Bold',
+                fontSize=14,
+                textColor=GHANA_GOLD,
+            ),
+        ))
 
     tagline_style = ParagraphStyle(
         'Tagline',

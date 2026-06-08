@@ -84,7 +84,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         aria-label="Shopping cart"
         className={[
           'fixed top-0 right-0 z-50',
-          'h-screen w-full max-w-md',
+          'h-[100dvh] w-full max-w-md',
           'flex flex-col overflow-hidden',
           'bg-[#FAF7F0] dark:bg-[#111827] shadow-2xl',
           'transition-transform duration-300 ease-in-out',
@@ -247,7 +247,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         )}
 
         {/* 4. Footer — flex-shrink-0, always at bottom */}
-        <div className="shrink-0 px-6 py-5 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
+        <div className="shrink-0 min-h-fit px-6 pt-5 pb-6 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
           {appliedPromo ? (
             <div className="mb-4 space-y-1.5">
               <div className="flex items-center justify-between">
