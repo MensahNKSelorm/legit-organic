@@ -4,6 +4,15 @@ from .models import Cart, CartItem, Order, OrderItem
 from .promo_models import PromoCode
 
 
+@admin.action(description='📊 Export selected orders to Excel')
+def export_to_excel(modeladmin, request, queryset):
+    from .exports import generate_orders_excel
+    orders = queryset.select_related(
+        'user', 'promo_code'
+    ).prefetch_related('items', 'items__product')
+    return generate_orders_excel(list(orders))
+
+
 class CartItemInline(TabularInline):
     model = CartItem
     extra = 0
@@ -30,6 +39,7 @@ class OrderItemInline(TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
+    actions = [export_to_excel]
     list_display = ['reference', 'get_customer', 'status', 'payment_status',
                     'order_source', 'total_amount', 'created_at']
     list_filter = ['status', 'payment_status', 'order_source', 'created_at']

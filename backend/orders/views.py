@@ -144,3 +144,37 @@ class OrderDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+
+class ExportOrdersView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'Staff access required'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        date_from     = request.query_params.get('date_from')
+        date_to       = request.query_params.get('date_to')
+        status_filter = request.query_params.get('status')
+        source_filter = request.query_params.get('source')
+
+        orders = Order.objects.select_related(
+            'user', 'promo_code'
+        ).prefetch_related(
+            'items', 'items__product'
+        ).order_by('-created_at')
+
+        if date_from:
+            orders = orders.filter(created_at__date__gte=date_from)
+        if date_to:
+            orders = orders.filter(created_at__date__lte=date_to)
+        if status_filter and status_filter != 'all':
+            orders = orders.filter(status=status_filter)
+        if source_filter and source_filter != 'all':
+            orders = orders.filter(order_source=source_filter)
+
+        from .exports import generate_orders_excel
+        return generate_orders_excel(list(orders), date_from, date_to, status_filter)
