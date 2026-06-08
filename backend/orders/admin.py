@@ -68,6 +68,27 @@ class OrderAdmin(ModelAdmin):
         }),
     )
 
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'export-all/',
+                self.admin_site.admin_view(self.export_all_view),
+                name='orders-export-all',
+            ),
+        ]
+        return custom_urls + urls
+
+    def export_all_view(self, request):
+        from .exports import generate_orders_excel
+        orders = Order.objects.select_related(
+            'user', 'promo_code'
+        ).prefetch_related(
+            'items', 'items__product'
+        ).order_by('-created_at')
+        return generate_orders_excel(list(orders))
+
     @admin.display(description='Customer')
     def get_customer(self, obj):
         if obj.user:
