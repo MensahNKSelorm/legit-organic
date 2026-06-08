@@ -28,7 +28,7 @@ class CartSerializer(serializers.ModelSerializer):
 class MinimalProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'slug', 'price', 'unit']
+        fields = ['id', 'name', 'slug', 'image', 'price', 'unit']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -50,12 +50,12 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'reference', 'status', 'payment_status', 'total_amount',
-            'discount_amount', 'promo_code', 'delivery_address',
-            'guest_name', 'guest_phone', 'order_source',
-            'items', 'created_at',
+            'id', 'reference', 'status', 'payment_status', 'order_source',
+            'total_amount', 'discount_amount', 'promo_code', 'delivery_address',
+            'guest_name', 'guest_phone',
+            'items', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'reference', 'created_at']
+        read_only_fields = ['id', 'reference', 'created_at', 'updated_at']
 
     def get_promo_code(self, obj):
         return obj.promo_code.code if obj.promo_code_id else None

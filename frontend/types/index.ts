@@ -169,30 +169,35 @@ export interface Cart {
   itemCount: number
 }
 
-export interface OrderItemData {
+export interface OrderItem {
+  id: number
   product: {
     id: number
     name: string
     slug: string
+    image: string | null
     price: string
     unit: string
-  }
+  } | null
   quantity: number
   unit_price: string
-  subtotal: string
 }
 
 export interface Order {
   id: number
   reference: string
-  status: string
-  payment_status: string
+  status: 'pending' | 'whatsapp_pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  payment_status: 'pending' | 'success' | 'failed'
+  order_source: 'paystack' | 'whatsapp'
   total_amount: string
-  discount_amount?: string
+  discount_amount: string
   promo_code?: string
   delivery_address: string
-  items: OrderItemData[]
+  guest_name?: string
+  guest_phone?: string
+  items: OrderItem[]
   created_at: string
+  updated_at: string
 }
 
 export interface PromoCode {

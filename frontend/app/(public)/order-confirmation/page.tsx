@@ -77,14 +77,14 @@ function OrderConfirmationContent() {
                 <li key={idx} className="flex items-center justify-between px-4 py-3">
                   <div>
                     <p className="text-sm font-medium text-[#0D3B2A] dark:text-[#faf7f0]">
-                      {item.product.name}
+                      {item.product?.name ?? 'Product'}
                     </p>
                     <p className="text-xs text-[#5B3E31] dark:text-[#9ca3af]">
                       {item.quantity} × GH₵{parseFloat(item.unit_price).toFixed(2)}
                     </p>
                   </div>
                   <span className="text-sm font-bold text-[#2E7D32] dark:text-[#81C784]">
-                    GH₵{parseFloat(item.subtotal).toFixed(2)}
+                    GH₵{(parseFloat(item.unit_price) * item.quantity).toFixed(2)}
                   </span>
                 </li>
               ))}

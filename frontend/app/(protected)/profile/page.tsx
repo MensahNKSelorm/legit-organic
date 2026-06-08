@@ -6,6 +6,7 @@ import SectionWrapper from '@/components/ui/SectionWrapper'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import type { UserRecipe, Order } from '@/types'
+import OrderCard from '@/components/orders/OrderCard'
 
 type Tab = 'personal' | 'recipes' | 'orders'
 
@@ -472,7 +473,10 @@ export default function ProfilePage() {
                 )}
 
                 {ordersLoading ? (
-                  <div className="text-center py-12 text-charcoal/40 text-sm">Loading your orders…</div>
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <span className="inline-block w-8 h-8 border-2 border-leaf-green border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-charcoal/40">Loading your orders…</span>
+                  </div>
                 ) : orders.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-5xl mb-4">📦</div>
@@ -485,52 +489,11 @@ export default function ProfilePage() {
                     </Link>
                   </div>
                 ) : (
-                  <ul className="space-y-4">
+                  <div className="space-y-4">
                     {orders.map((order) => (
-                      <li
-                        key={order.id}
-                        className="p-5 rounded-xl border border-sand bg-cream"
-                      >
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <div>
-                            <p className="font-semibold text-forest-green text-sm font-mono">
-                              {order.reference}
-                            </p>
-                            <p className="text-xs text-charcoal/50 mt-0.5">
-                              {formatDate(order.created_at)}
-                            </p>
-                          </div>
-                          <div className="flex gap-2 items-center shrink-0">
-                            <span className={[
-                              'text-xs font-semibold px-2.5 py-1 rounded-full',
-                              order.payment_status === 'success'
-                                ? 'bg-green-100 text-green-700'
-                                : order.payment_status === 'failed'
-                                ? 'bg-red-100 text-red-600'
-                                : 'bg-yellow-100 text-yellow-700',
-                            ].join(' ')}>
-                              {order.payment_status}
-                            </span>
-                            <span className="text-xs text-charcoal/50 capitalize">{order.status}</span>
-                          </div>
-                        </div>
-                        <ul className="space-y-1 mb-3">
-                          {order.items.map((item, idx) => (
-                            <li key={idx} className="flex justify-between text-xs text-charcoal/70">
-                              <span>{item.product.name} × {item.quantity}</span>
-                              <span className="font-semibold">GH₵{parseFloat(item.subtotal).toFixed(2)}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="flex justify-between items-center pt-3 border-t border-sand">
-                          <span className="text-xs text-charcoal/50">Total</span>
-                          <span className="font-bold text-[#2E7D32] text-sm">
-                            GH₵{parseFloat(order.total_amount).toFixed(2)}
-                          </span>
-                        </div>
-                      </li>
+                      <OrderCard key={order.reference} order={order} />
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             )}
