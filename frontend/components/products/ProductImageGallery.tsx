@@ -133,17 +133,25 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
           <>
             <button
               onClick={() => setSelectedIndex((prev) => (prev - 1 + total) % total)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all hover:scale-110"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-9 md:h-9 rounded-full bg-white/80 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 flex items-center justify-center shadow-md transition-all hover:scale-110 text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
               aria-label="Previous image"
             >
-              ←
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
             <button
               onClick={() => setSelectedIndex((prev) => (prev + 1) % total)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all hover:scale-110"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-9 md:h-9 rounded-full bg-white/80 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 flex items-center justify-center shadow-md transition-all hover:scale-110 text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
               aria-label="Next image"
             >
-              →
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </button>
           </>
         )}
