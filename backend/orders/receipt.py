@@ -35,16 +35,32 @@ def generate_receipt_pdf(order):
     story = []
 
     # ── Header ───────────────────────────────────────────────────────────────
-    company_style = ParagraphStyle(
-        'Company',
-        parent=styles['Title'],
-        fontSize=24,
-        textColor=FOREST_GREEN,
-        spaceAfter=4,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold',
-    )
-    story.append(Paragraph('LEGIT ORGANIC LIMITED', company_style))
+    story.append(HRFlowable(
+        width='100%', thickness=8, color=FOREST_GREEN, spaceAfter=0.4 * cm,
+    ))
+
+    story.append(Paragraph(
+        'LEGIT ORGANIC',
+        ParagraphStyle(
+            'co',
+            alignment=TA_CENTER,
+            spaceAfter=2,
+            fontName='Helvetica-Bold',
+            fontSize=24,
+            textColor=FOREST_GREEN,
+        ),
+    ))
+    story.append(Paragraph(
+        'LIMITED',
+        ParagraphStyle(
+            'ltd',
+            alignment=TA_CENTER,
+            spaceAfter=4,
+            fontName='Helvetica-Bold',
+            fontSize=14,
+            textColor=GHANA_GOLD,
+        ),
+    ))
 
     tagline_style = ParagraphStyle(
         'Tagline',
@@ -134,8 +150,8 @@ def generate_receipt_pdf(order):
         items_data.append([
             product_name,
             str(item.quantity),
-            f'GH₵ {unit_price:.2f}',
-            f'GH₵ {subtotal:.2f}',
+            f'GHS {unit_price:.2f}',
+            f'GHS {subtotal:.2f}',
         ])
 
     items_table = Table(
@@ -169,9 +185,9 @@ def generate_receipt_pdf(order):
 
     totals_data = []
     if order.promo_code:
-        totals_data.append(['Subtotal:', f'GH₵ {total:.2f}'])
-        totals_data.append([f'Discount ({order.promo_code.code}):', f'-GH₵ {discount:.2f}'])
-    totals_data.append(['TOTAL PAID:', f'GH₵ {final:.2f}'])
+        totals_data.append(['Subtotal:', f'GHS {total:.2f}'])
+        totals_data.append([f'Discount ({order.promo_code.code}):', f'-GHS {discount:.2f}'])
+    totals_data.append(['TOTAL PAID:', f'GHS {final:.2f}'])
 
     totals_table = Table(totals_data, colWidths=[13.5 * cm, 4 * cm])
 
