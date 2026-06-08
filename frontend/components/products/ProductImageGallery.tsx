@@ -12,6 +12,8 @@ const PLACEHOLDERS = [
   '/images/products/p4.webp',
 ]
 
+const MIN_SWIPE = 50
+
 interface Props {
   images: ProductImage[]
   productName: string
@@ -36,8 +38,11 @@ function LeafPlaceholder() {
 
 export default function ProductImageGallery({ images, productName, mainImage }: Props) {
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [touchStart, setTouchStart]       = useState<number | null>(null)
+  const [touchEnd, setTouchEnd]           = useState<number | null>(null)
+  const [dragStart, setDragStart]         = useState<number | null>(null)
 
-  // Gallery images take priority. Fall back to mainImage, then placeholder.
+  // Gallery images take priority. Fall back to mainImage, then empty.
   const allImages: { src: string; alt: string }[] =
     images.length > 0
       ? images.map((img) => ({
@@ -48,14 +53,60 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
       ? [{ src: getMediaUrl(mainImage, PLACEHOLDERS[0]), alt: productName }]
       : []
 
-  const current = allImages[selectedIndex] ?? null
-  const hasMultiple = allImages.length > 1
+  const current      = allImages[selectedIndex] ?? null
+  const hasMultiple  = allImages.length > 1
+  const total        = allImages.length
+
+  // ── Touch handlers ──────────────────────────────────────────────────────
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX)
+    setTouchEnd(null)
+  }
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    if (Math.abs(distance) >= MIN_SWIPE) {
+      if (distance > 0) {
+        setSelectedIndex((prev) => (prev + 1) % total)
+      } else {
+        setSelectedIndex((prev) => (prev - 1 + total) % total)
+      }
+    }
+  }
+
+  // ── Mouse drag handlers ─────────────────────────────────────────────────
+  const onMouseDown = (e: React.MouseEvent) => {
+    setDragStart(e.clientX)
+  }
+  const onMouseUp = (e: React.MouseEvent) => {
+    if (dragStart === null) return
+    const distance = dragStart - e.clientX
+    if (Math.abs(distance) >= MIN_SWIPE) {
+      if (distance > 0) {
+        setSelectedIndex((prev) => (prev + 1) % total)
+      } else {
+        setSelectedIndex((prev) => (prev - 1 + total) % total)
+      }
+    }
+    setDragStart(null)
+  }
 
   return (
     <div className="flex flex-col gap-3">
 
       {/* ── Main image ── */}
-      <div className="relative aspect-square rounded-2xl overflow-hidden bg-beige dark:bg-[#374151] shadow-sm">
+      <div
+        className="relative aspect-square rounded-2xl overflow-hidden bg-beige dark:bg-[#374151] shadow-sm"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
+        style={{ cursor: 'grab' }}
+      >
         {current ? (
           <Image
             key={current.src}
@@ -72,24 +123,44 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
 
         {/* Image counter */}
         {hasMultiple && (
-          <div className="absolute top-3 right-3 bg-black/50 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm select-none">
-            {selectedIndex + 1} / {allImages.length}
+          <div className="absolute top-3 right-3 bg-black/50 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm select-none z-10">
+            {selectedIndex + 1} / {total}
           </div>
+        )}
+
+        {/* Navigation arrows */}
+        {hasMultiple && (
+          <>
+            <button
+              onClick={() => setSelectedIndex((prev) => (prev - 1 + total) % total)}
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all hover:scale-110"
+              aria-label="Previous image"
+            >
+              ←
+            </button>
+            <button
+              onClick={() => setSelectedIndex((prev) => (prev + 1) % total)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md transition-all hover:scale-110"
+              aria-label="Next image"
+            >
+              →
+            </button>
+          </>
         )}
       </div>
 
       {/* ── Thumbnail strip ── */}
       {hasMultiple && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <div className="flex gap-2 overflow-x-auto pb-1 p-1 scrollbar-thin">
           {allImages.map((img, idx) => (
             <button
               key={idx}
               onClick={() => setSelectedIndex(idx)}
-              aria-label={`View image ${idx + 1} of ${allImages.length}`}
+              aria-label={`View image ${idx + 1} of ${total}`}
               className={[
-                'relative shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]',
+                'relative shrink-0 w-20 h-20 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]',
                 idx === selectedIndex
-                  ? 'ring-2 ring-[#F4C430] opacity-100'
+                  ? 'ring-2 ring-[#F4C430] ring-offset-2 opacity-100'
                   : 'opacity-70 hover:opacity-100',
               ].join(' ')}
             >
@@ -97,7 +168,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
                 src={img.src}
                 alt={img.alt}
                 fill
-                className="object-cover"
+                className="object-cover rounded-lg"
                 sizes="80px"
               />
             </button>

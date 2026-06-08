@@ -44,7 +44,7 @@ class ProductAdmin(ModelAdmin):
     search_fields = ['name', 'description']
     list_editable = ['is_featured', 'is_available']
     prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'image']
     fieldsets = (
         ('Basic Info', {
             'fields': ('name', 'slug', 'description', 'category'),
@@ -54,9 +54,6 @@ class ProductAdmin(ModelAdmin):
         }),
         ('Origin', {
             'fields': ('region', 'badge'),
-        }),
-        ('Media', {
-            'fields': ('image',),
         }),
         ('Status', {
             'fields': ('is_featured', 'is_available'),
