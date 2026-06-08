@@ -1,16 +1,162 @@
 {% extends "unfold/layouts/base_simple.html" %}
 {% load i18n %}
 
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* ── Layout containers ──────────────────────────────────────────────────── */
+.dashboard-container {
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .dashboard-container {
+    padding: 2rem;
+  }
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.dashboard-header-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dashboard-header-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* ── KPI grid ────────────────────────────────────────────────────────────── */
+.dashboard-grid-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Stats chips grid ────────────────────────────────────────────────────── */
+.dashboard-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Charts grid (equal columns) ─────────────────────────────────────────── */
+.dashboard-grid-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Charts grid (wide + narrow) ─────────────────────────────────────────── */
+.dashboard-grid-charts-wide {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 768px) {
+  .dashboard-grid-charts-wide {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── KPI card ────────────────────────────────────────────────────────────── */
+.kpi-card {
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+@media (min-width: 640px) {
+  .kpi-card {
+    padding: 1.5rem;
+  }
+}
+
+/* ── KPI value typography ─────────────────────────────────────────────────── */
+.kpi-value {
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 0.25rem;
+}
+
+/* ── Chart card ──────────────────────────────────────────────────────────── */
+.chart-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+.dark .chart-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+@media (min-width: 640px) {
+  .chart-card {
+    padding: 1.5rem;
+  }
+}
+
+/* ── Chart title typography ──────────────────────────────────────────────── */
+.chart-title {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* ── Canvas wrapper ──────────────────────────────────────────────────────── */
+.chart-canvas-container {
+  height: 250px;
+  position: relative;
+}
+@media (min-width: 769px) {
+  .chart-canvas-container {
+    height: 300px;
+  }
+}
+
+/* ── Stats chip ──────────────────────────────────────────────────────────── */
+.stat-chip {
+  border-radius: 12px;
+  padding: 0.875rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: box-shadow 0.15s;
+}
+.stat-chip:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="px-4 py-6 space-y-8">
+<div class="dashboard-container">
 
   {# ── Page title ────────────────────────────────────────────────────────── #}
-  <div class="flex items-center justify-between">
+  <div class="dashboard-header">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Legit Organic — live store metrics</p>
     </div>
-    <div class="flex gap-2">
+    <div class="dashboard-header-buttons">
       <a href="/admin/orders/order/"
          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
                 bg-primary-700 text-white hover:bg-primary-800 transition-colors">
@@ -28,14 +174,14 @@
   </div>
 
   {# ── Row 1: Revenue & Orders KPIs ─────────────────────────────────────── #}
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="dashboard-grid-kpi">
 
     {# Total Revenue #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <div class="flex items-start justify-between">
         <div>
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Revenue</p>
-          <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ kpi.total_revenue }}</p>
+          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.total_revenue }}</p>
           <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">This month: {{ kpi.this_month_revenue }}</p>
         </div>
         <span class="material-symbols-outlined text-3xl text-primary-600">payments</span>
@@ -52,11 +198,11 @@
     </div>
 
     {# Total Orders #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <div class="flex items-start justify-between">
         <div>
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Orders</p>
-          <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ kpi.total_orders }}</p>
+          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.total_orders }}</p>
           <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">This month: {{ kpi.orders_this_month }}</p>
         </div>
         <span class="material-symbols-outlined text-3xl text-blue-500">shopping_bag</span>
@@ -73,11 +219,11 @@
     </div>
 
     {# Avg Order Value #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <div class="flex items-start justify-between">
         <div>
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Avg Order Value</p>
-          <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ kpi.avg_order_value }}</p>
+          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.avg_order_value }}</p>
           <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Delivered: {{ kpi.delivered_orders }}</p>
         </div>
         <span class="material-symbols-outlined text-3xl text-amber-500">analytics</span>
@@ -89,11 +235,11 @@
     </div>
 
     {# Customers #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <div class="flex items-start justify-between">
         <div>
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Customers</p>
-          <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ kpi.total_customers }}</p>
+          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.total_customers }}</p>
           <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">New this month: {{ kpi.new_customers_this_month }}</p>
         </div>
         <span class="material-symbols-outlined text-3xl text-purple-500">people</span>
@@ -103,11 +249,10 @@
   </div>
 
   {# ── Row 2: Content & source quick stats ──────────────────────────────── #}
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+  <div class="dashboard-grid-stats">
 
     <a href="/admin/products/product/"
-       class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm
-              flex items-center gap-3 hover:shadow-md transition-shadow">
+       class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <span class="material-symbols-outlined text-2xl text-primary-600">shopping_basket</span>
       <div>
         <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.total_products }}</p>
@@ -116,8 +261,7 @@
     </a>
 
     <a href="/admin/blog/blogpost/"
-       class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm
-              flex items-center gap-3 hover:shadow-md transition-shadow">
+       class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <span class="material-symbols-outlined text-2xl text-blue-500">article</span>
       <div>
         <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.total_blog_posts }}</p>
@@ -126,8 +270,7 @@
     </a>
 
     <a href="/admin/recipes/recipe/"
-       class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm
-              flex items-center gap-3 hover:shadow-md transition-shadow">
+       class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <span class="material-symbols-outlined text-2xl text-orange-500">restaurant_menu</span>
       <div>
         <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.total_recipes }}</p>
@@ -135,8 +278,7 @@
       </div>
     </a>
 
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm
-                flex items-center gap-3">
+    <div class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <span class="material-symbols-outlined text-2xl text-green-600">chat</span>
       <div>
         <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.whatsapp_orders }}</p>
@@ -144,8 +286,7 @@
       </div>
     </div>
 
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm
-                flex items-center gap-3">
+    <div class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
       <span class="material-symbols-outlined text-2xl text-indigo-500">credit_card</span>
       <div>
         <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.paystack_orders }}</p>
@@ -155,37 +296,38 @@
 
   </div>
 
-  {# ── Row 3: Revenue chart (full width) ────────────────────────────────── #}
-  <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Revenue &amp; Orders — Last 30 Days</h2>
-    <div class="h-64">
-      <canvas id="revenueChart"></canvas>
+  {# ── Charts Row 1: Revenue (wide) + Donut ─────────────────────────────── #}
+  <div class="dashboard-grid-charts-wide">
+
+    <div class="chart-card">
+      <h2 class="chart-title text-gray-700 dark:text-gray-200">Revenue &amp; Orders — Last 30 Days</h2>
+      <div class="chart-canvas-container">
+        <canvas id="revenueChart"></canvas>
+      </div>
     </div>
-  </div>
 
-  {# ── Row 4: Donut + Top products + Customers ──────────────────────────── #}
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-    {# Order status donut #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Orders by Status</h2>
-      <div class="h-56 flex items-center justify-center">
+    <div class="chart-card">
+      <h2 class="chart-title text-gray-700 dark:text-gray-200">Orders by Status</h2>
+      <div class="chart-canvas-container flex items-center justify-center">
         <canvas id="donutChart"></canvas>
       </div>
     </div>
 
-    {# Top products bar #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Top Products by Quantity Sold</h2>
-      <div class="h-56">
+  </div>
+
+  {# ── Charts Row 2: Top Products (wide) + Customers ────────────────────── #}
+  <div class="dashboard-grid-charts-wide">
+
+    <div class="chart-card">
+      <h2 class="chart-title text-gray-700 dark:text-gray-200">Top Products by Quantity Sold</h2>
+      <div class="chart-canvas-container">
         <canvas id="topProductsChart"></canvas>
       </div>
     </div>
 
-    {# New customers bar #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">New Customers — Last 6 Months</h2>
-      <div class="h-56">
+    <div class="chart-card">
+      <h2 class="chart-title text-gray-700 dark:text-gray-200">New Customers — Last 6 Months</h2>
+      <div class="chart-canvas-container">
         <canvas id="customerChart"></canvas>
       </div>
     </div>
