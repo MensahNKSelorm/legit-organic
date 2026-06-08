@@ -235,28 +235,31 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          aria-label="Toggle navigation menu"
-          className="md:hidden shrink-0 flex flex-col justify-center gap-[5px] p-2 rounded-lg"
-          onClick={() => setMenuOpen((o) => !o)}
-        >
-          {[
-            menuOpen ? 'rotate-45 translate-y-[7px]' : '',
-            menuOpen ? 'opacity-0 scale-x-0' : '',
-            menuOpen ? '-rotate-45 -translate-y-[7px]' : '',
-          ].map((extra, idx) => (
-            <span
-              key={idx}
-              className={[
-                'block w-5 h-0.5 rounded-full transition-all duration-300 origin-center',
-                transparent ? 'bg-white' : 'bg-[#0D3B2A] dark:bg-[#F9FAFB]',
-                extra,
-              ].join(' ')}
-              style={transparent ? { backgroundColor: '#ffffff' } : undefined}
-            />
-          ))}
-        </button>
+        {/* Mobile right: cart + hamburger */}
+        <div className="md:hidden flex items-center gap-1 shrink-0">
+          <CartIcon isTransparent={transparent} />
+          <button
+            aria-label="Toggle navigation menu"
+            className="shrink-0 flex flex-col justify-center gap-[5px] p-2 rounded-lg"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            {[
+              menuOpen ? 'rotate-45 translate-y-[7px]' : '',
+              menuOpen ? 'opacity-0 scale-x-0' : '',
+              menuOpen ? '-rotate-45 -translate-y-[7px]' : '',
+            ].map((extra, idx) => (
+              <span
+                key={idx}
+                className={[
+                  'block w-5 h-0.5 rounded-full transition-all duration-300 origin-center',
+                  transparent ? 'bg-white' : 'bg-[#0D3B2A] dark:bg-[#F9FAFB]',
+                  extra,
+                ].join(' ')}
+                style={transparent ? { backgroundColor: '#ffffff' } : undefined}
+              />
+            ))}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile drawer */}

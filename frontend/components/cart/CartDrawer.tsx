@@ -106,7 +106,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           <button
             onClick={onClose}
             aria-label="Close cart"
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors text-[#0D3B2A] dark:text-[#faf7f0] text-xl leading-none"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors text-[#0D3B2A] dark:text-[#faf7f0] text-xl leading-none"
           >
             ×
           </button>
@@ -160,7 +160,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         <button
                           onClick={() => removeItem(item.product.id)}
                           aria-label={`Remove ${item.product.name}`}
-                          className="shrink-0 text-[#9ca3af] hover:text-red-500 transition-colors text-lg leading-none"
+                          className="shrink-0 w-11 h-11 flex items-center justify-center text-[#9ca3af] hover:text-red-500 transition-colors text-lg leading-none"
                         >
                           ×
                         </button>
@@ -175,17 +175,17 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                             aria-label="Decrease quantity"
-                            className="w-7 h-7 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
+                            className="w-9 h-9 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
                           >
                             −
                           </button>
-                          <span className="w-7 text-center text-sm font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
+                          <span className="w-8 text-center text-sm font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                             aria-label="Increase quantity"
-                            className="w-7 h-7 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
+                            className="w-9 h-9 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
                           >
                             +
                           </button>
