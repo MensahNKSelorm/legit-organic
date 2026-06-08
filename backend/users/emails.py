@@ -14,13 +14,12 @@ def send_welcome_email(user):
                      background-color: #FAF7F0; margin: 0; padding: 0;">
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
 
-            <div style="text-align: center; margin-bottom: 32px;">
-              <h1 style="color: #0D3B2A; font-size: 28px; margin: 0;">
-                Legit Organic
-              </h1>
-              <p style="color: #2E7D32; margin: 4px 0 0;">
-                Farm to Table, With Trust
-              </p>
+            <div style="text-align:center;margin-bottom:32px;">
+              <img
+                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                alt="Legit Organic"
+                style="height:50px;width:auto;"
+              />
             </div>
 
             <div style="background: white; border-radius: 12px;
@@ -121,10 +120,12 @@ def send_order_confirmation_email(user, order):
                      background-color: #FAF7F0; margin: 0; padding: 0;">
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
 
-            <div style="text-align: center; margin-bottom: 32px;">
-              <h1 style="color: #0D3B2A; font-size: 28px; margin: 0;">
-                Legit Organic
-              </h1>
+            <div style="text-align:center;margin-bottom:32px;">
+              <img
+                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                alt="Legit Organic"
+                style="height:50px;width:auto;"
+              />
             </div>
 
             <div style="background: white; border-radius: 12px;
@@ -319,12 +320,11 @@ def send_order_status_email(order):
           <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
 
             <div style="text-align:center;margin-bottom:32px;">
-              <h1 style="color:#0D3B2A;font-size:28px;margin:0;">
-                Legit Organic
-              </h1>
-              <p style="color:#2E7D32;margin:4px 0 0;font-size:14px;">
-                Farm to Table, With Trust
-              </p>
+              <img
+                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                alt="Legit Organic"
+                style="height:50px;width:auto;"
+              />
             </div>
 
             <div style="background:white;border-radius:12px;
@@ -445,10 +445,12 @@ def send_verification_email(user, token):
                      background-color: #FAF7F0; margin: 0; padding: 0;">
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
 
-            <div style="text-align: center; margin-bottom: 32px;">
-              <h1 style="color: #0D3B2A; font-size: 28px; margin: 0;">
-                Legit Organic
-              </h1>
+            <div style="text-align:center;margin-bottom:32px;">
+              <img
+                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                alt="Legit Organic"
+                style="height:50px;width:auto;"
+              />
             </div>
 
             <div style="background: white; border-radius: 12px;
