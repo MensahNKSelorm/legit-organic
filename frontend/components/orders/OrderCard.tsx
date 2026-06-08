@@ -65,6 +65,17 @@ export default function OrderCard({ order }: { order: Order }) {
   const isCancelled = order.status === 'cancelled'
   const badge = STATUS_BADGE[order.status] ?? { label: order.status, cls: 'bg-gray-100 text-gray-700' }
 
+  const stepCompleted = (idx: number) => {
+    if (order.status === 'delivered') return true
+    if (order.status === 'cancelled') return false
+    return idx < currentStep
+  }
+  const stepCurrent = (idx: number) => {
+    if (order.status === 'delivered') return false
+    if (order.status === 'cancelled') return false
+    return idx === currentStep
+  }
+
   return (
     <div className={[
       'rounded-2xl border bg-white transition-all duration-300',
@@ -120,11 +131,24 @@ export default function OrderCard({ order }: { order: Order }) {
           {!isCancelled && (
             <div className="pt-5">
 
+              {/* Delivered celebration banner */}
+              {order.status === 'delivered' && (
+                <div className="mb-6 p-4 bg-[#F0FFF4] border border-[#2E7D32] rounded-xl flex items-center gap-3">
+                  <span className="text-3xl">🎉</span>
+                  <div>
+                    <p className="font-semibold text-[#0D3B2A]">Order Delivered!</p>
+                    <p className="text-sm text-[#2E7D32]">
+                      Thank you for choosing Legit Organic. We hope you enjoy your fresh organic produce!
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Desktop: horizontal stepper */}
               <div className="hidden sm:flex items-start">
                 {STEPS.map((step, idx) => {
-                  const isCompleted = currentStep > idx
-                  const isCurrent = currentStep === idx
+                  const isCompleted = stepCompleted(idx)
+                  const isCurrent = stepCurrent(idx)
                   const isLast = idx === STEPS.length - 1
 
                   return (
@@ -171,8 +195,8 @@ export default function OrderCard({ order }: { order: Order }) {
               {/* Mobile: vertical stepper */}
               <div className="sm:hidden">
                 {STEPS.map((step, idx) => {
-                  const isCompleted = currentStep > idx
-                  const isCurrent = currentStep === idx
+                  const isCompleted = stepCompleted(idx)
+                  const isCurrent = stepCurrent(idx)
                   const isLast = idx === STEPS.length - 1
 
                   return (
