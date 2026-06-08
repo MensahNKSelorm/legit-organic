@@ -133,7 +133,7 @@ export default function SignupPage() {
         <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm overflow-hidden">
           {/* Google OAuth */}
           <div className="mb-6">
-            <div className="w-full overflow-hidden [&>div]:w-full [&>div>div]:w-full [&_iframe]:w-full">
+            <div className="flex justify-center w-full overflow-hidden">
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
@@ -143,7 +143,6 @@ export default function SignupPage() {
                   }
                 }}
                 onError={() => setApiError('Google signup failed. Please try again.')}
-                width="100%"
                 text="signup_with"
                 shape="rectangular"
                 theme="outline"

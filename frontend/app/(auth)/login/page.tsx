@@ -96,7 +96,7 @@ export default function LoginPage() {
         <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm overflow-hidden">
           {/* Google OAuth */}
           <div className="mb-6">
-            <div className="w-full overflow-hidden [&>div]:w-full [&>div>div]:w-full [&_iframe]:w-full">
+            <div className="flex justify-center w-full overflow-hidden">
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
@@ -106,7 +106,6 @@ export default function LoginPage() {
                   }
                 }}
                 onError={() => setError('Google login failed. Please try again.')}
-                width="100%"
                 text="signin_with"
                 shape="rectangular"
                 theme="outline"
