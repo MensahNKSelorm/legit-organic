@@ -228,6 +228,210 @@ def send_order_confirmation_email(user, order):
     })
 
 
+def send_order_status_email(order):
+    """Send email when order status changes. Works for both
+    registered users and guests (if they have an email)."""
+
+    if order.user:
+        recipient_email = order.user.email
+        customer_name = order.user.first_name or order.user.email
+    elif order.guest_email:
+        recipient_email = order.guest_email
+        customer_name = order.guest_name or 'Valued Customer'
+    else:
+        return  # No email to send to
+
+    STATUS_CONFIG = {
+        'paid': {
+            'subject': f'Payment Confirmed — {order.reference}',
+            'emoji': '✅',
+            'title': 'Payment Confirmed!',
+            'color': '#2196F3',
+            'message': f'Great news! We have received your payment for order {order.reference}. We are now preparing your organic produce for delivery.',
+            'next_step': 'Your order is being carefully prepared by our team.',
+        },
+        'processing': {
+            'subject': f'Order Being Prepared — {order.reference}',
+            'emoji': '\U0001f33f',
+            'title': 'Your Order is Being Prepared',
+            'color': '#FF9800',
+            'message': f'Your order {order.reference} is currently being processed. Our team is carefully selecting and packaging your fresh organic produce.',
+            'next_step': 'We will notify you once your order is on its way.',
+        },
+        'shipped': {
+            'subject': f'Order On Its Way — {order.reference}',
+            'emoji': '\U0001f69a',
+            'title': 'Your Order is On Its Way!',
+            'color': '#9C27B0',
+            'message': f'Your order {order.reference} has been dispatched and is on its way to you. Please ensure someone is available to receive the delivery.',
+            'next_step': 'Expected delivery within 1–3 business days.',
+        },
+        'delivered': {
+            'subject': f'Order Delivered — {order.reference}',
+            'emoji': '\U0001f389',
+            'title': 'Order Delivered!',
+            'color': '#2E7D32',
+            'message': f'Your order {order.reference} has been successfully delivered. We hope you enjoy your fresh organic produce from Legit Organic!',
+            'next_step': 'Thank you for choosing Legit Organic. We look forward to serving you again!',
+        },
+        'cancelled': {
+            'subject': f'Order Cancelled — {order.reference}',
+            'emoji': '❌',
+            'title': 'Order Cancelled',
+            'color': '#F44336',
+            'message': f'Your order {order.reference} has been cancelled. If you did not request this cancellation or have any questions, please contact us immediately.',
+            'next_step': 'Contact us at hello@legitorganic.com if you need assistance.',
+        },
+    }
+
+    config = STATUS_CONFIG.get(order.status)
+    if not config:
+        return  # No email for this status
+
+    items_html = ''.join([
+        f"""
+        <tr>
+          <td style="padding:8px 0;color:#333;border-bottom:1px solid #f5f0e6;">
+            {item.product.name if item.product else 'Product'}
+          </td>
+          <td style="padding:8px 0;color:#333;border-bottom:1px solid #f5f0e6;text-align:center;">
+            {item.quantity}
+          </td>
+          <td style="padding:8px 0;color:#333;border-bottom:1px solid #f5f0e6;text-align:right;">
+            GH₵{item.unit_price}
+          </td>
+        </tr>
+        """
+        for item in order.items.all()
+    ])
+
+    final_amount = float(order.total_amount) - float(order.discount_amount or 0)
+
+    resend.Emails.send({
+        "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
+        "to": [recipient_email],
+        "subject": config['subject'],
+        "html": f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family:'Inter',Arial,sans-serif;
+                     background-color:#FAF7F0;margin:0;padding:0;">
+          <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+
+            <div style="text-align:center;margin-bottom:32px;">
+              <h1 style="color:#0D3B2A;font-size:28px;margin:0;">
+                Legit Organic
+              </h1>
+              <p style="color:#2E7D32;margin:4px 0 0;font-size:14px;">
+                Farm to Table, With Trust
+              </p>
+            </div>
+
+            <div style="background:white;border-radius:12px;
+                        padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+              <div style="text-align:center;margin-bottom:24px;">
+                <div style="font-size:48px;margin-bottom:12px;">
+                  {config['emoji']}
+                </div>
+                <h2 style="color:{config['color']};font-size:24px;margin:0;">
+                  {config['title']}
+                </h2>
+                <p style="color:#666;margin:8px 0 0;font-size:14px;">
+                  Order: <strong style="color:#0D3B2A;">{order.reference}</strong>
+                </p>
+              </div>
+
+              <p style="color:#333;line-height:1.6;margin-bottom:16px;">
+                Hi {customer_name},
+              </p>
+              <p style="color:#333;line-height:1.6;margin-bottom:24px;">
+                {config['message']}
+              </p>
+
+              <div style="background:#F0FFF4;border-left:4px solid {config['color']};
+                          padding:16px;border-radius:0 8px 8px 0;margin-bottom:24px;">
+                <p style="margin:0;color:#0D3B2A;font-size:14px;">
+                  <strong>What's next:</strong> {config['next_step']}
+                </p>
+              </div>
+
+              <h3 style="color:#0D3B2A;border-bottom:2px solid #F4C430;
+                          padding-bottom:8px;font-size:16px;">
+                Order Summary
+              </h3>
+
+              <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;color:#666;font-size:11px;
+                               padding-bottom:8px;text-transform:uppercase;">Product</th>
+                    <th style="text-align:center;color:#666;font-size:11px;
+                               padding-bottom:8px;text-transform:uppercase;">Qty</th>
+                    <th style="text-align:right;color:#666;font-size:11px;
+                               padding-bottom:8px;text-transform:uppercase;">Price</th>
+                  </tr>
+                </thead>
+                <tbody>{items_html}</tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="2" style="padding:12px 0 0;font-weight:700;
+                                           color:#0D3B2A;font-size:16px;">
+                      Total
+                    </td>
+                    <td style="padding:12px 0 0;font-weight:700;
+                               color:#0D3B2A;font-size:16px;text-align:right;">
+                      GH₵{final_amount:.2f}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+
+              <div style="margin-top:16px;padding:16px;background:#FAF7F0;
+                          border-radius:8px;">
+                <p style="margin:0;color:#0D3B2A;font-size:13px;">
+                  <strong>\U0001f4cd Delivery Address:</strong><br/>
+                  {order.delivery_address}
+                </p>
+              </div>
+
+              <div style="text-align:center;margin-top:32px;">
+                <a href="{settings.FRONTEND_URL}/profile"
+                   style="background-color:#F4C430;color:#0D3B2A;
+                          padding:14px 32px;border-radius:8px;
+                          text-decoration:none;font-weight:600;
+                          font-size:16px;">
+                  View Order Status
+                </a>
+              </div>
+
+              <p style="color:#888;font-size:13px;margin-top:24px;
+                        line-height:1.6;text-align:center;">
+                Questions? Contact us at
+                <a href="mailto:hello@legitorganic.com"
+                   style="color:#2E7D32;">hello@legitorganic.com</a>
+                or WhatsApp us at +233 539 569 260
+              </p>
+            </div>
+
+            <div style="text-align:center;margin-top:32px;
+                        color:#888;font-size:12px;">
+              <p>Legit Organic Limited · Accra, Ghana</p>
+              <p>
+                <a href="{settings.FRONTEND_URL}/privacy-policy"
+                   style="color:#888;">Privacy Policy</a> ·
+                <a href="{settings.FRONTEND_URL}/terms-of-service"
+                   style="color:#888;">Terms of Service</a>
+              </p>
+            </div>
+
+          </div>
+        </body>
+        </html>
+        """,
+    })
+
+
 def send_verification_email(user, token):
     verification_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
     resend.Emails.send({

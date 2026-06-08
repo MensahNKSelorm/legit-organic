@@ -45,7 +45,7 @@ class OrderAdmin(ModelAdmin):
     list_filter = ['status', 'payment_status', 'order_source', 'created_at']
     search_fields = ['reference', 'user__email', 'user__first_name', 'user__last_name',
                      'guest_name', 'guest_phone', 'guest_email', 'delivery_address']
-    list_editable = ['status']
+    list_editable = []
     ordering = ['-created_at']
     readonly_fields = ['reference', 'paystack_id', 'created_at', 'updated_at']
     inlines = [OrderItemInline]

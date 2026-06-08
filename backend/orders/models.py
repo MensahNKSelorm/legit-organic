@@ -75,6 +75,25 @@ class Order(models.Model):
     def final_amount(self):
         return self.total_amount - self.discount_amount
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_status = self.status
+
+    def save(self, *args, **kwargs):
+        status_changed = self.status != self.__original_status
+        super().save(*args, **kwargs)
+
+        if status_changed and self.status in [
+            'paid', 'processing', 'shipped', 'delivered', 'cancelled'
+        ]:
+            try:
+                from users.emails import send_order_status_email
+                send_order_status_email(self)
+            except Exception:
+                pass  # Never let email failure break the save
+
+        self.__original_status = self.status
+
     def __str__(self):
         customer = str(self.user) if self.user else self.guest_name or 'Guest'
         return f"Order {self.reference} — {customer} ({self.status})"
