@@ -130,23 +130,25 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm">
+        <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm overflow-hidden">
           {/* Google OAuth */}
           <div className="mb-6">
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                if (credentialResponse.credential) {
-                  googleLogin(credentialResponse.credential).catch(() =>
-                    setApiError('Google signup failed. Please try again.')
-                  )
-                }
-              }}
-              onError={() => setApiError('Google signup failed. Please try again.')}
-              width="368"
-              text="signup_with"
-              shape="rectangular"
-              theme="outline"
-            />
+            <div className="w-full overflow-hidden">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    googleLogin(credentialResponse.credential).catch(() =>
+                      setApiError('Google signup failed. Please try again.')
+                    )
+                  }
+                }}
+                onError={() => setApiError('Google signup failed. Please try again.')}
+                width="100%"
+                text="signup_with"
+                shape="rectangular"
+                theme="outline"
+              />
+            </div>
           </div>
 
           <div className="relative flex items-center mb-6">

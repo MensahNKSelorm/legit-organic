@@ -93,23 +93,25 @@ export default function LoginPage() {
           <p className="text-charcoal/60 mt-2 text-sm">Sign in to your account to continue</p>
         </div>
 
-        <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm">
+        <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm overflow-hidden">
           {/* Google OAuth */}
           <div className="mb-6">
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                if (credentialResponse.credential) {
-                  googleLogin(credentialResponse.credential).catch(() =>
-                    setError('Google login failed. Please try again.')
-                  )
-                }
-              }}
-              onError={() => setError('Google login failed. Please try again.')}
-              width="368"
-              text="signin_with"
-              shape="rectangular"
-              theme="outline"
-            />
+            <div className="w-full overflow-hidden">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    googleLogin(credentialResponse.credential).catch(() =>
+                      setError('Google login failed. Please try again.')
+                    )
+                  }
+                }}
+                onError={() => setError('Google login failed. Please try again.')}
+                width="100%"
+                text="signin_with"
+                shape="rectangular"
+                theme="outline"
+              />
+            </div>
           </div>
 
           <div className="relative flex items-center mb-6">
