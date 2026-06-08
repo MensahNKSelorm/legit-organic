@@ -178,3 +178,30 @@ class ExportOrdersView(APIView):
 
         from .exports import generate_orders_excel
         return generate_orders_excel(list(orders), date_from, date_to, status_filter)
+
+
+class OrderReceiptView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, reference):
+        try:
+            order = Order.objects.prefetch_related(
+                'items', 'items__product', 'promo_code'
+            ).get(reference=reference)
+        except Order.DoesNotExist:
+            return Response(
+                {'error': 'Order not found'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Security: only allow if authenticated user owns the order
+        # or if it's a guest order (no user attached)
+        if order.user and request.user.is_authenticated:
+            if order.user != request.user and not request.user.is_staff:
+                return Response(
+                    {'error': 'Unauthorized'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        from .receipt import generate_receipt_pdf
+        return generate_receipt_pdf(order)
