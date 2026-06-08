@@ -20,6 +20,14 @@ export interface Badge {
   color: string
 }
 
+export interface ProductImage {
+  id: number
+  image: string
+  alt_text: string
+  order: number
+  is_primary: boolean
+}
+
 export interface Product {
   id: number
   name: string
@@ -38,6 +46,7 @@ export interface Product {
   nutritional_score?: number
   created_at: string
   updated_at: string
+  images?: ProductImage[]
 }
 
 export interface BlogCategory {

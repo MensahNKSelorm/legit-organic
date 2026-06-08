@@ -1,6 +1,6 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
-from .models import Badge, Category, Product, Region
+from unfold.admin import ModelAdmin, TabularInline
+from .models import Badge, Category, Product, ProductImage, Region
 
 
 @admin.register(Category)
@@ -26,9 +26,16 @@ class BadgeAdmin(ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
+class ProductImageInline(TabularInline):
+    model = ProductImage
+    extra = 3
+    fields = ['image', 'alt_text', 'order', 'is_primary']
+
+
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
     show_full_result_count = True
+    inlines = [ProductImageInline]
     list_display = [
         'name', 'category', 'price', 'unit', 'region',
         'is_featured', 'is_available', 'created_at',

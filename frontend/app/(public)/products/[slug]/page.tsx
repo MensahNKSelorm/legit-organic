@@ -3,21 +3,13 @@ export const revalidate = 0
 
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import type { Product } from '@/types'
 import ProductCard from '@/components/products/ProductCard'
 import ProductTabs from '@/components/products/ProductTabs'
 import AddToCartButton from '@/components/products/AddToCartButton'
-import { getMediaUrl } from '@/lib/media'
-
-const PLACEHOLDERS = [
-  '/images/products/p1.webp',
-  '/images/products/p2.webp',
-  '/images/products/p3.webp',
-  '/images/products/p4.webp',
-]
+import ProductImageGallery from '@/components/products/ProductImageGallery'
 
 // ---------------------------------------------------------------------------
 // Icons
@@ -71,8 +63,6 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const product = await api.products.detail(slug).catch(() => notFound())
 
-  const imageSrc = getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
-
   // Related products — same category, excluding this product
   let related: Product[] = []
   try {
@@ -108,20 +98,17 @@ export default async function ProductDetailPage({ params }: Props) {
       <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
 
-          {/* Left: image */}
+          {/* Left: image gallery */}
           <div className="lg:col-span-3">
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-beige dark:bg-[#374151] shadow-sm">
-              <Image
-                src={imageSrc}
-                alt={product.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 60vw"
-                priority
+            <div className="relative">
+              <ProductImageGallery
+                images={product.images ?? []}
+                productName={product.name}
+                mainImage={product.image}
               />
               {product.badge && (
-                <span className="absolute top-4 left-4 bg-forest-green text-ghana-gold text-sm font-bold px-3 py-1.5 rounded-full z-10 shadow">
-                  {product.badge?.name}
+                <span className="absolute top-4 left-4 bg-forest-green text-ghana-gold text-sm font-bold px-3 py-1.5 rounded-full z-20 shadow pointer-events-none">
+                  {product.badge.name}
                 </span>
               )}
             </div>
