@@ -92,6 +92,7 @@ UNFOLD = {
         },
     ],
     "SITE_SYMBOL": "eco",
+    "DASHBOARD_CALLBACK": "legitorganic.dashboard.dashboard_callback",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "THEME": "auto",
@@ -294,7 +295,7 @@ ROOT_URLCONF = 'legitorganic.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
