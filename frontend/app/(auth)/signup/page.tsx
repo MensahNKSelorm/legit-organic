@@ -133,7 +133,7 @@ export default function SignupPage() {
         <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm overflow-hidden">
           {/* Google OAuth */}
           <div className="mb-6">
-            <div className="w-full overflow-hidden">
+            <div className="w-full overflow-hidden [&>div]:w-full [&>div>div]:w-full [&_iframe]:w-full">
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
@@ -147,6 +147,7 @@ export default function SignupPage() {
                 text="signup_with"
                 shape="rectangular"
                 theme="outline"
+                size="large"
               />
             </div>
           </div>
