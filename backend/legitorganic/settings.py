@@ -38,6 +38,7 @@ PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
 PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
 WIGAL_API_KEY = os.getenv('WIGAL_API_KEY', '')
 WIGAL_SENDER_ID = os.getenv('WIGAL_SENDER_ID', 'LegitGH')
+WIGAL_USERNAME = os.getenv('WIGAL_USERNAME', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"

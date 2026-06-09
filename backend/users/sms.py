@@ -1,13 +1,16 @@
 import requests
+import json
+import uuid
 from django.conf import settings
 
-WIGAL_SMS_URL = 'https://frog.wigal.com.gh/api/sms/send'
+WIGAL_SMS_URL = 'https://frogapi.wigal.com.gh/api/v3/sms/send'
 
 
 def send_sms(phone_number: str, message: str) -> bool:
     if not settings.WIGAL_API_KEY:
         return False
 
+    # Normalize phone number
     phone = phone_number.strip().replace(' ', '').replace('+', '')
     if phone.startswith('0'):
         phone = '233' + phone[1:]
@@ -15,19 +18,35 @@ def send_sms(phone_number: str, message: str) -> bool:
         phone = '233' + phone
 
     try:
+        post_data = {
+            'senderid': settings.WIGAL_SENDER_ID,
+            'destinations': [{
+                'destination': phone,
+                'msgid': str(uuid.uuid4())[:8].upper()
+            }],
+            'message': message,
+            'smstype': 'text'
+        }
+
+        headers = {
+            'Content-Type': 'application/json',
+            'API-KEY': settings.WIGAL_API_KEY,
+            'USERNAME': settings.WIGAL_USERNAME,
+        }
+
         response = requests.post(
             WIGAL_SMS_URL,
-            json={
-                'key': settings.WIGAL_API_KEY,
-                'senderid': settings.WIGAL_SENDER_ID,
-                'phone': phone,
-                'message': message,
-            },
+            headers=headers,
+            data=json.dumps(post_data),
             timeout=10
         )
+
         data = response.json()
-        return data.get('status') == 'success' or response.status_code == 200
-    except Exception:
+        print('Wigal SMS response:', data)
+        return response.status_code == 200
+
+    except Exception as e:
+        print('Wigal SMS error:', e)
         return False
 
 
