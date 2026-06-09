@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import type { UserRecipe, Order } from '@/types'
 import OrderCard from '@/components/orders/OrderCard'
+import LocationPicker from '@/components/ui/LocationPicker'
 
 type Tab = 'personal' | 'recipes' | 'orders'
 
@@ -39,6 +40,8 @@ export default function ProfilePage() {
   const [houseNumber, setHouseNumber]     = useState('')
   const [city, setCity]                   = useState('')
   const [deliveryRegion, setDeliveryRegion] = useState('')
+
+  const [showMap, setShowMap] = useState(false)
 
   const [saving, setSaving]       = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -301,6 +304,32 @@ export default function ProfilePage() {
                       <h3 className="font-semibold text-forest-green mb-4">Delivery Address</h3>
 
                       <div className="space-y-4">
+                        {/* Map toggle */}
+                        <button
+                          type="button"
+                          onClick={() => setShowMap(!showMap)}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-[#2E7D32] text-[#2E7D32] font-semibold text-sm hover:bg-[#2E7D32]/5 transition-colors"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                          </svg>
+                          {showMap ? 'Hide Map' : 'Pick Location on Map'}
+                        </button>
+
+                        {showMap && (
+                          <div className="mb-4">
+                            <LocationPicker
+                              onLocationSelect={(data) => {
+                                if (data.street_address) setStreetAddress(data.street_address)
+                                setHouseNumber(data.house_number || '')
+                                if (data.city) setCity(data.city)
+                                if (data.delivery_region) setDeliveryRegion(data.delivery_region)
+                              }}
+                            />
+                          </div>
+                        )}
+
                         {/* House number */}
                         <div>
                           <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
