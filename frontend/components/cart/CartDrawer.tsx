@@ -133,10 +133,17 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           ) : (
             <ul className="flex flex-col gap-4">
               {items.map((item) => {
-                const imageSrc = getMediaUrl(
-                  item.product.image,
-                  PLACEHOLDERS[item.product.id % PLACEHOLDERS.length]
-                )
+                const getProductImage = () => {
+                  const p = item.product
+                  if (p.images && p.images.length > 0) {
+                    return getMediaUrl(p.images[0].image) || '/images/products/p1.webp'
+                  }
+                  if (p.image) {
+                    return getMediaUrl(p.image) || '/images/products/p1.webp'
+                  }
+                  return PLACEHOLDERS[p.id % PLACEHOLDERS.length]
+                }
+                const imageSrc = getProductImage()
                 const subtotal = (parseFloat(item.product.price) * item.quantity).toFixed(2)
                 return (
                   <li key={item.product.id} className="flex gap-4 py-4 border-b border-[#E6D8BD] dark:border-[#374151] last:border-0">
