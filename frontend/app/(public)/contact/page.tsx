@@ -117,7 +117,7 @@ export default function ContactPage() {
       </div>
 
       {/* Main content */}
-      <section className="bg-[#FAF7F0] py-16 px-6">
+      <section className="bg-[#FAF7F0] dark:bg-gray-900 py-16 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Left column — contact info + map */}
           <div>
@@ -128,7 +128,7 @@ export default function ContactPage() {
             <div className="flex flex-col gap-4">
               {contactItems.map((item) => {
                 const card = (
-                  <div className="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm border border-[#E6D8BD] transition-shadow hover:shadow-md">
+                  <div className="flex items-start gap-4 bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-[#E6D8BD] dark:border-gray-700 transition-shadow hover:shadow-md">
                     <div
                       className={`w-11 h-11 rounded-full ${item.iconBg} flex items-center justify-center flex-shrink-0 text-white`}
                     >
@@ -138,7 +138,7 @@ export default function ContactPage() {
                       <p className="text-xs font-semibold text-[#B8860B] uppercase tracking-widest mb-0.5">
                         {item.label}
                       </p>
-                      <p className="text-[#0D3B2A] font-semibold text-sm leading-snug">
+                      <p className="text-[#0D3B2A] dark:text-white font-semibold text-sm leading-snug">
                         {item.value}
                       </p>
                     </div>
@@ -155,7 +155,7 @@ export default function ContactPage() {
               })}
 
               {/* Map */}
-              <div className="rounded-2xl overflow-hidden border border-[#E6D8BD] shadow-sm">
+              <div className="rounded-2xl overflow-hidden border border-[#E6D8BD] dark:border-gray-700 shadow-sm dark:opacity-80">
                 <iframe
                   src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=New+Aplaku,Accra,Ghana`}
                   width="100%"

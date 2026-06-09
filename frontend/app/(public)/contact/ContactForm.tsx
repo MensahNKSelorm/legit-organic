@@ -31,19 +31,19 @@ export default function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="bg-white rounded-2xl p-8 border border-[#E6D8BD] shadow-sm flex flex-col items-center justify-center text-center min-h-[420px]">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-[#E6D8BD] dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center min-h-[420px]">
         <div className="w-16 h-16 bg-[#0D3B2A] rounded-full flex items-center justify-center mb-5">
           <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
         <h3 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-2">Message Sent!</h3>
-        <p className="text-[#0D3B2A]/70 text-sm leading-relaxed max-w-xs">
+        <p className="text-[#0D3B2A]/70 dark:text-gray-300 text-sm leading-relaxed max-w-xs">
           Thank you for reaching out. We&apos;ll be in touch within 24 hours.
         </p>
         <button
           onClick={reset}
-          className="mt-6 text-sm text-[#0D3B2A] font-semibold underline underline-offset-2"
+          className="mt-6 text-sm text-[#0D3B2A] dark:text-white font-semibold underline underline-offset-2"
         >
           Send another message
         </button>
@@ -52,13 +52,13 @@ export default function ContactForm() {
   }
 
   const inputClass =
-    'w-full px-4 py-3 rounded-xl border border-[#E6D8BD] bg-[#FAF7F0] text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] transition-colors'
+    'w-full px-4 py-3 rounded-xl border border-[#E6D8BD] dark:border-gray-600 bg-[#FAF7F0] dark:bg-gray-700 text-[#0D3B2A] dark:text-white placeholder:text-[#0D3B2A]/40 dark:placeholder-gray-400 text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] transition-colors'
 
   const labelClass =
-    'block text-xs font-semibold text-[#0D3B2A]/60 uppercase tracking-wide mb-1.5'
+    'block text-xs font-semibold text-[#0D3B2A]/60 dark:text-gray-400 uppercase tracking-wide mb-1.5'
 
   return (
-    <div className="bg-white rounded-2xl p-8 border border-[#E6D8BD] shadow-sm">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-[#E6D8BD] dark:border-gray-700 shadow-sm">
       <h2 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-6">Send a Message</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -88,7 +88,7 @@ export default function ContactForm() {
         <div>
           <label className={labelClass}>
             Phone Number{' '}
-            <span className="normal-case font-normal text-[#0D3B2A]/40">(optional)</span>
+            <span className="normal-case font-normal text-[#0D3B2A]/40 dark:text-gray-500">(optional)</span>
           </label>
           <input
             type="tel"
@@ -105,7 +105,7 @@ export default function ContactForm() {
             <select
               value={subject}
               onChange={e => setSubject(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-[#E6D8BD] bg-[#FAF7F0] text-[#0D3B2A] text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] transition-colors"
+              className="w-full px-4 py-3 rounded-xl border border-[#E6D8BD] dark:border-gray-600 bg-[#FAF7F0] dark:bg-gray-700 text-[#0D3B2A] dark:text-white text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] transition-colors"
             >
               <option>General Inquiry</option>
               <option>Order Support</option>
