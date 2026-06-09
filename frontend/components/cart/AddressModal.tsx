@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import LocationPicker from '@/components/ui/LocationPicker'
 
 export interface AddressData {
   house_number: string
@@ -48,6 +49,8 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
   const [city, setCity] = useState('')
   const [deliveryRegion, setDeliveryRegion] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+
+  const [showMap, setShowMap] = useState(false)
 
   const [errors, setErrors] = useState<Partial<AddressData>>({})
   const [saving, setSaving] = useState(false)
@@ -161,11 +164,11 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
         className="fixed inset-0 z-[61] flex items-center justify-center p-4 pointer-events-none"
       >
         <div
-          className="w-full max-w-md bg-[#FAF7F0] rounded-2xl shadow-2xl pointer-events-auto"
+          className="w-full max-w-md bg-[#FAF7F0] rounded-2xl shadow-2xl pointer-events-auto flex flex-col max-h-[90vh]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-[#E6D8BD]">
+          <div className="shrink-0 flex items-center justify-between px-6 py-5 border-b border-[#E6D8BD]">
             <h2 className="font-display text-lg font-bold text-[#0D3B2A]">Delivery Address</h2>
             <button
               onClick={onClose}
@@ -177,8 +180,8 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
           </div>
 
           {/* Body */}
-          <form onSubmit={handleSave} noValidate>
-            <div className="px-6 py-5 space-y-4">
+          <form onSubmit={handleSave} noValidate className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <p className="text-sm text-[#5B3E31]">
                 We need your delivery address before placing an order.
               </p>
@@ -187,6 +190,29 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                 <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
                   {apiError}
                 </div>
+              )}
+
+              {/* Map toggle */}
+              <button
+                type="button"
+                onClick={() => setShowMap(!showMap)}
+                className="w-full flex items-center justify-center gap-2 py-2.5
+                           rounded-xl border-2 border-dashed border-[#2E7D32]
+                           text-[#2E7D32] font-semibold text-sm
+                           hover:bg-[#2E7D32]/5 transition-colors"
+              >
+                🗺️ {showMap ? 'Hide Map' : 'Pick Location on Map'}
+              </button>
+
+              {showMap && (
+                <LocationPicker
+                  onLocationSelect={(data) => {
+                    if (data.street_address) setStreetAddress(data.street_address)
+                    if (data.house_number) setHouseNumber(data.house_number)
+                    if (data.city) setCity(data.city)
+                    if (data.delivery_region) setDeliveryRegion(data.delivery_region)
+                  }}
+                />
               )}
 
               {/* House number */}
@@ -278,7 +304,7 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
             </div>
 
             {/* Footer */}
-            <div className="px-6 pb-6 flex gap-3">
+            <div className="shrink-0 px-6 pb-6 pt-2 flex gap-3">
               <button
                 type="button"
                 onClick={onClose}

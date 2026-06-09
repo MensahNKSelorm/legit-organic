@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import LocationPicker from '@/components/ui/LocationPicker'
 
 export interface GuestData {
   first_name: string
@@ -52,6 +53,7 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
   const [city, setCity] = useState('')
   const [deliveryRegion, setDeliveryRegion] = useState('')
 
+  const [showMap, setShowMap] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
 
   useEffect(() => {
@@ -205,6 +207,29 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
                   <p className="mt-1 text-xs text-[#9ca3af]">Format: +233244123456 or 0244123456</p>
                 )}
               </div>
+
+              {/* Map toggle */}
+              <button
+                type="button"
+                onClick={() => setShowMap(!showMap)}
+                className="w-full flex items-center justify-center gap-2 py-2.5
+                           rounded-xl border-2 border-dashed border-[#2E7D32]
+                           text-[#2E7D32] font-semibold text-sm
+                           hover:bg-[#2E7D32]/5 transition-colors"
+              >
+                🗺️ {showMap ? 'Hide Map' : 'Pick Location on Map'}
+              </button>
+
+              {showMap && (
+                <LocationPicker
+                  onLocationSelect={(data) => {
+                    if (data.street_address) setStreetAddress(data.street_address)
+                    if (data.house_number) setHouseNumber(data.house_number)
+                    if (data.city) setCity(data.city)
+                    if (data.delivery_region) setDeliveryRegion(data.delivery_region)
+                  }}
+                />
+              )}
 
               {/* House number */}
               <div>
