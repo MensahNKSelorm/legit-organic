@@ -27,6 +27,11 @@ export const metadata: Metadata = {
     locale: 'en_GH',
     siteName: 'Legit Organic',
   },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
