@@ -30,22 +30,34 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
   const extractAddressComponents = (
     components: google.maps.GeocoderAddressComponent[],
     lat: number,
-    lng: number
+    lng: number,
+    formattedAddressFallback?: string
   ) => {
     let streetNumber = ''
     let route = ''
     let city = ''
     let region = ''
 
+    console.log('[LocationPicker] address_components:', components.map(c => ({ types: c.types, long_name: c.long_name })))
+
     components.forEach(component => {
       const types = component.types
       if (types.includes('street_number')) streetNumber = component.long_name
       if (types.includes('route')) route = component.long_name
-      if (types.includes('locality') || types.includes('sublocality_level_1')) {
+      if (types.includes('neighborhood') ||
+          types.includes('sublocality_level_2') ||
+          types.includes('sublocality_level_1')) {
+        if (!route) route = component.long_name
+      }
+      if (types.includes('locality')) city = component.long_name
+      if (types.includes('sublocality_level_1') && !city) {
         city = component.long_name
       }
       if (types.includes('administrative_area_level_1')) {
         region = component.long_name
+      }
+      if (types.includes('premise') || types.includes('point_of_interest')) {
+        if (!streetNumber) streetNumber = component.long_name
       }
     })
 
@@ -73,7 +85,7 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
     )?.[1] || ''
 
     onLocationSelect({
-      street_address: route || '',
+      street_address: route || (formattedAddressFallback ? formattedAddressFallback.split(',')[0] : '') || '',
       house_number: streetNumber || '',
       city: city || '',
       delivery_region: mappedRegion,
@@ -86,8 +98,9 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
     const geocoder = new google.maps.Geocoder()
     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
       if (status === 'OK' && results?.[0]) {
-        extractAddressComponents(results[0].address_components, lat, lng)
-        setSearchInput(results[0].formatted_address)
+        const formatted = results[0].formatted_address
+        extractAddressComponents(results[0].address_components, lat, lng, formatted)
+        setSearchInput(formatted)
       }
     })
   }

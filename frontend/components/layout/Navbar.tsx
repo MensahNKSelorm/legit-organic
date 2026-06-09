@@ -267,10 +267,10 @@ export default function Navbar() {
         className={[
           'md:hidden overflow-hidden transition-all duration-300 ease-in-out',
           'bg-mist-white border-t border-sand dark:bg-[#111827] dark:border-[#333]',
-          menuOpen ? 'max-h-[32rem] opacity-100' : 'max-h-0 opacity-0',
+          menuOpen ? 'max-h-[80vh] overflow-y-auto opacity-100' : 'max-h-0 opacity-0',
         ].join(' ')}
       >
-        <ul className="px-6 py-5 flex flex-col gap-1" style={{ listStyle: 'none' }}>
+        <ul className="px-6 py-5 pb-6 flex flex-col gap-1" style={{ listStyle: 'none' }}>
           {navLinks.map((link) => (
             <li key={link.href}>
               <Link
