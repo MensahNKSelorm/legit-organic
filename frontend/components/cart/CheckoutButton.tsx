@@ -97,7 +97,14 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
       setIsLoading(false)
     }
 
-    window.open(buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference), '_blank')
+    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference)
+    const link = document.createElement('a')
+    link.href = waUrl
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
     clearCart()
   }
 
@@ -149,7 +156,14 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
       setIsLoading(false)
     }
 
-    window.open(buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference), '_blank')
+    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference)
+    const link = document.createElement('a')
+    link.href = waUrl
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
     clearCart()
   }
 
