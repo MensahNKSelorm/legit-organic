@@ -219,6 +219,12 @@ UNFOLD = {
                         "link": "https://legitorganic.com/recipes",
                         "target": "_blank",
                     },
+                    {
+                        "title": "Wigal SMS Dashboard",
+                        "icon": "sms",
+                        "link": "https://frog.wigal.com.gh/dashboard",
+                        "target": "_blank",
+                    },
                 ],
             },
         ],
