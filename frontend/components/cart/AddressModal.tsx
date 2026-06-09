@@ -214,7 +214,7 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                 <LocationPicker
                   onLocationSelect={(data) => {
                     if (data.street_address) setStreetAddress(data.street_address)
-                    if (data.house_number) setHouseNumber(data.house_number)
+                    setHouseNumber(data.house_number || '')
                     if (data.city) setCity(data.city)
                     if (data.delivery_region) setDeliveryRegion(data.delivery_region)
                   }}
