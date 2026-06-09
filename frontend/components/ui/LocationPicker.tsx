@@ -80,15 +80,28 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
       'North East': 'North East',
     }
 
-    const mappedRegion = Object.entries(regionMap).find(([key]) =>
-      region.includes(key)
-    )?.[1] || ''
+    let country = ''
+    components.forEach(component => {
+      if (component.types.includes('country')) {
+        country = component.short_name
+      }
+    })
+
+    let finalRegion = ''
+
+    if (country !== 'GH') {
+      finalRegion = 'International'
+    } else {
+      finalRegion = Object.entries(regionMap).find(([key]) =>
+        region.includes(key)
+      )?.[1] || ''
+    }
 
     onLocationSelect({
       street_address: route || (formattedAddressFallback ? formattedAddressFallback.split(',')[0] : '') || '',
       house_number: streetNumber || '',
       city: city || '',
-      delivery_region: mappedRegion,
+      delivery_region: finalRegion,
       latitude: lat,
       longitude: lng,
     })
