@@ -37,7 +37,7 @@ export default function ContactForm() {
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3 className="font-display text-xl font-bold text-[#0D3B2A] mb-2">Message Sent!</h3>
+        <h3 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-2">Message Sent!</h3>
         <p className="text-[#0D3B2A]/70 text-sm leading-relaxed max-w-xs">
           Thank you for reaching out. We&apos;ll be in touch within 24 hours.
         </p>
@@ -59,7 +59,7 @@ export default function ContactForm() {
 
   return (
     <div className="bg-white rounded-2xl p-8 border border-[#E6D8BD] shadow-sm">
-      <h2 className="font-display text-xl font-bold text-[#0D3B2A] mb-6">Send a Message</h2>
+      <h2 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-6">Send a Message</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className={labelClass}>Full Name</label>

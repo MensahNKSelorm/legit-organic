@@ -95,8 +95,6 @@ const contactItems: ContactItem[] = [
 ]
 
 export default function ContactPage() {
-  const mapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
-  const mapSrc = `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=New+Aplaku,Accra,Ghana`
 
   return (
     <>
@@ -122,51 +120,53 @@ export default function ContactPage() {
       <section className="bg-[#FAF7F0] py-16 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Left column — contact info + map */}
-          <div className="space-y-4">
-            <h2 className="font-display text-2xl font-bold text-[#0D3B2A] mb-6">
+          <div>
+            <h2 className="font-display text-2xl font-bold text-[#0D3B2A] dark:text-white mb-6">
               Contact Information
             </h2>
 
-            {contactItems.map((item) => {
-              const card = (
-                <div className="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm border border-[#E6D8BD] transition-shadow hover:shadow-md">
-                  <div
-                    className={`w-11 h-11 rounded-full ${item.iconBg} flex items-center justify-center flex-shrink-0 text-white`}
-                  >
-                    {item.icon}
+            <div className="flex flex-col gap-4">
+              {contactItems.map((item) => {
+                const card = (
+                  <div className="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm border border-[#E6D8BD] transition-shadow hover:shadow-md">
+                    <div
+                      className={`w-11 h-11 rounded-full ${item.iconBg} flex items-center justify-center flex-shrink-0 text-white`}
+                    >
+                      {item.icon}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-[#B8860B] uppercase tracking-widest mb-0.5">
+                        {item.label}
+                      </p>
+                      <p className="text-[#0D3B2A] font-semibold text-sm leading-snug">
+                        {item.value}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold text-[#B8860B] uppercase tracking-widest mb-0.5">
-                      {item.label}
-                    </p>
-                    <p className="text-[#0D3B2A] font-semibold text-sm leading-snug">
-                      {item.value}
-                    </p>
-                  </div>
-                </div>
-              )
+                )
 
-              return item.href ? (
-                <a key={item.label} href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
-                  {card}
-                </a>
-              ) : (
-                <div key={item.label}>{card}</div>
-              )
-            })}
+                return item.href ? (
+                  <a key={item.label} href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="block">
+                    {card}
+                  </a>
+                ) : (
+                  <div key={item.label}>{card}</div>
+                )
+              })}
 
-            {/* Map */}
-            <div className="rounded-2xl overflow-hidden border border-[#E6D8BD] shadow-sm mt-2">
-              <iframe
-                src={mapSrc}
-                width="100%"
-                height="200"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Legit Organic location map"
-              />
+              {/* Map */}
+              <div className="rounded-2xl overflow-hidden border border-[#E6D8BD] shadow-sm">
+                <iframe
+                  src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=New+Aplaku,Accra,Ghana`}
+                  width="100%"
+                  height="220"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  className="rounded-xl w-full"
+                  title="Legit Organic location map"
+                />
+              </div>
             </div>
           </div>
 
