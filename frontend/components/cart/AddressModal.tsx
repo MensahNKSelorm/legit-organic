@@ -11,6 +11,8 @@ export interface AddressData {
   city: string
   delivery_region: string
   phone_number: string
+  latitude?: number
+  longitude?: number
 }
 
 interface AddressModalProps {
@@ -51,6 +53,8 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
   const [phoneNumber, setPhoneNumber] = useState('')
 
   const [showMap, setShowMap] = useState(false)
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
 
   const [errors, setErrors] = useState<Partial<AddressData>>({})
   const [saving, setSaving] = useState(false)
@@ -64,6 +68,8 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
       setCity(user.city ?? '')
       setDeliveryRegion(user.delivery_region ?? '')
       setPhoneNumber(user.phone_number ?? '')
+      setLatitude(null)
+      setLongitude(null)
       setErrors({})
       setApiError('')
     }
@@ -131,7 +137,7 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
         delivery_region: formData.delivery_region,
         phone_number: formData.phone_number,
       })
-      onSave(formData)
+      onSave({ ...formData, latitude: latitude ?? undefined, longitude: longitude ?? undefined })
       onClose()
     } catch (err: unknown) {
       setApiError(err instanceof Error ? err.message : 'Failed to save address.')
@@ -217,6 +223,8 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                     setHouseNumber(data.house_number || '')
                     if (data.city) setCity(data.city)
                     if (data.delivery_region) setDeliveryRegion(data.delivery_region)
+                    if (data.latitude) setLatitude(data.latitude)
+                    if (data.longitude) setLongitude(data.longitude)
                   }}
                 />
               )}

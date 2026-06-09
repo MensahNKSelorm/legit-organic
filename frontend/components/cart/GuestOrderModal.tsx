@@ -12,6 +12,8 @@ export interface GuestData {
   street_address: string
   city: string
   delivery_region: string
+  latitude?: number
+  longitude?: number
 }
 
 interface GuestOrderModalProps {
@@ -54,6 +56,8 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
   const [deliveryRegion, setDeliveryRegion] = useState('')
 
   const [showMap, setShowMap] = useState(false)
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
   const [errors, setErrors] = useState<FormErrors>({})
 
   useEffect(() => {
@@ -73,6 +77,8 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
       setStreetAddress('')
       setCity('')
       setDeliveryRegion('')
+      setLatitude(null)
+      setLongitude(null)
       setErrors({})
     }
   }, [isOpen])
@@ -104,6 +110,8 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
       street_address: streetAddress.trim(),
       city: city.trim(),
       delivery_region: deliveryRegion,
+      latitude: latitude ?? undefined,
+      longitude: longitude ?? undefined,
     })
   }
 
@@ -233,6 +241,8 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
                     setHouseNumber(data.house_number || '')
                     if (data.city) setCity(data.city)
                     if (data.delivery_region) setDeliveryRegion(data.delivery_region)
+                    if (data.latitude) setLatitude(data.latitude)
+                    if (data.longitude) setLongitude(data.longitude)
                   }}
                 />
               )}

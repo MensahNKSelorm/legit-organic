@@ -31,9 +31,15 @@ function buildWhatsAppUrl(
   discountLine: string,
   finalTotal: number,
   deliveryAddress: string,
-  reference?: string
+  reference?: string,
+  latitude?: number,
+  longitude?: number
 ): string {
   const referenceLine = reference ? `\n*Order Reference:* ${reference}` : ''
+
+  const mapsLink = latitude && longitude
+    ? `https://maps.google.com/?q=${latitude},${longitude}`
+    : `https://maps.google.com/?q=${encodeURIComponent(deliveryAddress)}`
 
   const message = `Hello Legit Organic! 🌿
 
@@ -47,6 +53,7 @@ ${itemsList}${discountLine}
 *Total:* GH₵${finalTotal.toFixed(2)}
 
 *Delivery Address:* ${deliveryAddress || 'To be confirmed'}
+*📍 Map Location:* ${mapsLink}
 
 Please send me the MoMo payment details. Thank you!`
 
@@ -78,7 +85,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
     return { itemsList, discountLine, finalTotal }
   }
 
-  const openWhatsApp = async (deliveryAddress: string) => {
+  const openWhatsApp = async (deliveryAddress: string, latitude?: number, longitude?: number) => {
     const { itemsList, discountLine, finalTotal } = buildOrderLines()
     const customerLine = `*Customer:* ${user!.first_name} ${user!.last_name}\n*Email:* ${user!.email}`
 
@@ -97,7 +104,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
       setIsLoading(false)
     }
 
-    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference)
+    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference, latitude, longitude)
     const link = document.createElement('a')
     link.href = waUrl
     link.target = '_blank'
@@ -127,7 +134,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
   const handleAddressSaved = async (addressData: AddressData) => {
     setShowAddressModal(false)
     setIsLoading(true)
-    await openWhatsApp(buildDeliveryAddress(addressData))
+    await openWhatsApp(buildDeliveryAddress(addressData), addressData.latitude, addressData.longitude)
   }
 
   const handleGuestSubmit = async (guestData: GuestData) => {
@@ -156,7 +163,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
       setIsLoading(false)
     }
 
-    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference)
+    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference, guestData.latitude, guestData.longitude)
     const link = document.createElement('a')
     link.href = waUrl
     link.target = '_blank'
