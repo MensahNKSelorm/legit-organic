@@ -9,23 +9,60 @@ import GoogleProvider from '@/components/providers/GoogleProvider'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://legitorganic.com'),
   title: {
-    default: "Legit Organic — Rebuilding Trust in Ghana's Food Ecosystem",
+    default: 'Legit Organic — Fresh Organic Food in Ghana',
     template: '%s | Legit Organic',
   },
-  description:
-    "Ghana's premier organic food marketplace. Traceable, certified-organic produce sourced directly from verified Ghanaian farmers — delivered with integrity.",
+  description: "Ghana's trusted organic food marketplace. Buy fresh, certified organic produce directly from verified Ghanaian farmers. Rice, vegetables, yam, spices — delivered to your door in Accra and beyond.",
   keywords: [
     'organic food Ghana',
-    'organic produce',
-    'Ghanaian farmers',
+    'organic produce Accra',
+    'buy organic food Ghana',
+    'certified organic Ghana',
+    'fresh vegetables Accra',
+    'organic rice Ghana',
     'farm to table Ghana',
-    'certified organic',
+    'Ghanaian farmers organic',
+    'healthy food delivery Ghana',
+    'organic spices Ghana',
   ],
+  authors: [{ name: 'Legit Organic Limited' }],
+  creator: 'Legit Organic Limited',
+  publisher: 'Legit Organic Limited',
   openGraph: {
     type: 'website',
     locale: 'en_GH',
+    url: 'https://legitorganic.com',
     siteName: 'Legit Organic',
+    title: 'Legit Organic — Fresh Organic Food in Ghana',
+    description: 'Buy fresh, certified organic produce directly from verified Ghanaian farmers.',
+    images: [
+      {
+        url: '/images/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Legit Organic — Fresh Organic Food in Ghana',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Legit Organic — Fresh Organic Food in Ghana',
+    description: 'Buy fresh, certified organic produce directly from verified Ghanaian farmers.',
+    images: ['/images/og-image.jpg'],
+    creator: '@legitorganicltd',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   icons: {
     icon: '/favicon.svg',

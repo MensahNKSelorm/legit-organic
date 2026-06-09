@@ -27,15 +27,32 @@ export async function generateStaticParams() {
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
   try {
+    const { slug } = await params
     const post = await api.blog.detail(slug)
+    const description = post.excerpt || `Read about ${post.title} on the Legit Organic blog — health, food safety, and nutrition in Ghana.`
+
     return {
-      title: `${post.title} | Legit Organic Blog`,
-      description: post.excerpt,
+      title: post.title,
+      description,
+      keywords: [
+        post.title,
+        post.category?.name || '',
+        'organic food Ghana',
+        'healthy eating Ghana',
+        'food safety Ghana',
+        'nutrition Ghana',
+        'Ghanaian food blog',
+      ],
+      openGraph: {
+        title: post.title,
+        description,
+        images: post.cover_image ? [{ url: post.cover_image }] : [],
+        type: 'article',
+      },
     }
   } catch {
-    return { title: 'Article Not Found' }
+    return { title: 'Article | Legit Organic Blog' }
   }
 }
 

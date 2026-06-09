@@ -13,15 +13,34 @@ export const revalidate = 0
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
   try {
+    const { slug } = await params
     const recipe = await api.recipes.detail(slug)
+    const description = recipe.description
+      ? recipe.description.replace(/<[^>]*>/g, '').slice(0, 160)
+      : `Learn how to make ${recipe.title} using fresh organic ingredients from Ghana.`
+
     return {
-      title: `${recipe.title} | Legit Organic Recipes`,
-      description: recipe.description.replace(/<[^>]*>/g, '').slice(0, 160),
+      title: recipe.title,
+      description,
+      keywords: [
+        recipe.title,
+        `${recipe.title} recipe`,
+        'Ghana recipe',
+        'Ghanaian cuisine',
+        'organic ingredients Ghana',
+        'healthy Ghanaian food',
+        'traditional Ghana cooking',
+      ],
+      openGraph: {
+        title: recipe.title,
+        description,
+        images: recipe.cover_image ? [{ url: recipe.cover_image }] : [],
+        type: 'website',
+      },
     }
   } catch {
-    return { title: 'Recipe Not Found' }
+    return { title: 'Recipe | Legit Organic' }
   }
 }
 

@@ -42,15 +42,33 @@ function LeafIcon() {
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
   try {
+    const { slug } = await params
     const product = await api.products.detail(slug)
+    const description = product.description
+      ? product.description.replace(/<[^>]*>/g, '').slice(0, 160)
+      : `Buy ${product.name} - certified organic from verified Ghanaian farmers. Delivered fresh to your door.`
+
     return {
-      title: product.name,
-      description: product.description.replace(/<[^>]*>/g, '').slice(0, 160),
+      title: `${product.name} — Organic ${product.category?.name || 'Produce'}`,
+      description,
+      keywords: [
+        product.name,
+        `organic ${product.name}`,
+        `buy ${product.name} Ghana`,
+        product.category?.name || '',
+        product.region?.name || '',
+        'organic food Ghana',
+      ],
+      openGraph: {
+        title: product.name,
+        description,
+        images: product.image ? [{ url: product.image }] : [],
+        type: 'website',
+      },
     }
   } catch {
-    return { title: 'Product Not Found' }
+    return { title: 'Product | Legit Organic' }
   }
 }
 
