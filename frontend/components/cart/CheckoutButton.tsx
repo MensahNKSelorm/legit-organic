@@ -55,7 +55,7 @@ Please send me the MoMo payment details. Thank you!`
 
 export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPromo }: CheckoutButtonProps) {
   const { user } = useAuth()
-  const { items, total } = useCart()
+  const { items, total, clearCart } = useCart()
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [showGuestModal, setShowGuestModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -98,6 +98,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
     }
 
     window.open(buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference), '_blank')
+    clearCart()
   }
 
   const handleWhatsAppOrder = async () => {
@@ -149,6 +150,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
     }
 
     window.open(buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference), '_blank')
+    clearCart()
   }
 
   return (
