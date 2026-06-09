@@ -25,6 +25,8 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
   const [searchInput, setSearchInput] = useState(initialAddress || '')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [locating, setLocating] = useState(false)
+  const [locError, setLocError] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
 
   const extractAddressComponents = (
@@ -118,6 +120,43 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
     })
   }
 
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocError('Geolocation is not supported by your browser.')
+      return
+    }
+
+    setLocating(true)
+    setLocError('')
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const loc = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        }
+        if (map && marker) {
+          map.setCenter(loc)
+          map.setZoom(17)
+          marker.setPosition(loc)
+          reverseGeocode(loc.lat, loc.lng)
+        }
+        setLocating(false)
+      },
+      (error) => {
+        setLocating(false)
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocError('Location access denied. Please enable location in your browser settings, or search for your address above.')
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          setLocError('Location unavailable. Please search for your address.')
+        } else {
+          setLocError('Could not get your location. Please search manually.')
+        }
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    )
+  }
+
   useEffect(() => {
     const loader = new Loader({
       apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
@@ -196,21 +235,7 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
       setMarker(markerInstance)
       setIsLoading(false)
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const userLocation = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            }
-            mapInstance.setCenter(userLocation)
-            mapInstance.setZoom(17)
-            markerInstance.setPosition(userLocation)
-            reverseGeocode(userLocation.lat, userLocation.lng)
-          },
-          () => {}
-        )
-      }
+      getCurrentLocation()
     }).catch(() => {
       setError('Failed to load map. Please enter address manually.')
       setIsLoading(false)
@@ -263,35 +288,39 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
       {/* Use current location button */}
       <button
         type="button"
-        onClick={() => {
-          if (!navigator.geolocation || !map || !marker) return
-          navigator.geolocation.getCurrentPosition((position) => {
-            const loc = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            }
-            map.setCenter(loc)
-            map.setZoom(17)
-            marker.setPosition(loc)
-            reverseGeocode(loc.lat, loc.lng)
-          })
-        }}
+        onClick={getCurrentLocation}
+        disabled={locating}
         className="w-full flex items-center justify-center gap-2 py-2.5
                    rounded-xl border-2 border-[#0D3B2A] text-[#0D3B2A]
-                   font-semibold text-sm hover:bg-[#0D3B2A]/5 transition-colors"
+                   font-semibold text-sm hover:bg-[#0D3B2A]/5
+                   transition-colors disabled:opacity-60
+                   disabled:cursor-not-allowed"
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className="w-4 h-4"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 1v4M12 19v4M1 12h4M19 12h4" />
-        </svg>
-        Use My Current Location
+        {locating ? (
+          <>
+            <div className="w-4 h-4 border-2 border-[#0D3B2A]
+                            border-t-transparent rounded-full animate-spin"/>
+            Getting your location...
+          </>
+        ) : (
+          <>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="w-4 h-4"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v4M12 19v4M1 12h4M19 12h4" />
+            </svg>
+            Use My Current Location
+          </>
+        )}
       </button>
+      {locError && (
+        <p className="text-xs text-red-500 text-center mt-1">{locError}</p>
+      )}
     </div>
   )
 }
