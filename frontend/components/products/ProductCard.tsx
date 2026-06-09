@@ -20,7 +20,9 @@ const PLACEHOLDERS = [
 ]
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const imageSrc = getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
+  const imageSrc = product.images && product.images.length > 0
+    ? getMediaUrl(product.images[0].image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
+    : getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
   const { addItem, isInCart } = useCart()
   const inCart = isInCart(product.id)
 

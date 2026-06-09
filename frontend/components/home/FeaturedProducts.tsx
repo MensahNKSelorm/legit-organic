@@ -41,7 +41,9 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.map((product, index) => {
-            const imageSrc = getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
+            const imageSrc = product.images && product.images.length > 0
+              ? getMediaUrl(product.images[0].image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
+              : getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
             return (
               <article
                 key={product.id}
