@@ -90,7 +90,13 @@ class Order(models.Model):
                 from users.emails import send_order_status_email
                 send_order_status_email(self)
             except Exception:
-                pass  # Never let email failure break the save
+                pass
+
+            try:
+                from users.sms import send_order_status_sms
+                send_order_status_sms(self)
+            except Exception:
+                pass
 
         self.__original_status = self.status
 
