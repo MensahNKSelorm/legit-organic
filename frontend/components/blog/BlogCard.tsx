@@ -50,7 +50,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
             </div>
           )}
           <span className="absolute top-3 left-3 bg-[#F4C430]/90 text-[#0D3B2A] text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
-            {post.category.name}
+            {post.category?.name}
           </span>
         </div>
 

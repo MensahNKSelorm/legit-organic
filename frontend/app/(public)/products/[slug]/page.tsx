@@ -126,7 +126,7 @@ export default async function ProductDetailPage({ params }: Props) {
               />
               {product.badge && (
                 <span className="absolute top-4 left-4 bg-forest-green text-ghana-gold text-sm font-bold px-3 py-1.5 rounded-full z-20 shadow pointer-events-none">
-                  {product.badge.name}
+                  {product.badge?.name}
                 </span>
               )}
             </div>

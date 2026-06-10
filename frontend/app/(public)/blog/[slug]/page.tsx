@@ -86,7 +86,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   let related: BlogPost[] = []
   try {
-    const same = await api.blog.list('category=' + post.category.slug)
+    const same = await api.blog.list('category=' + post.category?.slug)
     related = same.filter((p) => p.slug !== slug).slice(0, 3)
   } catch {
     // ignore
@@ -133,7 +133,7 @@ export default async function BlogPostPage({ params }: Props) {
         )}
         <div className="relative z-10 page-container max-w-4xl mx-auto px-6 lg:px-8 py-16 pb-20">
           <span className="inline-block bg-[#F4C430]/20 text-[#F4C430] text-xs font-semibold px-3 py-1 rounded-full mb-5">
-            {post.category.name}
+            {post.category?.name}
           </span>
           <h1 className="font-display text-3xl lg:text-5xl font-bold text-mist-white mb-6 leading-tight">
             {post.title}
@@ -229,7 +229,7 @@ export default async function BlogPostPage({ params }: Props) {
             {related.length > 0 && (
               <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-2xl p-6">
                 <p className="text-xs font-bold uppercase tracking-wide text-charcoal/40 dark:text-[#9ca3af] mb-4">
-                  More in {post.category.name}
+                  More in {post.category?.name}
                 </p>
                 <ul className="space-y-4">
                   {related.slice(0, 2).map((p) => (
@@ -260,7 +260,7 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="bg-beige dark:bg-[#111827] border-t border-[#E6D8BD] dark:border-[#374151]">
           <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
             <h2 className="font-display text-2xl font-bold text-forest-green dark:text-[#faf7f0] mb-8">
-              More from {post.category.name}
+              More from {post.category?.name}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {related.map((p) => (
