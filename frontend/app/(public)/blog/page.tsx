@@ -97,7 +97,7 @@ export default async function BlogPage({ searchParams }: Props) {
                 <div className="p-8 lg:p-10 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="bg-[#F4C430]/20 text-[#0D3B2A] dark:text-[#F4C430] text-xs font-semibold px-3 py-1 rounded-full">
-                      {featured.category.name}
+                      {featured.category?.name}
                     </span>
                     <span className="text-xs font-semibold text-ghana-gold uppercase tracking-wide">
                       Featured
