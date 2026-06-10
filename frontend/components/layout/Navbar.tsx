@@ -175,7 +175,7 @@ export default function Navbar() {
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/10"
                 aria-label="Account menu"
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0D3B2A] to-[#2E7D32] flex items-center justify-center text-white font-display italic font-bold text-xs ring-2 ring-[#F4C430] ring-offset-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0D3B2A] to-[#2E7D32] flex items-center justify-center text-white font-['Dancing_Script'] font-bold text-lg text-xs ring-2 ring-[#F4C430] ring-offset-2">
                   {initials}
                 </div>
                 <span
@@ -299,7 +299,7 @@ export default function Navbar() {
             <>
               <li>
                 <div className="px-4 py-3 flex items-center gap-3 border-t border-sand dark:border-[#333] mt-3 pt-4">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0D3B2A] to-[#2E7D32] flex items-center justify-center text-white font-display italic font-bold text-sm ring-2 ring-[#F4C430] ring-offset-2">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0D3B2A] to-[#2E7D32] flex items-center justify-center text-white font-['Dancing_Script'] font-bold text-lg text-sm ring-2 ring-[#F4C430] ring-offset-2">
                     {initials}
                   </div>
                   <div>

@@ -25,6 +25,7 @@ const config: Config = {
       fontFamily: {
         display: ['"Fraunces"', "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
+        cursive: ['"Dancing Script"', "cursive"],
       },
       backgroundImage: {
         "hero-pattern": "radial-gradient(circle at 20% 80%, #2E7D3215 0%, transparent 50%), radial-gradient(circle at 80% 20%, #F4C43010 0%, transparent 50%)",
