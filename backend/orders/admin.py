@@ -18,6 +18,9 @@ class CartItemInline(TabularInline):
     extra = 0
     readonly_fields = ['product', 'quantity']
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(Cart)
 class CartAdmin(ModelAdmin):
@@ -28,6 +31,9 @@ class CartAdmin(ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
