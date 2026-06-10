@@ -31,7 +31,6 @@ async function parseError(res: Response): Promise<never> {
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
-    cache: 'no-store',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   })
