@@ -4,8 +4,9 @@ export const revalidate = 0
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { api } from '@/lib/api'
 import type { BlogPost, BlogCategory } from '@/types'
+
+const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 import BlogCard from '@/components/blog/BlogCard'
 import BlogCategoryFilter from '@/components/blog/BlogCategoryFilter'
 import { getMediaUrl } from '@/lib/media'
@@ -32,14 +33,20 @@ export default async function BlogPage({ searchParams }: Props) {
   let posts: BlogPost[] = []
   let categories: BlogCategory[] = []
 
-  try {
-    ;[posts, categories] = await Promise.all([
-      category ? api.blog.list('category=' + category) : api.blog.list(),
-      api.blog.categories(),
-    ])
-  } catch {
-    // API unavailable — render empty state
-  }
+  const [postsResult, categoriesResult] = await Promise.allSettled([
+    fetch(
+      category
+        ? `${INTERNAL_API}/api/blog/?category=${category}`
+        : `${INTERNAL_API}/api/blog/`,
+      { headers: { 'Content-Type': 'application/json' }, next: { revalidate: 0 } }
+    ).then(r => r.ok ? r.json() : []).catch(() => []),
+    fetch(`${INTERNAL_API}/api/blog/categories/`, {
+      headers: { 'Content-Type': 'application/json' },
+      next: { revalidate: 0 },
+    }).then(r => r.ok ? r.json() : []).catch(() => []),
+  ])
+  posts = postsResult.status === 'fulfilled' ? postsResult.value : []
+  categories = categoriesResult.status === 'fulfilled' ? categoriesResult.value : []
 
   const featured = !category && posts.length > 0 ? posts[0] : null
   const gridPosts = featured ? posts.slice(1) : posts

@@ -2,8 +2,9 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 import type { Metadata } from 'next'
-import { api } from '@/lib/api'
 import type { Product, Category } from '@/types'
+
+const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 import ProductCard from '@/components/products/ProductCard'
 import CategoryFilter from '@/components/products/CategoryFilter'
 
@@ -26,16 +27,20 @@ export default async function ProductsPage({
   let products: Product[] = []
   let categories: Category[] = []
 
-  try {
-    ;[products, categories] = await Promise.all([
+  const [productsResult, categoriesResult] = await Promise.allSettled([
+    fetch(
       activeCategory
-        ? api.products.list('category=' + activeCategory)
-        : api.products.list(),
-      api.products.categories(),
-    ])
-  } catch {
-    // API unavailable — render empty state
-  }
+        ? `${INTERNAL_API}/api/products/?category=${activeCategory}`
+        : `${INTERNAL_API}/api/products/`,
+      { headers: { 'Content-Type': 'application/json' }, next: { revalidate: 0 } }
+    ).then(r => r.ok ? r.json() : []).catch(() => []),
+    fetch(`${INTERNAL_API}/api/products/categories/`, {
+      headers: { 'Content-Type': 'application/json' },
+      next: { revalidate: 0 },
+    }).then(r => r.ok ? r.json() : []).catch(() => []),
+  ])
+  products = productsResult.status === 'fulfilled' ? productsResult.value : []
+  categories = categoriesResult.status === 'fulfilled' ? categoriesResult.value : []
 
   return (
     <>

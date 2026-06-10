@@ -3,8 +3,9 @@ export const revalidate = 0
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { api } from '@/lib/api'
 import type { Recipe } from '@/types'
+
+const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 import RecipeCard from '@/components/recipes/RecipeCard'
 
 export const metadata: Metadata = {
@@ -14,12 +15,10 @@ export const metadata: Metadata = {
 }
 
 export default async function RecipesPage() {
-  let recipes: Recipe[] = []
-  try {
-    recipes = await api.recipes.default()
-  } catch {
-    // API unavailable — render empty state
-  }
+  const recipes: Recipe[] = await fetch(`${INTERNAL_API}/api/recipes/default/`, {
+    headers: { 'Content-Type': 'application/json' },
+    next: { revalidate: 0 },
+  }).then(r => r.ok ? r.json() : []).catch(() => [])
 
   return (
     <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
