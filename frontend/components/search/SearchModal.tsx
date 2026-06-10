@@ -36,7 +36,7 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
       onClick={() => { router.push(`/products/${product.slug}`); onClose() }}
       className="group text-left rounded-2xl overflow-hidden bg-white dark:bg-gray-800 border border-[#E6D8BD] dark:border-gray-700 hover:shadow-md transition-shadow w-full"
     >
-      <div className="relative h-36 bg-[#F5F0E6] dark:bg-gray-700">
+      <div className="relative h-28 md:h-36 bg-[#F5F0E6] dark:bg-gray-700">
         <Image
           src={imgSrc}
           alt={product.name}
@@ -51,7 +51,7 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
         )}
       </div>
       <div className="p-3">
-        <p className="font-semibold text-[#0D3B2A] dark:text-white text-sm leading-snug group-hover:text-[#2E7D32] dark:group-hover:text-[#81C784] transition-colors line-clamp-2">
+        <p className="font-semibold text-[#0D3B2A] dark:text-white text-xs md:text-sm leading-snug group-hover:text-[#2E7D32] dark:group-hover:text-[#81C784] transition-colors line-clamp-2">
           {product.name}
         </p>
         <p className="text-[#2E7D32] dark:text-[#81C784] font-bold text-sm mt-1">
@@ -65,7 +65,7 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
 function SkeletonCard() {
   return (
     <div className="rounded-2xl overflow-hidden bg-white dark:bg-gray-800 border border-[#E6D8BD] dark:border-gray-700 animate-pulse">
-      <div className="h-36 bg-[#E6D8BD] dark:bg-gray-700" />
+      <div className="h-28 md:h-36 bg-[#E6D8BD] dark:bg-gray-700" />
       <div className="p-3 space-y-2">
         <div className="h-3 bg-[#E6D8BD] dark:bg-gray-700 rounded w-3/4" />
         <div className="h-3 bg-[#E6D8BD] dark:bg-gray-700 rounded w-1/3" />
@@ -132,7 +132,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col px-4">
+    <div className="fixed inset-0 z-[200] flex flex-col">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -141,15 +141,15 @@ export default function SearchModal({ isOpen, onClose }: Props) {
       />
 
       {/* Content panel */}
-      <div className="relative z-10 max-w-3xl w-full mx-auto mt-20 rounded-2xl bg-[#FAF7F0] dark:bg-gray-900 max-h-[80vh] overflow-y-auto shadow-2xl">
-        <div className="p-6">
+      <div className="relative z-10 bg-[#FAF7F0] dark:bg-gray-900 w-full mx-4 mt-16 rounded-2xl md:max-w-3xl md:mx-auto md:mt-20 max-h-[85vh] overflow-y-auto shadow-2xl">
+        <div className="p-4 md:p-6">
 
           {/* Search input */}
           <div className="flex items-center gap-3 border-b-2 border-[#E6D8BD] dark:border-gray-700 pb-4 mb-6">
             <svg
               viewBox="0 0 24 24" fill="none" stroke="currentColor"
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              className="w-6 h-6 text-[#0D3B2A]/40 dark:text-gray-400 shrink-0"
+              className="w-5 h-5 md:w-6 md:h-6 text-[#0D3B2A]/40 dark:text-gray-400 shrink-0"
               aria-hidden
             >
               <circle cx="11" cy="11" r="8"/>
@@ -161,20 +161,20 @@ export default function SearchModal({ isOpen, onClose }: Props) {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search for organic rice, vegetables..."
-              className="flex-1 text-xl bg-transparent text-[#0D3B2A] dark:text-white placeholder:text-[#0D3B2A]/30 dark:placeholder:text-gray-500 focus:outline-none"
+              className="flex-1 text-base md:text-xl bg-transparent text-[#0D3B2A] dark:text-white placeholder:text-[#0D3B2A]/30 dark:placeholder:text-gray-500 focus:outline-none"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
                 aria-label="Clear search"
-                className="text-[#0D3B2A]/40 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors text-2xl leading-none"
+                className="w-10 h-10 flex items-center justify-center text-[#0D3B2A]/40 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors text-2xl leading-none shrink-0"
               >
                 ×
               </button>
             )}
             <button
               onClick={onClose}
-              className="ml-2 text-sm font-semibold text-[#0D3B2A]/50 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors"
+              className="w-10 h-10 flex items-center justify-center ml-1 text-sm font-semibold text-[#0D3B2A]/50 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors shrink-0"
             >
               Close
             </button>
