@@ -46,7 +46,7 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
         />
         {product.category && (
           <span className="absolute top-2 left-2 text-xs font-semibold bg-[#0D3B2A]/80 text-white px-2 py-0.5 rounded-full">
-            {product.category.name}
+            {product.category?.name}
           </span>
         )}
       </div>
