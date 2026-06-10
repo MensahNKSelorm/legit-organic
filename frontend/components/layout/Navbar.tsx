@@ -170,8 +170,8 @@ export default function Navbar() {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search products"
-            className={['w-9 h-9 rounded-full flex items-center justify-center transition-colors', toggleColor].join(' ')}
-            style={transparent ? { color: '#ffffff' } : undefined}
+            className={['shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-[background-color]', toggleColor].join(' ')}
+            style={{ color: transparent ? '#ffffff' : undefined }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
               <circle cx="11" cy="11" r="8"/>
@@ -255,8 +255,8 @@ export default function Navbar() {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search products"
-            className={['w-9 h-9 rounded-full flex items-center justify-center transition-colors', toggleColor].join(' ')}
-            style={transparent ? { color: '#ffffff' } : undefined}
+            className={['shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-[background-color]', toggleColor].join(' ')}
+            style={{ color: transparent ? '#ffffff' : undefined }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
               <circle cx="11" cy="11" r="8"/>

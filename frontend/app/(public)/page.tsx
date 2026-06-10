@@ -14,15 +14,14 @@ export default async function HomePage() {
   let blogPosts: BlogPost[] = []
   let recipes: Recipe[] = []
 
-  try {
-    ;[products, blogPosts, recipes] = await Promise.all([
-      api.products.featured(),
-      api.blog.list(),
-      api.recipes.default(),
-    ])
-  } catch {
-    // API unavailable — render with empty arrays
-  }
+  const [productsResult, blogResult, recipesResult] = await Promise.allSettled([
+    api.products.featured(),
+    api.blog.list(),
+    api.recipes.default(),
+  ])
+  if (productsResult.status === 'fulfilled') products = productsResult.value
+  if (blogResult.status === 'fulfilled') blogPosts = blogResult.value
+  if (recipesResult.status === 'fulfilled') recipes = recipesResult.value
 
   return (
     <>
