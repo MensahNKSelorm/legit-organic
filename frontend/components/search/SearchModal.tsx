@@ -145,7 +145,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
         <div className="p-4 md:p-6">
 
           {/* Search input */}
-          <div className="flex items-center gap-3 border-b-2 border-[#E6D8BD] dark:border-gray-700 pb-4 mb-6">
+          <div className="flex items-center gap-2 border-b border-[#E6D8BD] dark:border-gray-700 pb-3 mb-4">
             <svg
               viewBox="0 0 24 24" fill="none" stroke="currentColor"
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -161,22 +161,28 @@ export default function SearchModal({ isOpen, onClose }: Props) {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search for organic rice, vegetables..."
-              className="flex-1 text-base md:text-xl bg-transparent text-[#0D3B2A] dark:text-white placeholder:text-[#0D3B2A]/30 dark:placeholder:text-gray-500 focus:outline-none"
+              className="flex-1 min-w-0 text-base md:text-xl bg-transparent text-[#0D3B2A] dark:text-white placeholder:text-[#0D3B2A]/30 dark:placeholder:text-gray-500 focus:outline-none"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
                 aria-label="Clear search"
-                className="w-10 h-10 flex items-center justify-center text-[#0D3B2A]/40 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors text-2xl leading-none shrink-0"
+                className="shrink-0 w-10 h-10 flex items-center justify-center text-[#0D3B2A]/40 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors text-2xl leading-none"
               >
                 ×
               </button>
             )}
             <button
               onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center ml-1 text-sm font-semibold text-[#0D3B2A]/50 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors shrink-0"
+              aria-label="Close search"
+              className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-[#0D3B2A] dark:text-white"
             >
-              Close
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
             </button>
           </div>
 
