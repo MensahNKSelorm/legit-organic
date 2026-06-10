@@ -121,10 +121,10 @@ export default function Navbar() {
     >
       <nav
         className="page-container max-w-7xl mx-auto px-6 lg:px-8"
-        style={{ height: '68px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem' }}
+        style={{ height: '68px', display: 'flex', alignItems: 'center', gap: '1.5rem' }}
       >
         {/* Logo */}
-        <Link href="/" className="shrink-0 flex items-center" aria-label="Legit Organic — Home">
+        <Link href="/" className="shrink-0 flex items-center" style={{ minWidth: '160px' }} aria-label="Legit Organic — Home">
           <Image
             src={(transparent || darkMode) ? '/images/logo-darkmode.svg' : '/images/logo-lightmode.svg'}
             alt="Legit Organic"
@@ -156,7 +156,7 @@ export default function Navbar() {
         </ul>
 
         {/* Theme + Auth (desktop) */}
-        <div className="hidden md:flex items-center gap-3 shrink-0">
+        <div className="hidden md:flex items-center gap-3 shrink-0 justify-end" style={{ minWidth: '160px' }}>
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
