@@ -132,16 +132,15 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden
-      />
-
+    <div
+      className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex flex-col items-start md:items-center overflow-y-auto pt-0"
+      onClick={onClose}
+    >
       {/* Content panel */}
-      <div className="relative z-10 bg-[#FAF7F0] dark:bg-gray-900 w-full mx-4 mt-16 rounded-2xl md:max-w-3xl md:mx-auto md:mt-20 max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div
+        className="relative z-10 bg-[#FAF7F0] dark:bg-gray-900 w-[calc(100%-2rem)] mx-auto mt-16 rounded-2xl md:max-w-3xl md:mt-20 max-h-[85vh] overflow-y-auto shadow-2xl self-start md:self-auto"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="p-4 md:p-6">
 
           {/* Search input */}
