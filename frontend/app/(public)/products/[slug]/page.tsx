@@ -8,7 +8,7 @@ import { api } from '@/lib/api'
 import type { Product } from '@/types'
 import ProductCard from '@/components/products/ProductCard'
 import ProductTabs from '@/components/products/ProductTabs'
-import AddToCartButton from '@/components/products/AddToCartButton'
+import AddToCartButton, { WishlistButton } from '@/components/products/AddToCartButton'
 import ProductImageGallery from '@/components/products/ProductImageGallery'
 
 // ---------------------------------------------------------------------------
@@ -169,18 +169,8 @@ export default async function ProductDetailPage({ params }: Props) {
                 <AddToCartButton product={product} />
               </div>
 
-              <div className="relative group flex-1">
-                <button
-                  disabled
-                  className="w-full border-2 border-[#0D3B2A] dark:border-[#81C784] text-[#0D3B2A] dark:text-[#81C784] font-semibold px-6 py-3 rounded-xl opacity-50 cursor-not-allowed"
-                  aria-disabled="true"
-                >
-                  Save to My List
-                </button>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#0D3B2A] text-mist-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
-                  Coming soon
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-[#0D3B2A]" />
-                </div>
+              <div className="flex-1">
+                <WishlistButton productId={product.id} />
               </div>
             </div>
 

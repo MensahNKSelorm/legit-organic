@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth'
 import { CartProvider } from '@/lib/cart'
+import { WishlistProvider } from '@/lib/wishlist'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import VerificationBanner from '@/components/ui/VerificationBanner'
@@ -90,12 +91,14 @@ export default function RootLayout({
       <body className="antialiased">
         <GoogleProvider>
           <AuthProvider>
-            <CartProvider>
-              <Navbar />
-              <VerificationBanner />
-              <main>{children}</main>
-              <Footer />
-            </CartProvider>
+            <WishlistProvider>
+              <CartProvider>
+                <Navbar />
+                <VerificationBanner />
+                <main>{children}</main>
+                <Footer />
+              </CartProvider>
+            </WishlistProvider>
           </AuthProvider>
         </GoogleProvider>
         <WhatsAppButton />

@@ -1,6 +1,7 @@
 import re
 from rest_framework import serializers
-from .models import User
+from .models import User, WishlistItem
+from products.serializers import ProductSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -40,3 +41,21 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         return User.objects.create_user(**validated_data)
+
+
+class WishlistItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    product_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = WishlistItem
+        fields = ['id', 'product', 'product_id', 'created_at']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        product_id = validated_data['product_id']
+        item, _ = WishlistItem.objects.get_or_create(
+            user=user,
+            product_id=product_id,
+        )
+        return item

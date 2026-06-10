@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import SectionWrapper from '@/components/ui/SectionWrapper'
 import { useAuth } from '@/lib/auth'
+import { useCart } from '@/lib/cart'
+import { useWishlist } from '@/lib/wishlist'
 import { api } from '@/lib/api'
+import { getMediaUrl } from '@/lib/media'
 import type { UserRecipe, Order } from '@/types'
 import OrderCard from '@/components/orders/OrderCard'
 import LocationPicker from '@/components/ui/LocationPicker'
 
-type Tab = 'personal' | 'recipes' | 'orders'
+type Tab = 'personal' | 'recipes' | 'orders' | 'wishlist'
 
 const GHANA_REGIONS = [
   'Ahafo', 'Ashanti', 'Bono', 'Bono East', 'Central', 'Eastern',
@@ -28,6 +32,8 @@ function formatDate(iso: string) {
 
 export default function ProfilePage() {
   const { user, logout, updateUser } = useAuth()
+  const { addItem: addToCart } = useCart()
+  const { items: wishlistItems, isLoading: wishlistLoading, removeItem: removeWishlistItem } = useWishlist()
 
   const [activeTab, setActiveTab] = useState<Tab>('personal')
 
@@ -157,9 +163,10 @@ export default function ProfilePage() {
   const inputErr = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-400`
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'personal', label: 'Account Details' },
-    { id: 'recipes',  label: 'My Recipes' },
-    { id: 'orders',   label: 'Order History' },
+    { id: 'personal',  label: 'Account Details' },
+    { id: 'wishlist',  label: 'My List' },
+    { id: 'recipes',   label: 'My Recipes' },
+    { id: 'orders',    label: 'Order History' },
   ]
 
   return (
@@ -406,6 +413,87 @@ export default function ProfilePage() {
                   </form>
                 </div>
               </>
+            )}
+
+            {/* ── My List (Wishlist) tab ── */}
+            {activeTab === 'wishlist' && (
+              <div className="bg-mist-white rounded-2xl p-8 border border-sand">
+                <h2 className="font-display text-xl font-bold text-forest-green mb-6">My List</h2>
+
+                {wishlistLoading ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3">
+                    <span className="inline-block w-8 h-8 border-2 border-leaf-green border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-charcoal/40">Loading your list…</span>
+                  </div>
+                ) : wishlistItems.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" className="w-6 h-6">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                    </div>
+                    <p className="font-semibold text-forest-green mb-1">Your list is empty</p>
+                    <p className="text-charcoal/60 text-sm mb-5">Browse products and save items to find them here.</p>
+                    <Link href="/products" className="text-sm font-semibold text-leaf-green hover:underline">
+                      Browse Products
+                    </Link>
+                  </div>
+                ) : (
+                  <ul className="space-y-3">
+                    {wishlistItems.map((item) => {
+                      const imgSrc = getMediaUrl(item.product.image)
+                      return (
+                        <li
+                          key={item.id}
+                          className="flex items-center gap-4 p-4 rounded-xl border border-sand bg-cream hover:border-leaf-green/40 transition-colors"
+                        >
+                          {/* Image */}
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-beige flex-shrink-0">
+                            {imgSrc ? (
+                              <Image
+                                src={imgSrc}
+                                alt={item.product.name}
+                                width={64}
+                                height={64}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-charcoal/20 text-xs">No img</div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/products/${item.product.slug}`} className="font-semibold text-forest-green text-sm leading-snug hover:text-leaf-green transition-colors truncate block">
+                              {item.product.name}
+                            </Link>
+                            <p className="text-xs text-charcoal/50 mt-0.5">
+                              GH₵ {item.product.price} · {item.product.unit}
+                            </p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => addToCart(item.product)}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-forest-green text-mist-white hover:opacity-90 transition-opacity"
+                            >
+                              Add to Cart
+                            </button>
+                            <button
+                              onClick={() => removeWishlistItem(item.id)}
+                              aria-label="Remove from list"
+                              className="w-7 h-7 flex items-center justify-center rounded-lg border border-red-200 text-red-400 hover:bg-red-50 transition-colors text-sm font-bold"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
             )}
 
             {/* ── My Recipes tab ── */}

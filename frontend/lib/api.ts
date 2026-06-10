@@ -2,7 +2,7 @@ import type {
   Product, ProductDetail, Category,
   BlogPost, BlogCategory,
   Recipe, RecipeWithPairings, UserRecipe,
-  User, Order, PromoCode,
+  User, Order, PromoCode, WishlistItem,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -181,6 +181,16 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
+    wishlist: {
+      list: () => fetchWithAuth<WishlistItem[]>('/api/users/wishlist/'),
+      add: (product_id: number) =>
+        fetchWithAuth<WishlistItem>('/api/users/wishlist/', {
+          method: 'POST',
+          body: JSON.stringify({ product_id }),
+        }),
+      remove: (id: number) =>
+        fetchWithAuth<null>(`/api/users/wishlist/${id}/`, { method: 'DELETE' }),
+    },
   },
   orders: {
     create: (data: {

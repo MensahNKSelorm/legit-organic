@@ -219,6 +219,12 @@ export interface PromoCode {
   message: string
 }
 
+export interface WishlistItem {
+  id: number
+  product: Product
+  created_at: string
+}
+
 export interface AuthTokens {
   access: string
   refresh: string

@@ -1,5 +1,9 @@
 from django.urls import path
-from .views import RegisterView, ProfileView, VerifyEmailView, ResendVerificationView, GoogleAuthView
+from .views import (
+    RegisterView, ProfileView, VerifyEmailView,
+    ResendVerificationView, GoogleAuthView,
+    WishlistView, WishlistItemDeleteView,
+)
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='user-register'),
@@ -7,4 +11,6 @@ urlpatterns = [
     path('verify-email/', VerifyEmailView.as_view(), name='verify-email'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
     path('google/', GoogleAuthView.as_view(), name='google-auth'),
+    path('wishlist/', WishlistView.as_view(), name='wishlist'),
+    path('wishlist/<int:pk>/', WishlistItemDeleteView.as_view(), name='wishlist-delete'),
 ]

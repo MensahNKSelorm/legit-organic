@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
-from .models import User
-from .serializers import RegisterSerializer, UserSerializer
+from .models import User, WishlistItem
+from .serializers import RegisterSerializer, UserSerializer, WishlistItemSerializer
 from .emails import send_welcome_email, send_verification_email
 from .google_auth import verify_google_token
 
@@ -110,6 +110,23 @@ class GoogleAuthView(APIView):
             'refresh': str(refresh),
             'user': UserSerializer(user).data,
         })
+
+
+class WishlistView(generics.ListCreateAPIView):
+    serializer_class = WishlistItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return WishlistItem.objects.filter(
+            user=self.request.user
+        ).select_related('product', 'product__category', 'product__region', 'product__badge')
+
+
+class WishlistItemDeleteView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return WishlistItem.objects.filter(user=self.request.user)
 
 
 class ResendVerificationView(APIView):
