@@ -9,7 +9,7 @@ import { useCart } from '@/lib/cart'
 import { useWishlist } from '@/lib/wishlist'
 import { api } from '@/lib/api'
 import { getMediaUrl } from '@/lib/media'
-import type { UserRecipe, Order } from '@/types'
+import type { UserRecipe, Order, Product } from '@/types'
 import OrderCard from '@/components/orders/OrderCard'
 import LocationPicker from '@/components/ui/LocationPicker'
 
@@ -28,6 +28,16 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GH', {
     year: 'numeric', month: 'short', day: 'numeric',
   })
+}
+
+function getWishlistImageSrc(product: Product): string {
+  if (product.images && product.images.length > 0) {
+    return getMediaUrl(product.images[0].image) || '/images/products/p1.webp'
+  }
+  if (product.image) {
+    return getMediaUrl(product.image) || '/images/products/p1.webp'
+  }
+  return '/images/products/p1.webp'
 }
 
 export default function ProfilePage() {
@@ -441,7 +451,7 @@ export default function ProfilePage() {
                 ) : (
                   <ul className="space-y-3">
                     {wishlistItems.map((item) => {
-                      const imgSrc = getMediaUrl(item.product.image)
+                      const imgSrc = getWishlistImageSrc(item.product)
                       return (
                         <li
                           key={item.id}
