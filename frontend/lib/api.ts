@@ -121,6 +121,12 @@ export const api = {
     list: (params?: string) => fetchAPI<Product[]>(`/api/products/${params ? '?' + params : ''}`),
     detail: (slug: string) => fetchAPI<ProductDetail>(`/api/products/${slug}/`),
     categories: () => fetchAPI<Category[]>('/api/products/categories/'),
+    search: (query: string) => fetchAPI<{
+      query: string
+      results: Product[]
+      related: Product[]
+      has_results: boolean
+    }>(`/api/products/search/?q=${encodeURIComponent(query)}`),
   },
   blog: {
     list: (params?: string) => fetchAPI<BlogPost[]>(`/api/blog/${params ? '?' + params : ''}`),

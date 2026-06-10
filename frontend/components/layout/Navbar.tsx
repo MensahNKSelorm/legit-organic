@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import CartIcon from '@/components/cart/CartIcon'
+import SearchModal from '@/components/search/SearchModal'
 
 const navLinks = [
   { label: 'Home',     href: '/' },
@@ -54,6 +55,7 @@ export default function Navbar() {
   const [menuOpen,     setMenuOpen]     = useState(false)
   const [darkMode,     setDarkMode]     = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [searchOpen,   setSearchOpen]   = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -164,6 +166,19 @@ export default function Navbar() {
             {darkMode ? <SunIcon /> : <MoonIcon />}
           </button>
 
+          {/* Search */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search products"
+            className={['w-9 h-9 rounded-full flex items-center justify-center transition-colors', toggleColor].join(' ')}
+            style={transparent ? { color: '#ffffff' } : undefined}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
+
           {/* Cart icon */}
           <CartIcon isTransparent={transparent} />
 
@@ -235,8 +250,19 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile right: cart + hamburger */}
+        {/* Mobile right: search + cart + hamburger */}
         <div className="md:hidden flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search products"
+            className={['w-9 h-9 rounded-full flex items-center justify-center transition-colors', toggleColor].join(' ')}
+            style={transparent ? { color: '#ffffff' } : undefined}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
           <CartIcon isTransparent={transparent} />
           <button
             aria-label="Toggle navigation menu"
@@ -291,6 +317,20 @@ export default function Navbar() {
             >
               {darkMode ? <SunIcon /> : <MoonIcon />}
               {darkMode ? 'Light mode' : 'Dark mode'}
+            </button>
+          </li>
+
+          {/* Search */}
+          <li>
+            <button
+              onClick={() => { setSearchOpen(true); setMenuOpen(false) }}
+              className="w-full text-left flex items-center gap-3 py-3 px-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              Search products
             </button>
           </li>
 
@@ -357,6 +397,7 @@ export default function Navbar() {
           )}
         </ul>
       </div>
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   )
 }
