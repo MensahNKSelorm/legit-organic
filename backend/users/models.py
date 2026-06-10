@@ -48,6 +48,13 @@ class User(AbstractUser):
         return self.email
 
 
+class Customer(User):
+    class Meta:
+        proxy = True
+        verbose_name = 'Customer'
+        verbose_name_plural = 'Customers'
+
+
 class WishlistItem(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
