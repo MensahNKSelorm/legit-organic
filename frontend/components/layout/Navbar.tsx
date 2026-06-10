@@ -135,7 +135,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <ul className="hidden md:flex items-center gap-8" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ul className="hidden md:flex flex-1 justify-center items-center gap-8" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {navLinks.map((link) => (
             <li key={link.href}>
               <Link

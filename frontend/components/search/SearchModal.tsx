@@ -97,6 +97,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
       setIsLoading(false)
       document.body.style.overflow = ''
     }
+    return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
   // Escape key
@@ -131,7 +132,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col px-4">
+    <div className="fixed inset-0 z-[200] flex flex-col px-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
