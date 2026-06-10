@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
@@ -6,19 +9,6 @@ import { api } from '@/lib/api'
 import type { BlogPost } from '@/types'
 import { getMediaUrl } from '@/lib/media'
 import BlogCard from '@/components/blog/BlogCard'
-
-// ---------------------------------------------------------------------------
-// Static params
-// ---------------------------------------------------------------------------
-
-export async function generateStaticParams() {
-  try {
-    const posts = await api.blog.list()
-    return posts.map((p) => ({ slug: p.slug }))
-  } catch {
-    return []
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Metadata
