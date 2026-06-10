@@ -6,14 +6,43 @@ from .promo_models import PromoCode
 from products.models import Product
 
 
+class CartProductSerializer(serializers.ModelSerializer):
+    category = serializers.SerializerMethodField()
+    region = serializers.SerializerMethodField()
+    badge = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'name', 'slug', 'description', 'price', 'unit', 'image',
+            'category', 'region', 'badge', 'is_featured', 'is_available',
+            'created_at', 'updated_at',
+        ]
+
+    def get_category(self, obj):
+        if not obj.category_id:
+            return None
+        return {
+            'id': obj.category.id,
+            'name': obj.category.name,
+            'slug': obj.category.slug,
+            'description': getattr(obj.category, 'description', ''),
+            'image': None,
+        }
+
+    def get_region(self, obj):
+        return None
+
+    def get_badge(self, obj):
+        return None
+
+
 class CartItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
-    product_price = serializers.DecimalField(source='product.price', max_digits=10,
-                                             decimal_places=2, read_only=True)
+    product = CartProductSerializer(read_only=True)
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'product_name', 'product_price', 'quantity']
+        fields = ['id', 'product', 'quantity']
 
 
 class CartSerializer(serializers.ModelSerializer):

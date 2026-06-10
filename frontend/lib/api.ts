@@ -198,6 +198,20 @@ export const api = {
         fetchWithAuth<null>(`/api/users/wishlist/${id}/`, { method: 'DELETE' }),
     },
   },
+  cart: {
+    get: () => fetchWithAuth<{ id: number; items: { id: number; product: Product; quantity: number }[]; created_at: string; updated_at: string }>('/api/orders/cart/'),
+    addItem: (product_id: number, quantity: number) =>
+      fetchWithAuth<{ id: number; items: { id: number; product: Product; quantity: number }[] }>('/api/orders/cart/items/', {
+        method: 'POST',
+        body: JSON.stringify({ product_id, quantity }),
+      }),
+    removeItem: (product_id: number) =>
+      fetchWithAuth<{ id: number; items: { id: number; product: Product; quantity: number }[] }>('/api/orders/cart/items/', {
+        method: 'DELETE',
+        body: JSON.stringify({ product_id }),
+      }),
+    clear: () => fetchWithAuth<{ id: number; items: [] }>('/api/orders/cart/clear/', { method: 'POST' }),
+  },
   orders: {
     create: (data: {
       items: { product_id: number; quantity: number }[]

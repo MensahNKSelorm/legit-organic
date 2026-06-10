@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    CartView, CartItemViewSet,
+    CartView, CartItemViewSet, CartClearView,
     CreateOrderView, VerifyPaymentView, ValidatePromoView,
     UserOrderListView, OrderDetailView, ExportOrdersView,
     OrderReceiptView,
@@ -9,6 +9,7 @@ from .views import (
 urlpatterns = [
     path('cart/', CartView.as_view(), name='cart'),
     path('cart/items/', CartItemViewSet.as_view(), name='cart-items'),
+    path('cart/clear/', CartClearView.as_view(), name='cart-clear'),
     path('create/', CreateOrderView.as_view(), name='order-create'),
     path('verify-payment/', VerifyPaymentView.as_view(), name='verify-payment'),
     path('validate-promo/', ValidatePromoView.as_view(), name='validate-promo'),

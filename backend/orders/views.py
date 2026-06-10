@@ -10,28 +10,57 @@ from .serializers import (
     CartSerializer, CartItemSerializer,
     OrderSerializer, CreateOrderSerializer,
 )
+from products.models import Product
 
 
-class CartView(generics.RetrieveAPIView):
-    serializer_class = CartSerializer
+class CartView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        cart, _ = Cart.objects.get_or_create(user=self.request.user)
-        return cart
+    def get(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        serializer = CartSerializer(cart, context={'request': request})
+        return Response(serializer.data)
 
 
-class CartItemViewSet(generics.ListCreateAPIView):
-    serializer_class = CartItemSerializer
+class CartItemViewSet(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        cart, _ = Cart.objects.get_or_create(user=self.request.user)
-        return CartItem.objects.filter(cart=cart)
+    def post(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        product_id = request.data.get('product_id')
+        quantity = int(request.data.get('quantity', 1))
 
-    def perform_create(self, serializer):
-        cart, _ = Cart.objects.get_or_create(user=self.request.user)
-        serializer.save(cart=cart)
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart, product=product, defaults={'quantity': quantity}
+        )
+        if not created:
+            cart_item.quantity = quantity
+            cart_item.save()
+
+        serializer = CartSerializer(cart, context={'request': request})
+        return Response(serializer.data)
+
+    def delete(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        product_id = request.data.get('product_id')
+        CartItem.objects.filter(cart=cart, product_id=product_id).delete()
+        serializer = CartSerializer(cart, context={'request': request})
+        return Response(serializer.data)
+
+
+class CartClearView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        cart.items.all().delete()
+        serializer = CartSerializer(cart, context={'request': request})
+        return Response(serializer.data)
 
 
 class CreateOrderView(APIView):
