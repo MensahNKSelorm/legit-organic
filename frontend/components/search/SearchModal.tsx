@@ -167,7 +167,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
               <button
                 onClick={() => setQuery('')}
                 aria-label="Clear search"
-                className="shrink-0 w-10 h-10 flex items-center justify-center text-[#0D3B2A]/40 dark:text-gray-400 hover:text-[#0D3B2A] dark:hover:text-white transition-colors text-2xl leading-none"
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 ×
               </button>
@@ -175,7 +175,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
             <button
               onClick={onClose}
               aria-label="Close search"
-              className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-[#0D3B2A] dark:text-white"
+              className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-[#0D3B2A] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2.5"
@@ -234,7 +234,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
           {/* D. NO RESULTS + RELATED */}
           {!isLoading && searchResult && !searchResult.has_results && searchResult.related.length > 0 && (
             <div>
-              <p className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-1">
+              <p className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white break-words pr-2 mb-1">
                 We don&apos;t have &ldquo;{searchResult.query}&rdquo; right now 😔
               </p>
               <p className="text-[#0D3B2A]/60 dark:text-gray-400 text-sm mb-6">
@@ -258,7 +258,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
           {/* E. NO RESULTS + NO RELATED */}
           {!isLoading && searchResult && !searchResult.has_results && searchResult.related.length === 0 && (
             <div className="text-center py-8">
-              <p className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-2">
+              <p className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white break-words pr-2 mb-2">
                 We don&apos;t have &ldquo;{searchResult.query}&rdquo; right now
               </p>
               <p className="text-[#0D3B2A]/60 dark:text-gray-400 text-sm mb-6">
