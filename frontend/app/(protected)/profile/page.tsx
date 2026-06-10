@@ -209,8 +209,8 @@ export default function ProfilePage() {
                   className={[
                     'w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors',
                     activeTab === tab.id
-                      ? 'bg-beige text-forest-green font-semibold'
-                      : 'text-charcoal/70 hover:bg-beige hover:text-forest-green',
+                      ? 'bg-[#F5F0E6] text-[#0D3B2A] font-semibold dark:bg-gray-700 dark:text-white'
+                      : 'text-[#0D3B2A] dark:text-gray-300 hover:bg-[#F5F0E6] dark:hover:bg-gray-700',
                   ].join(' ')}
                 >
                   {tab.label}
