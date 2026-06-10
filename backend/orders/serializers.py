@@ -10,6 +10,7 @@ class CartProductSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     region = serializers.SerializerMethodField()
     badge = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -18,6 +19,19 @@ class CartProductSerializer(serializers.ModelSerializer):
             'category', 'region', 'badge', 'is_featured', 'is_available',
             'created_at', 'updated_at',
         ]
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        first_gallery = obj.images.order_by('order', 'created_at').first()
+        if first_gallery and first_gallery.image:
+            if request:
+                return request.build_absolute_uri(first_gallery.image.url)
+            return first_gallery.image.url
+        if obj.image:
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
     def get_category(self, obj):
         if not obj.category_id:

@@ -18,6 +18,7 @@ class CartView(APIView):
 
     def get(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
+        cart = Cart.objects.prefetch_related('items__product__images').get(pk=cart.pk)
         serializer = CartSerializer(cart, context={'request': request})
         return Response(serializer.data)
 
@@ -42,6 +43,7 @@ class CartItemViewSet(APIView):
             cart_item.quantity = quantity
             cart_item.save()
 
+        cart = Cart.objects.prefetch_related('items__product__images').get(pk=cart.pk)
         serializer = CartSerializer(cart, context={'request': request})
         return Response(serializer.data)
 
@@ -49,6 +51,7 @@ class CartItemViewSet(APIView):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         product_id = request.data.get('product_id')
         CartItem.objects.filter(cart=cart, product_id=product_id).delete()
+        cart = Cart.objects.prefetch_related('items__product__images').get(pk=cart.pk)
         serializer = CartSerializer(cart, context={'request': request})
         return Response(serializer.data)
 
@@ -59,6 +62,7 @@ class CartClearView(APIView):
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         cart.items.all().delete()
+        cart = Cart.objects.prefetch_related('items__product__images').get(pk=cart.pk)
         serializer = CartSerializer(cart, context={'request': request})
         return Response(serializer.data)
 
