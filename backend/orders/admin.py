@@ -26,6 +26,12 @@ class CartAdmin(ModelAdmin):
     search_fields = ['user__email', 'user__first_name', 'user__last_name']
     inlines = [CartItemInline]
 
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
     @admin.display(description='Items')
     def item_count(self, obj):
         return obj.items.count()
@@ -35,6 +41,12 @@ class OrderItemInline(TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = ['product', 'quantity', 'unit_price']
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Order)
@@ -47,12 +59,24 @@ class OrderAdmin(ModelAdmin):
                      'guest_name', 'guest_phone', 'guest_email', 'delivery_address']
     list_editable = []
     ordering = ['-created_at']
-    readonly_fields = ['reference', 'paystack_id', 'created_at', 'updated_at']
+    readonly_fields = [
+        'reference', 'paystack_id', 'created_at', 'updated_at',
+        'user', 'guest_name', 'guest_phone', 'guest_email',
+        'total_amount', 'discount_amount', 'promo_code',
+        'delivery_address', 'order_source',
+    ]
     inlines = [OrderItemInline]
     fieldsets = (
         ('Order Info', {
-            'fields': ('user', 'status', 'payment_status', 'order_source',
-                       'total_amount', 'discount_amount', 'promo_code', 'delivery_address'),
+            'fields': (
+                'user', 'order_source',
+                'total_amount', 'discount_amount', 'promo_code',
+                'delivery_address',
+            ),
+        }),
+        ('Status', {
+            'fields': ('status', 'payment_status'),
+            'description': 'Only these fields can be edited.',
         }),
         ('Guest Details', {
             'fields': ('guest_name', 'guest_phone', 'guest_email'),
@@ -67,6 +91,9 @@ class OrderAdmin(ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 
     def get_urls(self):
         from django.urls import path
