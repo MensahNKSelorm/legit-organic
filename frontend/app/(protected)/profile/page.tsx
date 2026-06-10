@@ -163,7 +163,7 @@ export default function ProfilePage() {
   }
 
   const initials = user
-    ? `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase()
+    ? [user.first_name?.[0], user.last_name?.[0]].filter(Boolean).join('').toUpperCase() || user.email[0].toUpperCase()
     : '?'
   const fullName = user ? `${user.first_name} ${user.last_name}`.trim() : ''
 
@@ -194,7 +194,7 @@ export default function ProfilePage() {
           {/* Sidebar */}
           <div className="bg-mist-white rounded-2xl p-6 border border-sand h-fit">
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-[#F4C430] flex items-center justify-center text-[#0D3B2A] text-2xl font-bold font-display mb-3">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#0D3B2A] to-[#2E7D32] flex items-center justify-center text-white text-3xl font-display italic font-bold ring-4 ring-[#F4C430] ring-offset-4 shadow-xl mb-3">
                 {initials}
               </div>
               <p className="font-semibold text-forest-green">{fullName}</p>
