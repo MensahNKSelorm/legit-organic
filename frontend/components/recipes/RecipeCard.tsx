@@ -6,9 +6,9 @@ import { getMediaUrl } from '@/lib/media'
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim()
 
 const difficultyConfig: Record<string, { label: string; classes: string }> = {
-  easy:   { label: 'Easy',     classes: 'text-[#2E7D32] bg-[#2E7D32]/10' },
-  medium: { label: 'Medium',   classes: 'text-[#F4C430] bg-[#F4C430]/10' },
-  hard:   { label: 'Advanced', classes: 'text-red-600 bg-red-600/10' },
+  easy:   { label: 'Easy',     classes: 'bg-[#E8F5E9] text-[#2E7D32] border border-[#2E7D32]/30' },
+  medium: { label: 'Medium',   classes: 'bg-[#FFF8E1] text-[#F57F17] border border-[#F57F17]/30' },
+  hard:   { label: 'Advanced', classes: 'bg-[#FFEBEE] text-[#C62828] border border-[#C62828]/30' },
 }
 
 function formatTime(minutes: number): string {
@@ -77,7 +77,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         <div className="flex gap-2">
           <Link
             href={`/recipes/${recipe.slug}`}
-            className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C] transition-colors whitespace-nowrap"
+            className="flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C] transition-colors whitespace-nowrap"
           >
             View Recipe
           </Link>

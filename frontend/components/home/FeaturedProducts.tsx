@@ -108,7 +108,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
       <div className="text-center mt-14">
         <Link
           href="/products"
-          className="inline-flex items-center gap-2 text-forest-green font-semibold border-b-2 border-ghana-gold pb-0.5 hover:text-leaf-green transition-colors text-lg"
+          className="inline-flex items-center gap-2 text-[#2E7D32] dark:text-[#81C784] font-semibold border-b-2 border-[#F4C430] pb-0.5 hover:text-[#0D3B2A] dark:hover:text-white transition-colors text-lg"
         >
           Browse All Products
           <span aria-hidden>→</span>
