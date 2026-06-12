@@ -106,9 +106,14 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           <button
             onClick={onClose}
             aria-label="Close cart"
-            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors text-[#0D3B2A] dark:text-[#faf7f0] text-xl leading-none"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors text-[#0D3B2A] dark:text-[#faf7f0]"
           >
-            ×
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2.5"
+                 strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
 
