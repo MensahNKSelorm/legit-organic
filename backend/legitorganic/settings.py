@@ -197,6 +197,22 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "B2B Portal",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "B2B Applications",
+                        "icon": "business",
+                        "link": "/admin/users/b2bprofile/",
+                    },
+                    {
+                        "title": "Discount Tiers",
+                        "icon": "percent",
+                        "link": "/admin/users/b2bdiscounttier/",
+                    },
+                ],
+            },
+            {
                 "title": "Website",
                 "separator": True,
                 "items": [

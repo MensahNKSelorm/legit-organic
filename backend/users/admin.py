@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.utils import timezone
 from unfold.admin import ModelAdmin
-from .models import User, Customer
+from .models import User, Customer, B2BProfile, B2BDiscountTier
 from .forms import UserCreationForm, UserChangeForm
 
 
@@ -72,3 +73,70 @@ class CustomerAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+
+@admin.register(B2BDiscountTier)
+class B2BDiscountTierAdmin(ModelAdmin):
+    list_display = ['name', 'discount_percent', 'min_order_amount', 'max_order_amount', 'description']
+    ordering = ['min_order_amount']
+
+
+@admin.register(B2BProfile)
+class B2BProfileAdmin(ModelAdmin):
+    list_display = [
+        'business_name', 'get_email', 'business_type', 'status',
+        'tier', 'created_at',
+    ]
+    list_filter = ['status', 'business_type', 'tier']
+    search_fields = ['business_name', 'user__email', 'contact_name', 'contact_phone']
+    ordering = ['-created_at']
+    readonly_fields = ['user', 'created_at', 'updated_at', 'approved_at']
+
+    fieldsets = (
+        ('Business Info', {
+            'fields': (
+                'user', 'business_name', 'business_type',
+                'contact_name', 'contact_phone', 'business_registration',
+                'expected_monthly_volume',
+            ),
+        }),
+        ('Review', {
+            'fields': ('status', 'tier', 'rejection_reason', 'notes'),
+        }),
+        ('Timestamps', {
+            'fields': ('approved_at', 'created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    @admin.display(description='Email')
+    def get_email(self, obj):
+        return obj.user.email
+
+    def save_model(self, request, obj, form, change):
+        previous_status = None
+        if change:
+            try:
+                previous_status = B2BProfile.objects.get(pk=obj.pk).status
+            except B2BProfile.DoesNotExist:
+                pass
+
+        if obj.status == 'approved' and previous_status != 'approved':
+            obj.approved_at = timezone.now()
+
+        super().save_model(request, obj, form, change)
+
+        if not change:
+            return
+
+        from .emails import send_b2b_approval_email, send_b2b_rejection_email
+        if obj.status == 'approved' and previous_status != 'approved':
+            try:
+                send_b2b_approval_email(obj)
+            except Exception:
+                pass
+        elif obj.status == 'rejected' and previous_status != 'rejected':
+            try:
+                send_b2b_rejection_email(obj)
+            except Exception:
+                pass

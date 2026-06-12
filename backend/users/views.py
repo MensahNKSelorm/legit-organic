@@ -1,12 +1,19 @@
 import secrets
+from decimal import Decimal
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
-from .models import User, WishlistItem
-from .serializers import RegisterSerializer, UserSerializer, WishlistItemSerializer
-from .emails import send_welcome_email, send_verification_email
+from .models import User, WishlistItem, B2BProfile, B2BDiscountTier
+from .serializers import (
+    RegisterSerializer, UserSerializer, WishlistItemSerializer,
+    B2BProfileSerializer, B2BDiscountTierSerializer,
+)
+from .emails import (
+    send_welcome_email, send_verification_email,
+    send_b2b_approval_email, send_b2b_rejection_email,
+)
 from .google_auth import verify_google_token
 
 
@@ -135,6 +142,73 @@ class WishlistItemDeleteView(generics.DestroyAPIView):
 
     def get_queryset(self):
         return WishlistItem.objects.filter(user=self.request.user)
+
+
+class B2BApplyView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        profile, _ = B2BProfile.objects.get_or_create(user=request.user)
+        serializer = B2BProfileSerializer(profile, data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        profile = serializer.save(status='pending', tier=None, rejection_reason='')
+        return Response(B2BProfileSerializer(profile).data, status=status.HTTP_200_OK)
+
+
+class B2BStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = B2BProfile.objects.select_related('tier').get(user=request.user)
+        except B2BProfile.DoesNotExist:
+            return Response({'status': None}, status=status.HTTP_200_OK)
+        return Response(B2BProfileSerializer(profile).data, status=status.HTTP_200_OK)
+
+
+class B2BDiscountTiersView(generics.ListAPIView):
+    queryset = B2BDiscountTier.objects.all()
+    serializer_class = B2BDiscountTierSerializer
+    permission_classes = []
+
+
+class B2BDiscountCalculateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            profile = B2BProfile.objects.select_related('tier').get(
+                user=request.user, status='approved'
+            )
+        except B2BProfile.DoesNotExist:
+            return Response(
+                {'error': 'No approved B2B account found.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            order_total = Decimal(str(request.data.get('order_total', 0)))
+        except Exception:
+            return Response({'error': 'Invalid order_total.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        tier = profile.tier
+        if not tier:
+            return Response({
+                'discount_percent': '0.00',
+                'discount_amount': '0.00',
+                'final_amount': str(order_total),
+                'tier': None,
+            })
+
+        discount_amount = (order_total * tier.discount_percent / Decimal('100')).quantize(Decimal('0.01'))
+        final_amount = order_total - discount_amount
+
+        return Response({
+            'discount_percent': str(tier.discount_percent),
+            'discount_amount': str(discount_amount),
+            'final_amount': str(final_amount),
+            'tier': B2BDiscountTierSerializer(tier).data,
+        })
 
 
 class ResendVerificationView(APIView):

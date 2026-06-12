@@ -55,6 +55,69 @@ class Customer(User):
         verbose_name_plural = 'Customers'
 
 
+class B2BDiscountTier(models.Model):
+    name = models.CharField(max_length=50)
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    max_order_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['min_order_amount']
+
+    def __str__(self):
+        return f'{self.name} ({self.discount_percent}%)'
+
+
+class B2BProfile(models.Model):
+    BUSINESS_TYPE_CHOICES = [
+        ('restaurant', 'Restaurant'),
+        ('school', 'School / University'),
+        ('hotel', 'Hotel / Hospitality'),
+        ('catering', 'Catering Company'),
+        ('supermarket', 'Supermarket / Retail'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='b2b_profile',
+    )
+    business_name = models.CharField(max_length=200)
+    business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES)
+    contact_name = models.CharField(max_length=150)
+    contact_phone = models.CharField(max_length=20)
+    business_registration = models.CharField(max_length=100, blank=True)
+    expected_monthly_volume = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    tier = models.ForeignKey(
+        B2BDiscountTier,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='profiles',
+    )
+    rejection_reason = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'B2B Profile'
+        verbose_name_plural = 'B2B Profiles'
+
+    def __str__(self):
+        return f'{self.business_name} ({self.user.email})'
+
+
 class WishlistItem(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

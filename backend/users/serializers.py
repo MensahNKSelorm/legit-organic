@@ -1,6 +1,6 @@
 import re
 from rest_framework import serializers
-from .models import User, WishlistItem
+from .models import User, WishlistItem, B2BProfile, B2BDiscountTier
 from products.serializers import ProductSerializer
 
 
@@ -59,3 +59,35 @@ class WishlistItemSerializer(serializers.ModelSerializer):
             product_id=product_id,
         )
         return item
+
+
+class B2BDiscountTierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = B2BDiscountTier
+        fields = [
+            'id', 'name', 'min_order_amount', 'max_order_amount',
+            'discount_percent', 'description',
+        ]
+
+
+class B2BProfileSerializer(serializers.ModelSerializer):
+    tier = B2BDiscountTierSerializer(read_only=True)
+    business_type_display = serializers.CharField(
+        source='get_business_type_display', read_only=True
+    )
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True
+    )
+
+    class Meta:
+        model = B2BProfile
+        fields = [
+            'id', 'business_name', 'business_type', 'business_type_display',
+            'contact_name', 'contact_phone', 'business_registration',
+            'expected_monthly_volume', 'status', 'status_display',
+            'tier', 'rejection_reason', 'approved_at', 'created_at',
+        ]
+        read_only_fields = [
+            'id', 'status', 'status_display', 'tier', 'rejection_reason',
+            'approved_at', 'created_at',
+        ]

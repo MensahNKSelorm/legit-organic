@@ -432,6 +432,158 @@ def send_order_status_email(order):
     })
 
 
+def send_b2b_approval_email(profile):
+    tier_info = ''
+    if profile.tier:
+        tier_info = f"""
+        <div style="background:#F0FFF4;border-left:4px solid #2E7D32;
+                    padding:16px;border-radius:0 8px 8px 0;margin:24px 0;">
+          <p style="margin:0;color:#0D3B2A;font-size:15px;font-weight:600;">
+            Your Discount Tier: {profile.tier.name}
+          </p>
+          <p style="margin:8px 0 0;color:#333;font-size:14px;">
+            {profile.tier.discount_percent}% off on qualifying orders &mdash; {profile.tier.description}
+          </p>
+        </div>
+        """
+
+    resend.Emails.send({
+        "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
+        "to": [profile.user.email],
+        "subject": "Your B2B Account Has Been Approved — Legit Organic",
+        "html": f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family:'Inter',Arial,sans-serif;
+                     background-color:#FAF7F0;margin:0;padding:0;">
+          <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+
+            <div style="text-align:center;margin-bottom:32px;">
+              <img src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                   alt="Legit Organic" style="height:50px;width:auto;" />
+            </div>
+
+            <div style="background:white;border-radius:12px;
+                        padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <div style="text-align:center;margin-bottom:24px;">
+                <div style="font-size:48px;margin-bottom:12px;">✅</div>
+                <h2 style="color:#2E7D32;font-size:24px;margin:0;">
+                  B2B Account Approved!
+                </h2>
+              </div>
+
+              <p style="color:#333;line-height:1.6;">
+                Dear {profile.contact_name},
+              </p>
+              <p style="color:#333;line-height:1.6;">
+                We're delighted to inform you that your B2B account for
+                <strong>{profile.business_name}</strong> has been approved.
+                You can now enjoy exclusive wholesale pricing when you place orders
+                through Legit Organic.
+              </p>
+
+              {tier_info}
+
+              <div style="text-align:center;margin-top:32px;">
+                <a href="{settings.FRONTEND_URL}/profile"
+                   style="background-color:#F4C430;color:#0D3B2A;
+                          padding:14px 32px;border-radius:8px;
+                          text-decoration:none;font-weight:600;font-size:16px;">
+                  View My B2B Account
+                </a>
+              </div>
+
+              <p style="color:#888;font-size:14px;margin-top:24px;line-height:1.6;">
+                To place wholesale orders or for any enquiries, contact us at
+                <a href="mailto:hello@legitorganic.com"
+                   style="color:#2E7D32;">hello@legitorganic.com</a>
+                or WhatsApp +233 539 569 260.
+              </p>
+            </div>
+
+            <div style="text-align:center;margin-top:32px;color:#888;font-size:12px;">
+              <p>Legit Organic Limited &middot; Accra, Ghana</p>
+            </div>
+
+          </div>
+        </body>
+        </html>
+        """,
+    })
+
+
+def send_b2b_rejection_email(profile):
+    reason_block = ''
+    if profile.rejection_reason:
+        reason_block = f"""
+        <div style="background:#FFF5F5;border-left:4px solid #F44336;
+                    padding:16px;border-radius:0 8px 8px 0;margin:24px 0;">
+          <p style="margin:0;color:#C62828;font-size:14px;font-weight:600;">
+            Reason:
+          </p>
+          <p style="margin:8px 0 0;color:#333;font-size:14px;">
+            {profile.rejection_reason}
+          </p>
+        </div>
+        """
+
+    resend.Emails.send({
+        "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
+        "to": [profile.user.email],
+        "subject": "B2B Application Update — Legit Organic",
+        "html": f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family:'Inter',Arial,sans-serif;
+                     background-color:#FAF7F0;margin:0;padding:0;">
+          <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+
+            <div style="text-align:center;margin-bottom:32px;">
+              <img src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                   alt="Legit Organic" style="height:50px;width:auto;" />
+            </div>
+
+            <div style="background:white;border-radius:12px;
+                        padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <h2 style="color:#0D3B2A;font-size:24px;margin-top:0;">
+                B2B Application Update
+              </h2>
+
+              <p style="color:#333;line-height:1.6;">
+                Dear {profile.contact_name},
+              </p>
+              <p style="color:#333;line-height:1.6;">
+                Thank you for applying for a B2B account at Legit Organic for
+                <strong>{profile.business_name}</strong>.
+                Unfortunately, we are unable to approve your application at this time.
+              </p>
+
+              {reason_block}
+
+              <p style="color:#333;line-height:1.6;">
+                You are welcome to reapply once you have addressed the points above,
+                or contact us directly to discuss your application.
+              </p>
+
+              <p style="color:#888;font-size:14px;margin-top:24px;line-height:1.6;">
+                Questions? Reach us at
+                <a href="mailto:hello@legitorganic.com"
+                   style="color:#2E7D32;">hello@legitorganic.com</a>
+                or WhatsApp +233 539 569 260.
+              </p>
+            </div>
+
+            <div style="text-align:center;margin-top:32px;color:#888;font-size:12px;">
+              <p>Legit Organic Limited &middot; Accra, Ghana</p>
+            </div>
+
+          </div>
+        </body>
+        </html>
+        """,
+    })
+
+
 def send_verification_email(user, token):
     verification_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
     resend.Emails.send({
