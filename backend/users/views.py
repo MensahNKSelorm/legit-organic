@@ -10,6 +10,11 @@ from .emails import send_welcome_email, send_verification_email
 from .google_auth import verify_google_token
 
 
+def link_guest_orders(user):
+    from orders.models import Order
+    Order.objects.filter(user__isnull=True, guest_email=user.email).update(user=user)
+
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = []
@@ -63,6 +68,8 @@ class VerifyEmailView(APIView):
         user.email_verification_token = ''
         user.save()
 
+        link_guest_orders(user)
+
         return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
 
 
@@ -99,6 +106,7 @@ class GoogleAuthView(APIView):
             user.save()
 
         if created:
+            link_guest_orders(user)
             try:
                 send_welcome_email(user)
             except Exception:

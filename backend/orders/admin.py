@@ -75,7 +75,8 @@ class OrderAdmin(ModelAdmin):
     fieldsets = (
         ('Order Info', {
             'fields': (
-                'user', 'order_source',
+                'reference', 'user', 'order_source',
+                'guest_name', 'guest_email', 'guest_phone',
                 'total_amount', 'discount_amount', 'promo_code',
                 'delivery_address',
             ),
@@ -84,12 +85,8 @@ class OrderAdmin(ModelAdmin):
             'fields': ('status', 'payment_status'),
             'description': 'Only these fields can be edited.',
         }),
-        ('Guest Details', {
-            'fields': ('guest_name', 'guest_phone', 'guest_email'),
-            'classes': ('collapse',),
-        }),
         ('Payment', {
-            'fields': ('reference', 'paystack_id'),
+            'fields': ('paystack_id',),
             'classes': ('collapse',),
         }),
         ('Timestamps', {
@@ -124,9 +121,12 @@ class OrderAdmin(ModelAdmin):
 
     @admin.display(description='Customer')
     def get_customer(self, obj):
+        if obj.guest_name:
+            email = obj.guest_email or (obj.user.email if obj.user else 'No email')
+            return f"{obj.guest_name} ({email})"
         if obj.user:
             return f"{obj.user.first_name} {obj.user.last_name} ({obj.user.email})"
-        return f"{obj.guest_name} - Guest ({obj.guest_phone})"
+        return f"Guest — {obj.guest_phone or 'No contact'}"
 
 
 @admin.register(PromoCode)

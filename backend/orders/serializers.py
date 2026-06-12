@@ -134,6 +134,12 @@ class CreateOrderSerializer(serializers.Serializer):
         guest_email = validated_data.get('guest_email', '')
         order_source = validated_data.get('order_source', 'whatsapp')
 
+        if is_auth:
+            user = request.user
+            guest_name = f'{user.first_name} {user.last_name}'.strip() or user.email
+            guest_email = user.email
+            guest_phone = getattr(user, 'phone_number', '') or ''
+
         if is_auth and not delivery_address:
             user = request.user
             parts = [
