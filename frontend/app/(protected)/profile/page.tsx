@@ -194,7 +194,7 @@ export default function ProfilePage() {
           {/* Sidebar */}
           <div className="bg-mist-white rounded-2xl p-6 border border-sand h-fit">
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#0D3B2A] to-[#2E7D32] flex items-center justify-center ring-4 ring-[#F4C430] ring-offset-2 ring-offset-[#FAF7F0] dark:ring-offset-gray-800 shadow-xl text-white text-3xl font-bold tracking-wider mb-3">
+              <div className="w-24 h-24 rounded-full bg-[#F4C430] flex items-center justify-center ring-4 ring-[#0D3B2A] ring-offset-2 ring-offset-[#FAF7F0] dark:ring-offset-gray-800 shadow-xl text-[#0D3B2A] text-3xl font-bold font-sans tracking-wide mb-3">
                 {initials}
               </div>
               <p className="font-semibold text-[#0D3B2A] dark:text-white">{fullName}</p>
