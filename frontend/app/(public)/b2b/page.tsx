@@ -147,7 +147,7 @@ export default async function B2BLandingPage() {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
-        .b2b-carousel { animation: b2b-scroll 28s linear infinite; }
+        .b2b-carousel { animation: b2b-scroll 20s linear infinite; }
         .b2b-carousel:hover { animation-play-state: paused; }
       `}</style>
 
@@ -269,13 +269,18 @@ export default async function B2BLandingPage() {
         </div>
 
         {/* Carousel track */}
-        <div className="overflow-hidden">
-          <div className="b2b-carousel flex gap-5 w-max">
-            {/* Original + duplicate for seamless loop */}
+        <div
+          className="max-w-3xl mx-auto relative overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+          }}
+        >
+          <div className="b2b-carousel flex gap-6 w-max">
             {[...BUSINESS_TYPES, ...BUSINESS_TYPES].map((bt, idx) => (
               <div
                 key={idx}
-                className="flex flex-col items-center gap-3 w-36 shrink-0 p-5 rounded-2xl bg-white dark:bg-[#1f2937] border border-[#E6D8BD] dark:border-[#374151] shadow-sm"
+                className="flex flex-col items-center gap-3 min-w-[140px] shrink-0 p-5 rounded-2xl bg-white dark:bg-[#1f2937] border border-[#E6D8BD] dark:border-[#374151] shadow-sm"
               >
                 <div className="text-[#2E7D32] dark:text-[#81C784]">{bt.icon}</div>
                 <span className="text-xs font-semibold text-[#0D3B2A] dark:text-[#d1d5db] leading-tight text-center">{bt.label}</span>
