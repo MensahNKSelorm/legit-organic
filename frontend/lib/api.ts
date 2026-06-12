@@ -223,7 +223,7 @@ export const api = {
       business_address: string
       estimated_monthly_order?: string
       business_registration?: string
-    }) => fetchWithAuth<B2BProfile>('/api/users/b2b/apply/', {
+    }) => fetchAPI<B2BProfile>('/api/users/b2b/apply/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -238,6 +238,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ order_total: orderTotal }),
     }),
+    setupPassword: (uid: string, token: string, password: string) =>
+      fetchAPI<{ message: string; access: string; refresh: string; user: import('@/types').User }>(
+        '/api/users/b2b/setup-password/',
+        { method: 'POST', body: JSON.stringify({ uid, token, password }) },
+      ),
   },
   orders: {
     create: (data: {

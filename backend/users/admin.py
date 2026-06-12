@@ -88,7 +88,7 @@ class B2BProfileAdmin(ModelAdmin):
         'tier', 'created_at',
     ]
     list_filter = ['status', 'business_type', 'tier']
-    search_fields = ['company_name', 'user__email', 'contact_person', 'business_phone']
+    search_fields = ['company_name', 'business_email', 'contact_person', 'business_phone']
     ordering = ['-created_at']
     readonly_fields = ['user', 'created_at', 'updated_at', 'approved_at']
 
@@ -112,7 +112,7 @@ class B2BProfileAdmin(ModelAdmin):
 
     @admin.display(description='Email')
     def get_email(self, obj):
-        return obj.user.email
+        return obj.user.email if obj.user else obj.business_email
 
     def save_model(self, request, obj, form, change):
         previous_status = None
@@ -122,8 +122,40 @@ class B2BProfileAdmin(ModelAdmin):
             except B2BProfile.DoesNotExist:
                 pass
 
+        uid = None
+        token = None
+
         if obj.status == 'approved' and previous_status != 'approved':
             obj.approved_at = timezone.now()
+
+            if not obj.user:
+                from django.contrib.auth import get_user_model
+                from django.contrib.auth.tokens import default_token_generator
+                from django.utils.http import urlsafe_base64_encode
+                from django.utils.encoding import force_bytes
+
+                UserModel = get_user_model()
+                name_parts = obj.contact_person.split() if obj.contact_person else []
+                first_name = name_parts[0] if name_parts else ''
+                last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+
+                user, created = UserModel.objects.get_or_create(
+                    email=obj.business_email,
+                    defaults={
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'is_active': True,
+                        'email_verified': True,
+                    },
+                )
+
+                if created:
+                    user.set_unusable_password()
+                    user.save()
+
+                obj.user = user
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
 
         super().save_model(request, obj, form, change)
 
@@ -133,9 +165,9 @@ class B2BProfileAdmin(ModelAdmin):
         from .emails import send_b2b_approval_email, send_b2b_rejection_email
         if obj.status == 'approved' and previous_status != 'approved':
             try:
-                send_b2b_approval_email(obj)
-            except Exception:
-                pass
+                send_b2b_approval_email(obj, uid, token)
+            except Exception as e:
+                print(f'B2B approval email failed: {e}')
         elif obj.status == 'rejected' and previous_status != 'rejected':
             try:
                 send_b2b_rejection_email(obj)

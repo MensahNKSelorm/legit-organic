@@ -88,6 +88,8 @@ class B2BProfile(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='b2b_profile',
+        null=True,
+        blank=True,
     )
     company_name = models.CharField(max_length=200)
     business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES)
@@ -117,7 +119,8 @@ class B2BProfile(models.Model):
         verbose_name_plural = 'B2B Profiles'
 
     def __str__(self):
-        return f'{self.company_name} ({self.user.email})'
+        identifier = self.user.email if self.user else self.business_email
+        return f'{self.company_name} ({identifier})'
 
 
 class WishlistItem(models.Model):

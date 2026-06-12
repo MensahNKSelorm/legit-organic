@@ -14,8 +14,8 @@ const FAQ = [
     a: 'None at all — simply fill in the application form with your business details. We may reach out for additional information if needed.',
   },
   {
-    q: 'Can I order without an account?',
-    a: 'B2B accounts require a registered user account so we can apply your discount at checkout. Sign up is free and takes under a minute.',
+    q: 'Do I need an account to apply?',
+    a: 'No account needed. Simply submit your business details and we\'ll review your application. If approved, we\'ll email you a link to set up your account password.',
   },
   {
     q: 'How are discounts applied?',
@@ -345,10 +345,7 @@ export default async function B2BLandingPage() {
             </svg>
           </Link>
           <p className="text-white/60 text-sm mt-6">
-            Already applied?{' '}
-            <Link href="/b2b/apply" className="text-[#F4C430] hover:underline font-semibold">
-              Check your status
-            </Link>
+            Already applied? Check your email for updates.
           </p>
         </div>
       </section>

@@ -432,25 +432,40 @@ def send_order_status_email(order):
     })
 
 
-def send_b2b_approval_email(profile):
-    tier_info = ''
-    if profile.tier:
-        tier_info = f"""
-        <div style="background:#F0FFF4;border-left:4px solid #2E7D32;
-                    padding:16px;border-radius:0 8px 8px 0;margin:24px 0;">
-          <p style="margin:0;color:#0D3B2A;font-size:15px;font-weight:600;">
-            Your Discount Tier: {profile.tier.name}
-          </p>
-          <p style="margin:8px 0 0;color:#333;font-size:14px;">
-            {profile.tier.discount_percent}% off on qualifying orders &mdash; {profile.tier.description}
-          </p>
+def send_b2b_approval_email(profile, uid=None, token=None):
+    setup_link = ''
+    if uid and token:
+        setup_link = f'{settings.FRONTEND_URL}/b2b/setup-password?uid={uid}&token={token}'
+
+    setup_button = ''
+    if setup_link:
+        setup_button = f"""
+        <div style="text-align:center;margin:32px 0;">
+          <a href="{setup_link}"
+             style="background-color:#F4C430;color:#0D3B2A;padding:14px 32px;
+                    border-radius:8px;text-decoration:none;font-weight:600;
+                    font-size:16px;display:inline-block;">
+            Set Up Your Password &rarr;
+          </a>
+          <p style="color:#888;font-size:12px;margin-top:12px;">This link expires in 48 hours</p>
+        </div>
+        """
+    else:
+        setup_button = f"""
+        <div style="text-align:center;margin:32px 0;">
+          <a href="{settings.FRONTEND_URL}/b2b/dashboard"
+             style="background-color:#F4C430;color:#0D3B2A;padding:14px 32px;
+                    border-radius:8px;text-decoration:none;font-weight:600;
+                    font-size:16px;display:inline-block;">
+            View My B2B Dashboard &rarr;
+          </a>
         </div>
         """
 
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
-        "to": [profile.user.email],
-        "subject": "Your B2B Account Has Been Approved — Legit Organic",
+        "to": [profile.business_email],
+        "subject": f"Welcome to Legit Organic B2B — {profile.company_name}!",
         "html": f"""
         <!DOCTYPE html>
         <html>
@@ -465,39 +480,46 @@ def send_b2b_approval_email(profile):
 
             <div style="background:white;border-radius:12px;
                         padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
               <div style="text-align:center;margin-bottom:24px;">
-                <div style="font-size:48px;margin-bottom:12px;">✅</div>
+                <div style="font-size:48px;margin-bottom:12px;">&#127881;</div>
                 <h2 style="color:#2E7D32;font-size:24px;margin:0;">
-                  B2B Account Approved!
+                  You&rsquo;re Approved!
                 </h2>
+                <p style="color:#666;margin:8px 0 0;font-size:14px;">
+                  Welcome to the Legit Organic B2B Program
+                </p>
               </div>
 
               <p style="color:#333;line-height:1.6;">
-                Dear {profile.contact_name},
+                Dear {profile.contact_person},
               </p>
               <p style="color:#333;line-height:1.6;">
-                We're delighted to inform you that your B2B account for
-                <strong>{profile.business_name}</strong> has been approved.
-                You can now enjoy exclusive wholesale pricing when you place orders
-                through Legit Organic.
+                Congratulations! Your B2B application for
+                <strong>{profile.company_name}</strong> has been approved.
+                You now have access to bulk pricing and institutional ordering
+                on Legit Organic.
               </p>
 
-              {tier_info}
-
-              <div style="text-align:center;margin-top:32px;">
-                <a href="{settings.FRONTEND_URL}/profile"
-                   style="background-color:#F4C430;color:#0D3B2A;
-                          padding:14px 32px;border-radius:8px;
-                          text-decoration:none;font-weight:600;font-size:16px;">
-                  View My B2B Account
-                </a>
+              <div style="background:#F0FFF4;border-left:4px solid #2E7D32;
+                          padding:16px;border-radius:0 8px 8px 0;margin:24px 0;">
+                <p style="margin:0;color:#0D3B2A;font-weight:600;">Your Benefits:</p>
+                <ul style="color:#333;margin:8px 0 0;padding-left:20px;">
+                  <li>Automatic bulk discounts on all orders</li>
+                  <li>The more you order, the more you save</li>
+                  <li>Dedicated support via WhatsApp</li>
+                  <li>Invoice generation for all orders</li>
+                </ul>
               </div>
 
-              <p style="color:#888;font-size:14px;margin-top:24px;line-height:1.6;">
-                To place wholesale orders or for any enquiries, contact us at
+              {setup_button}
+
+              <p style="color:#888;font-size:13px;margin-top:24px;
+                        line-height:1.6;text-align:center;">
+                Questions? Contact us at
                 <a href="mailto:hello@legitorganic.com"
                    style="color:#2E7D32;">hello@legitorganic.com</a>
-                or WhatsApp +233 539 569 260.
+                or WhatsApp us at +233 539 569 260
               </p>
             </div>
 
@@ -529,7 +551,7 @@ def send_b2b_rejection_email(profile):
 
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
-        "to": [profile.user.email],
+        "to": [profile.business_email],
         "subject": "B2B Application Update — Legit Organic",
         "html": f"""
         <!DOCTYPE html>
@@ -550,11 +572,11 @@ def send_b2b_rejection_email(profile):
               </h2>
 
               <p style="color:#333;line-height:1.6;">
-                Dear {profile.contact_name},
+                Dear {profile.contact_person},
               </p>
               <p style="color:#333;line-height:1.6;">
                 Thank you for applying for a B2B account at Legit Organic for
-                <strong>{profile.business_name}</strong>.
+                <strong>{profile.company_name}</strong>.
                 Unfortunately, we are unable to approve your application at this time.
               </p>
 

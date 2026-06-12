@@ -144,15 +144,61 @@ class WishlistItemDeleteView(generics.DestroyAPIView):
         return WishlistItem.objects.filter(user=self.request.user)
 
 
-class B2BApplyView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+class B2BApplyView(generics.CreateAPIView):
+    serializer_class = B2BProfileSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def perform_create(self, serializer):
+        email = self.request.data.get('business_email', '')
+        if B2BProfile.objects.filter(business_email=email).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'business_email': 'An application with this email already exists.'})
+        serializer.save()
+
+
+class B2BSetupPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        profile, _ = B2BProfile.objects.get_or_create(user=request.user)
-        serializer = B2BProfileSerializer(profile, data=request.data, partial=False)
-        serializer.is_valid(raise_exception=True)
-        profile = serializer.save(status='pending', tier=None, rejection_reason='')
-        return Response(B2BProfileSerializer(profile).data, status=status.HTTP_200_OK)
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+        password = request.data.get('password')
+
+        if not uid or not token or not password:
+            return Response({'error': 'uid, token and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from django.utils.http import urlsafe_base64_decode
+            from django.utils.encoding import force_str
+            from django.contrib.auth.tokens import default_token_generator
+
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_id)
+
+            if not default_token_generator.check_token(user, token):
+                return Response(
+                    {'error': 'Invalid or expired link. Please contact support.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            user.set_password(password)
+            user.save()
+
+            from rest_framework_simplejwt.tokens import RefreshToken as JWTRefreshToken
+            from .serializers import UserSerializer as US
+            refresh = JWTRefreshToken.for_user(user)
+            return Response({
+                'message': 'Password set successfully!',
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': US(user).data,
+            })
+
+        except (User.DoesNotExist, Exception):
+            return Response(
+                {'error': 'Invalid link. Please contact support.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class B2BStatusView(APIView):
