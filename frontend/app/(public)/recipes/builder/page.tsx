@@ -542,14 +542,14 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
           value={ing.quantity}
           onChange={(e) => onChange('quantity', e.target.value)}
           placeholder="Qty"
-          className={`${inputBase} w-16 text-center`}
+          className={`${inputBase} w-20 shrink-0 text-center`}
         />
 
         {/* Unit */}
         <select
           value={ing.unit}
           onChange={(e) => onChange('unit', e.target.value)}
-          className={`${inputBase} w-28`}
+          className={`${inputBase} w-24 shrink-0`}
         >
           {UNITS.map((u) => (
             <option key={u} value={u}>{u}</option>

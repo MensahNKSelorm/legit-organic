@@ -86,7 +86,8 @@ export default function ProductCard({ product }: ProductCardProps) {
               href={`/products/${product.slug}`}
               className="flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded-lg bg-[#F5F0E6] text-[#0D3B2A] hover:bg-[#E6D8BD] transition-colors whitespace-nowrap dark:bg-[#374151] dark:text-[#faf7f0] dark:hover:bg-[#4B5563]"
             >
-              View <span aria-hidden>→</span>
+              <span>View</span>
+              <span aria-hidden="true" className="leading-none">→</span>
             </Link>
           </div>
         </div>
