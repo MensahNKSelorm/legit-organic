@@ -501,7 +501,7 @@ interface IngredientRowProps {
 function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onMoveDown }: IngredientRowProps) {
   const [showNotes, setShowNotes] = useState(!!ing.notes)
 
-  const inputBase = 'bg-[#F5F0E6] dark:bg-[#374151] text-charcoal dark:text-[#d1d5db] rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#F4C430]/50 placeholder:text-charcoal/30'
+  const inputBase = 'bg-[#F5F0E6] dark:bg-gray-700 text-charcoal dark:text-white rounded-lg px-3 py-2 text-sm outline-none border border-transparent dark:border-gray-600 focus:ring-2 focus:ring-[#F4C430]/50 placeholder:text-gray-400 dark:placeholder:text-gray-500'
 
   return (
     <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-xl p-4 group">
