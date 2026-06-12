@@ -44,9 +44,9 @@ const slides = [
 ];
 
 const stats = [
-  { value: "500+",      label: "Verified Farmers" },
-  { value: "10 Regions", label: "Across Ghana" },
-  { value: "100%",      label: "Organic Certified" },
+  { value: "20+",  label: "Verified Farmers" },
+  { value: "16",   label: "Regions Across Ghana" },
+  { value: "100%", label: "Organic Certified" },
 ];
 
 export default function HeroSection() {
