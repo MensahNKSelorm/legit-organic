@@ -124,10 +124,8 @@ const BUSINESS_TYPES = [
     label: 'Hospitals',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
-        <path d="M12 2v20"/>
-        <path d="M12 7c0 0 4-2 4 2s-4 2-4 4s4 2 4 4"/>
-        <path d="M8 6c0-2 1.5-3 2.5-2"/>
-        <path d="M10 20c1 1 3 1 4-1"/>
+        <path d="M12 5v14M5 12h14"/>
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
       </svg>
     ),
   },
