@@ -17,11 +17,13 @@ export default function CartIcon({ isTransparent }: CartIconProps) {
       <button
         onClick={() => setDrawerOpen(true)}
         aria-label={`Open cart${itemCount > 0 ? `, ${itemCount} items` : ''}`}
-        className="relative w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-        style={isTransparent
-          ? { color: '#ffffff' }
-          : { color: '#0D3B2A' }
-        }
+        className={[
+          'relative w-9 h-9 flex items-center justify-center rounded-full transition-colors',
+          isTransparent
+            ? 'hover:bg-white/15'
+            : 'text-[#0D3B2A] dark:text-white hover:bg-[#F5F0E6] dark:hover:bg-gray-700',
+        ].join(' ')}
+        style={isTransparent ? { color: '#ffffff' } : undefined}
       >
         {/* Shopping bag icon */}
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
