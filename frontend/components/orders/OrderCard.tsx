@@ -58,6 +58,16 @@ function PinIcon() {
   )
 }
 
+const getProductImage = (product: any): string => {
+  if (product.images && product.images.length > 0) {
+    return getMediaUrl(product.images[0].image) || '/images/products/p1.webp'
+  }
+  if (product.image) {
+    return getMediaUrl(product.image) || '/images/products/p1.webp'
+  }
+  return '/images/products/p1.webp'
+}
+
 export default function OrderCard({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -256,10 +266,7 @@ export default function OrderCard({ order }: { order: Order }) {
             <ul className="space-y-3">
               {order.items.map((item) => {
                 if (!item.product) return null
-                const imageSrc = getMediaUrl(
-                  item.product.image,
-                  PLACEHOLDERS[item.product.id % PLACEHOLDERS.length],
-                )
+                const imageSrc = getProductImage(item.product)
                 const subtotal = (parseFloat(item.unit_price) * item.quantity).toFixed(2)
                 return (
                   <li key={item.id} className="flex items-center gap-3">
