@@ -89,12 +89,14 @@ class B2BProfile(models.Model):
         on_delete=models.CASCADE,
         related_name='b2b_profile',
     )
-    business_name = models.CharField(max_length=200)
+    company_name = models.CharField(max_length=200)
     business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES)
-    contact_name = models.CharField(max_length=150)
-    contact_phone = models.CharField(max_length=20)
+    contact_person = models.CharField(max_length=150)
+    business_phone = models.CharField(max_length=20)
+    business_email = models.EmailField()
+    business_address = models.TextField()
     business_registration = models.CharField(max_length=100, blank=True)
-    expected_monthly_volume = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    estimated_monthly_order = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     tier = models.ForeignKey(
         B2BDiscountTier,
@@ -115,7 +117,7 @@ class B2BProfile(models.Model):
         verbose_name_plural = 'B2B Profiles'
 
     def __str__(self):
-        return f'{self.business_name} ({self.user.email})'
+        return f'{self.company_name} ({self.user.email})'
 
 
 class WishlistItem(models.Model):

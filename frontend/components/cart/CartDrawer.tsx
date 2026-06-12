@@ -8,6 +8,7 @@ import { getMediaUrl } from '@/lib/media'
 import { api } from '@/lib/api'
 import type { PromoCode } from '@/types'
 import CheckoutButton from './CheckoutButton'
+import { useAuth } from '@/lib/auth'
 
 interface CartDrawerProps {
   open: boolean
@@ -23,12 +24,23 @@ const PLACEHOLDERS = [
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { items, total, itemCount, updateQuantity, removeItem } = useCart()
+  const { isB2B, b2bProfile } = useAuth()
   const drawerRef = useRef<HTMLDivElement>(null)
 
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null)
   const [promoError, setPromoError] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
+
+  // B2B discount calculation (client-side using the assigned tier)
+  const b2bDiscount = (() => {
+    if (!isB2B || !b2bProfile?.tier || appliedPromo) return null
+    const tier = b2bProfile.tier
+    const pct = parseFloat(tier.discount_percent)
+    if (!pct) return null
+    const discountAmt = (total * pct) / 100
+    return { tierName: tier.name, percent: pct, amount: discountAmt }
+  })()
 
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
@@ -274,6 +286,27 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
                 <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
                   GH₵ {appliedPromo.final_amount.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          ) : b2bDiscount ? (
+            <div className="mb-4 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[#5B3E31] dark:text-[#9ca3af]">Subtotal</span>
+                <span className="text-sm text-[#0D3B2A] dark:text-[#faf7f0]">GH₵ {total.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">
+                  B2B {b2bDiscount.tierName} ({b2bDiscount.percent}% off)
+                </span>
+                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">
+                  −GH₵ {b2bDiscount.amount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pt-1.5 border-t border-[#E6D8BD] dark:border-[#374151]">
+                <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
+                <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
+                  GH₵ {(total - b2bDiscount.amount).toFixed(2)}
                 </span>
               </div>
             </div>

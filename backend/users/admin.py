@@ -84,20 +84,21 @@ class B2BDiscountTierAdmin(ModelAdmin):
 @admin.register(B2BProfile)
 class B2BProfileAdmin(ModelAdmin):
     list_display = [
-        'business_name', 'get_email', 'business_type', 'status',
+        'company_name', 'get_email', 'business_type', 'status',
         'tier', 'created_at',
     ]
     list_filter = ['status', 'business_type', 'tier']
-    search_fields = ['business_name', 'user__email', 'contact_name', 'contact_phone']
+    search_fields = ['company_name', 'user__email', 'contact_person', 'business_phone']
     ordering = ['-created_at']
     readonly_fields = ['user', 'created_at', 'updated_at', 'approved_at']
 
     fieldsets = (
         ('Business Info', {
             'fields': (
-                'user', 'business_name', 'business_type',
-                'contact_name', 'contact_phone', 'business_registration',
-                'expected_monthly_volume',
+                'user', 'company_name', 'business_type',
+                'contact_person', 'business_phone', 'business_email',
+                'business_address', 'business_registration',
+                'estimated_monthly_order',
             ),
         }),
         ('Review', {

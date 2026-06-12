@@ -235,3 +235,30 @@ export interface ApiError {
   message?: string
   errors?: Record<string, string[]>
 }
+
+export interface B2BDiscountTier {
+  id: number
+  name: string
+  min_order_amount: string
+  max_order_amount: string | null
+  discount_percent: string
+  description: string
+}
+
+export interface B2BProfile {
+  id: number
+  company_name: string
+  business_type: string
+  business_type_display: string
+  contact_person: string
+  business_phone: string
+  business_email: string
+  business_address: string
+  estimated_monthly_order: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  status_display: string
+  tier: B2BDiscountTier | null
+  rejection_reason: string
+  approved_at: string | null
+  created_at: string
+}

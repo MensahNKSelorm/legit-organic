@@ -82,9 +82,10 @@ class B2BProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = B2BProfile
         fields = [
-            'id', 'business_name', 'business_type', 'business_type_display',
-            'contact_name', 'contact_phone', 'business_registration',
-            'expected_monthly_volume', 'status', 'status_display',
+            'id', 'company_name', 'business_type', 'business_type_display',
+            'contact_person', 'business_phone', 'business_email',
+            'business_address', 'business_registration',
+            'estimated_monthly_order', 'status', 'status_display',
             'tier', 'rejection_reason', 'approved_at', 'created_at',
         ]
         read_only_fields = [

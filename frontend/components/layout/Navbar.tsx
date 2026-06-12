@@ -45,7 +45,7 @@ function ChevronDown() {
 }
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated, isB2B, logout } = useAuth()
 
   const pathname = usePathname()
   const isAuthPage = pathname === '/login' || pathname === '/signup' ||
@@ -221,6 +221,13 @@ export default function Navbar() {
                   >
                     My Recipes
                   </Link>
+                  <Link
+                    href={isB2B ? '/b2b/dashboard' : '/b2b/apply'}
+                    onClick={() => setDropdownOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-charcoal/70 hover:bg-beige hover:text-forest-green transition-colors dark:text-[#d1d5db] dark:hover:bg-[#374151]"
+                  >
+                    {isB2B ? '🏢 B2B Dashboard' : 'B2B Portal'}
+                  </Link>
                   <div className="border-t border-sand dark:border-[#374151] my-1" />
                   <button
                     onClick={() => { logout(); setDropdownOpen(false) }}
@@ -367,6 +374,15 @@ export default function Navbar() {
                   className="block py-3 px-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
                 >
                   My Recipes
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={isB2B ? '/b2b/dashboard' : '/b2b/apply'}
+                  onClick={() => setMenuOpen(false)}
+                  className="block py-3 px-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
+                >
+                  {isB2B ? '🏢 B2B Dashboard' : 'B2B Portal'}
                 </Link>
               </li>
               <li>

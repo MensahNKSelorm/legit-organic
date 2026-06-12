@@ -12,6 +12,7 @@ const footerLinks = {
     { label: "Recipes",     href: "/recipes" },
     { label: "Blog",        href: "/blog" },
     { label: "Health Tips", href: "/blog?tag=health" },
+    { label: "B2B Portal",  href: "/b2b" },
   ],
   Account: [
     { label: "Login",       href: "/login" },

@@ -3,6 +3,7 @@ import type {
   BlogPost, BlogCategory,
   Recipe, RecipeWithPairings, UserRecipe,
   User, Order, PromoCode, WishlistItem,
+  B2BDiscountTier, B2BProfile,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -211,6 +212,32 @@ export const api = {
         body: JSON.stringify({ product_id }),
       }),
     clear: () => fetchWithAuth<{ id: number; items: [] }>('/api/orders/cart/clear/', { method: 'POST' }),
+  },
+  b2b: {
+    apply: (data: {
+      company_name: string
+      business_type: string
+      contact_person: string
+      business_phone: string
+      business_email: string
+      business_address: string
+      estimated_monthly_order?: string
+      business_registration?: string
+    }) => fetchWithAuth<B2BProfile>('/api/users/b2b/apply/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    status: () => fetchWithAuth<B2BProfile | { status: null }>('/api/users/b2b/status/'),
+    tiers: () => fetchAPI<B2BDiscountTier[]>('/api/users/b2b/tiers/'),
+    calculateDiscount: (orderTotal: number) => fetchWithAuth<{
+      discount_percent: string
+      discount_amount: string
+      final_amount: string
+      tier: B2BDiscountTier | null
+    }>('/api/users/b2b/calculate/', {
+      method: 'POST',
+      body: JSON.stringify({ order_total: orderTotal }),
+    }),
   },
   orders: {
     create: (data: {
