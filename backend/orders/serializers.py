@@ -69,9 +69,24 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class MinimalProductSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = ['id', 'name', 'slug', 'image', 'price', 'unit']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        first_gallery = obj.images.order_by('order', 'created_at').first()
+        if first_gallery and first_gallery.image:
+            if request:
+                return request.build_absolute_uri(first_gallery.image.url)
+            return first_gallery.image.url
+        if obj.image:
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

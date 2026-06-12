@@ -167,7 +167,12 @@ class UserOrderListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).order_by('-created_at')
+        return (
+            Order.objects
+            .filter(user=self.request.user)
+            .prefetch_related('items__product__images')
+            .order_by('-created_at')
+        )
 
 
 class OrderDetailView(generics.RetrieveAPIView):
