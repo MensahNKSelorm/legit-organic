@@ -1,48 +1,13 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
-import { api } from '@/lib/api'
-import type { B2BDiscountTier } from '@/types'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const TIER_STYLE: Record<string, { icon: string; accent: string; bg: string; ring: string; featured: boolean }> = {
-  Silver: {
-    icon: '🥈',
-    accent: 'text-gray-600 dark:text-gray-300',
-    bg: 'bg-gray-50 dark:bg-gray-800/50',
-    ring: 'ring-1 ring-gray-200 dark:ring-gray-700',
-    featured: false,
-  },
-  Gold: {
-    icon: '🥇',
-    accent: 'text-[#C59F2C]',
-    bg: 'bg-[#FFFBEB] dark:bg-[#1a1500]',
-    ring: 'ring-2 ring-[#F4C430]',
-    featured: true,
-  },
-  Platinum: {
-    icon: '💎',
-    accent: 'text-[#0D3B2A] dark:text-[#81C784]',
-    bg: 'bg-[#F0FFF4] dark:bg-[#0a1f14]',
-    ring: 'ring-1 ring-[#2E7D32]/30 dark:ring-[#2E7D32]/50',
-    featured: false,
-  },
-}
-
-const BUSINESS_TYPES = [
-  { icon: '🍽️', label: 'Restaurants' },
-  { icon: '🏫', label: 'Schools' },
-  { icon: '🏨', label: 'Hotels' },
-  { icon: '🛒', label: 'Retail Outlets' },
-  { icon: '🍱', label: 'Catering Services' },
-  { icon: '🏥', label: 'Hospitals' },
-  { icon: '🤝', label: 'NGOs' },
-]
-
 const FAQ = [
   {
     q: 'How long does approval take?',
-    a: 'We aim to review all B2B applications within 24–48 business hours. You\'ll receive an email with the outcome as soon as your application is reviewed.',
+    a: "We aim to review all B2B applications within 24–48 business hours. You'll receive an email with the outcome as soon as your application is reviewed.",
   },
   {
     q: 'What documents do I need?',
@@ -50,28 +15,141 @@ const FAQ = [
   },
   {
     q: 'Can I order without an account?',
-    a: 'B2B accounts require a registered user account so we can apply your discount tier at checkout. Sign up is free and takes under a minute.',
+    a: 'B2B accounts require a registered user account so we can apply your discount at checkout. Sign up is free and takes under a minute.',
   },
   {
     q: 'How are discounts applied?',
-    a: 'Once your application is approved and a tier is assigned, your B2B discount is automatically applied when you check out. No code needed.',
+    a: 'Once your application is approved, your B2B discount is automatically applied when you check out. No code needed.',
   },
   {
     q: 'What is the minimum order?',
-    a: 'The minimum for the Silver tier is GH₵200 per order. Gold starts at GH₵500 and Platinum at GH₵1,000.',
+    a: 'Discounts start from GH₵200 per order. The more you order, the larger your discount.',
+  },
+]
+
+const STEPS = [
+  {
+    n: '01',
+    title: 'Register Your Business',
+    body: 'Fill in your business details in our quick application form. Under 2 minutes — no documents required.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="28" height="28">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>
+    ),
+  },
+  {
+    n: '02',
+    title: 'Get Approved',
+    body: 'Our team reviews your application within 24–48 hours and assigns your discount level based on order volume.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="28" height="28">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+    ),
+  },
+  {
+    n: '03',
+    title: 'Order at Bulk Prices',
+    body: 'Shop as usual and your B2B discount is applied automatically at checkout — no codes, no friction.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="28" height="28">
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      </svg>
+    ),
+  },
+]
+
+const BUSINESS_TYPES = [
+  {
+    label: 'Restaurants',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+        <line x1="12" y1="2" x2="12" y2="6" />
+        <line x1="12" y1="18" x2="12" y2="22" />
+        <path d="M4.93 4.93 8 8M15.07 15.07 18 18M2 12h4m12 0h4M4.93 19.07 8 16M15.07 8.93 18 6" />
+        <circle cx="12" cy="12" r="4" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Schools',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Hotels',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+        <rect x="3" y="2" width="18" height="20" rx="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <line x1="9" y1="9" x2="9" y2="22" />
+        <rect x="12" y="13" width="4" height="9" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Retail Outlets',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Catering',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+        <path d="M3 11l19-9-9 19-2-8-8-2z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Hospitals',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <line x1="12" y1="8" x2="12" y2="16" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </svg>
+    ),
+  },
+  {
+    label: 'NGOs',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    ),
   },
 ]
 
 export default async function B2BLandingPage() {
-  let tiers: B2BDiscountTier[] = []
-  try {
-    tiers = await api.b2b.tiers()
-  } catch {
-    // backend unavailable — use empty, page still renders
-  }
-
   return (
     <div className="bg-[#FAF7F0] dark:bg-[#111827]">
+
+      {/* Carousel animation */}
+      <style>{`
+        @keyframes b2b-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .b2b-carousel { animation: b2b-scroll 28s linear infinite; }
+        .b2b-carousel:hover { animation-play-state: paused; }
+      `}</style>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section style={{ backgroundColor: '#0D3B2A', paddingTop: '6rem', paddingBottom: '5rem' }}>
@@ -82,9 +160,12 @@ export default async function B2BLandingPage() {
           <h1 className="font-display text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
             Partner With<br />Legit Organic
           </h1>
-          <p className="text-[#A7C4A0] text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-[#A7C4A0] text-lg lg:text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
             Bulk organic produce for restaurants, schools, hotels, and institutions —
             with guaranteed quality and competitive pricing.
+          </p>
+          <p className="text-[#6fa87a] text-sm max-w-xl mx-auto mb-10 italic">
+            Automatic discounts applied based on your order volume — the more you order, the more you save.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -107,9 +188,9 @@ export default async function B2BLandingPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 mt-16 max-w-xl mx-auto">
             {[
-              { value: '3', label: 'Pricing Tiers' },
-              { value: '24h', label: 'Fast Processing' },
+              { value: '24h',  label: 'Fast Approval' },
               { value: '100%', label: 'Verified Organic' },
+              { value: '0',    label: 'Documents Needed' },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <div className="text-2xl font-bold text-[#F4C430] font-display">{s.value}</div>
@@ -129,144 +210,75 @@ export default async function B2BLandingPage() {
               Three Simple Steps
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: '01',
-                title: 'Register Your Business',
-                body: 'Fill in your business details in our quick application form. Takes under 2 minutes — no documents required.',
-                icon: '📋',
-              },
-              {
-                step: '02',
-                title: 'Get Approved',
-                body: 'Our team reviews your application within 24–48 hours and assigns you a discount tier based on your order volume.',
-                icon: '✅',
-              },
-              {
-                step: '03',
-                title: 'Order at Bulk Prices',
-                body: 'Shop as usual and your B2B discount is applied automatically at checkout — no codes, no friction.',
-                icon: '🛒',
-              },
-            ].map((item) => (
-              <div key={item.step} className="relative">
-                <div className="text-5xl mb-4">{item.icon}</div>
-                <div className="absolute top-0 right-0 text-6xl font-bold text-[#0D3B2A]/5 dark:text-white/5 font-display leading-none select-none">
-                  {item.step}
+
+          <div className="flex flex-col md:flex-row items-stretch gap-0">
+            {STEPS.map((step, i) => (
+              <Fragment key={step.n}>
+                {/* Step card */}
+                <div className="flex-1 flex flex-col items-start p-8 rounded-2xl bg-[#FAF7F0] dark:bg-[#111827] border border-[#E6D8BD] dark:border-[#374151]">
+                  {/* Number badge */}
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="w-8 h-8 rounded-full bg-[#0D3B2A] dark:bg-[#F4C430] text-[#F4C430] dark:text-[#0D3B2A] flex items-center justify-center text-xs font-bold font-display shrink-0">
+                      {step.n}
+                    </span>
+                  </div>
+                  {/* Icon */}
+                  <div className="text-[#2E7D32] dark:text-[#81C784] mb-4">
+                    {step.icon}
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-[#0D3B2A] dark:text-white mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-[#5B3E31] dark:text-[#9ca3af] text-sm leading-relaxed">
+                    {step.body}
+                  </p>
                 </div>
-                <h3 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-2">{item.title}</h3>
-                <p className="text-[#5B3E31] dark:text-[#9ca3af] text-sm leading-relaxed">{item.body}</p>
-              </div>
+
+                {/* Arrow connector between steps */}
+                {i < STEPS.length - 1 && (
+                  <div className="hidden md:flex items-center justify-center px-3 shrink-0 text-[#F4C430]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                )}
+                {/* Mobile vertical connector */}
+                {i < STEPS.length - 1 && (
+                  <div className="md:hidden flex justify-center py-2 text-[#F4C430]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                      <path d="M12 5v14M5 12l7 7 7-7" />
+                    </svg>
+                  </div>
+                )}
+              </Fragment>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Discount Tiers ───────────────────────────────────────────────── */}
-      <section className="py-20">
-        <div className="max-w-5xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-[#2E7D32] dark:text-[#81C784] text-xs font-bold uppercase tracking-widest">Pricing</span>
-            <h2 className="font-display text-3xl lg:text-4xl font-bold text-[#0D3B2A] dark:text-white mt-2">
-              Discount Tiers
-            </h2>
-            <p className="text-[#5B3E31] dark:text-[#9ca3af] mt-3 max-w-lg mx-auto text-sm">
-              Your discount is automatically assigned based on your order volume. Move up tiers as your business grows.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {tiers.length > 0 ? tiers.map((tier) => {
-              const style = TIER_STYLE[tier.name] ?? TIER_STYLE.Silver
-              return (
-                <div
-                  key={tier.id}
-                  className={[
-                    'relative rounded-2xl p-8 flex flex-col',
-                    style.bg, style.ring,
-                    style.featured ? 'shadow-xl scale-[1.03]' : 'shadow-sm',
-                  ].join(' ')}
-                >
-                  {style.featured && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#F4C430] text-[#0D3B2A] text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wide">
-                      Most Popular
-                    </div>
-                  )}
-                  <div className="text-4xl mb-3">{style.icon}</div>
-                  <h3 className={['font-display text-2xl font-bold mb-1', style.accent].join(' ')}>
-                    {tier.name}
-                  </h3>
-                  <div className="flex items-end gap-1 mb-3">
-                    <span className="text-5xl font-bold text-[#0D3B2A] dark:text-white font-display">
-                      {tier.discount_percent}%
-                    </span>
-                    <span className="text-[#5B3E31] dark:text-[#9ca3af] text-sm mb-2">off</span>
-                  </div>
-                  <p className="text-sm text-[#5B3E31] dark:text-[#9ca3af] mb-2">{tier.description}</p>
-                  <p className="text-xs text-[#0D3B2A]/60 dark:text-[#9ca3af] mb-6">
-                    Min. order: GH₵{parseFloat(tier.min_order_amount).toLocaleString()}
-                    {tier.max_order_amount ? ` – GH₵${parseFloat(tier.max_order_amount).toLocaleString()}` : '+'}
-                  </p>
-                  <Link
-                    href="/b2b/apply"
-                    className={[
-                      'mt-auto text-center font-semibold py-2.5 px-5 rounded-xl text-sm transition-colors',
-                      style.featured
-                        ? 'bg-[#F4C430] text-[#0D3B2A] hover:bg-[#e6b82a]'
-                        : 'bg-[#0D3B2A] text-[#F4C430] hover:bg-[#0a2e20] dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#e6b82a]',
-                    ].join(' ')}
-                  >
-                    Apply Now
-                  </Link>
-                </div>
-              )
-            }) : (
-              /* Fallback if API unavailable */
-              [
-                { name: 'Silver', icon: '🥈', pct: '5%', range: 'GH₵200 – GH₵499' },
-                { name: 'Gold',   icon: '🥇', pct: '10%', range: 'GH₵500 – GH₵999', featured: true },
-                { name: 'Platinum', icon: '💎', pct: '15%', range: 'GH₵1,000+' },
-              ].map((t) => {
-                const style = TIER_STYLE[t.name]
-                return (
-                  <div key={t.name} className={['relative rounded-2xl p-8 flex flex-col', style.bg, style.ring, (t as {featured?: boolean}).featured ? 'shadow-xl scale-[1.03]' : 'shadow-sm'].join(' ')}>
-                    {(t as {featured?: boolean}).featured && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#F4C430] text-[#0D3B2A] text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wide">Most Popular</div>
-                    )}
-                    <div className="text-4xl mb-3">{t.icon}</div>
-                    <h3 className={['font-display text-2xl font-bold mb-1', style.accent].join(' ')}>{t.name}</h3>
-                    <div className="flex items-end gap-1 mb-3">
-                      <span className="text-5xl font-bold text-[#0D3B2A] dark:text-white font-display">{t.pct}</span>
-                      <span className="text-[#5B3E31] dark:text-[#9ca3af] text-sm mb-2">off</span>
-                    </div>
-                    <p className="text-xs text-[#0D3B2A]/60 dark:text-[#9ca3af] mb-6">{t.range}</p>
-                    <Link href="/b2b/apply" className={['mt-auto text-center font-semibold py-2.5 px-5 rounded-xl text-sm transition-colors', (t as {featured?: boolean}).featured ? 'bg-[#F4C430] text-[#0D3B2A] hover:bg-[#e6b82a]' : 'bg-[#0D3B2A] text-[#F4C430] hover:bg-[#0a2e20]'].join(' ')}>Apply Now</Link>
-                  </div>
-                )
-              })
-            )}
-          </div>
+      {/* ── Built for Institutions (carousel) ───────────────────────────── */}
+      <section className="py-20 overflow-hidden">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8 mb-12 text-center">
+          <span className="text-[#2E7D32] dark:text-[#81C784] text-xs font-bold uppercase tracking-widest">Who Benefits</span>
+          <h2 className="font-display text-3xl lg:text-4xl font-bold text-[#0D3B2A] dark:text-white mt-2">
+            Built for Institutions
+          </h2>
+          <p className="text-[#5B3E31] dark:text-[#9ca3af] mt-3 text-sm">
+            Serving businesses across Ghana with certified organic produce.
+          </p>
         </div>
-      </section>
 
-      {/* ── Who Is It For ────────────────────────────────────────────────── */}
-      <section className="py-20 bg-white dark:bg-[#1f2937]">
-        <div className="max-w-5xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-[#2E7D32] dark:text-[#81C784] text-xs font-bold uppercase tracking-widest">Who Benefits</span>
-            <h2 className="font-display text-3xl lg:text-4xl font-bold text-[#0D3B2A] dark:text-white mt-2">
-              Built for Institutions
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
-            {BUSINESS_TYPES.map((bt) => (
+        {/* Carousel track */}
+        <div className="overflow-hidden">
+          <div className="b2b-carousel flex gap-5 w-max">
+            {/* Original + duplicate for seamless loop */}
+            {[...BUSINESS_TYPES, ...BUSINESS_TYPES].map((bt, idx) => (
               <div
-                key={bt.label}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-[#FAF7F0] dark:bg-[#111827] border border-[#E6D8BD] dark:border-[#374151] text-center"
+                key={idx}
+                className="flex flex-col items-center gap-3 w-36 shrink-0 p-5 rounded-2xl bg-white dark:bg-[#1f2937] border border-[#E6D8BD] dark:border-[#374151] shadow-sm"
               >
-                <span className="text-3xl">{bt.icon}</span>
-                <span className="text-xs font-semibold text-[#0D3B2A] dark:text-[#d1d5db] leading-tight">{bt.label}</span>
+                <div className="text-[#2E7D32] dark:text-[#81C784]">{bt.icon}</div>
+                <span className="text-xs font-semibold text-[#0D3B2A] dark:text-[#d1d5db] leading-tight text-center">{bt.label}</span>
               </div>
             ))}
           </div>
@@ -274,7 +286,7 @@ export default async function B2BLandingPage() {
       </section>
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-      <section className="py-20">
+      <section className="py-20 bg-white dark:bg-[#1f2937]">
         <div className="max-w-3xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-[#2E7D32] dark:text-[#81C784] text-xs font-bold uppercase tracking-widest">FAQ</span>
@@ -286,7 +298,7 @@ export default async function B2BLandingPage() {
             {FAQ.map((item) => (
               <details
                 key={item.q}
-                className="group border border-[#E6D8BD] dark:border-[#374151] rounded-xl bg-white dark:bg-[#1f2937]"
+                className="group border border-[#E6D8BD] dark:border-[#374151] rounded-xl bg-[#FAF7F0] dark:bg-[#111827]"
               >
                 <summary className="flex items-center justify-between px-6 py-4 cursor-pointer list-none select-none">
                   <span className="font-semibold text-[#0D3B2A] dark:text-white text-sm">{item.q}</span>
@@ -308,12 +320,12 @@ export default async function B2BLandingPage() {
       </section>
 
       {/* ── CTA Banner ───────────────────────────────────────────────────── */}
-      <section style={{ backgroundColor: '#0D3B2A' }} className="py-20">
+      <section className="py-20 bg-gradient-to-r from-[#0D3B2A] to-[#2E7D32] dark:from-gray-800 dark:to-gray-700">
         <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
           <h2 className="font-display text-3xl lg:text-4xl font-bold text-white mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-[#A7C4A0] mb-8 text-lg">
+          <p className="text-white/70 mb-8 text-lg">
             Apply today and start saving on every bulk order.
           </p>
           <Link
@@ -325,7 +337,7 @@ export default async function B2BLandingPage() {
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </Link>
-          <p className="text-[#A7C4A0] text-sm mt-6">
+          <p className="text-white/60 text-sm mt-6">
             Already applied?{' '}
             <Link href="/b2b/apply" className="text-[#F4C430] hover:underline font-semibold">
               Check your status
