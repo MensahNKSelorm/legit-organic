@@ -139,11 +139,37 @@ export default function MyRecipesPage() {
                     </p>
                   )}
 
-                  <div className="flex items-center gap-3 text-xs text-charcoal/40 dark:text-[#9ca3af]">
-                    <span>{recipe.ingredients.length} ingredient{recipe.ingredients.length !== 1 ? 's' : ''}</span>
-                    <span>·</span>
-                    <span>Saved {formatDate(recipe.created_at)}</span>
+                  <div className="text-xs text-charcoal/40 dark:text-[#9ca3af] mb-2">
+                    {recipe.ingredients.length} ingredient{recipe.ingredients.length !== 1 ? 's' : ''} · Saved {formatDate(recipe.created_at)}
                   </div>
+
+                  {recipe.ingredients.length > 0 && (
+                    <ul className="space-y-1 mt-2">
+                      {recipe.ingredients.slice(0, 5).map((ing, i) => (
+                        <li key={i} className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-charcoal/70 dark:text-[#d1d5db] truncate">
+                            {ing.name}
+                            <span className="text-charcoal/40 dark:text-[#9ca3af] ml-1">
+                              {ing.quantity} {ing.unit}
+                            </span>
+                          </span>
+                          {ing.product && (
+                            <a
+                              href={`/products/${ing.product.slug}`}
+                              className="shrink-0 text-xs px-2 py-0.5 rounded bg-[#0D3B2A] text-[#F4C430] hover:bg-[#2E7D32] transition-colors whitespace-nowrap"
+                            >
+                              Buy →
+                            </a>
+                          )}
+                        </li>
+                      ))}
+                      {recipe.ingredients.length > 5 && (
+                        <li className="text-xs text-charcoal/40 dark:text-[#9ca3af]">
+                          +{recipe.ingredients.length - 5} more ingredient{recipe.ingredients.length - 5 !== 1 ? 's' : ''}
+                        </li>
+                      )}
+                    </ul>
+                  )}
                 </div>
 
                 <div className="flex gap-2 pt-4 border-t border-sand dark:border-[#374151]">

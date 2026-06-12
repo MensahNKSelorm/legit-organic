@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
-import type { Recipe, RecipeWithPairings } from '@/types'
+import type { Product, Recipe, RecipeWithPairings } from '@/types'
+import { getMediaUrl } from '@/lib/media'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -208,6 +209,26 @@ function BuilderContent() {
     setIngredients((prev) => prev.filter((ing) => ing.sourceRecipeId !== id))
   }
 
+  function linkProduct(localId: number, productId: number, productName: string, productSlug: string) {
+    setIngredients((prev) =>
+      prev.map((ing) =>
+        ing.localId === localId
+          ? { ...ing, productId, productName, productSlug }
+          : ing
+      )
+    )
+  }
+
+  function unlinkProduct(localId: number) {
+    setIngredients((prev) =>
+      prev.map((ing) =>
+        ing.localId === localId
+          ? { ...ing, productId: null, productName: null, productSlug: null }
+          : ing
+      )
+    )
+  }
+
   async function addRecipeToBuilder(slug: string) {
     if (baseRecipes.some((r) => r.slug === slug)) return
     try {
@@ -377,6 +398,10 @@ function BuilderContent() {
                     onRemove={() => removeIngredient(ing.localId)}
                     onMoveUp={() => moveIngredient(ing.localId, -1)}
                     onMoveDown={() => moveIngredient(ing.localId, 1)}
+                    onLinkProduct={(productId, productName, productSlug) =>
+                      linkProduct(ing.localId, productId, productName, productSlug)
+                    }
+                    onUnlinkProduct={() => unlinkProduct(ing.localId)}
                   />
                 ))}
               </div>
@@ -496,15 +521,64 @@ interface IngredientRowProps {
   onRemove: () => void
   onMoveUp: () => void
   onMoveDown: () => void
+  onLinkProduct: (productId: number, productName: string, productSlug: string) => void
+  onUnlinkProduct: () => void
 }
 
-function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onMoveDown }: IngredientRowProps) {
+function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onMoveDown, onLinkProduct, onUnlinkProduct }: IngredientRowProps) {
   const [showNotes, setShowNotes] = useState(!!ing.notes)
+  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const inputBase = 'bg-[#F5F0E6] dark:bg-gray-700 text-charcoal dark:text-white rounded-lg px-3 py-2 text-sm outline-none border border-transparent dark:border-gray-600 focus:ring-2 focus:ring-[#F4C430]/50 placeholder:text-gray-400 dark:placeholder:text-gray-500'
 
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  function handleNameChange(value: string) {
+    onChange('name', value)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    // Don't search when a product is already linked
+    if (ing.productId) return
+    if (!value.trim() || value.length < 2) {
+      setSearchResults([])
+      setShowDropdown(false)
+      return
+    }
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const data = await api.products.search(value)
+        const results = data.results.slice(0, 5)
+        setSearchResults(results)
+        setShowDropdown(results.length > 0)
+      } catch {
+        setSearchResults([])
+        setShowDropdown(false)
+      }
+    }, 300)
+  }
+
+  function handleSelectProduct(product: Product) {
+    onChange('name', product.name)
+    onLinkProduct(product.id, product.name, product.slug)
+    setShowDropdown(false)
+    setSearchResults([])
+  }
+
   return (
-    <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-xl p-4 group">
+    <div
+      ref={containerRef}
+      className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-xl p-4 group"
+    >
       <div className="flex items-center gap-2">
         {/* Reorder */}
         <div className="flex flex-col gap-0.5 shrink-0">
@@ -526,14 +600,49 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
           </button>
         </div>
 
-        {/* Name */}
-        <input
-          type="text"
-          value={ing.name}
-          onChange={(e) => onChange('name', e.target.value)}
-          placeholder="Ingredient name"
-          className={`${inputBase} flex-1 min-w-0`}
-        />
+        {/* Name input + search dropdown */}
+        <div className="relative flex-1 min-w-0">
+          <input
+            type="text"
+            value={ing.name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            placeholder="Ingredient name"
+            className={`${inputBase} w-full`}
+          />
+          {showDropdown && searchResults.length > 0 && (
+            <ul className="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 border border-[#E6D8BD] dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+              {searchResults.map((product) => {
+                const imgSrc = product.images && product.images.length > 0
+                  ? getMediaUrl(product.images[0].image)
+                  : getMediaUrl(product.image)
+                return (
+                  <li key={product.id}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); handleSelectProduct(product) }}
+                      className="w-full flex items-center gap-2 p-2 hover:bg-[#F5F0E6] dark:hover:bg-gray-700 cursor-pointer text-left transition-colors"
+                    >
+                      {imgSrc ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={imgSrc} alt={product.name} className="w-8 h-8 rounded object-cover shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded bg-[#F5F0E6] dark:bg-gray-600 shrink-0" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-[#0D3B2A] dark:text-[#faf7f0] truncate">
+                          {product.name}
+                        </p>
+                        <p className="text-xs text-[#2E7D32] dark:text-[#81C784]">
+                          GH₵ {product.price} · {product.unit}
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
 
         {/* Quantity */}
         <input
@@ -575,15 +684,30 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
         </button>
       </div>
 
-      {/* Product badge */}
+      {/* Linked product badge + Buy button */}
       {ing.productSlug && (
-        <div className="mt-2 ml-10">
+        <div className="mt-2 ml-10 flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 text-xs text-[#2E7D32] dark:text-[#81C784] bg-[#2E7D32]/10 px-2 py-0.5 rounded-full">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor">
+              <circle cx="12" cy="12" r="10" />
+            </svg>
+            {ing.productName}
+            <button
+              type="button"
+              onClick={onUnlinkProduct}
+              className="ml-0.5 hover:text-red-500 transition-colors leading-none"
+              aria-label="Unlink product"
+            >
+              ×
+            </button>
+          </span>
           <a
             href={`/products/${ing.productSlug}`}
-            className="inline-flex items-center gap-1 text-xs text-[#2E7D32] dark:text-[#81C784] bg-[#2E7D32]/10 px-2 py-0.5 rounded-full hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 text-xs px-2 py-1 rounded-lg bg-[#0D3B2A] text-[#F4C430] hover:bg-[#2E7D32] transition-colors whitespace-nowrap"
           >
-            <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-            {ing.productName}
+            Buy →
           </a>
         </div>
       )}
