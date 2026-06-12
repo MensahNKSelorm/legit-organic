@@ -72,10 +72,9 @@ const BUSINESS_TYPES = [
     label: 'Restaurants',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
-        <line x1="12" y1="2" x2="12" y2="6" />
-        <line x1="12" y1="18" x2="12" y2="22" />
-        <path d="M4.93 4.93 8 8M15.07 15.07 18 18M2 12h4m12 0h4M4.93 19.07 8 16M15.07 8.93 18 6" />
-        <circle cx="12" cy="12" r="4" />
+        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+        <path d="M7 2v20"/>
+        <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
       </svg>
     ),
   },
@@ -113,7 +112,11 @@ const BUSINESS_TYPES = [
     label: 'Catering',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
-        <path d="M3 11l19-9-9 19-2-8-8-2z" />
+        <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+        <line x1="6" y1="1" x2="6" y2="4"/>
+        <line x1="10" y1="1" x2="10" y2="4"/>
+        <line x1="14" y1="1" x2="14" y2="4"/>
       </svg>
     ),
   },
@@ -121,9 +124,10 @@ const BUSINESS_TYPES = [
     label: 'Hospitals',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <line x1="12" y1="8" x2="12" y2="16" />
-        <line x1="8" y1="12" x2="16" y2="12" />
+        <path d="M12 2v20"/>
+        <path d="M12 7c0 0 4-2 4 2s-4 2-4 4s4 2 4 4"/>
+        <path d="M8 6c0-2 1.5-3 2.5-2"/>
+        <path d="M10 20c1 1 3 1 4-1"/>
       </svg>
     ),
   },
