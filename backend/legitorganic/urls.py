@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/blog/', include('blog.urls')),
     path('api/recipes/', include('recipes.urls')),
     path('api/orders/', include('orders.urls')),
+    path('api/sales/', include('sales.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
 ]
 

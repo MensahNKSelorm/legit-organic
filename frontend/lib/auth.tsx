@@ -27,7 +27,8 @@ interface AuthContextType {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    referralCode?: string
   ) => Promise<void>
   googleLogin: (token: string) => Promise<void>
   logout: () => void
@@ -99,7 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: string,
       password: string,
       firstName: string,
-      lastName: string
+      lastName: string,
+      referralCode?: string
     ) => {
       const { user: userData, access, refresh } = await api.auth.register({
         email,
@@ -107,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         last_name: lastName,
         password,
         password_confirm: password,
+        ...(referralCode ? { referral_code: referralCode } : {}),
       })
       localStorage.setItem('access_token', access)
       localStorage.setItem('refresh_token', refresh)

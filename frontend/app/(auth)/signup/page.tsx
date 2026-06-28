@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '@/lib/auth'
+import { getReferralCode, clearReferralCode } from '@/lib/referral'
 
 // ---------------------------------------------------------------------------
 // Icons
@@ -94,8 +95,10 @@ export default function SignupPage() {
     setApiError('')
     if (!validate()) return
     setLoading(true)
+    const referralCode = getReferralCode() ?? undefined
     try {
-      await register(email, password, firstName, lastName)
+      await register(email, password, firstName, lastName, referralCode)
+      clearReferralCode()
     } catch (err: unknown) {
       setApiError(err instanceof Error ? err.message : 'Registration failed. Please try again.')
     } finally {

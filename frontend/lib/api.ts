@@ -96,6 +96,8 @@ export interface RegisterData {
   last_name: string
   password: string
   password_confirm: string
+  phone_number?: string
+  referral_code?: string
 }
 
 export interface CreateUserRecipeData {
@@ -243,6 +245,10 @@ export const api = {
         '/api/users/b2b/setup-password/',
         { method: 'POST', body: JSON.stringify({ uid, token, password }) },
       ),
+  },
+  sales: {
+    validateCode: (code: string) =>
+      fetchAPI<{ valid: boolean }>(`/api/sales/validate-code/?code=${encodeURIComponent(code)}`),
   },
   orders: {
     create: (data: {

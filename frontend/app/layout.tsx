@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth'
 import { CartProvider } from '@/lib/cart'
@@ -8,6 +9,7 @@ import Footer from '@/components/layout/Footer'
 import VerificationBanner from '@/components/ui/VerificationBanner'
 import GoogleProvider from '@/components/providers/GoogleProvider'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
+import { ReferralCapture } from '@/components/ReferralCapture'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://legitorganic.com'),
@@ -102,6 +104,9 @@ export default function RootLayout({
           </AuthProvider>
         </GoogleProvider>
         <WhatsAppButton />
+        <Suspense fallback={null}>
+          <ReferralCapture />
+        </Suspense>
       </body>
     </html>
   )
