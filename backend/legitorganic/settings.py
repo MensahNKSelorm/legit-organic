@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'blog',
     'recipes',
     'orders',
+    'sales',
 ]
 
 UNFOLD = {
@@ -209,6 +210,27 @@ UNFOLD = {
                         "title": "Discount Tiers",
                         "icon": "percent",
                         "link": "/admin/users/b2bdiscounttier/",
+                    },
+                ],
+            },
+            {
+                "title": "Sales Reps",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Sales Reps",
+                        "icon": "badge",
+                        "link": "/admin/sales/salesrep/",
+                    },
+                    {
+                        "title": "Referred Customers",
+                        "icon": "group_add",
+                        "link": "/admin/sales/referredcustomer/",
+                    },
+                    {
+                        "title": "Commissions",
+                        "icon": "payments",
+                        "link": "/admin/sales/commission/",
                     },
                 ],
             },
