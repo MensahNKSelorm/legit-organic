@@ -72,16 +72,6 @@ function PlusIcon() {
   )
 }
 
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2"
-      fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="9" y="9" width="13" height="13" rx="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
-  )
-}
-
 function CheckIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2.5"
@@ -106,6 +96,18 @@ function WhatsAppIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden>
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  )
+}
+
+// Small 16×16 link icon for the "Copy referral link" action button —
+// kept separate from the tab-bar LinkIcon (18×18) so that one isn't resized.
+function SmallLinkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2"
+      fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </svg>
   )
 }
@@ -540,104 +542,169 @@ export default function SalesRepDashboardPage() {
 
         {/* ── Tab 3: My Referral Link ──────────────────────────────────── */}
         {activeTab === 'referral' && (
-          <section className="flex flex-col items-center py-4">
+          <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '16px', paddingBottom: '16px' }}>
             {/* Flyer card — self-contained, screenshot-friendly. No interactive
                 elements inside it; all actions live below. */}
-            <div
-              ref={flyerRef}
-              className="w-[380px] max-w-full rounded-2xl shadow-lg overflow-hidden"
-            >
-              {/* 1. Header band */}
-              <div style={{ backgroundColor: '#0D3B2A' }} className="px-6 pt-7 pb-6 text-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/logo-darkmode.svg"
-                  alt="Legit Organic"
-                  className="h-9 w-auto mx-auto"
-                />
-                <p style={{ color: '#FAF7F0' }} className="text-xs font-medium tracking-wide mt-3">
-                  Fresh. Organic. Delivered.
-                </p>
-              </div>
-
-              {/* 2. Rep identity section */}
-              <div style={{ backgroundColor: '#F4C430' }} className="px-6 py-6 text-center">
-                <p style={{ color: '#0D3B2A' }} className="font-display text-2xl font-bold leading-tight">
-                  {salesRepProfile.first_name} {salesRepProfile.last_name}
-                </p>
-                <p style={{ color: '#0D3B2A' }} className="text-sm font-medium mt-1 opacity-80">
-                  Legit Organic Sales Representative
-                </p>
-              </div>
-
-              {/* 3. QR code section */}
-              <div style={{ backgroundColor: '#FAF7F0' }} className="px-6 py-7 flex flex-col items-center gap-4">
-                {qrDataUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={qrDataUrl}
-                    alt={`QR code for referral link ${referralUrl}`}
-                    width={200}
-                    height={200}
-                    className="rounded-xl border border-[#E6D8BD]"
-                  />
-                ) : (
-                  <div className="w-[200px] h-[200px] rounded-xl border border-[#E6D8BD] flex items-center justify-center">
-                    <span className="w-6 h-6 border-2 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+              <div
+                ref={flyerRef}
+                className="border-[0.5px] border-[#E6D8BD] dark:border-[#374151]"
+                style={{ width: 340, maxWidth: '100%', borderRadius: 20, overflow: 'hidden' }}
+              >
+                {/* 1. Header band */}
+                <div style={{
+                  backgroundColor: '#0D3B2A', padding: '28px 24px 20px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden>
+                      <path d="M18 4C18 4 8 10 8 20C8 26.627 12.477 30 18 30C23.523 30 28 26.627 28 20C28 10 18 4 18 4Z" fill="#2E7D32"/>
+                      <path d="M18 4C18 4 8 10 8 20C8 26.627 12.477 30 18 30" fill="#81C784" opacity="0.5"/>
+                      <path d="M18 30V16" stroke="#FAF7F0" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M18 22L13 17" stroke="#FAF7F0" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M18 18L23 14" stroke="#FAF7F0" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ color: '#FAF7F0', fontSize: 15, fontWeight: 500, letterSpacing: '0.02em' }}>
+                        Legit Organic
+                      </span>
+                      <span style={{ color: '#81C784', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        Ltd.
+                      </span>
+                    </div>
                   </div>
-                )}
+                  <p style={{
+                    color: '#FAF7F0', fontSize: 11, letterSpacing: '0.12em',
+                    textTransform: 'uppercase', opacity: 0.7, margin: 0,
+                  }}>
+                    Fresh · Organic · Delivered
+                  </p>
+                </div>
 
-                <p style={{ color: '#0D3B2A' }} className="text-sm font-semibold">
-                  Scan to shop organic food
-                </p>
+                {/* 2. Rep identity band */}
+                <div style={{ backgroundColor: '#F4C430', padding: '18px 24px 16px', textAlign: 'center' }}>
+                  <p style={{
+                    color: '#0D3B2A', fontSize: 10, letterSpacing: '0.14em',
+                    textTransform: 'uppercase', opacity: 0.6, margin: '0 0 4px',
+                  }}>
+                    Your representative
+                  </p>
+                  <p style={{
+                    color: '#0D3B2A', fontSize: 26, fontWeight: 500,
+                    letterSpacing: '-0.01em', lineHeight: 1.1, margin: 0,
+                  }}>
+                    {salesRepProfile.first_name} {salesRepProfile.last_name}
+                  </p>
+                  <p style={{
+                    color: '#0D3B2A', fontSize: 11, opacity: 0.65,
+                    letterSpacing: '0.03em', margin: '4px 0 0',
+                  }}>
+                    Legit Organic Sales Representative
+                  </p>
+                </div>
 
-                <span
-                  style={{ backgroundColor: '#0D3B2A', color: '#FAF7F0' }}
-                  className="inline-flex items-center px-5 py-2.5 rounded-full font-mono text-sm font-bold tracking-wide"
-                >
-                  Code: {salesRepProfile.referral_code}
-                </span>
-              </div>
+                {/* 3. QR code section */}
+                <div style={{
+                  backgroundColor: '#FAF7F0', padding: '24px 24px 20px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+                }}>
+                  <div style={{
+                    width: 160, height: 160, backgroundColor: '#fff', borderRadius: 12,
+                    border: '0.5px solid #E6D8BD', padding: 10,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {qrDataUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={qrDataUrl}
+                        alt={`QR code for referral link ${referralUrl}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <span className="w-6 h-6 border-2 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
+                    )}
+                  </div>
 
-              {/* 4. Footer band */}
-              <div style={{ backgroundColor: '#0D3B2A' }} className="py-3 text-center">
-                <p style={{ color: '#FAF7F0' }} className="text-xs font-semibold tracking-wide">
-                  legitorganic.com
-                </p>
+                  <p style={{ color: '#5B3E31', fontSize: 12, letterSpacing: '0.04em', textAlign: 'center', margin: 0 }}>
+                    Scan to shop fresh organic food
+                  </p>
+
+                  <span style={{
+                    backgroundColor: '#0D3B2A', color: '#FAF7F0', fontFamily: 'monospace',
+                    fontSize: 13, letterSpacing: '0.12em', padding: '7px 20px',
+                    borderRadius: 100, display: 'inline-block',
+                  }}>
+                    Code: {salesRepProfile.referral_code}
+                  </span>
+                </div>
+
+                {/* 4. Gold divider */}
+                <div style={{
+                  width: '100%', height: 2,
+                  background: 'linear-gradient(90deg, transparent, #F4C430 30%, #F4C430 70%, transparent)',
+                }} />
+
+                {/* 5. Footer band */}
+                <div style={{
+                  backgroundColor: '#0D3B2A', padding: '12px 24px',
+                  display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#F4C430', opacity: 0.7 }} />
+                  <p style={{ color: '#FAF7F0', fontSize: 11, letterSpacing: '0.1em', opacity: 0.85, margin: 0 }}>
+                    legitorganic.com
+                  </p>
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#F4C430', opacity: 0.7 }} />
+                </div>
               </div>
             </div>
 
             {/* Actions — outside the card */}
-            <div className="w-[380px] max-w-full flex flex-col gap-3 mt-6">
+            <div style={{ width: 340, maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24 }}>
               <button
                 onClick={handleCopy}
-                className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-white font-semibold text-sm transition-colors"
-                style={{ backgroundColor: '#2E7D32' }}
+                className="min-h-[44px]"
+                style={{
+                  backgroundColor: '#2E7D32', color: '#FAF7F0', padding: '11px 16px',
+                  borderRadius: 10, fontSize: 13, fontWeight: 500, border: 'none',
+                  width: '100%', display: 'flex', flexDirection: 'row',
+                  alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
               >
-                {copied ? <CheckIcon /> : <CopyIcon />}
-                {copied ? 'Copied!' : 'Copy Link'}
+                {copied ? <CheckIcon /> : <SmallLinkIcon />}
+                {copied ? 'Copied!' : 'Copy referral link'}
               </button>
 
               <button
                 onClick={handleDownloadFlyer}
                 disabled={downloadingFlyer}
-                className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-60"
-                style={{ backgroundColor: '#F4C430', color: '#0D3B2A' }}
+                className="min-h-[44px]"
+                style={{
+                  backgroundColor: '#F4C430', color: '#0D3B2A', padding: '11px 16px',
+                  borderRadius: 10, fontSize: 13, fontWeight: 500, border: 'none',
+                  width: '100%', display: 'flex', flexDirection: 'row',
+                  alignItems: 'center', justifyContent: 'center', gap: 8,
+                  opacity: downloadingFlyer ? 0.6 : 1,
+                }}
               >
                 {downloadingFlyer ? (
                   <span className="w-4 h-4 border-2 border-[#0D3B2A]/40 border-t-[#0D3B2A] rounded-full animate-spin" />
                 ) : (
                   <DownloadIcon />
                 )}
-                {downloadingFlyer ? 'Preparing…' : 'Download Flyer'}
+                {downloadingFlyer ? 'Preparing…' : 'Download flyer'}
               </button>
 
               <a
                 href={whatsappShareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-white font-semibold text-sm transition-colors"
-                style={{ backgroundColor: '#25D366' }}
+                className="min-h-[44px]"
+                style={{
+                  backgroundColor: '#25D366', color: '#ffffff', padding: '11px 16px',
+                  borderRadius: 10, fontSize: 13, fontWeight: 500, border: 'none',
+                  width: '100%', display: 'flex', flexDirection: 'row',
+                  alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
               >
                 <WhatsAppIcon />
                 Share on WhatsApp
