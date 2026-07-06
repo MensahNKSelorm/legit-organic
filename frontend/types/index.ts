@@ -161,6 +161,7 @@ export interface User {
   avatar?: string | null
   created_at: string
   email_verified: boolean
+  is_staff?: boolean
 }
 
 export interface ProductDetail extends Product {
@@ -305,4 +306,20 @@ export interface CommissionSummary {
     approved: string
     paid: string
   }
+}
+
+export interface AppNotification {
+  id: number
+  type: 'order_placed' | 'order_paid' | 'b2b_application' |
+        'sales_rep_customer'
+  title: string
+  body: string
+  link: string
+  is_read: boolean
+  created_at: string
+}
+
+export interface NotificationResponse {
+  unread_count: number
+  results: AppNotification[]
 }

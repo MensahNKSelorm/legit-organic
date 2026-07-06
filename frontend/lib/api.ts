@@ -5,9 +5,10 @@ import type {
   User, Order, PromoCode, WishlistItem,
   B2BDiscountTier, B2BProfile,
   SalesRepProfile, ReferredCustomer, CommissionSummary,
+  AppNotification, NotificationResponse,
 } from '@/types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -300,6 +301,19 @@ export const api = {
       }),
     myOrders: () => fetchWithAuth<Order[]>('/api/orders/my-orders/'),
     detail: (reference: string) => fetchWithAuth<Order>(`/api/orders/${reference}/`),
+  },
+  notifications: {
+    list: () => fetchWithAuth<NotificationResponse>(
+      '/api/notifications/'
+    ),
+    markRead: (id: number) => fetchWithAuth<AppNotification>(
+      `/api/notifications/${id}/read/`,
+      { method: 'PATCH' }
+    ),
+    markAllRead: () => fetchWithAuth<{ marked: number }>(
+      '/api/notifications/mark-all-read/',
+      { method: 'POST' }
+    ),
   },
 }
 

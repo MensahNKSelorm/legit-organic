@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import CartIcon from '@/components/cart/CartIcon'
 import SearchModal from '@/components/search/SearchModal'
+import NotificationBell from '@/components/ui/NotificationBell'
 
 const navLinks = [
   { label: 'Home',     href: '/' },
@@ -194,7 +195,9 @@ export default function Navbar() {
           <CartIcon isTransparent={transparent} />
 
           {isAuthenticated && user ? (
-            /* ── Authenticated: avatar + dropdown ── */
+            <>
+            {user.is_staff && <NotificationBell isTransparent={transparent} />}
+            {/* ── Authenticated: avatar + dropdown ── */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
@@ -258,6 +261,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            </>
           ) : (
             /* ── Not authenticated: Login + Sign Up ── */
             <>
@@ -292,6 +296,9 @@ export default function Navbar() {
             </svg>
           </button>
           <CartIcon isTransparent={transparent} />
+          {isAuthenticated && user?.is_staff && (
+            <NotificationBell isTransparent={transparent} />
+          )}
           <button
             aria-label="Toggle navigation menu"
             className="shrink-0 flex flex-col justify-center gap-[5px] p-2 rounded-lg"

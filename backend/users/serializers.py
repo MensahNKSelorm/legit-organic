@@ -14,9 +14,9 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'first_name', 'last_name', 'phone_number',
             'street_address', 'house_number', 'city', 'delivery_region',
-            'avatar', 'created_at', 'email_verified',
+            'avatar', 'created_at', 'email_verified', 'is_staff',
         ]
-        read_only_fields = ['id', 'created_at', 'email_verified']
+        read_only_fields = ['id', 'created_at', 'email_verified', 'is_staff']
 
     def validate_phone_number(self, value):
         if not value:
