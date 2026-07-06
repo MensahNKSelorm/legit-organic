@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
@@ -7,8 +8,6 @@ import type { RecipeWithPairings } from '@/types'
 import RecipeDetailActions from '@/components/recipes/RecipeDetailActions'
 import { getMediaUrl } from '@/lib/media'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 type Props = { params: Promise<{ slug: string }> }
 
