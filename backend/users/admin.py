@@ -1,9 +1,19 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils import timezone
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, StackedInline
 from .models import User, Customer, B2BProfile, B2BDiscountTier
 from .forms import UserCreationForm, UserChangeForm
+from sales.models import SalesRep
+
+
+class SalesRepInline(StackedInline):
+    model = SalesRep
+    extra = 0
+    fields = [
+        'phone', 'status', 'commission_rate_registration',
+        'commission_rate_first_purchase', 'commission_rate_repeat_purchase',
+    ]
 
 
 @admin.register(User)
@@ -11,6 +21,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     add_form = UserCreationForm
     form = UserChangeForm
     model = User
+    inlines = [SalesRepInline]
 
     list_display = ['email', 'first_name', 'last_name',
                     'get_user_type', 'is_active', 'date_joined']

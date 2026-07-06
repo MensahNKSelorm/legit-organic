@@ -115,3 +115,10 @@ class Commission(models.Model):
 
     def __str__(self):
         return f'{self.sales_rep.user.email} — {self.type} — GHS {self.amount}'
+
+
+class SalesRepPerformance(SalesRep):
+    class Meta:
+        proxy = True
+        verbose_name = 'Rep Performance'
+        verbose_name_plural = 'Rep Performance'
