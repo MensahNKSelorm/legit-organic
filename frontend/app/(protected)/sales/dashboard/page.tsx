@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import { ConnectionStatus } from '@/components/ui/ConnectionStatus'
 import type { ReferredCustomer, CommissionSummary } from '@/types'
 
 type Tab = 'customers' | 'commissions' | 'referral' | 'add'
@@ -304,6 +305,20 @@ export default function SalesRepDashboardPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  )
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true)
+    const goOffline = () => setIsOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
 
   function validateForm(): boolean {
     const errors: Record<string, string> = {}
@@ -384,6 +399,8 @@ export default function SalesRepDashboardPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 lg:px-8 py-6 space-y-6">
+        <ConnectionStatus />
+
         {/* ── Tab bar ──────────────────────────────────────────────────── */}
         <div className="-mx-6 px-6 lg:mx-0 lg:px-0 overflow-x-auto">
           <div className="flex gap-2 min-w-max lg:min-w-0 lg:grid lg:grid-cols-4">
@@ -793,9 +810,18 @@ export default function SalesRepDashboardPage() {
                 )}
               </div>
 
+              {!isOnline && (
+                <div style={{
+                  backgroundColor: '#FAF7F0', border: '1px solid #F4C430',
+                  color: '#5B3E31', borderRadius: 8, padding: '10px 14px', fontSize: 13,
+                }}>
+                  You&apos;re offline. Connect to the internet to add a customer.
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || !isOnline}
                 className="w-full min-h-[44px] rounded-xl bg-[#0D3B2A] text-white font-semibold text-sm hover:bg-[#0D3B2A]/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {submitting && (

@@ -10,6 +10,7 @@ import VerificationBanner from '@/components/ui/VerificationBanner'
 import GoogleProvider from '@/components/providers/GoogleProvider'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
 import { ReferralCapture } from '@/components/ReferralCapture'
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://legitorganic.com'),
@@ -72,6 +73,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
+  manifest: '/manifest.json',
   verification: {
     google: 'w-yk7o14_14SX7lNlF928YFcGI0MT5ltOWa3cY-8HJA',
   },
@@ -89,6 +91,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Legit Organic" />
+        <meta name="theme-color" content="#0D3B2A" />
       </head>
       <body className="antialiased">
         <GoogleProvider>
@@ -106,6 +112,9 @@ export default function RootLayout({
         <WhatsAppButton />
         <Suspense fallback={null}>
           <ReferralCapture />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ServiceWorkerRegistration />
         </Suspense>
       </body>
     </html>
