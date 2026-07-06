@@ -556,23 +556,16 @@ export default function SalesRepDashboardPage() {
                   backgroundColor: '#0D3B2A', padding: '28px 24px 20px',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden>
-                      <path d="M18 4C18 4 8 10 8 20C8 26.627 12.477 30 18 30C23.523 30 28 26.627 28 20C28 10 18 4 18 4Z" fill="#2E7D32"/>
-                      <path d="M18 4C18 4 8 10 8 20C8 26.627 12.477 30 18 30" fill="#81C784" opacity="0.5"/>
-                      <path d="M18 30V16" stroke="#FAF7F0" strokeWidth="1.5" strokeLinecap="round"/>
-                      <path d="M18 22L13 17" stroke="#FAF7F0" strokeWidth="1.5" strokeLinecap="round"/>
-                      <path d="M18 18L23 14" stroke="#FAF7F0" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ color: '#FAF7F0', fontSize: 15, fontWeight: 500, letterSpacing: '0.02em' }}>
-                        Legit Organic
-                      </span>
-                      <span style={{ color: '#81C784', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                        Ltd.
-                      </span>
-                    </div>
-                  </div>
+                  {/* logo-darkmode.svg is a full wordmark (leaf mark + "Legit Organic
+                      Ltd." text) — a separate text column would duplicate it, so the
+                      logo image is the only element in this row. Plain <img>, not
+                      next/image, so html2canvas reliably captures it (no srcset/lazy load). */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/logo-darkmode.svg"
+                    alt="Legit Organic Ltd."
+                    style={{ height: 40, width: 'auto', objectFit: 'contain' }}
+                  />
                   <p style={{
                     color: '#FAF7F0', fontSize: 11, letterSpacing: '0.12em',
                     textTransform: 'uppercase', opacity: 0.7, margin: 0,
@@ -630,9 +623,10 @@ export default function SalesRepDashboardPage() {
                   </p>
 
                   <span style={{
-                    backgroundColor: '#0D3B2A', color: '#FAF7F0', fontFamily: 'monospace',
-                    fontSize: 13, letterSpacing: '0.12em', padding: '7px 20px',
-                    borderRadius: 100, display: 'inline-block',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '8px 24px', lineHeight: 1, fontFamily: 'monospace',
+                    fontSize: 13, letterSpacing: '0.14em', backgroundColor: '#0D3B2A',
+                    color: '#FAF7F0', borderRadius: 100, whiteSpace: 'nowrap',
                   }}>
                     Code: {salesRepProfile.referral_code}
                   </span>
@@ -646,14 +640,23 @@ export default function SalesRepDashboardPage() {
 
                 {/* 5. Footer band */}
                 <div style={{
-                  backgroundColor: '#0D3B2A', padding: '12px 24px',
-                  display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '13px 24px', backgroundColor: '#0D3B2A',
                 }}>
-                  <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#F4C430', opacity: 0.7 }} />
-                  <p style={{ color: '#FAF7F0', fontSize: 11, letterSpacing: '0.1em', opacity: 0.85, margin: 0 }}>
+                  <span style={{
+                    width: 4, height: 4, borderRadius: '50%', backgroundColor: '#F4C430',
+                    opacity: 0.7, flexShrink: 0, alignSelf: 'center',
+                  }} />
+                  <p style={{
+                    color: '#FAF7F0', fontSize: 11, letterSpacing: '0.1em',
+                    opacity: 0.85, lineHeight: 1, margin: 0,
+                  }}>
                     legitorganic.com
                   </p>
-                  <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#F4C430', opacity: 0.7 }} />
+                  <span style={{
+                    width: 4, height: 4, borderRadius: '50%', backgroundColor: '#F4C430',
+                    opacity: 0.7, flexShrink: 0, alignSelf: 'center',
+                  }} />
                 </div>
               </div>
             </div>
