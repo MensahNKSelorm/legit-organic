@@ -1,6 +1,10 @@
+import logging
+
 from django.db import models
 from django.conf import settings
 from .promo_models import PromoCode  # noqa: F401 — registers with orders app
+
+logger = logging.getLogger(__name__)
 
 
 class Cart(models.Model):
@@ -80,7 +84,9 @@ class Order(models.Model):
         self.__original_status = self.status
 
     def save(self, *args, **kwargs):
-        status_changed = self.status != self.__original_status
+        is_update = self.pk is not None
+        old_status = self.__original_status
+        status_changed = self.status != old_status
         super().save(*args, **kwargs)
 
         if status_changed and self.status in [
@@ -97,6 +103,67 @@ class Order(models.Model):
                 send_order_status_sms(self)
             except Exception:
                 pass
+
+        if (
+            is_update
+            and status_changed
+            and old_status != 'processing'
+            and self.status == 'processing'
+            and self.payment_status == 'success'
+            and self.user is not None
+        ):
+            try:
+                from sales.models import Commission, ReferredCustomer
+
+                try:
+                    referred = self.user.referral_record
+                except ReferredCustomer.DoesNotExist:
+                    referred = None
+
+                if referred is not None:
+                    rep = referred.sales_rep
+                    completed_orders = Order.objects.filter(
+                        user=self.user,
+                        status='processing',
+                        payment_status='success',
+                    ).exclude(pk=self.pk).count()
+
+                    if completed_orders == 0:
+                        commission_type = 'first_purchase'
+                        amount = self.final_amount * (
+                            rep.commission_rate_first_purchase / 100
+                        )
+                        referred.status = 'converted'
+                        referred.save(update_fields=['status'])
+                        Commission.objects.create(
+                            sales_rep=rep,
+                            referred_customer=referred,
+                            order=self,
+                            type=commission_type,
+                            amount=amount,
+                            status='pending',
+                        )
+                    else:
+                        from django.utils import timezone
+                        if timezone.now() <= referred.commission_expires_at:
+                            commission_type = 'repeat_purchase'
+                            amount = self.final_amount * (
+                                rep.commission_rate_repeat_purchase / 100
+                            )
+                            Commission.objects.create(
+                                sales_rep=rep,
+                                referred_customer=referred,
+                                order=self,
+                                type=commission_type,
+                                amount=amount,
+                                status='pending',
+                            )
+            except Exception as e:
+                logger.error(
+                    f'Commission trigger failed for order {self.reference} '
+                    f'(user={self.user_id}): {e}',
+                    exc_info=True,
+                )
 
         self.__original_status = self.status
 
