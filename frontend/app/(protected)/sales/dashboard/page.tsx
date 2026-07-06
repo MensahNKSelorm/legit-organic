@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
@@ -264,8 +264,34 @@ export default function SalesRepDashboardPage() {
   }, [referralUrl])
 
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Use my referral link to sign up on Legit Organic: ${referralUrl}`
+    `Shop fresh organic food with my referral link: ${referralUrl}`
   )}`
+
+  const flyerRef = useRef<HTMLDivElement>(null)
+  const [downloadingFlyer, setDownloadingFlyer] = useState(false)
+
+  const handleDownloadFlyer = useCallback(async () => {
+    if (!flyerRef.current) return
+    setDownloadingFlyer(true)
+    try {
+      // Dynamically imported and only invoked from this click handler, so
+      // html2canvas (which needs a DOM to walk and a canvas to render into)
+      // never runs during SSR — same client-only guard as the QR generation.
+      const { default: html2canvas } = await import('html2canvas')
+      const canvas = await html2canvas(flyerRef.current, {
+        backgroundColor: null,
+        scale: 2,
+      })
+      const link = document.createElement('a')
+      link.href = canvas.toDataURL('image/png')
+      link.download = 'legit-organic-referral-flyer.png'
+      link.click()
+    } catch {
+      // flyer capture failed (e.g. canvas tainted) — download is a convenience, not critical path
+    } finally {
+      setDownloadingFlyer(false)
+    }
+  }, [])
 
   // ── Add Customer ──────────────────────────────────────────────────────
   const [firstName, setFirstName] = useState('')
@@ -514,81 +540,115 @@ export default function SalesRepDashboardPage() {
 
         {/* ── Tab 3: My Referral Link ──────────────────────────────────── */}
         {activeTab === 'referral' && (
-          <section className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] overflow-hidden">
-            <div style={{ backgroundColor: '#0D3B2A' }} className="px-6 py-6 text-center">
-              <p className="text-[#F4C430] text-xs font-bold uppercase tracking-widest mb-2">
-                Legit Organic — Referral Link
-              </p>
-              <p className="text-white font-display text-xl font-bold">
-                {salesRepProfile.first_name} {salesRepProfile.last_name}
-              </p>
-              <p className="text-white/70 text-sm mt-1">{salesRepProfile.referral_code}</p>
+          <section className="flex flex-col items-center py-4">
+            {/* Flyer card — self-contained, screenshot-friendly. No interactive
+                elements inside it; all actions live below. */}
+            <div
+              ref={flyerRef}
+              className="w-[380px] max-w-full rounded-2xl shadow-lg overflow-hidden"
+            >
+              {/* 1. Header band */}
+              <div style={{ backgroundColor: '#0D3B2A' }} className="px-6 pt-7 pb-6 text-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/logo-darkmode.svg"
+                  alt="Legit Organic"
+                  className="h-9 w-auto mx-auto"
+                />
+                <p style={{ color: '#FAF7F0' }} className="text-xs font-medium tracking-wide mt-3">
+                  Fresh. Organic. Delivered.
+                </p>
+              </div>
+
+              {/* 2. Rep identity section */}
+              <div style={{ backgroundColor: '#F4C430' }} className="px-6 py-6 text-center">
+                <p style={{ color: '#0D3B2A' }} className="font-display text-2xl font-bold leading-tight">
+                  {salesRepProfile.first_name} {salesRepProfile.last_name}
+                </p>
+                <p style={{ color: '#0D3B2A' }} className="text-sm font-medium mt-1 opacity-80">
+                  Legit Organic Sales Representative
+                </p>
+              </div>
+
+              {/* 3. QR code section */}
+              <div style={{ backgroundColor: '#FAF7F0' }} className="px-6 py-7 flex flex-col items-center gap-4">
+                {qrDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={qrDataUrl}
+                    alt={`QR code for referral link ${referralUrl}`}
+                    width={200}
+                    height={200}
+                    className="rounded-xl border border-[#E6D8BD]"
+                  />
+                ) : (
+                  <div className="w-[200px] h-[200px] rounded-xl border border-[#E6D8BD] flex items-center justify-center">
+                    <span className="w-6 h-6 border-2 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+
+                <p style={{ color: '#0D3B2A' }} className="text-sm font-semibold">
+                  Scan to shop organic food
+                </p>
+
+                <span
+                  style={{ backgroundColor: '#0D3B2A', color: '#FAF7F0' }}
+                  className="inline-flex items-center px-5 py-2.5 rounded-full font-mono text-sm font-bold tracking-wide"
+                >
+                  Code: {salesRepProfile.referral_code}
+                </span>
+              </div>
+
+              {/* 4. Footer band */}
+              <div style={{ backgroundColor: '#0D3B2A' }} className="py-3 text-center">
+                <p style={{ color: '#FAF7F0' }} className="text-xs font-semibold tracking-wide">
+                  legitorganic.com
+                </p>
+              </div>
             </div>
 
-            <div className="p-6 flex flex-col items-center gap-5">
-              {qrDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={qrDataUrl}
-                  alt={`QR code for referral link ${referralUrl}`}
-                  width={220}
-                  height={220}
-                  className="rounded-xl border border-[#E6D8BD] dark:border-[#374151]"
-                />
-              ) : (
-                <div className="w-[220px] h-[220px] rounded-xl border border-[#E6D8BD] dark:border-[#374151] flex items-center justify-center">
-                  <span className="w-6 h-6 border-2 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
+            {/* Actions — outside the card */}
+            <div className="w-[380px] max-w-full flex flex-col gap-3 mt-6">
+              <button
+                onClick={handleCopy}
+                className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-white font-semibold text-sm transition-colors"
+                style={{ backgroundColor: '#2E7D32' }}
+              >
+                {copied ? <CheckIcon /> : <CopyIcon />}
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
 
-              <div className="w-full max-w-sm">
-                <p className="text-xs text-[#9ca3af] uppercase tracking-wide font-medium mb-1 text-center">
-                  Referral URL
-                </p>
-                <p className="text-sm font-medium text-[#0D3B2A] dark:text-white text-center break-all">
-                  {referralUrl}
-                </p>
-              </div>
-
-              <div className="w-full max-w-sm flex flex-col gap-3">
-                <button
-                  onClick={handleCopy}
-                  className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-[#0D3B2A] text-white font-semibold text-sm hover:bg-[#0D3B2A]/90 transition-colors"
-                >
-                  {copied ? <CheckIcon /> : <CopyIcon />}
-                  {copied ? 'Copied!' : 'Copy Referral Link'}
-                </button>
-
-                <a
-                  href={qrDataUrl || undefined}
-                  download="legit-organic-referral-qr.png"
-                  aria-disabled={!qrDataUrl}
-                  className={[
-                    'min-h-[44px] flex items-center justify-center gap-2 rounded-xl border border-[#E6D8BD] dark:border-[#374151] text-[#0D3B2A] dark:text-white font-semibold text-sm transition-colors',
-                    qrDataUrl ? 'hover:bg-[#F5F0E6] dark:hover:bg-[#374151]' : 'opacity-50 pointer-events-none',
-                  ].join(' ')}
-                >
+              <button
+                onClick={handleDownloadFlyer}
+                disabled={downloadingFlyer}
+                className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl font-semibold text-sm transition-colors disabled:opacity-60"
+                style={{ backgroundColor: '#F4C430', color: '#0D3B2A' }}
+              >
+                {downloadingFlyer ? (
+                  <span className="w-4 h-4 border-2 border-[#0D3B2A]/40 border-t-[#0D3B2A] rounded-full animate-spin" />
+                ) : (
                   <DownloadIcon />
-                  Download QR Code
-                </a>
+                )}
+                {downloadingFlyer ? 'Preparing…' : 'Download Flyer'}
+              </button>
 
-                <a
-                  href={whatsappShareUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-[#25D366] text-white font-semibold text-sm hover:bg-[#1ebe5d] transition-colors"
-                >
-                  <WhatsAppIcon />
-                  Share via WhatsApp
-                </a>
-              </div>
+              <a
+                href={whatsappShareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-white font-semibold text-sm transition-colors"
+                style={{ backgroundColor: '#25D366' }}
+              >
+                <WhatsAppIcon />
+                Share on WhatsApp
+              </a>
             </div>
           </section>
         )}
 
         {/* ── Tab 4: Add Customer ──────────────────────────────────────── */}
         {activeTab === 'add' && (
-          <section className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-6">
+          <section className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-6 max-w-[480px] mx-auto">
             {successMessage && (
               <div className="mb-5 p-4 rounded-xl bg-[#F0FFF4] dark:bg-[#0a1f14] border border-[#2E7D32]/20 text-sm text-[#2E7D32] dark:text-[#81C784]">
                 {successMessage}
@@ -601,7 +661,7 @@ export default function SalesRepDashboardPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db] mb-1.5">
                   First Name
