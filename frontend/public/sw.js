@@ -1,6 +1,8 @@
-const CACHE_NAME = 'legit-organic-v1'
+const CACHE_NAME = 'legit-organic-v2'
 const STATIC_ASSETS = [
   '/',
+  '/sales/dashboard',
+  '/login',
   '/manifest.json',
 ]
 

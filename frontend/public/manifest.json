@@ -2,7 +2,7 @@
   "name": "Legit Organic",
   "short_name": "Legit Organic",
   "description": "Fresh, organic food delivered to your door.",
-  "start_url": "/",
+  "start_url": "/sales/dashboard",
   "display": "standalone",
   "background_color": "#0D3B2A",
   "theme_color": "#0D3B2A",
