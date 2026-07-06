@@ -54,6 +54,7 @@ async function fetchWithAuth<T>(endpoint: string, options?: RequestInit): Promis
 
   let res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
+    cache: 'no-store',
     headers: buildHeaders(getAccessToken()),
   })
 
@@ -71,6 +72,7 @@ async function fetchWithAuth<T>(endpoint: string, options?: RequestInit): Promis
         localStorage.setItem('access_token', access)
         res = await fetch(`${API_BASE}${endpoint}`, {
           ...options,
+          cache: 'no-store',
           headers: buildHeaders(access),
         })
       } else {
