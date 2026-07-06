@@ -50,6 +50,17 @@ class SalesRepDashboardView(APIView):
         return Response(SalesRepSerializer(rep).data)
 
 
+class SalesRepMeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            rep = request.user.sales_rep_profile
+        except SalesRep.DoesNotExist:
+            return Response({'status': None}, status=status.HTTP_200_OK)
+        return Response(SalesRepSerializer(rep).data, status=status.HTTP_200_OK)
+
+
 class ReferredCustomerListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ReferredCustomerSerializer

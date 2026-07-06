@@ -44,8 +44,18 @@ function ChevronDown() {
   )
 }
 
+function SalesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" strokeWidth="2"
+      fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="3 17 9 11 13 15 21 6" />
+      <polyline points="15 6 21 6 21 12" />
+    </svg>
+  )
+}
+
 export default function Navbar() {
-  const { user, isAuthenticated, isB2B, logout } = useAuth()
+  const { user, isAuthenticated, isB2B, isSalesRep, logout } = useAuth()
 
   const pathname = usePathname()
   const isAuthPage = pathname === '/login' || pathname === '/signup' ||
@@ -228,6 +238,16 @@ export default function Navbar() {
                   >
                     {isB2B ? '🏢 B2B Dashboard' : 'B2B Portal'}
                   </Link>
+                  {isSalesRep && (
+                    <Link
+                      href="/sales/dashboard"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-charcoal/70 hover:bg-beige hover:text-forest-green transition-colors dark:text-[#d1d5db] dark:hover:bg-[#374151]"
+                    >
+                      <SalesIcon />
+                      Sales Dashboard
+                    </Link>
+                  )}
                   <div className="border-t border-sand dark:border-[#374151] my-1" />
                   <button
                     onClick={() => { logout(); setDropdownOpen(false) }}
@@ -385,6 +405,18 @@ export default function Navbar() {
                   {isB2B ? '🏢 B2B Dashboard' : 'B2B Portal'}
                 </Link>
               </li>
+              {isSalesRep && (
+                <li>
+                  <Link
+                    href="/sales/dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 py-3 px-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
+                  >
+                    <SalesIcon />
+                    Sales Dashboard
+                  </Link>
+                </li>
+              )}
               <li>
                 <button
                   onClick={() => { logout(); setMenuOpen(false) }}

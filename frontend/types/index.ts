@@ -262,3 +262,47 @@ export interface B2BProfile {
   approved_at: string | null
   created_at: string
 }
+
+export interface SalesRepProfile {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  referral_code: string
+  phone: string
+  status: 'active' | 'suspended'
+  commission_rate_registration: string
+  commission_rate_first_purchase: string
+  commission_rate_repeat_purchase: string
+  created_at: string
+}
+
+export interface ReferredCustomer {
+  id: number
+  customer_name: string
+  customer_email: string
+  source: 'rep_form' | 'referral_link'
+  status: 'registered' | 'converted'
+  commission_expires_at: string
+  days_remaining: number
+  created_at: string
+}
+
+export interface Commission {
+  id: number
+  customer_name: string
+  order_reference: string | null
+  type: 'registration' | 'first_purchase' | 'repeat_purchase'
+  amount: string
+  status: 'pending' | 'approved' | 'paid'
+  created_at: string
+}
+
+export interface CommissionSummary {
+  commissions: Commission[]
+  summary: {
+    pending: string
+    approved: string
+    paid: string
+  }
+}

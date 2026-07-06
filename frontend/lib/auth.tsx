@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-import type { User, B2BProfile } from '@/types'
+import type { User, B2BProfile, SalesRepProfile } from '@/types'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,6 +22,8 @@ interface AuthContextType {
   isAuthenticated: boolean
   isB2B: boolean
   b2bProfile: B2BProfile | null
+  isSalesRep: boolean
+  salesRepProfile: SalesRepProfile | null
   login: (email: string, password: string) => Promise<void>
   register: (
     email: string,
@@ -34,6 +36,7 @@ interface AuthContextType {
   logout: () => void
   updateUser: (data: Partial<User>) => void
   refreshB2B: () => Promise<void>
+  refreshSalesRep: () => Promise<void>
   resendVerification: () => Promise<void>
 }
 
@@ -51,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [b2bProfile, setB2bProfile] = useState<B2BProfile | null>(null)
+  const [salesRepProfile, setSalesRepProfile] = useState<SalesRepProfile | null>(null)
   const router = useRouter()
 
   const refreshB2B = useCallback(async () => {
@@ -59,6 +63,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setB2bProfile('id' in data ? (data as B2BProfile) : null)
     } catch {
       setB2bProfile(null)
+    }
+  }, [])
+
+  const refreshSalesRep = useCallback(async () => {
+    try {
+      const data = await api.sales.me()
+      if (data && 'referral_code' in data) {
+        setSalesRepProfile(data as SalesRepProfile)
+      } else {
+        setSalesRepProfile(null)
+      }
+    } catch {
+      setSalesRepProfile(null)
     }
   }, [])
 
@@ -74,13 +91,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((u) => {
         setUser(u)
         refreshB2B()
+        refreshSalesRep()
       })
       .catch(() => {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
       })
       .finally(() => setIsLoading(false))
-  }, [refreshB2B])
+  }, [refreshB2B, refreshSalesRep])
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -90,9 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await api.users.me()
       setUser(userData)
       refreshB2B()
+      refreshSalesRep()
       router.push('/profile')
     },
-    [router, refreshB2B]
+    [router, refreshB2B, refreshSalesRep]
   )
 
   const register = useCallback(
@@ -124,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('refresh_token')
     setUser(null)
     setB2bProfile(null)
+    setSalesRepProfile(null)
     router.push('/')
   }, [router])
 
@@ -138,9 +158,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('refresh_token', data.refresh)
       setUser(data.user)
       refreshB2B()
+      refreshSalesRep()
       router.push('/profile')
     },
-    [router, refreshB2B]
+    [router, refreshB2B, refreshSalesRep]
   )
 
   const resendVerification = useCallback(async () => {
@@ -155,12 +176,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isB2B: b2bProfile?.status === 'approved',
         b2bProfile,
+        isSalesRep: salesRepProfile?.status === 'active',
+        salesRepProfile,
         login,
         register,
         googleLogin,
         logout,
         updateUser,
         refreshB2B,
+        refreshSalesRep,
         resendVerification,
       }}
     >

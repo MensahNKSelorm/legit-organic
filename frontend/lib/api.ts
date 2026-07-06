@@ -4,6 +4,7 @@ import type {
   Recipe, RecipeWithPairings, UserRecipe,
   User, Order, PromoCode, WishlistItem,
   B2BDiscountTier, B2BProfile,
+  SalesRepProfile, ReferredCustomer, CommissionSummary,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -249,6 +250,19 @@ export const api = {
   sales: {
     validateCode: (code: string) =>
       fetchAPI<{ valid: boolean }>(`/api/sales/validate-code/?code=${encodeURIComponent(code)}`),
+    me: () => fetchWithAuth<SalesRepProfile | { status: null }>('/api/sales/me/'),
+    customers: () => fetchWithAuth<ReferredCustomer[]>('/api/sales/customers/'),
+    commissions: () => fetchWithAuth<CommissionSummary>('/api/sales/commissions/'),
+    addCustomer: (data: {
+      first_name: string
+      last_name: string
+      phone_number: string
+      email?: string
+    }) =>
+      fetchWithAuth<ReferredCustomer>('/api/sales/customers/add/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
   orders: {
     create: (data: {
