@@ -165,6 +165,26 @@ class Order(models.Model):
                     exc_info=True,
                 )
 
+            try:
+                from notifications.utils import notify_admins
+                customer_name = 'Guest'
+                if self.user:
+                    customer_name = (
+                        f'{self.user.first_name} {self.user.last_name}'.strip()
+                        or self.user.email
+                    )
+                notify_admins(
+                    type='order_paid',
+                    title='Order paid',
+                    body=f'{customer_name} completed order {self.reference} — GHS {self.final_amount}',
+                    link=f'/admin/orders/order/{self.pk}/change/',
+                )
+            except Exception as e:
+                logger.error(
+                    f'order_paid notification failed for order {self.pk}: {e}',
+                    exc_info=True,
+                )
+
         self.__original_status = self.status
 
     def __str__(self):

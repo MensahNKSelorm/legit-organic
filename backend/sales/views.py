@@ -138,6 +138,19 @@ class AddCustomerView(APIView):
                 status='registered',
             )
 
+            try:
+                from notifications.utils import notify_admins
+                notify_admins(
+                    type='sales_rep_customer',
+                    title='New referred customer',
+                    body=f'{rep.user.get_full_name() or rep.user.email} added customer {user.get_full_name() or user.phone_number}',
+                    link='/admin/sales/referredcustomer/',
+                )
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f'sales_rep_customer notification failed: {e}', exc_info=True)
+
             Commission.objects.create(
                 sales_rep=rep,
                 referred_customer=referred,

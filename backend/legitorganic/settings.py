@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'recipes',
     'orders',
     'sales',
+    'notifications',
 ]
 
 UNFOLD = {
@@ -436,6 +437,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 
+LOG_FILE = os.environ.get(
+    'DJANGO_LOG_FILE',
+    os.path.join(BASE_DIR, 'django_errors.log')
+)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -443,7 +449,7 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': '/var/www/legitorganic/backend/django_errors.log',
+            'filename': LOG_FILE,
         },
     },
     'loggers': {

@@ -155,6 +155,20 @@ class B2BApplyView(generics.CreateAPIView):
             raise ValidationError({'business_email': 'An application with this email already exists.'})
         serializer.save()
 
+        try:
+            from notifications.utils import notify_admins
+            profile = serializer.instance
+            notify_admins(
+                type='b2b_application',
+                title='New B2B application',
+                body=f'{profile.company_name} submitted a B2B application',
+                link=f'/admin/users/b2bprofile/{profile.pk}/change/',
+            )
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'b2b_application notification failed: {e}', exc_info=True)
+
 
 class B2BSetupPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
