@@ -31,3 +31,12 @@ TURNSTILE_SECRET_KEY = ''
 
 # Known currency for payment-verification tests.
 PAYSTACK_CURRENCY = 'GHS'
+
+# DEBUG now defaults to False, which turns on the production hardening (HTTPS
+# redirect, Secure cookies). The functional suite drives the test client over
+# plain http, so neutralise those here — otherwise every request would 301.
+# The production-mode behaviour itself is covered directly in tests_settings.py.
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0
