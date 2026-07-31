@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import type { Order } from '@/types'
 import { getMediaUrl } from '@/lib/media'
+import { api } from '@/lib/api'
 
 const PLACEHOLDERS = [
   '/images/products/p1.webp',
@@ -70,6 +71,27 @@ const getProductImage = (product: any): string => {
 
 export default function OrderCard({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false)
+  const [receiptState, setReceiptState] = useState<'idle' | 'loading' | 'error'>('idle')
+
+  const handleDownloadReceipt = async () => {
+    setReceiptState('loading')
+    try {
+      // Receipt now requires authentication, so fetch it as an authenticated blob
+      // and trigger a client-side download rather than linking to the API directly.
+      const blob = await api.orders.downloadReceipt(order.reference)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `LegitOrganic_Receipt_${order.reference}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      setReceiptState('idle')
+    } catch {
+      setReceiptState('error')
+    }
+  }
 
   const currentStep = STEP_ORDER.indexOf(order.status)
   const isCancelled = order.status === 'cancelled'
@@ -317,12 +339,12 @@ export default function OrderCard({ order }: { order: Order }) {
           )}
 
           {/* ── Download Receipt ── */}
-          <div className="mt-4 flex justify-end">
-            <a
-              href={`https://api.legitorganic.com/api/orders/${order.reference}/receipt/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0D3B2A] text-[#F4C430] rounded-xl font-semibold text-sm hover:bg-[#1a5c40] transition-colors"
+          <div className="mt-4 flex flex-col items-end gap-1">
+            <button
+              type="button"
+              onClick={handleDownloadReceipt}
+              disabled={receiptState === 'loading'}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0D3B2A] text-[#F4C430] rounded-xl font-semibold text-sm hover:bg-[#1a5c40] transition-colors disabled:opacity-60"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2"
@@ -331,8 +353,11 @@ export default function OrderCard({ order }: { order: Order }) {
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
-              Download Receipt
-            </a>
+              {receiptState === 'loading' ? 'Preparing…' : 'Download Receipt'}
+            </button>
+            {receiptState === 'error' && (
+              <span className="text-xs text-red-600">Could not download receipt. Please try again.</span>
+            )}
           </div>
 
         </div>

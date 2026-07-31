@@ -89,11 +89,52 @@ async function fetchWithAuth<T>(endpoint: string, options?: RequestInit): Promis
 }
 
 // ---------------------------------------------------------------------------
+// Authenticated blob fetcher — for binary downloads (e.g. receipt PDFs) that
+// now require an Authorization header. Mirrors fetchWithAuth's refresh logic.
+// ---------------------------------------------------------------------------
+
+async function fetchBlobWithAuth(endpoint: string): Promise<Blob> {
+  const withToken = (token: string | null) =>
+    fetch(`${API_BASE}${endpoint}`, {
+      cache: 'no-store',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+
+  let res = await withToken(getAccessToken())
+
+  if (res.status === 401 && typeof window !== 'undefined') {
+    const refreshToken = localStorage.getItem('refresh_token')
+    if (refreshToken) {
+      const refreshRes = await fetch(`${API_BASE}/api/auth/token/refresh/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken }),
+      })
+      if (refreshRes.ok) {
+        const { access } = await refreshRes.json() as { access: string }
+        localStorage.setItem('access_token', access)
+        res = await withToken(access)
+      } else {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        throw new Error('Session expired. Please log in again.')
+      }
+    }
+  }
+
+  if (!res.ok) await parseError(res)
+  return res.blob()
+}
+
+// ---------------------------------------------------------------------------
 // Types for auth endpoints
 // ---------------------------------------------------------------------------
 
 export interface LoginResponse { access: string; refresh: string }
-export interface RegisterResponse { user: User; access: string; refresh: string }
+/** Registration no longer returns tokens — the account must verify email first. */
+export interface RegisterResponse { user: User; email_verification_required?: boolean; detail?: string }
+/** Verify-email now logs the user in and returns a session. */
+export interface VerifyEmailResponse { message: string; access: string; refresh: string; user: User }
 export interface RegisterData {
   email: string
   first_name: string
@@ -102,6 +143,7 @@ export interface RegisterData {
   password_confirm: string
   phone_number?: string
   referral_code?: string
+  turnstile_token?: string
 }
 
 export interface CreateUserRecipeData {
@@ -178,9 +220,12 @@ export const api = {
         body: JSON.stringify(data),
       }),
     verifyEmail: (token: string) =>
-      fetchAPI<{ message: string }>(`/api/users/verify-email/?token=${token}`),
-    resendVerification: () =>
-      fetchWithAuth<{ message: string }>('/api/users/resend-verification/', { method: 'POST' }),
+      fetchAPI<VerifyEmailResponse>(`/api/users/verify-email/?token=${token}`),
+    resendVerification: (email: string) =>
+      fetchAPI<{ message: string }>('/api/users/resend-verification/', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
     googleAuth: (token: string) =>
       fetchAPI<{ access: string; refresh: string; user: User }>('/api/users/google/', {
         method: 'POST',
@@ -303,6 +348,8 @@ export const api = {
       }),
     myOrders: () => fetchWithAuth<Order[]>('/api/orders/my-orders/'),
     detail: (reference: string) => fetchWithAuth<Order>(`/api/orders/${reference}/`),
+    downloadReceipt: (reference: string) =>
+      fetchBlobWithAuth(`/api/orders/${reference}/receipt/`),
   },
   notifications: {
     list: () => fetchWithAuth<NotificationResponse>(

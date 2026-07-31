@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
-import { api } from '@/lib/api'
 
 function CheckIcon() {
   return (
@@ -36,7 +35,7 @@ type VerifyState = 'loading' | 'success' | 'error-no-token' | 'error-invalid'
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { user, updateUser } = useAuth()
+  const { user, completeEmailVerification } = useAuth()
 
   const [state, setState] = useState<VerifyState>('loading')
 
@@ -47,9 +46,8 @@ function VerifyEmailContent() {
       return
     }
 
-    api.auth.verifyEmail(token)
+    completeEmailVerification(token)
       .then(() => {
-        if (user) updateUser({ email_verified: true })
         setState('success')
         setTimeout(() => router.push('/profile'), 3000)
       })

@@ -36,6 +36,17 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
 PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
+# Currency Paystack transactions are expected to settle in (ISO 4217).
+PAYSTACK_CURRENCY = os.getenv('PAYSTACK_CURRENCY', 'GHS')
+
+# Cloudflare Turnstile — configurable, and OFF until a secret key is provisioned.
+# With no key set (current dev + production), registration is unaffected.
+TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
+TURNSTILE_ENABLED = os.getenv('TURNSTILE_ENABLED', 'true').lower() == 'true' and bool(TURNSTILE_SECRET_KEY)
+
+# Email-verification token lifetime (hours). email_verification_sent_at is enforced
+# against this in VerifyEmailView.
+EMAIL_VERIFICATION_TOKEN_HOURS = int(os.getenv('EMAIL_VERIFICATION_TOKEN_HOURS', '24'))
 WIGAL_API_KEY = os.getenv('WIGAL_API_KEY', '')
 WIGAL_SENDER_ID = os.getenv('WIGAL_SENDER_ID', 'LegitGH')
 WIGAL_USERNAME = os.getenv('WIGAL_USERNAME', '')
@@ -369,6 +380,25 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ),
+    # ScopedRateThrottle only throttles views that declare `throttle_scope`, so
+    # everything else is unaffected. Defense-in-depth: the observed bot campaign
+    # used ~1 IP per request, so these per-IP limits are one layer, not the whole
+    # defense (Turnstile is the other).
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.ScopedRateThrottle",
+    ),
+    # Exactly one trusted proxy hop (Nginx). DRF derives the throttle identity from
+    # the LAST X-Forwarded-For entry (the address Nginx observed), so a client
+    # cannot mint fresh identities by spoofing the first X-Forwarded-For value.
+    "NUM_PROXIES": 1,
+    "DEFAULT_THROTTLE_RATES": {
+        "register": "5/hour",
+        "login": "10/min",
+        "resend_verification": "3/hour",
+        "b2b_apply": "5/hour",
+        "guest_order": "20/hour",
+        "promo_validate": "30/hour",
+    },
 }
 
 

@@ -1,5 +1,7 @@
 import uuid
 from decimal import Decimal
+from django.db import transaction
+from django.db.models import F
 from rest_framework import serializers
 from .models import Cart, CartItem, Order, OrderItem
 from .promo_models import PromoCode
@@ -166,51 +168,66 @@ class CreateOrderSerializer(serializers.Serializer):
             delivery_address = ', '.join(p for p in parts if p)
 
         order_status = 'whatsapp_pending' if order_source == 'whatsapp' else 'pending'
-        reference = f"LO-{uuid.uuid4().hex[:12].upper()}"
-        total = Decimal('0')
 
-        order = Order.objects.create(
-            user=request.user if is_auth else None,
-            reference=reference,
-            delivery_address=delivery_address,
-            status=order_status,
-            payment_status='pending',
-            total_amount=0,
-            discount_amount=0,
-            guest_name=guest_name,
-            guest_phone=guest_phone,
-            guest_email=guest_email,
-            order_source=order_source,
-        )
+        # Validate every product BEFORE writing anything, and do the whole build
+        # in one transaction so a failure can never leave an orphaned Order or a
+        # partial set of OrderItems behind.
+        with transaction.atomic():
+            product_ids = [item['product_id'] for item in items_data]
+            products = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+            missing = [pid for pid in product_ids if pid not in products]
+            if missing:
+                raise serializers.ValidationError(
+                    {'items': f'Invalid or unavailable product id(s): {missing}'}
+                )
 
-        for item_data in items_data:
-            product = Product.objects.get(pk=item_data['product_id'])
-            quantity = item_data['quantity']
-            unit_price = product.price
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=quantity,
-                unit_price=unit_price,
+            reference = f"LO-{uuid.uuid4().hex[:12].upper()}"
+            order = Order.objects.create(
+                user=request.user if is_auth else None,
+                reference=reference,
+                delivery_address=delivery_address,
+                status=order_status,
+                payment_status='pending',
+                total_amount=0,
+                discount_amount=0,
+                guest_name=guest_name,
+                guest_phone=guest_phone,
+                guest_email=guest_email,
+                order_source=order_source,
             )
-            total += unit_price * quantity
 
-        order.total_amount = total
-        update_fields = ['total_amount', 'discount_amount']
+            total = Decimal('0')
+            for item_data in items_data:
+                product = products[item_data['product_id']]
+                quantity = item_data['quantity']
+                unit_price = product.price
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                )
+                total += unit_price * quantity
 
-        if promo_code_str:
-            try:
-                promo = PromoCode.objects.get(code=promo_code_str)
-                is_valid, _ = promo.is_valid(float(total))
-                if is_valid:
-                    discount = Decimal(str(promo.calculate_discount(float(total))))
-                    order.promo_code = promo
-                    order.discount_amount = discount
-                    promo.times_used += 1
-                    promo.save(update_fields=['times_used'])
-                    update_fields.append('promo_code')
-            except PromoCode.DoesNotExist:
-                pass
+            order.total_amount = total
+            update_fields = ['total_amount', 'discount_amount']
 
-        order.save(update_fields=update_fields)
+            if promo_code_str:
+                try:
+                    promo = PromoCode.objects.get(code=promo_code_str)
+                    is_valid, _ = promo.is_valid(float(total))
+                    if is_valid:
+                        discount = Decimal(str(promo.calculate_discount(float(total))))
+                        order.promo_code = promo
+                        order.discount_amount = discount
+                        # Concurrency-safe increment (avoids a read-modify-write race).
+                        PromoCode.objects.filter(pk=promo.pk).update(
+                            times_used=F('times_used') + 1
+                        )
+                        update_fields.append('promo_code')
+                except PromoCode.DoesNotExist:
+                    pass
+
+            order.save(update_fields=update_fields)
+
         return order
