@@ -1,5 +1,8 @@
+from decimal import ROUND_HALF_UP, Decimal
+
 import requests
 from django.conf import settings
+from django.db import transaction
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -69,6 +72,7 @@ class CartClearView(APIView):
 
 class CreateOrderView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'guest_order'
 
     def post(self, request):
         serializer = CreateOrderSerializer(data=request.data, context={'request': request})
@@ -94,33 +98,95 @@ class VerifyPaymentView(APIView):
         except Order.DoesNotExist:
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Verify with Paystack
+        # Idempotency: an already-verified order returns its current state and is not
+        # re-processed (no duplicate emails, status transitions, or commissions).
+        if order.payment_status == 'success':
+            return Response(OrderSerializer(order).data)
+
         secret_key = settings.PAYSTACK_SECRET_KEY
-        if secret_key:
-            try:
-                resp = requests.get(
-                    f'https://api.paystack.co/transaction/verify/{reference}',
-                    headers={'Authorization': f'Bearer {secret_key}'},
-                    timeout=10,
-                )
-                data = resp.json()
-                if not data.get('status') or data.get('data', {}).get('status') != 'success':
-                    order.payment_status = 'failed'
-                    order.save(update_fields=['payment_status'])
-                    return Response({'detail': 'Payment verification failed.'}, status=status.HTTP_402_PAYMENT_REQUIRED)
+        # Fail CLOSED: an order is never marked paid without a positive verification
+        # from Paystack. If verification cannot be performed, the payment stays pending.
+        if not secret_key:
+            return Response(
+                {'detail': 'Payment verification is not configured.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
-                paystack_id = data['data'].get('id', '')
-                order.paystack_id = str(paystack_id)
-            except Exception:
-                pass  # Allow in dev/test environments without live Paystack
+        try:
+            resp = requests.get(
+                f'https://api.paystack.co/transaction/verify/{reference}',
+                headers={'Authorization': f'Bearer {secret_key}'},
+                timeout=15,
+            )
+        except requests.RequestException:
+            return Response(
+                {'detail': 'Could not reach the payment provider. Please try again.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
 
-        order.payment_status = 'success'
-        order.status = 'processing'
-        order.save(update_fields=['payment_status', 'status', 'paystack_id'])
+        try:
+            payload = resp.json()
+        except ValueError:
+            return Response(
+                {'detail': 'Invalid response from the payment provider.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        pdata = payload.get('data') or {}
+        if not payload.get('status') or pdata.get('status') != 'success':
+            order.payment_status = 'failed'
+            order.save(update_fields=['payment_status'])
+            return Response(
+                {'detail': 'Payment verification failed.'},
+                status=status.HTTP_402_PAYMENT_REQUIRED,
+            )
+
+        # The transaction Paystack verified must be the one we asked about.
+        if pdata.get('reference') != reference:
+            return Response(
+                {'detail': 'Payment reference mismatch.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Currency must match what we charge in.
+        if (pdata.get('currency') or '').upper() != settings.PAYSTACK_CURRENCY.upper():
+            return Response(
+                {'detail': 'Payment currency mismatch.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Amount check. Paystack reports the amount in the minor unit (pesewas),
+        # i.e. the charged value × 100. Reject underpayment; overpayment is allowed.
+        expected_minor = int(
+            (order.final_amount * 100).to_integral_value(rounding=ROUND_HALF_UP)
+        )
+        paid_minor = pdata.get('amount')
+        if not isinstance(paid_minor, int) or paid_minor < expected_minor:
+            return Response(
+                {'detail': 'Payment amount mismatch.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # All checks passed — perform the state transition exactly once, even under
+        # concurrent verification requests. select_for_update() serialises the two
+        # requests; whichever loses the race reloads a row already marked 'success'
+        # and returns without re-running the transition side effects (which fire
+        # from Order.save(): confirmation email, status email, commissions).
+        with transaction.atomic():
+            locked = Order.objects.select_for_update().get(pk=order.pk)
+            if locked.payment_status == 'success':
+                return Response(OrderSerializer(locked).data)
+
+            locked.paystack_id = str(pdata.get('id', '') or '')
+            locked.payment_status = 'success'
+            locked.status = 'processing'
+            locked.save(update_fields=['payment_status', 'status', 'paystack_id'])
+            order = locked
 
         try:
             from users.emails import send_order_confirmation_email
-            send_order_confirmation_email(order.user, order)
+            if order.user:
+                send_order_confirmation_email(order.user, order)
         except Exception:
             pass  # Never let email failure break the payment confirmation
 
@@ -129,6 +195,7 @@ class VerifyPaymentView(APIView):
 
 class ValidatePromoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'promo_validate'
 
     def post(self, request):
         code = request.data.get('code', '').strip().upper()
@@ -219,7 +286,10 @@ class ExportOrdersView(APIView):
 
 
 class OrderReceiptView(APIView):
-    permission_classes = [AllowAny]
+    # Authentication required. This closes the previous hole where an anonymous
+    # request with any known/leaked reference could download a receipt PDF
+    # containing customer name, email, phone, and delivery address.
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, reference):
         try:
@@ -227,19 +297,14 @@ class OrderReceiptView(APIView):
                 'items', 'items__product', 'promo_code'
             ).get(reference=reference)
         except Order.DoesNotExist:
-            return Response(
-                {'error': 'Order not found'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Security: only allow if authenticated user owns the order
-        # or if it's a guest order (no user attached)
-        if order.user and request.user.is_authenticated:
-            if order.user != request.user and not request.user.is_staff:
-                return Response(
-                    {'error': 'Unauthorized'},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
+        is_owner = order.user_id is not None and order.user_id == request.user.id
+        if not (is_owner or request.user.is_staff):
+            # 404 (not 403) so a reference can't be confirmed by a non-owner.
+            # NOTE: guest-order receipts (no user attached) are staff-only for now.
+            # Self-service guest receipts will use signed, expiring tokens (follow-up).
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
         from .receipt import generate_receipt_pdf
         return generate_receipt_pdf(order)

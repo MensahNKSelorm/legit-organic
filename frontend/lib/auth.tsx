@@ -30,14 +30,16 @@ interface AuthContextType {
     password: string,
     firstName: string,
     lastName: string,
-    referralCode?: string
+    referralCode?: string,
+    turnstileToken?: string | null
   ) => Promise<void>
   googleLogin: (token: string) => Promise<void>
   logout: () => void
   updateUser: (data: Partial<User>) => void
   refreshB2B: () => Promise<void>
   refreshSalesRep: () => Promise<void>
-  resendVerification: () => Promise<void>
+  resendVerification: (email?: string) => Promise<void>
+  completeEmailVerification: (token: string) => Promise<User>
 }
 
 // ---------------------------------------------------------------------------
@@ -120,19 +122,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: string,
       firstName: string,
       lastName: string,
-      referralCode?: string
+      referralCode?: string,
+      turnstileToken?: string | null
     ) => {
-      const { user: userData, access, refresh } = await api.auth.register({
+      // Registration creates the account but issues NO token — the user must
+      // verify their email before they can log in. Do not set a session here.
+      await api.auth.register({
         email,
         first_name: firstName,
         last_name: lastName,
         password,
         password_confirm: password,
         ...(referralCode ? { referral_code: referralCode } : {}),
+        ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
       })
-      localStorage.setItem('access_token', access)
-      localStorage.setItem('refresh_token', refresh)
-      setUser(userData)
       router.push(`/check-email?email=${encodeURIComponent(email)}`)
     },
     [router]
@@ -164,9 +167,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [router, refreshB2B, refreshSalesRep]
   )
 
-  const resendVerification = useCallback(async () => {
-    await api.auth.resendVerification()
-  }, [])
+  const resendVerification = useCallback(async (email?: string) => {
+    const target = email ?? user?.email
+    if (!target) throw new Error('No email address available to resend to.')
+    await api.auth.resendVerification(target)
+  }, [user])
+
+  // Called from the verify-email page: verifies the token, then logs the user
+  // in with the session the endpoint now returns.
+  const completeEmailVerification = useCallback(
+    async (token: string) => {
+      const data = await api.auth.verifyEmail(token)
+      localStorage.setItem('access_token', data.access)
+      localStorage.setItem('refresh_token', data.refresh)
+      setUser(data.user)
+      refreshB2B()
+      refreshSalesRep()
+      return data.user
+    },
+    [refreshB2B, refreshSalesRep]
+  )
 
   return (
     <AuthContext.Provider
@@ -186,6 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshB2B,
         refreshSalesRep,
         resendVerification,
+        completeEmailVerification,
       }}
     >
       {children}

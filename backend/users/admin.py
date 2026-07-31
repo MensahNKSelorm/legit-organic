@@ -68,11 +68,22 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 @admin.register(Customer)
 class CustomerAdmin(ModelAdmin):
     list_display = ['email', 'first_name', 'last_name',
-                    'phone_number', 'date_joined', 'is_active']
-    list_filter = ['is_active', 'date_joined']
+                    'phone_number', 'email_verified', 'date_joined', 'is_active']
+    # email_verified toggleable straight from the list — used to mark the known
+    # legitimate customers verified before verification-gating is deployed.
+    list_editable = ['email_verified']
+    list_filter = ['email_verified', 'is_active', 'date_joined']
     search_fields = ['email', 'first_name', 'last_name', 'phone_number']
     ordering = ['-date_joined']
     readonly_fields = ['date_joined', 'last_login']
+    # Explicit fields so email_verified is editable on the detail page while the
+    # raw password hash field is not exposed on this proxy admin.
+    fields = [
+        'email', 'first_name', 'last_name', 'phone_number',
+        'email_verified', 'is_active',
+        'house_number', 'street_address', 'city', 'delivery_region',
+        'date_joined', 'last_login',
+    ]
 
     def get_queryset(self, request):
         return super().get_queryset(request).filter(

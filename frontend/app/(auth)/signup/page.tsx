@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuth } from '@/lib/auth'
 import { getReferralCode, clearReferralCode } from '@/lib/referral'
+import Turnstile, { TURNSTILE_ENABLED } from '@/components/Turnstile'
 
 // ---------------------------------------------------------------------------
 // Icons
@@ -68,6 +69,19 @@ export default function SignupPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [apiError, setApiError] = useState('')
   const [loading, setLoading] = useState(false)
+  // Turnstile token (null until solved). turnstileKey remounts the widget to get
+  // a fresh single-use token after a failed/expired attempt. turnstileError marks
+  // a hard failure (widget error or script-load failure) so we can surface a
+  // message + retry control instead of leaving submit silently disabled.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [turnstileKey, setTurnstileKey] = useState(0)
+  const [turnstileError, setTurnstileError] = useState(false)
+
+  const retryTurnstile = () => {
+    setTurnstileError(false)
+    setTurnstileToken(null)
+    setTurnstileKey((k) => k + 1)
+  }
 
   const inputClass =
     'w-full px-4 py-3 rounded-xl border bg-cream text-charcoal text-sm focus:outline-none transition-colors'
@@ -94,13 +108,22 @@ export default function SignupPage() {
     e.preventDefault()
     setApiError('')
     if (!validate()) return
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      setApiError('Please complete the verification challenge.')
+      return
+    }
     setLoading(true)
     const referralCode = getReferralCode() ?? undefined
     try {
-      await register(email, password, firstName, lastName, referralCode)
+      await register(email, password, firstName, lastName, referralCode, turnstileToken)
       clearReferralCode()
     } catch (err: unknown) {
       setApiError(err instanceof Error ? err.message : 'Registration failed. Please try again.')
+      // The token is single-use; reset the widget so the user can retry.
+      if (TURNSTILE_ENABLED) {
+        setTurnstileToken(null)
+        setTurnstileKey((k) => k + 1)
+      }
     } finally {
       setLoading(false)
     }
@@ -277,9 +300,39 @@ export default function SignupPage() {
               )}
             </div>
 
+            {/* Cloudflare Turnstile — renders only when a site key is configured. */}
+            {TURNSTILE_ENABLED && (
+              <div className="pt-1">
+                {turnstileError ? (
+                  <div className="flex flex-col items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <span>Couldn&apos;t load the verification challenge.</span>
+                    <button
+                      type="button"
+                      onClick={retryTurnstile}
+                      className="font-semibold text-forest-green underline hover:text-leaf-green"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : (
+                  <Turnstile
+                    key={turnstileKey}
+                    onToken={(t) => {
+                      setTurnstileToken(t)
+                      if (t) setTurnstileError(false)
+                    }}
+                    onError={() => {
+                      setTurnstileToken(null)
+                      setTurnstileError(true)
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (TURNSTILE_ENABLED && !turnstileToken)}
               className="w-full bg-ghana-gold text-forest-green font-semibold py-3 rounded-xl hover:bg-dark-gold transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
             >
               {loading ? <Spinner /> : 'Create Account'}

@@ -46,6 +46,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [needsVerification, setNeedsVerification] = useState(false)
 
   const inputClass =
     'w-full px-4 py-3 rounded-xl border border-sand bg-cream text-charcoal text-sm focus:outline-none focus:border-leaf-green focus:ring-1 focus:ring-leaf-green transition-colors'
@@ -53,16 +54,23 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNeedsVerification(false)
     setLoading(true)
     try {
       await login(email, password)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Something went wrong.'
-      setError(
-        msg.toLowerCase().includes('no active account')
-          ? 'Invalid email or password. Please try again.'
-          : msg
-      )
+      const lower = msg.toLowerCase()
+      if (lower.includes('verify your email')) {
+        setNeedsVerification(true)
+        setError(msg)
+      } else {
+        setError(
+          lower.includes('no active account')
+            ? 'Invalid email or password. Please try again.'
+            : msg
+        )
+      }
     } finally {
       setLoading(false)
     }
@@ -123,6 +131,14 @@ export default function LoginPage() {
           {error && (
             <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
               {error}
+              {needsVerification && (
+                <Link
+                  href={`/check-email?email=${encodeURIComponent(email)}`}
+                  className="block mt-2 font-semibold text-forest-green underline hover:text-leaf-green"
+                >
+                  Resend verification email
+                </Link>
+              )}
             </div>
           )}
 

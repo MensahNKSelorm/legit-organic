@@ -1,10 +1,15 @@
+import logging
 import secrets
+from datetime import timedelta
 from decimal import Decimal
+from django.conf import settings
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 from .models import User, WishlistItem, B2BProfile, B2BDiscountTier
 from .serializers import (
     RegisterSerializer, UserSerializer, WishlistItemSerializer,
@@ -15,6 +20,7 @@ from .emails import (
     send_b2b_approval_email, send_b2b_rejection_email,
 )
 from .google_auth import verify_google_token
+from .turnstile import verify_turnstile
 
 
 def link_guest_orders(user):
@@ -22,11 +28,32 @@ def link_guest_orders(user):
     Order.objects.filter(user__isnull=True, guest_email=user.email).update(user=user)
 
 
+def _client_ip(request):
+    # Trust only proxy-supplied values. Nginx overwrites X-Real-IP with the real
+    # peer address, and appends it as the LAST X-Forwarded-For entry. The FIRST
+    # X-Forwarded-For value is client-controlled and must never be trusted.
+    real_ip = request.META.get('HTTP_X_REAL_IP', '').strip()
+    if real_ip:
+        return real_ip
+    xff = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    if xff:
+        return xff.split(',')[-1].strip()
+    return request.META.get('REMOTE_ADDR', '')
+
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = []
+    throttle_scope = 'register'
 
     def create(self, request, *args, **kwargs):
+        # Bot mitigation (only enforced once a Turnstile key is configured).
+        if not verify_turnstile(request.data.get('turnstile_token'), _client_ip(request)):
+            return Response(
+                {'detail': 'Captcha verification failed. Please try again.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -36,17 +63,18 @@ class RegisterView(generics.CreateAPIView):
         user.email_verification_sent_at = timezone.now()
         user.save()
 
+        # No JWT is issued at signup. The account cannot log in until the email is
+        # verified (see VerifiedTokenObtainPairView). The welcome email is deferred
+        # to VerifyEmailView so unverified/bot signups never trigger it.
         try:
-            send_welcome_email(user)
             send_verification_email(user, token)
         except Exception:
             pass
 
-        refresh = RefreshToken.for_user(user)
         return Response({
             'user': UserSerializer(user).data,
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
+            'email_verification_required': True,
+            'detail': 'Account created. Please check your email to verify your address before logging in.',
         }, status=status.HTTP_201_CREATED)
 
 
@@ -71,13 +99,40 @@ class VerifyEmailView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Enforce token expiry. Invariant: a token with no send timestamp is
+        # invalid (not indefinitely valid), and one older than the window expires.
+        expiry = timedelta(hours=settings.EMAIL_VERIFICATION_TOKEN_HOURS)
+        sent_at = user.email_verification_sent_at
+        if sent_at is None or timezone.now() - sent_at > expiry:
+            return Response(
+                {'error': 'Invalid or expired token.', 'code': 'token_expired'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        already_verified = user.email_verified
         user.email_verified = True
         user.email_verification_token = ''
-        user.save()
+        user.save(update_fields=['email_verified', 'email_verification_token'])
 
         link_guest_orders(user)
 
-        return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+        # Welcome email now fires here (after verification), not at signup, so bot/
+        # unverified accounts never receive it. Guard against re-sending if the link
+        # is opened twice.
+        if not already_verified:
+            try:
+                send_welcome_email(user)
+            except Exception:
+                pass
+
+        # Issue tokens so the freshly-verified user is logged in immediately.
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'message': 'Email verified successfully.',
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': UserSerializer(user).data,
+        }, status=status.HTTP_200_OK)
 
 
 class GoogleAuthView(APIView):
@@ -91,6 +146,13 @@ class GoogleAuthView(APIView):
         google_data = verify_google_token(token)
         if not google_data:
             return Response({'error': 'Invalid Google token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Only accept Google identities Google itself reports as verified.
+        if not google_data.get('email_verified'):
+            return Response(
+                {'error': 'Your Google account email is not verified.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         email = google_data['email']
 
@@ -147,6 +209,7 @@ class WishlistItemDeleteView(generics.DestroyAPIView):
 class B2BApplyView(generics.CreateAPIView):
     serializer_class = B2BProfileSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'b2b_apply'
 
     def perform_create(self, serializer):
         email = self.request.data.get('business_email', '')
@@ -272,24 +335,53 @@ class B2BDiscountCalculateView(APIView):
 
 
 class ResendVerificationView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    # AllowAny: with verification-gating, unverified users hold no JWT, so this
+    # endpoint must be reachable without authentication (looked up by email).
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'resend_verification'
 
-    def post(self, request):
-        user = request.user
+    # Identical response for anonymous callers regardless of account state, so the
+    # endpoint cannot be used to enumerate which emails are registered/verified.
+    GENERIC_MESSAGE = (
+        'If an account exists for that email and is not yet verified, '
+        'a verification link has been sent.'
+    )
+
+    def _issue(self, user):
+        """Regenerate + send a verification token for an unverified user.
+        Delivery failures are logged internally, never surfaced to the caller."""
         if user.email_verified:
-            return Response({'message': 'Email is already verified.'}, status=status.HTTP_200_OK)
-
+            return
         token = secrets.token_urlsafe(32)
         user.email_verification_token = token
         user.email_verification_sent_at = timezone.now()
-        user.save()
-
+        user.save(update_fields=['email_verification_token', 'email_verification_sent_at'])
         try:
             send_verification_email(user, token)
-        except Exception:
-            return Response(
-                {'error': 'Failed to send verification email. Please try again.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        except Exception as e:
+            logger.error(
+                f'Verification email delivery failed for user {user.pk}: {e}',
+                exc_info=True,
             )
 
-        return Response({'message': 'Verification email sent.'}, status=status.HTTP_200_OK)
+    def post(self, request):
+        # Authenticated user resending for themselves — not an enumeration vector,
+        # so specific messaging is fine.
+        if request.user and request.user.is_authenticated:
+            user = request.user
+            if user.email_verified:
+                return Response({'message': 'Email is already verified.'}, status=status.HTTP_200_OK)
+            self._issue(user)
+            return Response({'message': 'Verification email sent.'}, status=status.HTTP_200_OK)
+
+        # Anonymous: unknown / verified / unverified / delivery-failure must all
+        # produce exactly the same status and body.
+        email = (request.data.get('email') or '').strip().lower()
+        if not email:
+            return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(email__iexact=email).first()
+        if user is not None:
+            self._issue(user)
+
+        return Response({'message': self.GENERIC_MESSAGE}, status=status.HTTP_200_OK)

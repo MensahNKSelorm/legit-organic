@@ -31,7 +31,7 @@ function CheckEmailContent() {
   const handleResend = async () => {
     setResendState('loading')
     try {
-      await resendVerification()
+      await resendVerification(email)
       setResendState('sent')
     } catch {
       setResendState('error')
