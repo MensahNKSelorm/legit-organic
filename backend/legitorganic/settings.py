@@ -22,6 +22,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 
+def _env_bool(name, default='False'):
+    """Parse a boolean env var robustly. Absent → the given default (itself
+    parsed), so an unset DEBUG resolves to False rather than True."""
+    return os.getenv(name, default).strip().lower() in ('true', '1', 'yes', 'on')
+
+
+def production_security_settings(debug):
+    """Security settings applied only when NOT in debug mode. Returned as a dict
+    (instead of assigned inline) so both modes are directly unit-testable. In
+    debug mode the empty dict leaves Django's dev-friendly defaults in place."""
+    if debug:
+        return {}
+    return {
+        'SESSION_COOKIE_SECURE': True,
+        'CSRF_COOKIE_SECURE': True,
+        'SECURE_SSL_REDIRECT': True,
+        'SECURE_HSTS_SECONDS': 300,
+        'SECURE_HSTS_INCLUDE_SUBDOMAINS': False,
+        'SECURE_HSTS_PRELOAD': False,
+    }
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -52,7 +74,8 @@ WIGAL_SENDER_ID = os.getenv('WIGAL_SENDER_ID', 'LegitGH')
 WIGAL_USERNAME = os.getenv('WIGAL_USERNAME', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True") == "True"
+# Production-safe: an unset DEBUG resolves to False.
+DEBUG = _env_bool("DEBUG", "False")
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')]
 
@@ -62,6 +85,17 @@ CSRF_TRUSTED_ORIGINS = [
     for o in os.getenv('CSRF_TRUSTED_ORIGINS', 'https://legitorganic.com').split(',')
     if o.strip()
 ]
+
+# Production security hardening — applied only when DEBUG is False. nginx
+# terminates TLS and forwards X-Forwarded-Proto, and SECURE_PROXY_SSL_HEADER
+# (above) makes Django trust it, so Secure cookies + SSL redirect work without
+# redirect loops. In DEBUG (local dev over http) none of these apply, which
+# preserves development usability.
+globals().update(production_security_settings(DEBUG))
+
+# The CSRF token cookie must stay readable by frontend JavaScript, so it is
+# never marked HttpOnly (in either mode).
+CSRF_COOKIE_HTTPONLY = False
 
 
 # Application definition
