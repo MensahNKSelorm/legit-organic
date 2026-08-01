@@ -46,6 +46,11 @@ File: `frontend/app/(public)/recipes/page.tsx`
 - Recipe results use an unnumbered, even grid so the page feels like a useful kitchen index rather than a ranked list.
 - The search is a long editorial rule immediately above the Recipe Shelf, not a compact control inside the hero.
 - The complete card surface opens the recipe; secondary actions remain independently clickable.
+- Autocomplete suggestions are square, ruled editorial rows beneath the long search line. `+` and `and` both create a combined-meal suggestion.
+- Combined-meal heroes use a real split-image collage from the selected recipe covers; do not invent a single misleading food photograph.
+- Recipe names remain links in the hero, ingredient groups and preparation groups so customers can return to one component.
+- Logged-in ingredient edits create a private copy in My Recipes. Inline fields keep the underline treatment and offer product matches from the shop without changing the public recipe.
+- Empty video areas use a dark, 16:9 admin-preview field with a restrained play control; replace it with the real video only when one is configured.
 
 ### Editorial Empty State
 

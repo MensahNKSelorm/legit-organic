@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Recipe, RecipeWithPairings } from '@/types'
 import { getMediaUrl } from '@/lib/media'
+import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
 
 const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -56,21 +57,51 @@ async function getRecipes(query: string): Promise<RecipeWithPairings[]> {
 
 export default async function CombinedRecipePage({ searchParams }: Props) {
   const { q: rawQuery } = await searchParams
-  const query = rawQuery?.trim().slice(0, 200) || ''
+  const query = rawQuery?.trim().slice(0, 200).replace(/\s+and\s+/gi, ' + ') || ''
   if (!query) notFound()
 
   const realRecipes = await getRecipes(query)
   const terms = query.split('+').map(term => term.trim()).filter(Boolean)
-  const demos = realRecipes.length === 0
-    ? terms.map(term => demoRecipes.find(recipe => normalise(recipe.title) === normalise(term))).filter((recipe): recipe is DemoRecipe => Boolean(recipe))
-    : []
-
-  const recipes = realRecipes.length ? realRecipes.map(recipe => ({
-    title: recipe.title, slug: recipe.slug, description: clean(recipe.description), prepTime: recipe.prep_time, cookTime: recipe.cook_time, servings: recipe.servings,
-    image: getMediaUrl(recipe.cover_image) || '/images/hero/8.webp',
-    ingredients: recipe.ingredients.map(ingredient => `${ingredient.quantity}${ingredient.unit ? ` ${ingredient.unit}` : ''} ${ingredient.name}`),
-    steps: recipe.steps.map(step => clean(step.instruction)),
-  })) : demos
+  const recipes = terms.map(term => {
+    const real = realRecipes.find(recipe => normalise(recipe.title) === normalise(term))
+      || realRecipes.find(recipe => normalise(recipe.title).includes(normalise(term)))
+    if (real) return {
+      id: real.id,
+      title: real.title,
+      slug: real.slug,
+      href: `/recipes/${real.slug}`,
+      description: clean(real.description),
+      prepTime: real.prep_time,
+      cookTime: real.cook_time,
+      servings: real.servings,
+      image: getMediaUrl(real.cover_image) || '/images/hero/8.webp',
+      ingredients: real.ingredients.map(ingredient => ({
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+        notes: ingredient.notes,
+        productId: ingredient.product?.id ?? null,
+        productName: ingredient.product?.name ?? null,
+        productSlug: ingredient.product?.slug ?? null,
+      })),
+      steps: real.steps.map(step => clean(step.instruction)),
+    }
+    const demo = demoRecipes.find(recipe => normalise(recipe.title) === normalise(term))
+    if (!demo) return null
+    return {
+      id: null,
+      title: demo.title,
+      slug: demo.slug,
+      href: `/recipes/combined?q=${encodeURIComponent(demo.title)}`,
+      description: demo.description,
+      prepTime: demo.prepTime,
+      cookTime: demo.cookTime,
+      servings: demo.servings,
+      image: demo.image,
+      ingredients: demo.ingredients.map(name => ({ name, quantity: '1', unit: 'portion', notes: '', productId: null, productName: null, productSlug: null })),
+      steps: demo.steps,
+    }
+  }).filter((recipe): recipe is NonNullable<typeof recipe> => Boolean(recipe))
 
   if (!recipes.length || recipes.length !== terms.length) notFound()
 
@@ -78,20 +109,27 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
   const totalPrep = recipes.reduce((sum, recipe) => sum + recipe.prepTime, 0)
   const totalCook = Math.max(...recipes.map(recipe => recipe.cookTime))
   const servings = Math.min(...recipes.map(recipe => recipe.servings))
+  const mealDescription = recipes.length === 1
+    ? recipes[0].description
+    : `${recipes.map(recipe => recipe.title).join(' and ')} come together on one plate. Each part keeps its own ingredients and method, so you can prepare them clearly and serve them together.`
+  const editableIngredients: EditableMealIngredient[] = recipes.flatMap(recipe => recipe.ingredients.map((ingredient, index) => ({
+    key: `${recipe.slug}-${index}`,
+    group: recipe.title,
+    ...ingredient,
+  })))
 
   return (
     <main className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-white">
       <header className="grid min-h-[62vh] bg-[#0D3B2A] pt-[76px] lg:grid-cols-[.9fr_1.1fr]">
-        <div className="relative min-h-[42vh] overflow-hidden">
-          <Image src={recipes[0].image} alt={title} fill priority className="object-cover" sizes="(max-width:1024px) 100vw, 45vw" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="grid min-h-[42vh] overflow-hidden" style={{ gridTemplateColumns: `repeat(${Math.min(recipes.length, 3)}, minmax(0, 1fr))` }}>
+          {recipes.slice(0, 3).map((recipe, index) => <div key={recipe.slug} className="relative min-h-[42vh] overflow-hidden border-r border-white/20 last:border-r-0"><Image src={recipe.image} alt={recipe.title} fill priority={index === 0} className="object-cover transition-transform duration-700 hover:scale-[1.025]" sizes={`(max-width:1024px) ${Math.round(100 / recipes.length)}vw, ${Math.round(45 / recipes.length)}vw`} /><div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" /><Link href={recipe.href} className="absolute bottom-5 left-5 border-b border-white/60 pb-1 text-sm font-bold text-white">{recipe.title} ↗</Link></div>)}
         </div>
         <div className="flex items-center px-6 py-14 text-white md:px-12 lg:px-16">
           <div>
             <Link href="/recipes" className="border-b border-white/50 pb-1 text-sm">Back to the recipe shelf</Link>
             <p className="mt-10 text-sm font-bold text-[#F4C430]">Your combined plate</p>
-            <h1 className="display-organic mt-4 max-w-3xl text-5xl leading-[.95] md:text-7xl">{title}</h1>
-            <p className="mt-7 max-w-2xl text-base leading-7 text-white/75">One meal, with every component kept clear. Prepare each part from its own list, then bring them together at the table.</p>
+            <h1 className="display-organic mt-4 max-w-3xl text-5xl leading-[.95] md:text-7xl">{recipes.map((recipe, index) => <span key={recipe.slug}>{index > 0 && <span className="font-normal text-white/35"> + </span>}<Link href={recipe.href} className="underline decoration-white/25 underline-offset-8 hover:decoration-[#F4C430]">{recipe.title}</Link></span>)}</h1>
+            <p className="mt-7 max-w-2xl text-base leading-7 text-white/75">{mealDescription}</p>
             <dl className="mt-9 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/25 pt-5 text-sm">
               <div><dt className="text-white/55">Prep</dt><dd className="font-bold">{totalPrep} min</dd></div>
               <div><dt className="text-white/55">Cooking window</dt><dd className="font-bold">about {totalCook} min</dd></div>
@@ -107,17 +145,23 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
             <p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">Everything you need</p>
             <h2 className="display-organic mt-3 text-5xl">Ingredients, kept in their place.</h2>
             <div className="mt-10 space-y-10">
-              {recipes.map(recipe => <div key={recipe.slug} className="border-t editorial-rule pt-5"><h3 className="display-organic text-3xl">For the {recipe.title}</h3><ul className="mt-4 space-y-2 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">{recipe.ingredients.map((ingredient, index) => <li key={`${ingredient}-${index}`}>{ingredient}</li>)}</ul></div>)}
+              {recipes.map(recipe => <div key={recipe.slug} className="border-t editorial-rule pt-5"><h3 className="display-organic text-3xl">For the <Link href={recipe.href} className="underline decoration-[#0D3B2A]/25 underline-offset-4 hover:decoration-[#2E7D32] dark:decoration-white/25">{recipe.title}</Link></h3><ul className="mt-4 space-y-2 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">{recipe.ingredients.map((ingredient, index) => <li key={`${ingredient.name}-${index}`}><span className="font-bold text-[#0D3B2A] dark:text-white">{ingredient.quantity} {ingredient.unit}</span> {ingredient.productSlug ? <Link href={`/products/${ingredient.productSlug}`} className="underline decoration-[#2E7D32]/40 underline-offset-2">{ingredient.name}</Link> : ingredient.name}</li>)}</ul></div>)}
             </div>
+            <CombinedRecipeEditor title={title} baseRecipeIds={recipes.flatMap(recipe => recipe.id ? [recipe.id] : [])} initialIngredients={editableIngredients} returnTo={`/recipes/combined?q=${encodeURIComponent(query)}`} />
           </section>
           <section>
             <p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">Cook the plate</p>
             <h2 className="display-organic mt-3 text-5xl">Make each part. Meet at the table.</h2>
             <div className="mt-10 space-y-12">
-              {recipes.map(recipe => <div key={recipe.slug} className="border-t editorial-rule pt-6"><div className="flex items-baseline justify-between gap-5"><h3 className="display-organic text-3xl">{recipe.title}</h3><span className="text-xs font-bold text-[#5B3E31] dark:text-[#B8D4BD]">{recipe.prepTime + recipe.cookTime} min</span></div><ol className="mt-6 space-y-5">{recipe.steps.map((step, index) => <li key={`${recipe.slug}-${index}`} className="grid grid-cols-[2rem_1fr] gap-3 text-sm leading-7"><span className="font-bold text-[#2E7D32] dark:text-[#F4C430]">{index + 1}</span><span className="text-[#5B3E31] dark:text-[#B8D4BD]">{step}</span></li>)}</ol></div>)}
+              {recipes.map(recipe => <div key={recipe.slug} className="border-t editorial-rule pt-6"><div className="flex items-baseline justify-between gap-5"><h3 className="display-organic text-3xl"><Link href={recipe.href} className="underline decoration-[#0D3B2A]/25 underline-offset-4 hover:decoration-[#2E7D32] dark:decoration-white/25">{recipe.title}</Link></h3><span className="text-xs font-bold text-[#5B3E31] dark:text-[#B8D4BD]">{recipe.prepTime + recipe.cookTime} min</span></div><ol className="mt-6 space-y-5">{recipe.steps.map((step, index) => <li key={`${recipe.slug}-${index}`} className="grid grid-cols-[2rem_1fr] gap-3 text-sm leading-7"><span className="font-bold text-[#2E7D32] dark:text-[#F4C430]">{index + 1}</span><span className="text-[#5B3E31] dark:text-[#B8D4BD]">{step}</span></li>)}</ol></div>)}
             </div>
           </section>
         </div>
+
+        <section className="mt-20 border-y editorial-rule py-10 lg:grid lg:grid-cols-[.7fr_1.3fr] lg:items-center lg:gap-16">
+          <div><p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">From the kitchen</p><h2 className="display-organic mt-3 text-4xl md:text-5xl">Watch the plate come together.</h2><p className="mt-4 text-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">When a preparation video is added in the dashboard, it will appear here with the full cooking walkthrough.</p></div>
+          <div className="relative mt-8 aspect-video overflow-hidden bg-[#0D3B2A] lg:mt-0"><div className="absolute inset-0 opacity-30 [background:radial-gradient(circle_at_25%_25%,#F4C430,transparent_42%)]" /><div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white"><span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/60 text-xl">▶</span><p className="mt-5 text-sm font-bold">Recipe video preview</p><p className="mt-1 text-xs text-white/55">Video managed from the admin dashboard</p></div></div>
+        </section>
       </div>
     </main>
   )

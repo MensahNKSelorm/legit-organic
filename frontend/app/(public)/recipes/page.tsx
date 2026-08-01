@@ -9,6 +9,7 @@ import type { Recipe } from '@/types'
 
 const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 import RecipeCard from '@/components/recipes/RecipeCard'
+import RecipeSearch from '@/components/recipes/RecipeSearch'
 
 export const metadata: Metadata = {
   title: 'Recipes — Traditional Ghanaian Cuisine with Organic Ingredients',
@@ -21,8 +22,9 @@ type Props = { searchParams: Promise<{ q?: string }> }
 export default async function RecipesPage({ searchParams }: Props) {
   const { q: rawQuery } = await searchParams
   const query = rawQuery?.trim().slice(0, 200) || ''
-  if (query.includes('+')) {
-    redirect(`/recipes/combined?q=${encodeURIComponent(query)}`)
+  const combinedQuery = query.replace(/\s+and\s+/gi, ' + ')
+  if (combinedQuery.includes('+')) {
+    redirect(`/recipes/combined?q=${encodeURIComponent(combinedQuery)}`)
   }
   const recipes: Recipe[] = await fetch(`${INTERNAL_API}/api/recipes/default/${query ? `?search=${encodeURIComponent(query)}` : ''}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -40,9 +42,13 @@ export default async function RecipesPage({ searchParams }: Props) {
     { title: 'Garden egg stew', note: 'Slow-cooked garden eggs, tomato and smoked fish.', time: '45 minutes', image: '/images/products/p2.webp' },
   ]
   const queryTerms = query.toLowerCase().split('+').map(term => term.trim()).filter(Boolean)
-  const previewRecipes = recipes.length === 0
-    ? demoCatalogue.filter(recipe => !queryTerms.length || queryTerms.some(term => `${recipe.title} ${recipe.note}`.toLowerCase().includes(term)))
-    : []
+  const realTitles = new Set(recipes.map(recipe => recipe.title.toLowerCase()))
+  const previewRecipes = demoCatalogue.filter(recipe =>
+    !realTitles.has(recipe.title.toLowerCase()) &&
+    (!queryTerms.length || queryTerms.some(term => `${recipe.title} ${recipe.note}`.toLowerCase().includes(term)))
+  )
+  const suggestions = [...recipes.map(recipe => ({ title: recipe.title })), ...demoCatalogue.map(recipe => ({ title: recipe.title }))]
+    .filter((recipe, index, all) => all.findIndex(item => item.title.toLowerCase() === recipe.title.toLowerCase()) === index)
 
   return (
     <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
@@ -63,36 +69,14 @@ export default async function RecipesPage({ searchParams }: Props) {
 
       {/* ── Recipes grid ─────────────────────────────────────── */}
       <div className="page-container py-12 lg:py-20">
-        <form action="/recipes" method="get" className="mb-12 border-y editorial-rule py-5 lg:mb-16">
-          <label htmlFor="recipe-search" className="block text-sm font-bold text-[#0D3B2A] dark:text-[#F4C430]">Find a recipe or build a plate</label>
-          <div className="mt-3 flex items-end gap-3">
-            <input id="recipe-search" name="q" type="search" defaultValue={query} placeholder="Try fufu + light soup" className="min-w-0 flex-1 border-0 border-b-2 border-[#0D3B2A] bg-transparent px-0 py-3 text-xl text-[#0D3B2A] placeholder:text-[#0D3B2A]/35 focus:border-[#2E7D32] focus:outline-none dark:border-white dark:text-white dark:placeholder:text-white/35 md:text-2xl" />
-            <button type="submit" className="shrink-0 bg-[#F4C430] px-6 py-3.5 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white dark:hover:bg-white dark:hover:text-[#0D3B2A]">Search</button>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[#5B3E31] dark:text-[#B8D4BD]">
-            <span>Try:</span>
-            <Link href={{ pathname: '/recipes', query: { q: 'fufu' } }} className="border-b border-current">fufu</Link>
-            <Link href={{ pathname: '/recipes', query: { q: 'fufu + light soup' } }} className="border-b border-current">fufu + light soup</Link>
-            <Link href={{ pathname: '/recipes', query: { q: 'rice + kontomire stew' } }} className="border-b border-current">rice + kontomire stew</Link>
-          </div>
-        </form>
-        {recipes.length > 0 ? (
-          <>
-            <div className="mb-10 border-b editorial-rule pb-5">
-              <p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">{query ? 'Search results' : 'The recipe shelf'}</p>
-              <h2 className="display-organic mt-2 text-4xl text-[#0D3B2A] dark:text-white md:text-5xl">{query ? <>Recipes for <em className="font-normal">“{query}”</em>.</> : 'Cook one part. Pair it with another.'}</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-              {recipes.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} />)}
-            </div>
-          </>
-        ) : previewRecipes.length > 0 ? (
-          <>
+        <RecipeSearch recipes={suggestions} initialQuery={query} />
+        {(recipes.length > 0 || previewRecipes.length > 0) ? <>
             <div className="mb-10 flex items-end justify-between border-b editorial-rule pb-5">
               <div><p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">{query ? 'Search results' : 'The recipe shelf'}</p><h2 className="display-organic mt-2 text-4xl text-[#0D3B2A] dark:text-white md:text-5xl">{query ? <>What goes into <em className="font-normal">“{query}”</em>.</> : 'Cook one part. Pair it with another.'}</h2></div>
               {query && <Link href="/recipes" className="hidden border-b border-current pb-1 text-sm font-bold text-[#0D3B2A] dark:text-[#F4C430] md:block">Clear search</Link>}
             </div>
             <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+              {recipes.map(recipe => <RecipeCard key={`real-${recipe.id}`} recipe={recipe} />)}
               {previewRecipes.map((recipe, index) => (
                 <Link href={`/recipes/combined?q=${encodeURIComponent(recipe.title)}`} key={recipe.title} className="group block border-b editorial-rule pb-6" aria-label={`Open ${recipe.title} recipe`}>
                   <div className="relative aspect-[4/3] overflow-hidden">
@@ -105,8 +89,7 @@ export default async function RecipesPage({ searchParams }: Props) {
                 </Link>
               ))}
             </div>
-          </>
-        ) : query ? (
+          </> : query ? (
           <div className="border-y editorial-rule py-12"><h2 className="display-organic text-4xl text-[#0D3B2A] dark:text-white">Nothing matched “{query}” yet.</h2><p className="mt-3 max-w-2xl text-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">Try one component at a time, or browse the full recipe shelf.</p><Link href="/recipes" className="mt-7 inline-flex border-b border-current pb-1 text-sm font-bold text-[#0D3B2A] dark:text-[#F4C430]">Clear search</Link></div>
         ) : (
           <div className="grid border-y editorial-rule py-12 md:grid-cols-[1fr_auto] md:items-end md:gap-12">
