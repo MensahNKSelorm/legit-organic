@@ -429,6 +429,7 @@ REST_FRAMEWORK = {
         "register": "5/hour",
         "login": "10/min",
         "resend_verification": "3/hour",
+        "recipe_note": "20/hour",
         "b2b_apply": "5/hour",
         "guest_order": "20/hour",
         "promo_validate": "30/hour",

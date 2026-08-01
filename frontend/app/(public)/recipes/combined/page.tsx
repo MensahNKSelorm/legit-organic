@@ -7,6 +7,7 @@ import type { Product, Recipe, RecipeWithPairings } from '@/types'
 import { getMediaUrl } from '@/lib/media'
 import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
 import AddDishSearch from '@/components/recipes/AddDishSearch'
+import CombinationNote from '@/components/recipes/CombinationNote'
 import { normaliseRecipeText, parseRecipeQuery } from '@/lib/recipe-query'
 
 const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
@@ -67,6 +68,7 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
   ])
   const catalogueTitles = [...catalogueRecipes.map(recipe => recipe.title), ...demoRecipes.map(recipe => recipe.title)]
   const terms = parseRecipeQuery(query, catalogueTitles)
+  if (terms.length > 4) notFound()
   const realRecipes = await getRecipes(terms, catalogueRecipes)
   const matchProduct = (name: string) => products.find(product => normalise(product.name) === normalise(name))
     || products.find(product => normalise(product.name).includes(normalise(name)) || normalise(name).includes(normalise(product.name)))
@@ -122,9 +124,9 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
   const totalPrep = recipes.reduce((sum, recipe) => sum + recipe.prepTime, 0)
   const totalCook = Math.max(...recipes.map(recipe => recipe.cookTime))
   const servings = Math.min(...recipes.map(recipe => recipe.servings))
-  const mealDescription = recipes.length === 1
+  const fallbackDescription = recipes.length === 1
     ? recipes[0].description
-    : `${recipes.map(recipe => recipe.title).join(' and ')} come together on one plate. Each part keeps its own ingredients and method, so you can prepare them clearly and serve them together.`
+    : `${recipes.map(recipe => recipe.title).join(' and ')} bring contrasting flavours and textures together on one plate.`
   const editableIngredients: EditableMealIngredient[] = recipes.flatMap(recipe => recipe.ingredients.map((ingredient, index) => ({
     key: `${recipe.slug}-${index}`,
     group: recipe.title,
@@ -145,7 +147,9 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
             <p className="mt-10 text-sm font-bold text-[#F4C430]">{isCombination ? `${recipes.length}-part meal` : 'Recipe notebook'}</p>
             <h1 className="display-organic mt-4 max-w-3xl text-5xl leading-[.95] md:text-7xl">{recipes.map((recipe, index) => <span key={recipe.slug}>{index > 0 && <span className="font-normal text-white/35"> + </span>}<Link href={recipe.href} className="underline decoration-white/25 underline-offset-8 hover:decoration-[#F4C430]">{recipe.title}</Link></span>)}</h1>
             <AddDishSearch currentTitles={recipes.map(recipe => recipe.title)} catalogue={uniqueCatalogueTitles} />
-            <p className="mt-7 max-w-2xl text-base leading-7 text-white/75">{mealDescription}</p>
+            {isCombination
+              ? <CombinationNote titles={recipes.map(recipe => recipe.title)} fallback={fallbackDescription} />
+              : <p className="mt-7 max-w-2xl text-base leading-7 text-white/75">{fallbackDescription}</p>}
             <dl className="mt-9 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/25 pt-5 text-sm">
               <div><dt className="text-white/55">Prep</dt><dd className="font-bold">{totalPrep} min</dd></div>
               <div><dt className="text-white/55">Cooking window</dt><dd className="font-bold">about {totalCook} min</dd></div>

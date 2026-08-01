@@ -53,6 +53,9 @@ File: `frontend/app/(public)/recipes/page.tsx`
 - Recipe pages keep structural language short: use “Ingredients” and “Method”; avoid stacking editorial headings above functional content.
 - Single recipes use “Recipe notebook.” Combinations state their component count and can add further dishes without a two-recipe limit.
 - “Add dish +” belongs beside the recipe title and opens a compact overlay; do not repeat it below the ingredient editor.
+- Combination controls stay as small ruled text actions beneath the title: “Add dish +” leads, while each removable component uses muted white text that turns gold on hover. Never render them as pills.
+- Combined meals stop at four components. At the limit, replace the add action with the quiet gold status “Plate complete · 4 dishes”; removal remains available.
+- A generated pairing note occupies the existing hero-description position and keeps the same restrained `text-white/75` body treatment. Show deterministic copy immediately; AI enhancement must never introduce a spinner or delay the page.
 - Recipe queries accept `+`, `and`, commas, or catalogue-aware whitespace. Never split raw spaces without longest-title matching because recipe names may contain several words.
 - Private recipe titles are editable for authenticated customers and participate in the same dirty/save state as ingredient edits.
 - Empty video areas use a dark, 16:9 admin-preview field with a restrained play control; replace it with the real video only when one is configured.

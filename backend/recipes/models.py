@@ -94,6 +94,20 @@ class RecipePairing(models.Model):
         return f"{self.base_recipe} → {self.suggested_recipe}"
 
 
+class RecipeCombinationNote(models.Model):
+    """A reusable editorial note for one canonical set of dishes."""
+
+    combination_key = models.CharField(max_length=500, unique=True)
+    titles = models.JSONField(default=list)
+    note = models.TextField()
+    model_name = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return " + ".join(self.titles)
+
+
 class UserRecipe(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_recipes'

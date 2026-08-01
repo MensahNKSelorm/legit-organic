@@ -186,6 +186,12 @@ export const api = {
     default: () => fetchAPI<Recipe[]>('/api/recipes/default/'),
     list: () => fetchAPI<Recipe[]>('/api/recipes/'),
     detail: (slug: string) => fetchAPI<RecipeWithPairings>(`/api/recipes/${slug}/`),
+    combinationNote: (titles: string[], signal?: AbortSignal) =>
+      fetchAPI<{ note: string; source: 'cache' | 'generated' | 'fallback' }>('/api/recipes/combination-note/', {
+        method: 'POST',
+        body: JSON.stringify({ titles }),
+        signal,
+      }),
     myRecipes: {
       list: () => fetchWithAuth<UserRecipe[]>('/api/recipes/my-recipes/'),
       get: (id: number) => fetchWithAuth<UserRecipe>(`/api/recipes/my-recipes/${id}/`),

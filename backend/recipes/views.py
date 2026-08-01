@@ -1,18 +1,112 @@
 from decimal import Decimal, InvalidOperation
+import json
+import logging
+import os
 import re
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from django.db.models import Q
-from rest_framework import generics, status
+from rest_framework import generics, status, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Recipe, UserRecipe, UserRecipeIngredient
+from .models import Recipe, RecipeCombinationNote, UserRecipe, UserRecipeIngredient
 from .serializers import (
     RecipeListSerializer,
     RecipeDetailWithPairingsSerializer,
     UserRecipeSerializer,
     CreateUserRecipeSerializer,
 )
+
+logger = logging.getLogger(__name__)
+
+DEMO_RECIPE_TITLES = {
+    'Fufu', 'Light soup', 'Groundnut soup', 'Palm nut soup',
+    'Ebunebunu soup', 'Kontomire stew', 'Plain rice', 'Garden egg stew',
+}
+
+
+def _normalise_title(value):
+    return re.sub(r'[^a-z0-9]+', ' ', value.lower()).strip()
+
+
+def _fallback_note(titles):
+    names = ', '.join(titles[:-1]) + f" and {titles[-1]}"
+    return f"{names} make a complete plate, with each dish bringing its own flavour and texture to the table."
+
+
+def _groq_note(titles):
+    api_key = os.getenv('GROQ_API_KEY', '').strip()
+    if not api_key:
+        return None, ''
+    model = os.getenv('GROQ_MODEL', 'openai/gpt-oss-20b').strip()
+    prompt = (
+        "Write one warm, useful sentence (maximum 32 words) about why these Ghanaian dishes "
+        f"work together: {', '.join(titles)}. Mention flavour or texture. No headings, hype, "
+        "health claims, quotation marks, or instructions."
+    )
+    payload = json.dumps({
+        'model': model,
+        'messages': [
+            {'role': 'system', 'content': 'You are a concise Ghanaian food editor for Legit Organic.'},
+            {'role': 'user', 'content': prompt},
+        ],
+        'temperature': 0.6,
+        'max_tokens': 80,
+    }).encode()
+    request = Request(
+        'https://api.groq.com/openai/v1/chat/completions',
+        data=payload,
+        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+        method='POST',
+    )
+    try:
+        with urlopen(request, timeout=5) as response:
+            data = json.loads(response.read().decode())
+        note = data['choices'][0]['message']['content'].strip().strip('"')
+        return (note[:500], model) if note else (None, model)
+    except (HTTPError, URLError, TimeoutError, KeyError, ValueError, json.JSONDecodeError) as exc:
+        logger.warning('Groq recipe note unavailable: %s', exc.__class__.__name__)
+        return None, model
+
+
+class RecipeCombinationNoteView(views.APIView):
+    permission_classes = []
+    throttle_scope = 'recipe_note'
+
+    def post(self, request):
+        raw_titles = request.data.get('titles')
+        if not isinstance(raw_titles, list) or not 2 <= len(raw_titles) <= 4:
+            return Response({'detail': 'Choose between two and four dishes.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        requested = [str(title).strip()[:100] for title in raw_titles]
+        if any(not title for title in requested):
+            return Response({'detail': 'Every dish needs a title.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        allowed_titles = set(DEMO_RECIPE_TITLES)
+        allowed_titles.update(Recipe.objects.filter(is_default=True).values_list('title', flat=True))
+        allowed = {_normalise_title(title): title for title in allowed_titles}
+        normalised = [_normalise_title(title) for title in requested]
+        if len(set(normalised)) != len(normalised) or any(title not in allowed for title in normalised):
+            return Response({'detail': 'One or more dishes are not in the recipe shelf.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        canonical = sorted(normalised)
+        key = '|'.join(canonical)
+        cached = RecipeCombinationNote.objects.filter(combination_key=key).first()
+        if cached:
+            return Response({'note': cached.note, 'source': 'cache'})
+
+        display_titles = [allowed[title] for title in canonical]
+        note, model = _groq_note(display_titles)
+        if not note:
+            return Response({'note': _fallback_note(display_titles), 'source': 'fallback'})
+
+        cached, _ = RecipeCombinationNote.objects.get_or_create(
+            combination_key=key,
+            defaults={'titles': display_titles, 'note': note, 'model_name': model},
+        )
+        return Response({'note': cached.note, 'source': 'generated'})
 
 
 class RecipeListView(generics.ListAPIView):
