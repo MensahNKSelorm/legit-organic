@@ -95,7 +95,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         ) : (
           <div className="mt-12 grid grid-cols-1 gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product, index) => (
-              <div key={product.id} className={index === 0 && !activeCategory ? 'sm:col-span-2 lg:col-span-2' : ''}>
+              <div key={product.id} className={`h-full ${index === 0 && !activeCategory ? 'sm:col-span-2 lg:col-span-2' : ''}`}>
                 <ProductCard product={product} featured={index === 0 && !activeCategory} preview={usingDemo} />
               </div>
             ))}

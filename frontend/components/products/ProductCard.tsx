@@ -29,7 +29,7 @@ export default function ProductCard({ product, featured = false, preview = false
   const inCart = isInCart(product.id)
 
   return (
-    <article className={`group overflow-hidden border-b border-[#0D3B2A]/20 bg-transparent dark:border-white/15 ${featured ? 'md:grid md:min-h-[500px] md:grid-cols-[1.15fr_.85fr]' : 'flex min-h-[420px] flex-col'}`}>
+    <article className={`group h-full overflow-hidden border-b border-[#0D3B2A]/20 bg-transparent dark:border-white/15 ${featured ? 'md:grid md:min-h-[500px] md:grid-cols-[1.15fr_.85fr]' : 'flex min-h-[500px] flex-col'}`}>
       {/* Image */}
       <div className={`relative overflow-hidden bg-beige dark:bg-[#273029] ${featured ? 'h-80 md:h-auto' : 'h-64'}`}>
         <Image
@@ -48,17 +48,17 @@ export default function ProductCard({ product, featured = false, preview = false
 
       {/* Content */}
       <div className={`flex flex-col flex-1 ${featured ? 'justify-center p-8 md:p-10' : 'p-6'}`}>
-        <h3 className={`display-organic text-forest-green dark:text-[#faf7f0] break-words w-full mb-2 ${featured ? 'text-4xl md:text-5xl' : 'text-2xl'}`}>
+        <h3 className={`display-organic w-full break-words text-forest-green dark:text-[#faf7f0] ${featured ? 'mb-2 text-4xl md:text-5xl' : 'mb-2 line-clamp-2 min-h-[3.5rem] text-2xl'}`}>
           {product.name}
         </h3>
 
-        <div className="min-h-[28px] flex items-center mb-3">
-          <span className="inline-block border-b border-[#2E7D32]/40 pb-1 text-xs text-[#2e7d32] dark:text-[#9FC5A4] font-semibold uppercase tracking-wide">
+        <div className={`mb-3 flex items-start ${featured ? 'min-h-[28px]' : 'min-h-[44px]'}`}>
+          <span className="line-clamp-2 inline-block border-b border-[#2E7D32]/40 pb-1 text-xs font-semibold uppercase tracking-wide text-[#2e7d32] dark:text-[#9FC5A4]">
             {product.category?.name} · {product.region?.name}
           </span>
         </div>
 
-        <p className="text-charcoal/70 dark:text-[#d1d5db] text-sm leading-relaxed flex-1 line-clamp-3">
+        <p className={`text-sm leading-relaxed text-charcoal/70 dark:text-[#d1d5db] ${featured ? 'flex-1 line-clamp-3' : 'line-clamp-3 min-h-[4.125rem]'}`}>
           {stripHtml(product.description)}
         </p>
 
@@ -67,7 +67,7 @@ export default function ProductCard({ product, featured = false, preview = false
             <span className="font-bold text-[#2E7D32] dark:text-[#81C784] text-xl leading-tight">
               GH₵ {product.price}
             </span>
-            <span className="text-xs text-[#5B3E31] dark:text-[#E6D8BD] max-w-[80px] leading-snug mt-0.5">
+            <span className="mt-0.5 min-h-[2rem] max-w-[80px] text-xs leading-snug text-[#5B3E31] dark:text-[#E6D8BD]">
               {product.unit}
             </span>
           </div>

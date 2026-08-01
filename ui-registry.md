@@ -136,6 +136,16 @@ Last updated: 2026-08-01
 
 **Pattern notes:** Search opens as a near-full-width market catalogue rather than a rounded dialog. Categories form a ruled index in the green sidebar, never pills. The idle state loads real featured products from the live catalogue under one short “Suggested” label; never use decorative stock images or hardcoded demo products here. Results resemble produce entries on a market table: square imagery, top rules, name and price beneath. No-result language is limited to “Nothing found” and one action.
 
+### Product Catalogue Cards
+
+File: `frontend/components/products/ProductCard.tsx`
+Last updated: 2026-08-01
+
+- Standard cards stretch to the full height of their grid cell.
+- Product names reserve two lines, category/origin reserves two lines, and descriptions reserve three lines.
+- Price, unit and actions remain aligned at the bottom regardless of copy length.
+- The intentionally enlarged featured product keeps its separate editorial layout; equal-height rules apply to the standard product grid and related-product grid.
+
 ### Email Verification Transition
 
 File: `frontend/app/(auth)/check-email/page.tsx`
