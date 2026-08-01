@@ -22,6 +22,7 @@ def main():
     api_key = os.getenv('RESEND_API_KEY', '')
     if not api_key:
         raise RuntimeError('RESEND_API_KEY is not configured')
+    resend.api_key = api_key
 
     recipient = os.getenv('BACKUP_ALERT_EMAIL', 'admin@legitorganic.com')
     sender = os.getenv('DEFAULT_FROM_EMAIL', 'hello@legitorganic.com')
