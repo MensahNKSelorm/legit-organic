@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 echo "🚀 Deploying Legit Organic..."
 
 cd /var/www/legitorganic
@@ -21,6 +23,10 @@ npm run build
 
 # Restart services
 systemctl restart legitorganic
-pm2 restart legitorganic-frontend
+if systemctl cat legitorganic-frontend.service >/dev/null 2>&1; then
+    systemctl restart legitorganic-frontend
+else
+    pm2 restart legitorganic-frontend
+fi
 
 echo "✅ Deployment complete!"
