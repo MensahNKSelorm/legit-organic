@@ -27,6 +27,7 @@ class RecipePairingInline(TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(ModelAdmin):
+    change_form_before_template = 'admin/includes/writing_assistant.html'
     view_on_site = True
     list_display = [
         'title', 'is_default', 'created_by', 'difficulty',

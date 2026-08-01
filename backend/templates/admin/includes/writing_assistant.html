@@ -1,0 +1,39 @@
+{% load static %}
+<section class="lo-writing-assistant" data-writing-assistant data-kind="{{ opts.model_name }}">
+  <div class="lo-writing-assistant__identity">
+    <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
+    <div>
+      <p>Writing assistant</p>
+      <span>Draft with Groq. Review before applying.</span>
+    </div>
+  </div>
+  <div class="lo-writing-assistant__work">
+    <label for="lo-writing-task">Draft</label>
+    <select id="lo-writing-task" data-writing-task>
+      {% if opts.model_name == 'product' %}
+        <option value="description">Product description</option>
+        <option value="storage">Storage guidance</option>
+        <option value="nutrition">Nutrition copy</option>
+      {% elif opts.model_name == 'blogpost' %}
+        <option value="titles">Title ideas</option>
+        <option value="excerpt">Excerpt</option>
+        <option value="outline">Article outline</option>
+        <option value="draft">Complete first draft</option>
+      {% elif opts.model_name == 'recipe' %}
+        <option value="description">Dish description</option>
+        <option value="method">Ingredients &amp; steps</option>
+      {% endif %}
+    </select>
+    <label for="lo-writing-instruction">What should this say?</label>
+    <textarea id="lo-writing-instruction" data-writing-instruction rows="2" maxlength="800" placeholder="Give the assistant a short, factual brief."></textarea>
+    <button type="button" data-writing-generate>Generate draft</button>
+  </div>
+  <div class="lo-writing-assistant__result" data-writing-result hidden>
+    <div class="lo-writing-assistant__result-head">
+      <strong>Draft preview</strong>
+      <button type="button" data-writing-apply>Apply to form</button>
+    </div>
+    <div data-writing-preview></div>
+    <p data-writing-status aria-live="polite"></p>
+  </div>
+</section>

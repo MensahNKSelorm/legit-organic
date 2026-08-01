@@ -34,6 +34,7 @@ class ProductImageInline(TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
+    change_form_before_template = 'admin/includes/writing_assistant.html'
     show_full_result_count = True
     inlines = [ProductImageInline]
     list_display = [

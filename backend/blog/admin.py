@@ -12,6 +12,7 @@ class BlogCategoryAdmin(ModelAdmin):
 
 @admin.register(BlogPost)
 class BlogPostAdmin(ModelAdmin):
+    change_form_before_template = 'admin/includes/writing_assistant.html'
     view_on_site = True
     list_display = [
         'title', 'author', 'category', 'is_published', 'published_at', 'created_at',

@@ -308,3 +308,54 @@ input.bg-primary-600:hover {
     grid-column: 1 / -1;
   }
 }
+
+/* Groq writing assistant — one restrained editorial workbench, never a chat UI. */
+.lo-writing-assistant {
+  display: grid;
+  grid-template-columns: minmax(13rem, .65fr) minmax(18rem, 1fr) minmax(18rem, 1.35fr);
+  border: 1px solid rgba(255,255,255,.17);
+  background: #111827;
+  color: #f8f4e9;
+  font-family: "Cabinet Grotesk", sans-serif;
+}
+
+.lo-writing-assistant > div { padding: 1.15rem 1.25rem; }
+.lo-writing-assistant > div + div { border-left: 1px solid rgba(255,255,255,.13); }
+.lo-writing-assistant__identity { display: flex; gap: .75rem; align-items: flex-start; background: #0d3b2a; }
+.lo-writing-assistant__identity .material-symbols-outlined { color: #f4c430; }
+.lo-writing-assistant__identity p { margin: 0 0 .25rem; color: #fff; font-family: "Boska", serif; font-size: 1.55rem; line-height: 1; }
+.lo-writing-assistant__identity span:last-child { color: rgba(255,255,255,.62); font-size: .78rem; }
+.lo-writing-assistant__work { display: grid; grid-template-columns: 1fr auto; gap: .5rem .75rem; align-content: start; }
+.lo-writing-assistant__work label { color: #f4c430; font-size: .66rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.lo-writing-assistant__work label:first-child { grid-column: 1 / -1; }
+.lo-writing-assistant__work select,
+.lo-writing-assistant__work textarea { grid-column: 1 / -1; width: 100%; border: 0 !important; border-bottom: 1px solid rgba(255,255,255,.25) !important; border-radius: 0 !important; background: transparent !important; color: #fff !important; box-shadow: none !important; }
+.lo-writing-assistant__work textarea { min-height: 4.25rem; padding: .65rem 0 !important; resize: vertical; }
+.lo-writing-assistant__work select { padding: .55rem 1.5rem .55rem 0 !important; }
+.lo-writing-assistant__work button,
+.lo-writing-assistant__result-head button { border: 0; border-radius: 0 !important; background: #f4c430; color: #0d3b2a; padding: .7rem .9rem; font-weight: 800; cursor: pointer; }
+.lo-writing-assistant__work button { grid-column: 1 / -1; margin-top: .25rem; }
+.lo-writing-assistant button:disabled { cursor: wait; opacity: .55; }
+.lo-writing-assistant__result[hidden] { display: none; }
+.lo-writing-assistant__result-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .8rem; }
+.lo-writing-assistant__result-head strong { color: #f4c430; font-size: .68rem; letter-spacing: .11em; text-transform: uppercase; }
+.lo-writing-assistant__result-head button { padding: .5rem .7rem; font-size: .75rem; }
+.lo-writing-assistant [data-writing-preview] { max-height: 15rem; overflow: auto; color: rgba(255,255,255,.84); font-size: .86rem; line-height: 1.55; }
+.lo-writing-assistant [data-writing-preview] h2,
+.lo-writing-assistant [data-writing-preview] h3 { margin: .8rem 0 .35rem; color: #fff; font-family: "Boska", serif; font-size: 1.25rem; }
+.lo-writing-assistant [data-writing-preview] ul,
+.lo-writing-assistant [data-writing-preview] ol { margin: .45rem 0 0 1.1rem; list-style: revert; }
+.lo-writing-assistant [data-writing-status] { margin: .75rem 0 0; color: rgba(255,255,255,.52); font-size: .75rem; }
+.lo-writing-choice { display: flex; align-items: center; gap: .6rem; padding: .6rem 0; border-top: 1px solid rgba(255,255,255,.12); cursor: pointer; }
+.lo-writing-choice input { flex: 0 0 auto; }
+
+@media (max-width: 1050px) {
+  .lo-writing-assistant { grid-template-columns: 1fr 1.4fr; }
+  .lo-writing-assistant__result { grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,.13); border-left: 0 !important; }
+}
+
+@media (max-width: 700px) {
+  .lo-writing-assistant { grid-template-columns: 1fr; }
+  .lo-writing-assistant > div + div { border-top: 1px solid rgba(255,255,255,.13); border-left: 0; }
+  .lo-writing-assistant__result { grid-column: auto; }
+}

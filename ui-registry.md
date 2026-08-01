@@ -271,3 +271,22 @@ Last updated: 2026-08-01
 - Use compact square checkboxes for multi-select and table selection only.
 - Boolean yes/no fields use one coherent capsule track with a circular handle: charcoal when off, forest and gold when on.
 - Generic input-radius rules must always exclude checkboxes and radios so they cannot flatten switch tracks.
+
+### Admin Writing Assistant
+
+Files: `backend/templates/admin/includes/writing_assistant.html`, `backend/products/static/admin/css/legitorganic-admin.css`
+Last updated: 2026-08-01
+
+| Property | Pattern |
+| --- | --- |
+| Background | night workbench with one forest identity field |
+| Border | one-pixel white rules at 13–17% opacity |
+| Border radius | none |
+| Text — primary | warm white; Boska only for the assistant identity |
+| Text — secondary | white at 52–62% opacity |
+| Spacing | compact `1.15rem–1.25rem` work cells with ruled divisions |
+| Hover state | gold action may move to white; no floating-card motion |
+| Shadow | none |
+| Accent usage | gold for labels, icon and deliberate Apply/Generate actions |
+
+**Pattern notes:** The assistant is an editorial workbench inside the existing form, never a chatbot, modal or floating AI button. It starts with one factual instruction field, shows a contained preview and states that nothing has been saved. Applying a draft only edits the current unsaved Django form; existing prose requires explicit replacement confirmation. Structured recipe output appends editable ingredient and step rows and links exact catalogue matches. AI failures leave every field untouched.
