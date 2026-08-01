@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from products.models import Product
 from users.models import User
-from .writing_assistant import SYSTEM_PROMPT
+from .writing_assistant import SYSTEM_PROMPT, _prompt
 
 
 class WritingAssistantTests(TestCase):
@@ -41,6 +41,13 @@ class WritingAssistantTests(TestCase):
         self.assertIn('Only state facts and uses explicitly supplied', SYSTEM_PROMPT)
         self.assertIn('Never invent dish names, traditional uses', SYSTEM_PROMPT)
         self.assertIn('Avoid puffery', SYSTEM_PROMPT)
+        product_prompt = _prompt(
+            'product', 'description', 'Describe garden eggs.',
+            {'name': 'Garden eggs'}, ['Tomatoes', 'Onions'],
+        )
+        self.assertNotIn('Tomatoes', product_prompt)
+        self.assertNotIn('Onions', product_prompt)
+        self.assertIn('Do not introduce other named foods', product_prompt)
 
     def test_requires_staff_authentication_and_model_permission(self):
         response = self.client.post(self.url, self.payload(), content_type='application/json')

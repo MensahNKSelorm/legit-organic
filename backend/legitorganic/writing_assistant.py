@@ -105,12 +105,20 @@ def _prompt(kind, task, instruction, context, products):
             'Ingredient names should match catalogue names when appropriate.'
         ),
     }[(kind, task)]
-    product_line = f"\nAvailable shop products: {', '.join(products)}" if products else ''
+    product_line = (
+        f"\nAvailable shop products for ingredient matching only: {', '.join(products)}"
+        if kind == 'recipe' and task == 'method' and products else ''
+    )
+    grounding = (
+        "\nUse only the factual anchors written in the staff instruction and current form. "
+        "Do not introduce other named foods, ingredients, dishes, places or traditions."
+        if kind in {'product', 'recipe'} and task != 'method' else ''
+    )
     return (
         f"Draft type: {kind}. Task: {task}.\n"
         f"Staff instruction: {instruction}\n"
         f"Current form reference: {json.dumps(context, ensure_ascii=False)}"
-        f"{product_line}\n{requirements}"
+        f"{product_line}{grounding}\n{requirements}"
     )
 
 
@@ -128,7 +136,7 @@ def _call_groq(prompt):
                 {'role': 'system', 'content': SYSTEM_PROMPT},
                 {'role': 'user', 'content': prompt},
             ],
-            'temperature': 0.55,
+            'temperature': 0.3,
             'reasoning_effort': 'low',
             'max_completion_tokens': 3000,
             'response_format': {'type': 'json_object'},
