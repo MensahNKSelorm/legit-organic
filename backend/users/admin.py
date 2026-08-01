@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib import messages
 from django.utils import timezone
 from unfold.admin import ModelAdmin, StackedInline
-from .models import User, Customer, B2BProfile, B2BDiscountTier
-from .forms import UserCreationForm, UserChangeForm
+from .models import User, Customer, B2BProfile, B2BDiscountTier, StaffInvitation
+from .forms import UserCreationForm, UserChangeForm, StaffInvitationAdminForm
 from sales.models import SalesRep
 
 
@@ -95,6 +96,129 @@ class CustomerAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+
+@admin.register(StaffInvitation)
+class StaffInvitationAdmin(ModelAdmin):
+    form = StaffInvitationAdminForm
+    list_display = [
+        'company_email', 'full_name', 'delivery_email', 'role',
+        'invitation_status', 'expires_at', 'invited_by',
+    ]
+    list_filter = ['role', 'delivery_status', 'created_at']
+    search_fields = [
+        'company_email', 'delivery_email', 'first_name', 'last_name'
+    ]
+    ordering = ['-created_at']
+    actions = ['resend_invitations', 'revoke_invitations']
+
+    def get_fields(self, request, obj=None):
+        if obj is None:
+            return ['first_name', 'last_name', 'company_email', 'delivery_email', 'role']
+        return [
+            'first_name', 'last_name', 'company_email', 'delivery_email', 'role',
+            'invitation_status', 'delivery_status', 'delivery_error',
+            'expires_at', 'accepted_at', 'revoked_at', 'invited_by',
+            'created_at', 'updated_at',
+        ]
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return []
+        return self.get_fields(request, obj)
+
+    @admin.display(description='Name')
+    def full_name(self, obj):
+        return f'{obj.first_name} {obj.last_name}'.strip()
+
+    @admin.display(description='Status')
+    def invitation_status(self, obj):
+        return obj.status.replace('_', ' ').title()
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            return super().save_model(request, obj, form, change)
+
+        obj.invited_by = request.user
+        raw_token = obj.issue_token()
+        super().save_model(request, obj, form, change)
+        delivered = self._deliver(obj, raw_token)
+        if delivered:
+            self.message_user(
+                request,
+                f'Setup link sent to {obj.delivery_email}.',
+                messages.SUCCESS,
+            )
+        else:
+            self.message_user(
+                request,
+                'Invitation saved, but email delivery failed. Use Resend after checking the address.',
+                messages.WARNING,
+            )
+
+    def _deliver(self, invitation, raw_token):
+        from .emails import send_staff_invitation_email
+        try:
+            send_staff_invitation_email(invitation, raw_token)
+        except Exception as exc:
+            invitation.delivery_status = 'failed'
+            invitation.delivery_error = str(exc)[:500]
+            invitation.save(update_fields=[
+                'delivery_status', 'delivery_error', 'updated_at'
+            ])
+            return False
+
+        invitation.delivery_status = 'sent'
+        invitation.delivery_error = ''
+        invitation.save(update_fields=[
+            'delivery_status', 'delivery_error', 'updated_at'
+        ])
+        return True
+
+    @admin.action(description='Resend selected setup links')
+    def resend_invitations(self, request, queryset):
+        sent = skipped = failed = 0
+        for invitation in queryset:
+            if invitation.accepted_at or invitation.revoked_at:
+                skipped += 1
+                continue
+            raw_token = invitation.issue_token()
+            invitation.save(update_fields=[
+                'token_digest', 'expires_at', 'revoked_at',
+                'delivery_status', 'delivery_error', 'updated_at',
+            ])
+            if self._deliver(invitation, raw_token):
+                sent += 1
+            else:
+                failed += 1
+        self.message_user(
+            request,
+            f'Resent: {sent}. Failed: {failed}. Skipped: {skipped}.',
+            messages.SUCCESS if not failed else messages.WARNING,
+        )
+
+    @admin.action(description='Revoke selected invitations')
+    def revoke_invitations(self, request, queryset):
+        updated = queryset.filter(
+            accepted_at__isnull=True,
+            revoked_at__isnull=True,
+        ).update(revoked_at=timezone.now())
+        self.message_user(request, f'Revoked {updated} invitation(s).')
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(B2BDiscountTier)

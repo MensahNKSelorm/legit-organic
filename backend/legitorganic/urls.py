@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenRefreshView
 from users.tokens import VerifiedTokenObtainPairView
+from users.staff_views import staff_setup
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -17,6 +18,7 @@ def health(request):
 
 
 urlpatterns = [
+    path('staff/setup/<str:token>/', staff_setup, name='staff-setup'),
     path('admin/', admin.site.urls),
 
     # Health check

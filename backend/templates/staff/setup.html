@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Staff account setup · Legit Organic</title>
+  <style>
+    :root { --forest:#0d3b2a; --gold:#f4c430; --ink:#f8f4e9; --muted:#aebcaf; --night:#111827; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--night); color:var(--ink); font-family:Arial,sans-serif; }
+    main { width:min(68rem,100%); min-height:100vh; margin:auto; display:grid; grid-template-columns:minmax(0,1.05fr) minmax(20rem,.95fr); }
+    .identity { padding:clamp(2rem,6vw,5rem); background:var(--forest); display:flex; flex-direction:column; justify-content:space-between; }
+    .mark { width:3rem; height:3rem; border:2px solid var(--gold); display:grid; place-items:center; color:var(--gold); font-size:1.5rem; }
+    .identity h1 { max-width:12ch; margin:4rem 0 1rem; font-family:Georgia,serif; font-size:clamp(3rem,7vw,6rem); font-weight:400; line-height:.9; letter-spacing:-.04em; }
+    .identity h1 em { color:var(--gold); font-weight:400; }
+    .identity p { max-width:30rem; color:#d7e5d9; line-height:1.6; }
+    .form-side { padding:clamp(2rem,6vw,5rem); display:flex; align-items:center; }
+    .panel { width:100%; }
+    .kicker { margin:0 0 2rem; color:var(--gold); font-size:.7rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .facts { margin:0 0 2rem; padding:1rem 0; border-block:1px solid rgba(255,255,255,.15); }
+    .facts div { display:flex; justify-content:space-between; gap:1rem; padding:.45rem 0; font-size:.82rem; }
+    .facts span { color:var(--muted); }
+    label { display:block; margin:1.25rem 0 .45rem; font-size:.78rem; font-weight:700; }
+    input { width:100%; padding:.9rem 1rem; border:1px solid rgba(255,255,255,.24); border-radius:0; background:transparent; color:white; font:inherit; outline:none; }
+    input:focus { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold); }
+    .helptext { display:block; margin-top:.55rem; color:var(--muted); font-size:.72rem; line-height:1.45; }
+    .helptext ul { padding-left:1.1rem; }
+    .errorlist { margin:.45rem 0 0; padding:0; list-style:none; color:#ffb4ab; font-size:.75rem; }
+    button,.login-link { display:block; width:100%; margin-top:1.5rem; padding:1rem; border:0; border-radius:0; background:var(--gold); color:var(--forest); font-weight:800; text-align:center; text-decoration:none; cursor:pointer; }
+    button:hover,.login-link:hover { background:white; }
+    .state h2 { margin:0 0 1rem; font-family:Georgia,serif; font-size:clamp(2.4rem,5vw,4rem); font-weight:400; line-height:.95; }
+    .state p { color:var(--muted); line-height:1.6; }
+    @media(max-width:760px){ main{grid-template-columns:1fr}.identity{min-height:18rem}.identity h1{margin:2.5rem 0 1rem}.form-side{align-items:start} }
+  </style>
+</head>
+<body>
+<main>
+  <section class="identity">
+    <div class="mark">◒</div>
+    <div>
+      <h1>Welcome to the <em>control room.</em></h1>
+      <p>Your access is private, role-based and tied to your Legit Organic company identity.</p>
+    </div>
+  </section>
+  <section class="form-side">
+    <div class="panel">
+      {% if state == 'ready' %}
+        <p class="kicker">Create your password</p>
+        <div class="facts">
+          <div><span>Company login</span><strong>{{ invitation.company_email }}</strong></div>
+          <div><span>Role</span><strong>{{ invitation.role }}</strong></div>
+        </div>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+            {% if field.help_text %}<span class="helptext">{{ field.help_text|safe }}</span>{% endif %}
+          {% endfor %}
+          <button type="submit">Activate staff account</button>
+        </form>
+      {% elif state == 'complete' %}
+        <div class="state"><p class="kicker">Account ready</p><h2>You're in.</h2><p>Your password is set. Sign in with <strong>{{ invitation.company_email }}</strong>.</p><a class="login-link" href="/admin/login/">Open the control room</a></div>
+      {% elif state == 'accepted' %}
+        <div class="state"><p class="kicker">Link already used</p><h2>Account already active.</h2><p>This private link has completed its job. Use your company email to sign in.</p><a class="login-link" href="/admin/login/">Sign in</a></div>
+      {% elif state == 'expired' %}
+        <div class="state"><p class="kicker">Link expired</p><h2>Ask for a fresh invitation.</h2><p>For security, setup links expire after 48 hours. Contact the owner to resend it.</p></div>
+      {% elif state == 'revoked' %}
+        <div class="state"><p class="kicker">Invitation revoked</p><h2>This link is closed.</h2><p>Contact the owner if you still require staff access.</p></div>
+      {% elif state == 'account_exists' %}
+        <div class="state"><p class="kicker">Account conflict</p><h2>Setup could not continue.</h2><p>An account already uses this company address. Contact the owner.</p></div>
+      {% elif state == 'role_unavailable' %}
+        <div class="state"><p class="kicker">Setup unavailable</p><h2>Try again later.</h2><p>The assigned role is not ready. Contact the owner.</p></div>
+      {% else %}
+        <div class="state"><p class="kicker">Invalid link</p><h2>This invitation cannot be used.</h2><p>Check the link or ask the owner for a new invitation.</p></div>
+      {% endif %}
+    </div>
+  </section>
+</main>
+</body>
+</html>

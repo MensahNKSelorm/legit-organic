@@ -1,6 +1,12 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
+
+import hashlib
+import secrets
+from datetime import timedelta
 
 
 class UserManager(BaseUserManager):
@@ -53,6 +59,108 @@ class Customer(User):
         proxy = True
         verbose_name = 'Customer'
         verbose_name_plural = 'Customers'
+
+
+class StaffInvitation(models.Model):
+    ROLE_CHOICES = [
+        ('Executive Admin', 'Executive Admin'),
+        ('Operations', 'Operations'),
+        ('Finance', 'Finance'),
+        ('Sales & Marketing', 'Sales & Marketing'),
+        ('Product Manager', 'Product Manager'),
+        ('Content Team', 'Content Team'),
+    ]
+    DELIVERY_CHOICES = [
+        ('pending', 'Pending'),
+        ('sent', 'Sent'),
+        ('failed', 'Delivery failed'),
+    ]
+
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    company_email = models.EmailField()
+    delivery_email = models.EmailField(
+        help_text='Personal address used only to deliver the setup link.'
+    )
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES)
+    token_digest = models.CharField(max_length=64, unique=True, editable=False)
+    expires_at = models.DateTimeField(editable=False)
+    accepted_at = models.DateTimeField(null=True, blank=True, editable=False)
+    revoked_at = models.DateTimeField(null=True, blank=True, editable=False)
+    delivery_status = models.CharField(
+        max_length=20, choices=DELIVERY_CHOICES, default='pending', editable=False
+    )
+    delivery_error = models.CharField(max_length=500, blank=True, editable=False)
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='staff_invitations_sent',
+        editable=False,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        permissions = [
+            ('resend_staffinvitation', 'Can resend staff invitation'),
+            ('revoke_staffinvitation', 'Can revoke staff invitation'),
+        ]
+
+    def __str__(self):
+        return f'{self.company_email} — {self.role}'
+
+    @property
+    def status(self):
+        if self.accepted_at:
+            return 'accepted'
+        if self.revoked_at:
+            return 'revoked'
+        if self.expires_at and self.expires_at <= timezone.now():
+            return 'expired'
+        if self.delivery_status == 'failed':
+            return 'delivery_failed'
+        return 'pending'
+
+    def clean(self):
+        super().clean()
+        self.company_email = self.company_email.strip().lower()
+        self.delivery_email = self.delivery_email.strip().lower()
+        if not self.company_email.endswith('@legitorganic.com'):
+            raise ValidationError({
+                'company_email': 'Staff login addresses must end in @legitorganic.com.'
+            })
+        if User.objects.filter(email__iexact=self.company_email).exists():
+            raise ValidationError({
+                'company_email': 'An account already uses this company email.'
+            })
+        duplicate = StaffInvitation.objects.filter(
+            company_email__iexact=self.company_email,
+            accepted_at__isnull=True,
+            revoked_at__isnull=True,
+            expires_at__gt=timezone.now(),
+        )
+        if self.pk:
+            duplicate = duplicate.exclude(pk=self.pk)
+        if duplicate.exists():
+            raise ValidationError({
+                'company_email': 'A pending invitation already exists for this address.'
+            })
+
+    def issue_token(self):
+        token = secrets.token_urlsafe(32)
+        self.token_digest = self.digest_token(token)
+        self.expires_at = timezone.now() + timedelta(hours=48)
+        self.revoked_at = None
+        self.delivery_status = 'pending'
+        self.delivery_error = ''
+        return token
+
+    @staticmethod
+    def digest_token(token):
+        return hashlib.sha256(token.encode('utf-8')).hexdigest()
 
 
 class B2BDiscountTier(models.Model):

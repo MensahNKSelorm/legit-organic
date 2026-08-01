@@ -238,3 +238,24 @@ Files: `frontend/app/(public)/blog/[slug]/page.tsx`, `frontend/app/(public)/reci
 - Cabinet Grotesk carries long reading text.
 - Boska is reserved for document titles and editorial subheads.
 - Legal sections use a two-column index/content layout on desktop and a single reading column on mobile.
+
+### Staff Account Setup
+
+File: `backend/templates/staff/setup.html`
+Last updated: 2026-08-01
+
+| Property | Pattern |
+| --- | --- |
+| Background | night `#111827` with a full-height forest identity field |
+| Border | one-pixel white transparency; gold on focus |
+| Border radius | none |
+| Display type | Georgia/Boska-like serif for the welcome message |
+| Functional type | Arial/system sans for fields and operational details |
+| Primary text | warm white |
+| Secondary text | muted green-grey |
+| Spacing | generous split-page composition; compact form rhythm |
+| Hover state | gold-to-white transition |
+| Shadow | none |
+| Accent usage | gold identity mark, focus and primary action |
+
+**Pattern notes:** Staff onboarding is a private identity handoff, not a generic password-reset card. The setup URL must send `no-referrer`, `no-store` and `noindex` headers and must not load third-party fonts or assets while the invitation token is present. Show the assigned company login and role, never the raw token. Expired, revoked, accepted and invalid invitations replace the form with one concise lifecycle state. The owner-facing invitation list remains inside the permission-aware control-room shell.

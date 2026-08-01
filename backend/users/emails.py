@@ -1,5 +1,6 @@
 import resend
 from django.conf import settings
+from django.utils.html import escape
 
 
 def send_welcome_email(user):
@@ -663,6 +664,51 @@ def send_verification_email(user, token):
               <p>Legit Organic Limited · Accra, Ghana</p>
             </div>
 
+          </div>
+        </body>
+        </html>
+        """,
+    })
+
+
+def send_staff_invitation_email(invitation, token):
+    setup_url = f'{settings.DASHBOARD_URL}/staff/setup/{token}/'
+    first_name = escape(invitation.first_name)
+    company_email = escape(invitation.company_email)
+    role = escape(invitation.role)
+    safe_url = escape(setup_url)
+    resend.Emails.send({
+        'from': f'Legit Organic <{settings.DEFAULT_FROM_EMAIL}>',
+        'to': [invitation.delivery_email],
+        'subject': 'Set up your Legit Organic staff account',
+        'html': f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="margin:0;background:#111827;color:#F8F4E9;font-family:Arial,sans-serif;">
+          <div style="max-width:620px;margin:0 auto;padding:40px 20px;">
+            <div style="border-top:6px solid #F4C430;background:#0D3B2A;padding:42px;">
+              <p style="margin:0 0 22px;color:#F4C430;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+                Staff invitation
+              </p>
+              <h1 style="margin:0 0 22px;font-size:38px;line-height:1.05;font-weight:500;">
+                Welcome to the control room, {first_name}.
+              </h1>
+              <p style="margin:0 0 10px;color:#D7E5D9;line-height:1.6;">
+                Your company login is <strong style="color:#fff;">{company_email}</strong>.
+              </p>
+              <p style="margin:0 0 28px;color:#D7E5D9;line-height:1.6;">
+                Role: <strong style="color:#fff;">{role}</strong>
+              </p>
+              <a href="{safe_url}" style="display:inline-block;background:#F4C430;color:#0D3B2A;padding:15px 24px;text-decoration:none;font-weight:700;">
+                Create your password
+              </a>
+              <p style="margin:26px 0 0;color:#AEBCAF;font-size:13px;line-height:1.6;">
+                This private link expires in 48 hours and works once. If you were not expecting it, ignore this email.
+              </p>
+            </div>
+            <p style="margin:18px 0 0;color:#7F8D82;font-size:12px;text-align:center;">
+              Legit Organic Limited · Accra, Ghana
+            </p>
           </div>
         </body>
         </html>

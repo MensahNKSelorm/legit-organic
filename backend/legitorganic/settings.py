@@ -54,6 +54,7 @@ RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 resend.api_key = RESEND_API_KEY
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'hello@legitorganic.com')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://legitorganic.com')
+DASHBOARD_URL = os.getenv('DASHBOARD_URL', 'https://dashboard.legitorganic.com')
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
@@ -262,6 +263,12 @@ UNFOLD = {
                         "icon": "person",
                         "link": "/admin/users/customer/",
                         "permission": admin_permission("users.view_customer"),
+                    },
+                    {
+                        "title": "Staff Invitations",
+                        "icon": "forward_to_inbox",
+                        "link": "/admin/users/staffinvitation/",
+                        "permission": admin_permission("users.view_staffinvitation"),
                     },
                 ],
             },
