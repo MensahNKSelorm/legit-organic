@@ -172,7 +172,7 @@ Last updated: 2026-08-01
 | Status | short text with a gold underline, never a pill |
 | Shadow | none inside dashboard content |
 
-**Pattern notes:** The dashboard is an operations surface, not a generic analytics template. Use only four section names: Analytics, Actions, Attention and Orders. For the owner and finance roles, lead with a terse five-number snapshot and restrained charts for sales, fulfilment, products, customers and order channels. Charts must resolve automatic dark mode before choosing ink colours; an empty dataset becomes a short ruled empty state rather than a blank canvas or invented demo data. Other roles should still lead with permitted actions and live queues. Role identity is explicit. Future admin changelists should favour readable rows, useful filters and direct verbs over decorative cards.
+**Pattern notes:** The dashboard is an operations surface, not a generic analytics template. Its content area is always the dark night-market/control-room surface, independent of the surrounding admin theme; forms and ordinary admin pages may still follow light or dark mode. Use only four section names: Analytics, Actions, Attention and Orders. For the owner and finance roles, lead with a terse five-number snapshot and restrained charts for sales, fulfilment, products, customers and order channels. An empty dataset becomes a short ruled empty state rather than a blank canvas or invented demo data. Other roles should still lead with permitted actions and live queues. Role identity is explicit. Future admin changelists should favour readable rows, useful filters and direct verbs over decorative cards.
 
 ### Email Verification Transition
 

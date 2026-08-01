@@ -6,8 +6,7 @@
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=boska@400,500,600&f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
 <style>
-  .lo-dashboard { --forest:#0d3b2a; --leaf:#2e7d32; --gold:#f4c430; --paper:#faf7f0; --ink:#173126; --muted:#6f746c; font-family:"Cabinet Grotesk",sans-serif; padding:1.25rem; color:var(--ink); }
-  .dark .lo-dashboard { --paper:#171b18; --ink:#f8f4e9; --muted:#aebcaf; }
+  .lo-dashboard { --forest:#0d3b2a; --leaf:#82c68a; --gold:#f4c430; --paper:#171b18; --ink:#f8f4e9; --muted:#aebcaf; margin:0 -1rem; padding:1.25rem 2.25rem 3rem; background:#111827; color:var(--ink); font-family:"Cabinet Grotesk",sans-serif; color-scheme:dark; }
   .lo-display { font-family:"Boska",serif; font-weight:500; }
   .lo-hero { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(18rem,.55fr); min-height:19rem; background:var(--forest); color:white; }
   .lo-hero-main { padding:2.25rem; display:flex; flex-direction:column; justify-content:space-between; }
@@ -58,8 +57,7 @@
   .lo-metric:last-child { border-bottom:0; }
   .lo-metric span { color:rgba(255,255,255,.62); font-size:.76rem; }
   .lo-metric strong { font-family:"Boska",serif; color:var(--gold); font-size:1.9rem; font-weight:500; }
-  .lo-link { color:var(--leaf); border-bottom:1px solid currentColor; font-size:.75rem; font-weight:800; text-decoration:none; }
-  .dark .lo-link { color:var(--gold); }
+  .lo-link { color:var(--gold); border-bottom:1px solid currentColor; font-size:.75rem; font-weight:800; text-decoration:none; }
   @media(max-width:1000px){ .lo-analytics-secondary{grid-template-columns:1fr 1fr}.lo-analytics-secondary .lo-chart:last-child{grid-column:1/-1}.lo-snapshot{grid-template-columns:repeat(3,1fr)}.lo-snapshot-item{border-bottom:1px solid rgba(255,255,255,.16)} }
   @media(max-width:900px){ .lo-hero,.lo-main-grid,.lo-analytics{grid-template-columns:1fr}.lo-attention{grid-template-columns:repeat(2,1fr)}.lo-attention a:last-child{grid-column:span 2}.lo-owner-card{min-height:11rem}.lo-dashboard{padding:.75rem} }
   @media(max-width:560px){ .lo-attention,.lo-analytics-secondary{grid-template-columns:1fr}.lo-analytics-secondary .lo-chart:last-child{grid-column:auto}.lo-snapshot{grid-template-columns:1fr 1fr}.lo-snapshot-item strong{white-space:normal}.lo-attention a:last-child{grid-column:auto}.lo-hero-main{padding:1.5rem}.lo-orders th:nth-child(3),.lo-orders td:nth-child(3){display:none} }
@@ -155,21 +153,20 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 (function () {
-  const dark = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const ink = dark ? '#E7E9E4' : '#173126';
-  const grid = dark ? 'rgba(255,255,255,.08)' : 'rgba(13,59,42,.1)';
+  const ink = '#E7E9E4';
+  const grid = 'rgba(255,255,255,.08)';
   const salesInk = '#F8F4E9';
   const salesGrid = 'rgba(255,255,255,.13)';
   const common = { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:ink,boxWidth:10,font:{family:'Cabinet Grotesk',size:11}}}} };
   new Chart(document.getElementById('revenueChart'), {type:'line',data:{labels:{{ chart_revenue_labels|safe }},datasets:[{label:'Revenue',data:{{ chart_revenue_data|safe }},borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,fill:true,tension:.35,pointRadius:2,pointBackgroundColor:'#F4C430',yAxisID:'y'},{label:'Orders',data:{{ chart_orders_data|safe }},borderColor:'#82C68A',borderWidth:2,tension:.35,pointRadius:2,pointBackgroundColor:'#82C68A',yAxisID:'y1'}]},options:{...common,plugins:{legend:{labels:{color:salesInk,boxWidth:10,font:{family:'Cabinet Grotesk',size:11}}}},scales:{x:{ticks:{color:salesInk,maxTicksLimit:8},grid:{display:false}},y:{ticks:{color:salesInk,callback:v=>'GH₵'+v},grid:{color:salesGrid}},y1:{position:'right',ticks:{color:salesInk,stepSize:1},grid:{display:false}}}}});
   const statusCanvas = document.getElementById('statusChart');
-  if (statusCanvas) new Chart(statusCanvas, {type:'doughnut',data:{labels:{{ chart_donut_labels|safe }},datasets:[{data:{{ chart_donut_data|safe }},backgroundColor:{{ chart_donut_colors|safe }},borderColor:dark?'#171B18':'#FAF7F0',borderWidth:3}]},options:{...common,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Cabinet Grotesk',size:10}}}}}});
+  if (statusCanvas) new Chart(statusCanvas, {type:'doughnut',data:{labels:{{ chart_donut_labels|safe }},datasets:[{data:{{ chart_donut_data|safe }},backgroundColor:{{ chart_donut_colors|safe }},borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Cabinet Grotesk',size:10}}}}}});
   const productsCanvas = document.getElementById('productsChart');
   if (productsCanvas) new Chart(productsCanvas, {type:'bar',data:{labels:{{ chart_top_product_labels|safe }},datasets:[{data:{{ chart_top_product_data|safe }},backgroundColor:'#F4C430',borderRadius:0}]},options:{...common,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}},y:{ticks:{color:ink},grid:{display:false}}}}});
   const customersCanvas = document.getElementById('customersChart');
   if (customersCanvas) new Chart(customersCanvas, {type:'line',data:{labels:{{ chart_customer_labels|safe }},datasets:[{data:{{ chart_customer_data|safe }},borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,pointRadius:4,pointBackgroundColor:'#F4C430',fill:true,tension:.3}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:ink,maxRotation:0},grid:{display:false}},y:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}}}}});
   const channelCanvas = document.getElementById('channelChart');
-  if (channelCanvas) new Chart(channelCanvas, {type:'doughnut',data:{labels:{{ chart_channel_labels|safe }},datasets:[{data:{{ chart_channel_data|safe }},backgroundColor:['#82C68A','#F4C430'],borderColor:dark?'#171B18':'#FAF7F0',borderWidth:3}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Cabinet Grotesk',size:10}}}}}});
+  if (channelCanvas) new Chart(channelCanvas, {type:'doughnut',data:{labels:{{ chart_channel_labels|safe }},datasets:[{data:{{ chart_channel_data|safe }},backgroundColor:['#82C68A','#F4C430'],borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Cabinet Grotesk',size:10}}}}}});
 })();
 </script>
 {% endif %}
