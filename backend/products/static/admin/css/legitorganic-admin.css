@@ -1,9 +1,41 @@
+@import url("https://api.fontshare.com/v2/css?f[]=boska@400,500,600&f[]=cabinet-grotesk@400,500,700,800&display=swap");
+
 /* Legit Organic control-room shell */
+html,
+body,
+#page,
+#main {
+  background: #111827 !important;
+  color: #f8f4e9 !important;
+}
+
+#main > .bg-white,
+#main > [class*="border-b"] {
+  background: #111827 !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  color: #f8f4e9 !important;
+}
+
+#header-inner h1,
+#header-inner a,
+#header-inner span {
+  color: #f8f4e9;
+}
+
 nav.bg-base-50.flex.flex-col.min-h-screen {
-  background: #0d3b2a !important;
+  background: #092f22 !important;
   color: #f8f4e9 !important;
   border-right: 0 !important;
   font-family: "Cabinet Grotesk", sans-serif;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen img {
+  filter: brightness(0) invert(1);
+  opacity: .94;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen > div:nth-last-child(2) {
+  padding-bottom: 1rem;
 }
 
 nav.bg-base-50.flex.flex-col.min-h-screen > div:first-child {
@@ -11,10 +43,21 @@ nav.bg-base-50.flex.flex-col.min-h-screen > div:first-child {
 }
 
 nav.bg-base-50.flex.flex-col.min-h-screen input {
-  background: rgba(255, 255, 255, .08) !important;
-  border: 1px solid rgba(255, 255, 255, .18) !important;
+  background: transparent !important;
+  border: 0 !important;
   border-radius: 0 !important;
   color: #fff !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen input + * {
+  color: rgba(255,255,255,.55) !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen div:has(> input[placeholder*="Search"]) {
+  background: rgba(255, 255, 255, .055) !important;
+  border: 1px solid rgba(244, 196, 48, .32) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 nav.bg-base-50.flex.flex-col.min-h-screen input::placeholder {
@@ -29,7 +72,14 @@ nav.bg-base-50.flex.flex-col.min-h-screen [class*="uppercase"] {
   letter-spacing: .14em !important;
 }
 
+nav.bg-base-50.flex.flex-col.min-h-screen h3 {
+  margin-top: .4rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,.11);
+}
+
 nav.bg-base-50.flex.flex-col.min-h-screen a[href^="/admin/"] {
+  min-height: 2.65rem;
   border-radius: 0 !important;
   color: rgba(255, 255, 255, .78) !important;
 }
@@ -54,6 +104,49 @@ nav.bg-base-50.flex.flex-col.min-h-screen [class*="border-base"] {
 
 .dark nav.bg-base-50.flex.flex-col.min-h-screen {
   background: #09291d !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen > div:last-child {
+  background: rgba(0,0,0,.12);
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen > div:last-child .text-subtle,
+nav.bg-base-50.flex.flex-col.min-h-screen > div:last-child .text-font-subtle-dark {
+  display: none;
+}
+
+/* Quiet the generic shell and use the brand controls consistently. */
+a.bg-primary-600,
+button.bg-primary-600,
+input.bg-primary-600 {
+  background: #2e7d32 !important;
+  border-radius: 0 !important;
+}
+
+a.bg-primary-600:hover,
+button.bg-primary-600:hover,
+input.bg-primary-600:hover {
+  background: #f4c430 !important;
+  color: #0d3b2a !important;
+}
+
+#main input,
+#main select,
+#main textarea,
+#main [class*="rounded-default"] {
+  border-radius: 0 !important;
+}
+
+.ck.ck-toolbar {
+  background: #faf7f0 !important;
+  border-color: rgba(13,59,42,.22) !important;
+}
+
+.ck.ck-editor__editable_inline {
+  background: #fffdf8 !important;
+  color: #173126 !important;
+  border-color: rgba(13,59,42,.22) !important;
 }
 
 /* Editorial content forms */

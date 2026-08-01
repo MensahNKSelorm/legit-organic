@@ -225,6 +225,7 @@ def dashboard_callback(request, context):
 
     # ── Populate context ─────────────────────────────────────────────────────
     context.update({
+        'title': 'Control Room',
         'kpi': {
             'total_revenue':           f'GH₵ {float(total_revenue):,.2f}',
             'this_month_revenue':      f'GH₵ {float(this_month_revenue):,.2f}',

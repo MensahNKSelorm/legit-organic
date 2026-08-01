@@ -19,6 +19,7 @@ class StaffRolePermissionTests(TestCase):
         permissions = self.permissions_for('Executive Admin')
         self.assertIn(('orders', 'change_order'), permissions)
         self.assertIn(('users', 'view_user'), permissions)
+        self.assertIn(('users', 'view_customer'), permissions)
         self.assertNotIn(('users', 'change_user'), permissions)
         self.assertNotIn(('users', 'delete_user'), permissions)
         self.assertNotIn(('auth', 'change_group'), permissions)

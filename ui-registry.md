@@ -210,7 +210,7 @@ Last updated: 2026-08-01
 | Shadow | none |
 | Accent usage | gold for icons, section labels and active identity |
 
-**Pattern notes:** Navigation is grouped by working department—Catalogue & Stories, Commerce, People, Wholesale, Sales Team and Useful Links. Keep the automatically generated “all applications” catalogue hidden; the sidebar should expose deliberate workflows, not Django's model registry.
+**Pattern notes:** Navigation is grouped by working department—Catalogue & Stories, Commerce, People, Wholesale, Sales Team and Useful Links. It uses a fixed forest shell with a white wordmark, gold section markers, a single ruled search field and a quiet account footer. The whole control-room shell is deliberately dark across devices; individual staff see only navigation backed by their role permissions. Keep the automatically generated “all applications” catalogue hidden; the sidebar should expose deliberate workflows, not Django's model registry.
 
 ### Django Editorial Forms
 

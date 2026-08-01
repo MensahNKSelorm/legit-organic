@@ -71,6 +71,7 @@ class Command(BaseCommand):
 
         # Users - view only (no passwords, no deletion)
         ops_perms += list(get_perms('users', 'user', ['view']))
+        ops_perms += list(get_perms('users', 'customer', ['view']))
 
         # Products - view only
         ops_perms += list(get_perms('products', 'product', ['view']))
@@ -93,6 +94,7 @@ class Command(BaseCommand):
 
         # Users - view only (for order context)
         finance_perms += list(get_perms('users', 'user', ['view']))
+        finance_perms += list(get_perms('users', 'customer', ['view']))
 
         finance.permissions.set(finance_perms)
         self.stdout.write(self.style.SUCCESS(
@@ -111,6 +113,7 @@ class Command(BaseCommand):
         sales_perms += list(get_perms('sales', 'commission', ['view']))
         sales_perms += list(get_perms('orders', 'order', ['view']))
         sales_perms += list(get_perms('users', 'user', ['view']))
+        sales_perms += list(get_perms('users', 'customer', ['view']))
         sales_perms += list(get_perms('products', 'product', ['view']))
         sales_perms += list(get_perms('blog', 'blogpost', ['view']))
         sales_marketing.permissions.set(sales_perms)
@@ -152,6 +155,7 @@ class Command(BaseCommand):
         executive_perms += list(get_perms('orders', 'cart', ['view']))
         executive_perms += list(get_perms('orders', 'cartitem', ['view']))
         executive_perms += list(get_perms('users', 'user', ['view']))
+        executive_perms += list(get_perms('users', 'customer', ['view']))
         executive_perms += list(get_perms('sales', 'commission', ['view']))
         executive.permissions.set(executive_perms)
         self.stdout.write(self.style.SUCCESS(
