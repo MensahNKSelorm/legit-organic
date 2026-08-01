@@ -10,6 +10,7 @@ flock -n 9 || {
 
 BACKUP_DIR=/var/backups/legitorganic
 MEDIA_DIR=/var/www/legitorganic/backend/media
+RESTIC_ENV=/etc/legitorganic-backup/restic.env
 TIMESTAMP=$(date -u +%Y-%m-%d_%H-%M)
 DB_BACKUP="$BACKUP_DIR/db_$TIMESTAMP.sql.gz"
 MEDIA_BACKUP="$BACKUP_DIR/media_$TIMESTAMP.tar.gz"
@@ -37,5 +38,28 @@ find "$BACKUP_DIR" -maxdepth 1 -type f \
     \( -name 'db_*.sql.gz' -o -name 'media_*.tar.gz' \) \
     -mtime +14 -delete
 
+test -r "$RESTIC_ENV"
+set -a
+source "$RESTIC_ENV"
+set +a
+
+restic backup \
+    "$BACKUP_DIR" \
+    /var/www/legitorganic/backend/.env \
+    /var/www/legitorganic/frontend/.env.local \
+    /etc/systemd/system/legitorganic.service \
+    /etc/systemd/system/legitorganic-frontend.service \
+    /etc/nginx/sites-available/legitorganic \
+    /etc/nginx/sites-available/legitorganic-frontend \
+    --tag automatic
+
+restic forget \
+    --tag automatic \
+    --keep-daily 14 \
+    --keep-weekly 8 \
+    --keep-monthly 12 \
+    --prune
+
 echo "Backup completed: $DB_BACKUP"
 echo "Backup completed: $MEDIA_BACKUP"
+echo "Encrypted off-site backup completed"
