@@ -83,6 +83,29 @@ Files: `frontend/app/(protected)/profile/page.tsx`, `frontend/app/(protected)/my
 - Customer records are presented as a ledger/notebook rather than a SaaS dashboard.
 - Panels use top rules and transparent backgrounds.
 - Existing functional controls may retain compact borders, but structural cards remain square.
+- Profile heroes pair a large cream-paper title with one dark green identity docket; do not use a floating avatar card.
+- Account navigation is a ruled “Book index.” On mobile it becomes a two-column index; active state is a narrow gold edge, never a filled pill.
+- Empty wishlist, recipe and order states are left-aligned editorial records with one direct link. Avoid circular icons, emojis and centered card copy.
+- Personal and delivery fields remain underline inputs. Location selection is a text action, while saving uses one square gold field.
+
+### Email Verification Transition
+
+File: `frontend/app/(auth)/check-email/page.tsx`
+Last updated: 2026-08-01
+
+| Property | Class |
+| --- | --- |
+| Background | `bg-[#FAF7F0] dark:bg-[#171B18]` with one `bg-[#0D3B2A]` instruction field |
+| Border | `editorial-rule` / `border-white/20` |
+| Border radius | none |
+| Text — primary | `text-[#0D3B2A] dark:text-[#FAF7F0]` |
+| Text — secondary | `text-[#5B3E31] dark:text-[#B8D4BD]` / `text-white/70` |
+| Spacing | generous page fields; compact ruled actions |
+| Hover state | white-to-gold text and underline transition |
+| Shadow | none |
+| Accent usage | gold envelope line and primary action; green italic display phrase |
+
+**Pattern notes:** Verification is a transition page, not a modal or success card. Keep the email destination visible, explain only the next action, and let resend feedback replace the resend control in place.
 
 ### Long-form Stories and Legal Documents
 

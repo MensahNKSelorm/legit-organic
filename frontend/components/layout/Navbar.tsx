@@ -100,7 +100,7 @@ export default function Navbar() {
     localStorage.setItem('theme', next ? 'dark' : 'light')
   }
 
-  const lightTopRoutes = pathname === '/blog'
+  const lightTopRoutes = pathname === '/blog' || pathname === '/profile'
   const transparent = !scrolled && !isAuthPage && !lightTopRoutes
 
   const btnBase = 'px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap'

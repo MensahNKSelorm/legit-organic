@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import SectionWrapper from '@/components/ui/SectionWrapper'
 import { useAuth } from '@/lib/auth'
 import { useCart } from '@/lib/cart'
 import { useWishlist } from '@/lib/wishlist'
@@ -181,64 +180,51 @@ export default function ProfilePage() {
 
   return (
     <div className="account-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
-      <div className="bg-[#0D3B2A] pb-12 pt-32 text-white md:pb-16 md:pt-36">
-        <div className="page-container grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
-          <div><p className="editorial-label text-[#F4C430]">Customer ledger</p><h1 className="display-organic mt-3 text-6xl md:text-8xl">Your market account.</h1></div>
-          <p className="max-w-sm border-l border-white/20 pl-5 text-sm leading-6 text-[#B8D4BD]">Keep delivery details current, revisit saved food and follow every order.</p>
+      <header className="overflow-hidden border-b editorial-rule pb-10 pt-28 md:pb-14 md:pt-36">
+        <div className="page-container grid gap-10 lg:grid-cols-[1fr_22rem] lg:items-end">
+          <div><p className="text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">Your market book</p><h1 className="display-organic mt-5 max-w-4xl text-5xl leading-[.92] text-[#0D3B2A] dark:text-white sm:text-6xl md:text-8xl md:leading-[.88]">Everything you keep<br /><em className="font-normal text-[#2E7D32] dark:text-[#F4C430]">for the next shop.</em></h1></div>
+          <div className="bg-[#0D3B2A] p-6 text-white md:p-8">
+            <div className="display-organic text-6xl text-[#F4C430]">{initials}</div>
+            <p className="mt-5 text-lg font-bold">{fullName || 'Customer'}</p>
+            <p className="mt-1 break-all text-sm text-white/60">{user?.email}</p>
+            <button onClick={logout} className="mt-7 border-b border-white/45 pb-1 text-xs font-bold text-white/70 hover:border-[#F4C430] hover:text-[#F4C430]">Sign out</button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <SectionWrapper background="cream">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <main className="page-container py-12 md:py-16">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[15rem_1fr] lg:gap-20">
 
           {/* Sidebar */}
-          <div className="account-panel h-fit border-t p-6">
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-24 h-24 rounded-full bg-[#F4C430] flex items-center justify-center ring-4 ring-[#0D3B2A] ring-offset-2 ring-offset-[#FAF7F0] dark:ring-offset-gray-800 shadow-xl text-[#0D3B2A] text-3xl font-bold font-sans tracking-wide mb-3">
-                {initials}
-              </div>
-              <p className="font-semibold text-[#0D3B2A] dark:text-white">{fullName}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
-            </div>
-
-            <nav className="space-y-1">
+          <aside className="h-fit lg:sticky lg:top-28">
+            <p className="mb-4 text-xs font-bold text-[#5B3E31] dark:text-[#B8D4BD]">Book index</p>
+            <nav className="grid grid-cols-2 border-t editorial-rule sm:grid-cols-4 lg:block">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={[
-                    'w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors',
+                    'relative w-full border-b editorial-rule px-3 py-4 text-left text-sm transition-colors lg:px-0',
                     activeTab === tab.id
-                      ? 'bg-[#F5F0E6] text-[#0D3B2A] font-semibold dark:bg-gray-700 dark:text-white'
-                      : 'text-[#0D3B2A] dark:text-gray-300 hover:bg-[#F5F0E6] dark:hover:bg-gray-700',
+                      ? 'font-bold text-[#0D3B2A] before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-[#F4C430] dark:text-white lg:before:-left-4'
+                      : 'text-[#5B3E31] hover:text-[#2E7D32] dark:text-[#B8D4BD] dark:hover:text-white',
                   ].join(' ')}
                 >
                   {tab.label}
                 </button>
               ))}
-
-              <div className="border-t border-sand pt-3 mt-3">
-                <button
-                  onClick={logout}
-                  className="w-full text-left px-4 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
             </nav>
-          </div>
+          </aside>
 
           {/* Main panel */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="min-w-0">
 
             {/* ── Personal Info tab ── */}
             {activeTab === 'personal' && (
               <>
                 {/* Personal info card */}
-                <div className="account-panel p-8">
-                  <h2 className="font-display text-xl font-bold text-forest-green mb-6">
-                    Account Details
-                  </h2>
+                <div>
+                  <div className="mb-10 grid gap-4 border-b editorial-rule pb-7 md:grid-cols-[1fr_auto] md:items-end"><div><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">Personal record</p><h2 className="display-organic mt-2 text-5xl text-[#0D3B2A] dark:text-white md:text-6xl">Account details</h2></div><p className="max-w-xs text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">Names, contact details and the address we use for delivery.</p></div>
 
                   {saveStatus === 'success' && (
                     <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
@@ -251,9 +237,9 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  <form onSubmit={handleSave} noValidate className="space-y-5">
+                  <form onSubmit={handleSave} noValidate className="space-y-7">
                     {/* Name row */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-7 sm:grid-cols-2">
                       <div>
                         <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
                           First Name <span className="text-red-500">*</span>
@@ -317,15 +303,15 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Delivery Address section */}
-                    <div className="border-t border-sand pt-5">
-                      <h3 className="font-semibold text-forest-green mb-4">Delivery Address</h3>
+                    <div className="border-t editorial-rule pt-9">
+                      <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">Where the harvest goes</p><h3 className="display-organic mt-1 text-4xl text-[#0D3B2A] dark:text-white">Delivery address</h3></div>
 
                       <div className="space-y-4">
                         {/* Map toggle */}
                         <button
                           type="button"
                           onClick={() => setShowMap(!showMap)}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-[#2E7D32] text-[#2E7D32] font-semibold text-sm hover:bg-[#2E7D32]/5 transition-colors"
+                          className="flex items-center gap-2 border-b border-[#2E7D32] pb-1 text-sm font-bold text-[#2E7D32] transition-colors hover:text-[#0D3B2A] dark:border-[#F4C430] dark:text-[#F4C430]"
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -333,6 +319,7 @@ export default function ProfilePage() {
                           </svg>
                           {showMap ? 'Hide Map' : 'Pick Location on Map'}
                         </button>
+                      </div>
 
                         {showMap && (
                           <div className="mb-4">
@@ -412,7 +399,7 @@ export default function ProfilePage() {
                       <button
                         type="submit"
                         disabled={saving}
-                        className="bg-ghana-gold text-forest-green font-semibold px-8 py-3 rounded-xl hover:bg-dark-gold transition-colors disabled:opacity-60 flex items-center gap-2"
+                        className="flex items-center gap-2 bg-[#F4C430] px-8 py-4 font-bold text-[#0D3B2A] transition-colors hover:bg-[#E2B426] disabled:opacity-60"
                       >
                         {saving && (
                           <span className="inline-block w-4 h-4 border-2 border-forest-green border-t-transparent rounded-full animate-spin" />
@@ -427,8 +414,8 @@ export default function ProfilePage() {
 
             {/* ── My List (Wishlist) tab ── */}
             {activeTab === 'wishlist' && (
-              <div className="account-panel p-8">
-                <h2 className="font-display text-xl font-bold text-forest-green mb-6">My List</h2>
+              <div>
+                <div className="mb-8 border-b editorial-rule pb-7"><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">Saved for later</p><h2 className="display-organic mt-2 text-5xl text-[#0D3B2A] dark:text-white md:text-6xl">My list</h2></div>
 
                 {wishlistLoading ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -436,17 +423,10 @@ export default function ProfilePage() {
                     <span className="text-sm text-charcoal/40">Loading your list…</span>
                   </div>
                 ) : wishlistItems.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" className="w-6 h-6">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                      </svg>
-                    </div>
-                    <p className="font-semibold text-forest-green mb-1">Your list is empty</p>
-                    <p className="text-charcoal/60 text-sm mb-5">Browse products and save items to find them here.</p>
-                    <Link href="/products" className="text-sm font-semibold text-leaf-green hover:underline">
-                      Browse Products
-                    </Link>
+                  <div className="border-b editorial-rule py-12 text-left">
+                    <p className="display-organic text-4xl text-[#0D3B2A] dark:text-white">Nothing held aside yet.</p>
+                    <p className="mt-3 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">Save produce while browsing and it will wait here.</p>
+                    <Link href="/products" className="mt-6 inline-block border-b border-current pb-1 text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">Browse the stalls ↗</Link>
                   </div>
                 ) : (
                   <ul className="space-y-3">
@@ -455,7 +435,7 @@ export default function ProfilePage() {
                       return (
                         <li
                           key={item.id}
-                          className="flex items-center gap-4 p-4 rounded-xl border border-sand bg-cream hover:border-leaf-green/40 transition-colors"
+                          className="flex items-center gap-4 border-b editorial-rule py-5"
                         >
                           {/* Image */}
                           <div className="w-16 h-16 rounded-lg overflow-hidden bg-beige flex-shrink-0">
@@ -508,12 +488,12 @@ export default function ProfilePage() {
 
             {/* ── My Recipes tab ── */}
             {activeTab === 'recipes' && (
-              <div className="account-panel p-8">
+              <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display text-xl font-bold text-forest-green">My Recipes</h2>
+                  <div><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">Kitchen notes</p><h2 className="display-organic mt-2 text-5xl text-[#0D3B2A] dark:text-white md:text-6xl">My recipes</h2></div>
                   <Link
                     href="/recipes/builder"
-                    className="text-xs font-semibold bg-ghana-gold text-forest-green px-4 py-2 rounded-xl hover:bg-dark-gold transition-colors"
+                    className="border-b border-current pb-1 text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]"
                   >
                     + New Recipe
                   </Link>
@@ -528,25 +508,17 @@ export default function ProfilePage() {
                 {recipesLoading ? (
                   <div className="text-center py-12 text-charcoal/40 text-sm">Loading your recipes…</div>
                 ) : myRecipes.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-12 h-12 rounded-full bg-[#F4C430]/20 flex items-center justify-center mx-auto mb-4">
-                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F4C430" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
-                        <path d="M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
-                      </svg>
-                    </div>
-                    <p className="font-semibold text-forest-green mb-1">No saved recipes yet</p>
-                    <p className="text-charcoal/60 text-sm mb-5">You haven&apos;t saved any recipes yet.</p>
-                    <Link href="/recipes" className="text-sm font-semibold text-leaf-green hover:underline">
-                      Browse Recipes
-                    </Link>
+                  <div className="border-y editorial-rule py-12 text-left">
+                    <p className="display-organic text-4xl text-[#0D3B2A] dark:text-white">Your notebook is open.</p>
+                    <p className="mt-3 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">Save a recipe or write your own version as you cook.</p>
+                    <Link href="/recipes" className="mt-6 inline-block border-b border-current pb-1 text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">Visit the recipe shelf ↗</Link>
                   </div>
                 ) : (
                   <ul className="space-y-3">
                     {myRecipes.map((recipe) => (
                       <li
                         key={recipe.id}
-                        className="flex items-start justify-between gap-4 p-4 rounded-xl border border-sand bg-cream hover:border-leaf-green/40 transition-colors"
+                        className="flex items-start justify-between gap-4 border-b editorial-rule py-5"
                       >
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-forest-green text-sm leading-snug mb-0.5 truncate">
@@ -590,8 +562,8 @@ export default function ProfilePage() {
 
             {/* ── Order History tab ── */}
             {activeTab === 'orders' && (
-              <div className="account-panel p-8">
-                <h2 className="font-display text-xl font-bold text-forest-green mb-6">Order History</h2>
+              <div>
+                <div className="mb-8 border-b editorial-rule pb-7"><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">From basket to doorstep</p><h2 className="display-organic mt-2 text-5xl text-[#0D3B2A] dark:text-white md:text-6xl">Order history</h2></div>
 
                 {ordersError && (
                   <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
@@ -605,15 +577,10 @@ export default function ProfilePage() {
                     <span className="text-sm text-charcoal/40">Loading your orders…</span>
                   </div>
                 ) : orders.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-5xl mb-4">📦</div>
-                    <p className="font-semibold text-forest-green mb-2">No orders yet</p>
-                    <p className="text-charcoal/60 text-sm max-w-xs mx-auto mb-5">
-                      Your order history will appear here after your first purchase.
-                    </p>
-                    <Link href="/products" className="text-sm font-semibold text-leaf-green hover:underline">
-                      Browse Products
-                    </Link>
+                  <div className="border-b editorial-rule py-12 text-left">
+                    <p className="display-organic text-4xl text-[#0D3B2A] dark:text-white">No deliveries recorded.</p>
+                    <p className="mt-3 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">Your first order will be tracked here from payment to delivery.</p>
+                    <Link href="/products" className="mt-6 inline-block border-b border-current pb-1 text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">Browse the current harvest ↗</Link>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -627,7 +594,7 @@ export default function ProfilePage() {
 
           </div>
         </div>
-      </SectionWrapper>
+      </main>
     </div>
   )
 }
