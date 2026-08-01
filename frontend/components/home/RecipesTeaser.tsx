@@ -35,23 +35,31 @@ export default function RecipesTeaser({ recipes }: RecipesTeaserProps) {
           </div>
           <div className="flex flex-col justify-between p-8 md:p-14 lg:p-16">
             <div>
-            <p className="font-medium text-[#2e7d32]">Cook with what is growing now.</p>
+            <p className="font-medium text-[#2e7d32] dark:text-[#F4C430]">Cook with what is growing now.</p>
               <h2 className="display-organic mt-7 text-5xl leading-[.92] text-[#0d3b2a] dark:text-[#FEFCF7] md:text-7xl">A better meal begins at the <em className="font-normal">market.</em></h2>
               <p className="mt-7 max-w-lg text-lg leading-8 text-[#5b3e31] dark:text-[#B8D4BD]">Explore Ghanaian recipes built around fresh produce, familiar flavours and ingredients you can order directly.</p>
             </div>
 
-            <div className="mt-14 border-t border-[#0d3b2a]/20 pt-7">
+            <div className="mt-14 border-t border-[#0d3b2a]/20 pt-7 dark:border-white/20">
               {featured ? (
-                <Link href={usingDemo ? '/recipes' : `/recipes/${featured.slug}`} className="group flex items-end justify-between gap-6">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#2e7d32]">Featured recipe</span>
-                    <h3 className="display-organic mt-2 text-3xl text-[#0d3b2a]">{featured.title}</h3>
-                    <p className="mt-2 text-sm text-[#5b3e31]">{featured.prep_time + featured.cook_time} minutes · Serves {featured.servings}</p>
+                <div>
+                  <div className="mb-5 flex items-center justify-between gap-6">
+                    <span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#2e7d32] dark:text-[#F4C430]">Featured recipe</span>
+                    <Link href="/recipes" className="border-b border-current pb-1 text-xs font-bold text-[#2e7d32] dark:text-[#F4C430]">All recipes ↗</Link>
                   </div>
-                  <span className="grid size-12 shrink-0 place-items-center bg-[#0d3b2a] text-white transition-transform group-hover:-translate-y-1 group-hover:translate-x-1">↗</span>
-                </Link>
+                  <Link href={usingDemo ? '/recipes' : `/recipes/${featured.slug}`} className="group flex items-end justify-between gap-6">
+                    <div>
+                      <h3 className="display-organic text-3xl text-[#0d3b2a] dark:text-white">{featured.title}</h3>
+                      <p className="mt-2 text-sm text-[#5b3e31] dark:text-[#B8D4BD]">{featured.prep_time + featured.cook_time} minutes · Serves {featured.servings}</p>
+                    </div>
+                    <span className="grid size-12 shrink-0 place-items-center bg-[#0d3b2a] text-white transition-transform group-hover:-translate-y-1 group-hover:translate-x-1 dark:bg-[#F4C430] dark:text-[#0D3B2A]">↗</span>
+                  </Link>
+                </div>
               ) : (
-                <Link href="/recipes" className="group flex items-center justify-between font-bold text-[#0d3b2a]">Explore the recipe kitchen <span className="text-2xl transition-transform group-hover:translate-x-1">→</span></Link>
+                <Link href="/recipes" className="group flex items-center justify-between gap-6 font-bold text-[#0d3b2a] dark:text-white">
+                  <span>Explore the recipe kitchen</span>
+                  <span className="grid size-12 shrink-0 place-items-center bg-[#0d3b2a] text-xl text-white transition-transform group-hover:translate-x-1 dark:bg-[#F4C430] dark:text-[#0d3b2a]">→</span>
+                </Link>
               )}
             </div>
           </div>

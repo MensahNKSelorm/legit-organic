@@ -146,6 +146,16 @@ Last updated: 2026-08-01
 - Price, unit and actions remain aligned at the bottom regardless of copy length.
 - The intentionally enlarged featured product keeps its separate editorial layout; equal-height rules apply to the standard product grid and related-product grid.
 
+### Homepage Recipe Teaser
+
+File: `frontend/components/home/RecipesTeaser.tsx`
+Last updated: 2026-08-01
+
+- On the dark recipe panel, labels use gold, primary copy uses white and supporting copy uses pale green.
+- The empty-catalogue action remains white with a square gold arrow control in dark mode.
+- Apply the same contrast rules to future featured-recipe content; never rely on light-mode green or brown text inside the dark panel.
+- When a featured recipe exists, its card opens that recipe while the separate “All recipes” link opens the complete shelf.
+
 ### Email Verification Transition
 
 File: `frontend/app/(auth)/check-email/page.tsx`
