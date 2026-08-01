@@ -156,6 +156,24 @@ Last updated: 2026-08-01
 - Apply the same contrast rules to future featured-recipe content; never rely on light-mode green or brown text inside the dark panel.
 - When a featured recipe exists, its card opens that recipe while the separate “All recipes” link opens the complete shelf.
 
+### Django Admin Control Room
+
+File: `backend/templates/admin/index.html`
+Last updated: 2026-08-01
+
+| Property | Pattern |
+| --- | --- |
+| Background | Django Unfold shell with forest-green operational fields and one gold identity docket |
+| Border | thin ruled grids using the current foreground at 14–25% opacity |
+| Border radius | none in custom dashboard content |
+| Display type | Boska for owner greeting, section headings and key figures |
+| Functional type | Cabinet Grotesk for actions, queues, tables and labels |
+| Primary action | square ruled cell with icon and direct verb; gold fill on hover |
+| Status | short text with a gold underline, never a pill |
+| Shadow | none inside dashboard content |
+
+**Pattern notes:** The dashboard is an operations surface, not a generic analytics template. Use only four section names: Analytics, Actions, Attention and Orders. For the owner and finance roles, lead with a terse five-number snapshot and restrained charts for sales, fulfilment, products, customers and order channels. Charts must resolve automatic dark mode before choosing ink colours; an empty dataset becomes a short ruled empty state rather than a blank canvas or invented demo data. Other roles should still lead with permitted actions and live queues. Role identity is explicit. Future admin changelists should favour readable rows, useful filters and direct verbs over decorative cards.
+
 ### Email Verification Transition
 
 File: `frontend/app/(auth)/check-email/page.tsx`
@@ -174,6 +192,44 @@ Last updated: 2026-08-01
 | Accent usage | gold envelope line and primary action; green italic display phrase |
 
 **Pattern notes:** Verification is a transition page, not a modal or success card. Keep the email destination visible, explain only the next action, and let resend feedback replace the resend control in place.
+
+### Django Admin Sidebar
+
+File: `backend/products/static/admin/css/legitorganic-admin.css`
+Last updated: 2026-08-01
+
+| Property | Pattern |
+| --- | --- |
+| Background | solid forest green; deeper forest in dark mode |
+| Border | white at 14–18% opacity for search and divisions |
+| Border radius | none |
+| Text — primary | warm white at 78–100% opacity |
+| Text — section | harvest gold, uppercase, tightly tracked |
+| Spacing | retain Unfold's compact navigation rhythm |
+| Hover state | transparent gold wash with white text |
+| Shadow | none |
+| Accent usage | gold for icons, section labels and active identity |
+
+**Pattern notes:** Navigation is grouped by working department—Catalogue & Stories, Commerce, People, Wholesale, Sales Team and Useful Links. Keep the automatically generated “all applications” catalogue hidden; the sidebar should expose deliberate workflows, not Django's model registry.
+
+### Django Editorial Forms
+
+File: `backend/products/static/admin/css/legitorganic-admin.css`
+Last updated: 2026-08-01
+
+| Property | Pattern |
+| --- | --- |
+| Background | transparent fieldsets with one forest-green editorial title field |
+| Border | one-pixel foreground rules at 16–20% opacity |
+| Border radius | none on fieldsets, inputs, editors and actions |
+| Display type | Boska for the workflow identity only |
+| Functional type | Cabinet Grotesk for labels, help, fields and controls |
+| Section label | uppercase compact heading on a faint forest wash; gold in dark mode |
+| Focus state | gold border and one-pixel gold focus ring |
+| Shadow | none |
+| Accent usage | gold marks publication/storefront state and active focus |
+
+**Pattern notes:** Product, blog and recipe forms share one disciplined editing system but carry different identities: Market shelf, Field journal and Kitchen notebook. At desktop size the supporting fieldsets may form a two-column working grid; the main writing field and inline collections stay full-width. Never restyle content forms as floating SaaS cards.
 
 ### Long-form Stories and Legal Documents
 

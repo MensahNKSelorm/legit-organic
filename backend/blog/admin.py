@@ -23,16 +23,16 @@ class BlogPostAdmin(ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'published_at'
     fieldsets = (
-        ('Content', {
+        ('The story', {
             'fields': ('title', 'slug', 'excerpt', 'content'),
         }),
-        ('Media', {
+        ('Lead image', {
             'fields': ('cover_image',),
         }),
-        ('Meta', {
+        ('Byline & filing', {
             'fields': ('author', 'category', 'tags'),
         }),
-        ('Publishing', {
+        ('Publication', {
             'fields': ('is_published', 'published_at'),
         }),
         ('Timestamps', {

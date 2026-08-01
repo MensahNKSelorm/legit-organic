@@ -18,7 +18,7 @@ def dashboard_callback(request, context):
 
     from orders.models import Order, OrderItem
     from products.models import Product
-    from users.models import User
+    from users.models import User, B2BProfile
     from blog.models import BlogPost
     from recipes.models import Recipe
 
@@ -65,6 +65,23 @@ def dashboard_callback(request, context):
     pending_orders   = all_orders.filter(status='whatsapp_pending').count()
     delivered_orders = all_orders.filter(status='delivered').count()
     avg_order_value  = paid_orders.aggregate(a=Avg('total_amount'))['a'] or 0
+
+    successful_payments = all_orders.filter(payment_status='success').count()
+    payment_attempts = all_orders.exclude(payment_status='pending').count()
+    payment_success_rate = round(
+        successful_payments / payment_attempts * 100
+    ) if payment_attempts else 0
+
+    ordering_customers = paid_orders.filter(user__isnull=False).values(
+        'user_id'
+    ).annotate(order_count=Count('id'))
+    ordering_customer_count = ordering_customers.count()
+    repeat_customer_rate = round(
+        ordering_customers.filter(order_count__gt=1).count()
+        / ordering_customer_count * 100
+    ) if ordering_customer_count else 0
+
+    promo_orders = all_orders.filter(promo_code__isnull=False).count()
 
     # ── Customer KPIs ────────────────────────────────────────────────────────
     total_customers = User.objects.filter(is_staff=False).count()
@@ -167,6 +184,41 @@ def dashboard_callback(request, context):
     customer_labels = [item['month'].strftime('%b %Y') for item in customers_by_month]
     customer_data   = [item['count']                   for item in customers_by_month]
 
+    # ── Role and operational queues ─────────────────────────────────────────
+    group_names = set(request.user.groups.values_list('name', flat=True))
+    if request.user.is_superuser:
+        dashboard_role, role_label = 'owner', 'Owner'
+    elif 'Operations' in group_names:
+        dashboard_role, role_label = 'operations', 'Operations'
+    elif 'Content Team' in group_names:
+        dashboard_role, role_label = 'content', 'Content Team'
+    elif 'Finance' in group_names:
+        dashboard_role, role_label = 'finance', 'Finance'
+    elif 'Sales & Marketing' in group_names:
+        dashboard_role, role_label = 'sales', 'Sales & Marketing'
+    else:
+        dashboard_role, role_label = 'staff', 'Staff'
+
+    recent_orders = all_orders.select_related('user').order_by('-created_at')[:6]
+    attention = {
+        'awaiting_payment': all_orders.filter(status='whatsapp_pending').count(),
+        'processing': all_orders.filter(status='processing').count(),
+        'b2b_pending': B2BProfile.objects.filter(status='pending').count(),
+        'unavailable_products': Product.objects.filter(is_available=False).count(),
+        'draft_posts': BlogPost.objects.filter(is_published=False).count(),
+    }
+    quick_actions = []
+    if request.user.has_perm('orders.view_order'):
+        quick_actions.append({'label': 'Review orders', 'href': '/admin/orders/order/', 'icon': 'receipt_long'})
+    if request.user.has_perm('products.add_product'):
+        quick_actions.append({'label': 'Add product', 'href': '/admin/products/product/add/', 'icon': 'add_shopping_cart'})
+    if request.user.has_perm('recipes.add_recipe'):
+        quick_actions.append({'label': 'Write recipe', 'href': '/admin/recipes/recipe/add/', 'icon': 'restaurant_menu'})
+    if request.user.has_perm('blog.add_blogpost'):
+        quick_actions.append({'label': 'Write story', 'href': '/admin/blog/blogpost/add/', 'icon': 'edit_note'})
+    if request.user.has_perm('orders.add_promocode'):
+        quick_actions.append({'label': 'Create promo', 'href': '/admin/orders/promocode/add/', 'icon': 'sell'})
+
     # ── Populate context ─────────────────────────────────────────────────────
     context.update({
         'kpi': {
@@ -197,5 +249,24 @@ def dashboard_callback(request, context):
         'chart_top_product_data':    json.dumps(top_product_data),
         'chart_customer_labels':     json.dumps(customer_labels),
         'chart_customer_data':       json.dumps(customer_data),
+        'chart_channel_labels':      json.dumps(['WhatsApp', 'Online checkout']),
+        'chart_channel_data':        json.dumps([whatsapp_orders, paystack_orders]),
+        'has_order_status_data':     bool(donut_data),
+        'has_product_sales_data':    bool(top_product_data),
+        'has_channel_data':          bool(whatsapp_orders or paystack_orders),
+        'has_customer_growth_data':  bool(customer_data),
+        'analytics': {
+            'payment_success_rate': payment_success_rate,
+            'repeat_customer_rate': repeat_customer_rate,
+            'promo_orders': promo_orders,
+        },
+        'dashboard_role':            dashboard_role,
+        'role_label':                role_label,
+        'today_label':               now.strftime('%A, %d %B'),
+        'greeting':                  'Good morning' if now.hour < 12 else ('Good afternoon' if now.hour < 18 else 'Good evening'),
+        'recent_orders':             recent_orders,
+        'attention':                 attention,
+        'quick_actions':             quick_actions,
+        'can_see_finance':           request.user.is_superuser or 'Finance' in group_names,
     })
     return context
