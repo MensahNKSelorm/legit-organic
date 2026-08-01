@@ -44,7 +44,8 @@ source "$RESTIC_ENV"
 set +a
 
 restic backup \
-    "$BACKUP_DIR" \
+    "$DB_BACKUP" \
+    "$MEDIA_DIR" \
     /var/www/legitorganic/backend/.env \
     /var/www/legitorganic/frontend/.env.local \
     /etc/systemd/system/legitorganic.service \
