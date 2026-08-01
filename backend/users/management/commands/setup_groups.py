@@ -59,11 +59,11 @@ class Command(BaseCommand):
         operations, _ = Group.objects.get_or_create(name='Operations')
         ops_perms = []
 
-        # Orders - full CRUD
+        # Orders - process and view, but preserve the audit trail
         ops_perms += list(get_perms('orders', 'order',
-                                    ['add', 'change', 'view', 'delete']))
+                                    ['change', 'view']))
         ops_perms += list(get_perms('orders', 'orderitem',
-                                    ['add', 'change', 'view', 'delete']))
+                                    ['change', 'view']))
         ops_perms += list(get_perms('orders', 'cart',
                                     ['view']))
         ops_perms += list(get_perms('orders', 'cartitem',
@@ -118,10 +118,52 @@ class Command(BaseCommand):
             f'✓ Sales & Marketing — {len(sales_perms)} permissions'
         ))
 
+        # ── PRODUCT MANAGER ─────────────────────────────────────
+        product_manager, _ = Group.objects.get_or_create(name='Product Manager')
+        product_perms = []
+        for model in ['product', 'productimage', 'category', 'region', 'badge']:
+            product_perms += list(get_perms(
+                'products', model, ['add', 'change', 'view', 'delete']
+            ))
+        product_perms += list(get_perms('orders', 'order', ['view']))
+        product_perms += list(get_perms('orders', 'orderitem', ['view']))
+        product_manager.permissions.set(product_perms)
+        self.stdout.write(self.style.SUCCESS(
+            f'✓ Product Manager — {len(product_perms)} permissions'
+        ))
+
+        # ── EXECUTIVE ADMIN ─────────────────────────────────────
+        # Broad business access without staff-security or commission controls.
+        executive, _ = Group.objects.get_or_create(name='Executive Admin')
+        executive_perms = []
+        business_models = {
+            'products': ['product', 'productimage', 'category', 'region', 'badge'],
+            'blog': ['blogpost', 'blogcategory'],
+            'recipes': ['recipe', 'recipeingredient', 'recipestep', 'recipepairing'],
+            'orders': ['order', 'orderitem', 'promocode'],
+            'sales': ['salesrep', 'referredcustomer'],
+            'users': ['b2bprofile', 'b2bdiscounttier'],
+        }
+        for app_label, models in business_models.items():
+            for model in models:
+                executive_perms += list(get_perms(
+                    app_label, model, ['add', 'change', 'view', 'delete']
+                ))
+        executive_perms += list(get_perms('orders', 'cart', ['view']))
+        executive_perms += list(get_perms('orders', 'cartitem', ['view']))
+        executive_perms += list(get_perms('users', 'user', ['view']))
+        executive_perms += list(get_perms('sales', 'commission', ['view']))
+        executive.permissions.set(executive_perms)
+        self.stdout.write(self.style.SUCCESS(
+            f'✓ Executive Admin — {len(executive_perms)} permissions'
+        ))
+
         self.stdout.write(self.style.SUCCESS('''
 Groups created successfully:
 - Content Team: manage products, blog, recipes
 - Operations: manage orders, view users and products
 - Finance: read-only access to orders and users
 - Sales & Marketing: manage promos, reps and referrals; view reporting
+- Product Manager: manage the catalogue; view order demand
+- Executive Admin: manage business operations without staff-security controls
         '''))

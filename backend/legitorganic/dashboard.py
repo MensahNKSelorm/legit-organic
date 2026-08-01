@@ -188,6 +188,10 @@ def dashboard_callback(request, context):
     group_names = set(request.user.groups.values_list('name', flat=True))
     if request.user.is_superuser:
         dashboard_role, role_label = 'owner', 'Owner'
+    elif 'Executive Admin' in group_names:
+        dashboard_role, role_label = 'executive', 'Executive Admin'
+    elif 'Product Manager' in group_names:
+        dashboard_role, role_label = 'product', 'Product Manager'
     elif 'Operations' in group_names:
         dashboard_role, role_label = 'operations', 'Operations'
     elif 'Content Team' in group_names:
@@ -267,6 +271,8 @@ def dashboard_callback(request, context):
         'recent_orders':             recent_orders,
         'attention':                 attention,
         'quick_actions':             quick_actions,
-        'can_see_finance':           request.user.is_superuser or 'Finance' in group_names,
+        'can_see_finance':           request.user.is_superuser or bool(
+            {'Finance', 'Executive Admin'} & group_names
+        ),
     })
     return context
