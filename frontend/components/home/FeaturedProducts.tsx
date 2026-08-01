@@ -63,7 +63,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
               <div className="absolute inset-x-0 bottom-0 p-7 text-white md:p-10">
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#f4c430]">{featured.region?.name} · {featured.category?.name}</p>
                 <div className="mt-4 flex items-end justify-between gap-6">
-                  <h3 className="display-organic max-w-xl text-5xl leading-[.9] md:text-7xl">{featured.name}</h3>
+                  <h3 className="product-name-sans max-w-xl text-5xl font-bold leading-[.9] md:text-7xl">{featured.name}</h3>
                   <div className="shrink-0 bg-[#f4c430] px-5 py-4 text-right text-[#0d3b2a]">
                     <strong className="block text-xl">GH₵ {featured.price}</strong>
                     <span className="text-xs">{featured.unit}</span>
@@ -81,7 +81,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                   <div className="flex flex-col justify-between p-5 md:p-7">
                     <p className="text-[9px] font-bold uppercase tracking-[.16em] text-[#2e7d32] dark:text-[#9fc5a4]">{product.region?.name}</p>
                     <div>
-                      <h3 className="display-organic text-2xl leading-tight md:text-3xl">{product.name}</h3>
+                      <h3 className="product-name-sans text-2xl font-bold leading-tight md:text-3xl">{product.name}</h3>
                       <div className="mt-4 flex items-end justify-between gap-3">
                         <span className="font-bold">GH₵ {product.price}</span>
                         <span className="text-xs text-[#5b3e31] dark:text-[#b8d4bd]">{product.unit}</span>

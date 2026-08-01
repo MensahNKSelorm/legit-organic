@@ -48,7 +48,7 @@ export default function ProductCard({ product, featured = false, preview = false
 
       {/* Content */}
       <div className={`flex flex-1 flex-col p-3 sm:p-6 ${featured ? 'md:justify-center md:p-10' : ''}`}>
-        <h3 className={`w-full break-words font-sans font-bold leading-tight text-forest-green dark:text-[#faf7f0] ${featured ? 'mb-2 line-clamp-2 min-h-[2.5rem] text-base sm:min-h-[3.5rem] sm:text-2xl md:min-h-0 md:text-5xl' : 'mb-2 line-clamp-2 min-h-[2.5rem] text-base sm:min-h-[3.5rem] sm:text-2xl'}`}>
+        <h3 className={`product-name-sans w-full break-words font-bold leading-tight text-forest-green dark:text-[#faf7f0] ${featured ? 'mb-2 line-clamp-2 min-h-[2.5rem] text-base sm:min-h-[3.5rem] sm:text-2xl md:min-h-0 md:text-5xl' : 'mb-2 line-clamp-2 min-h-[2.5rem] text-base sm:min-h-[3.5rem] sm:text-2xl'}`}>
           {product.name}
         </h3>
 

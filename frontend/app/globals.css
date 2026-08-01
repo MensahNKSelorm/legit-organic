@@ -51,32 +51,54 @@
 }
 
 /* ── Base resets ─────────────────────────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #faf7f0;
+    color: #333333;
+    font-family: "Cabinet Grotesk", system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Boska", Georgia, serif;
+    line-height: 1.2;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  html.dark body {
+    background-color: #1a1a1a;
+    color: #faf7f0;
+  }
+
+  html.dark h1,
+  html.dark h2,
+  html.dark h3,
+  html.dark h4,
+  html.dark h5,
+  html.dark h6 {
+    color: #faf7f0;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  background-color: #faf7f0;
-  color: #333333;
-  font-family: "Cabinet Grotesk", system-ui, sans-serif;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Boska", Georgia, serif;
-  line-height: 1.2;
-}
-
-a {
-  text-decoration: none;
+/* Product names are functional catalogue labels, not editorial headings. */
+.product-name-sans {
+  font-family: "Cabinet Grotesk", Arial, sans-serif;
+  font-style: normal;
 }
 
 /* ── Layout utility ──────────────────────────────────────────── */
@@ -90,21 +112,6 @@ a {
 }
 
 /* ── Dark mode ───────────────────────────────────────────────── */
-
-/* Page chrome */
-html.dark body {
-  background-color: #1a1a1a;
-  color: #faf7f0;
-}
-
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4,
-html.dark h5,
-html.dark h6 {
-  color: #faf7f0;
-}
 
 /* Section backgrounds */
 html.dark .bg-cream  { background-color: #1a1a1a; }

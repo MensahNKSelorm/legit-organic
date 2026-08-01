@@ -51,7 +51,7 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
         )}
       </div>
       <div className="flex items-start justify-between gap-3 py-3">
-        <p className="text-sm font-bold leading-snug text-[#0D3B2A] transition-colors group-hover:text-[#2E7D32] dark:text-white dark:group-hover:text-[#F4C430] md:text-base">
+        <p className="product-name-sans text-sm font-bold leading-snug text-[#0D3B2A] transition-colors group-hover:text-[#2E7D32] dark:text-white dark:group-hover:text-[#F4C430] md:text-base">
           {product.name}
         </p>
         <p className="shrink-0 text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">

@@ -78,7 +78,7 @@ export default async function ProductDetailPage({ params }: Props) {
             <div className="flex items-center justify-between gap-5 border-b border-[#0D3B2A]/20 pb-4 text-[10px] font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:border-white/15 dark:text-[#9FC5A4]">
               <span>{product.category?.name}</span><span>{product.region?.name}</span>
             </div>
-            <h1 className="display-organic mt-8 text-5xl leading-[.9] md:text-7xl">{product.name}</h1>
+            <h1 className="product-name-sans mt-8 text-5xl font-bold leading-[.9] md:text-7xl">{product.name}</h1>
             <div className="mt-7 flex items-end gap-3">
               <strong className="text-3xl text-[#2E7D32] dark:text-[#F4C430]">GH₵ {product.price}</strong>
               <span className="pb-1 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">{product.unit}</span>

@@ -6,7 +6,7 @@ The storefront should feel like a Ghanaian market, field journal and working kit
 
 | Property | Correct pattern |
 | --- | --- |
-| Display type | `display-organic` / Boska 500; reserve for expressive headings, product names and editorial moments |
+| Display type | `display-organic` / Boska 500; reserve for expressive headings and editorial moments |
 | Functional type | Cabinet Grotesk for navigation, body text, forms, prices, labels and controls |
 | Page background | `bg-[#FAF7F0] dark:bg-[#171B18]` |
 | Primary surface | Transparent or page background; use rules before enclosed cards |
@@ -142,7 +142,7 @@ File: `frontend/components/products/ProductCard.tsx`
 Last updated: 2026-08-01
 
 - Standard cards stretch to the full height of their grid cell.
-- Product names use Cabinet Grotesk bold and reserve two lines; category/origin reserves two lines, and descriptions reserve three lines above the mobile breakpoint.
+- Product names use the explicit `product-name-sans` Cabinet Grotesk rule and reserve two lines. Global element defaults belong in Tailwind’s base layer so intentional font, line-height, colour and underline utilities remain effective. Category/origin reserves two lines, and descriptions reserve three lines above the mobile breakpoint.
 - Price, unit and actions remain aligned at the bottom regardless of copy length.
 - The intentionally enlarged featured product keeps its separate editorial layout; equal-height rules apply to the standard product grid and related-product grid.
 - The main market uses a compact two-column phone grid. At that width, cards use a shorter image, hide description copy and shorten “Add to Cart” to “Add”; full copy and spacing return at the small breakpoint.
