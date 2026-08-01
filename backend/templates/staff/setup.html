@@ -64,9 +64,9 @@
           <button type="submit">Activate staff account</button>
         </form>
       {% elif state == 'complete' %}
-        <div class="state"><p class="kicker">Account ready</p><h2>You're in.</h2><p>Your password is set. Sign in with <strong>{{ invitation.company_email }}</strong>.</p><a class="login-link" href="/admin/login/">Open the control room</a></div>
+        <div class="state"><p class="kicker">Account ready</p><h2>You're in.</h2><p>Your password is set. Sign in with <strong>{{ invitation.company_email }}</strong>.</p><a class="login-link" href="{% url 'admin:login' %}?next={% url 'admin:index' %}">Open the control room</a></div>
       {% elif state == 'accepted' %}
-        <div class="state"><p class="kicker">Link already used</p><h2>Account already active.</h2><p>This private link has completed its job. Use your company email to sign in.</p><a class="login-link" href="/admin/login/">Sign in</a></div>
+        <div class="state"><p class="kicker">Link already used</p><h2>Account already active.</h2><p>This private link has completed its job. Use your company email to sign in.</p><a class="login-link" href="{% url 'admin:login' %}?next={% url 'admin:index' %}">Sign in</a></div>
       {% elif state == 'expired' %}
         <div class="state"><p class="kicker">Link expired</p><h2>Ask for a fresh invitation.</h2><p>For security, setup links expire after 48 hours. Contact the owner to resend it.</p></div>
       {% elif state == 'revoked' %}

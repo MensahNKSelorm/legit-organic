@@ -66,6 +66,7 @@ class StaffInvitationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "You're in")
+        self.assertContains(response, '/admin/login/?next=/admin/')
 
         user = User.objects.get(email=invitation.company_email)
         self.assertTrue(user.is_staff)
@@ -76,6 +77,26 @@ class StaffInvitationTests(TestCase):
         self.assertEqual(list(user.groups.values_list('name', flat=True)), [self.role.name])
         invitation.refresh_from_db()
         self.assertIsNotNone(invitation.accepted_at)
+
+    def test_direct_staff_login_redirects_to_control_room(self):
+        staff = User.objects.create_user(
+            email='finance@legitorganic.com',
+            password=self.password,
+            first_name='Finance',
+            last_name='Staff',
+            is_staff=True,
+            is_active=True,
+        )
+        staff.groups.add(self.role)
+        response = self.client.post(reverse('admin:login'), {
+            'username': staff.email,
+            'password': self.password,
+        })
+        self.assertRedirects(
+            response,
+            '/admin/',
+            fetch_redirect_response=False,
+        )
 
     def test_setup_link_cannot_be_reused(self):
         invitation, token = self.make_invitation()
