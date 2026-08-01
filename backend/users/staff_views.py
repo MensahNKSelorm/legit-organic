@@ -12,7 +12,9 @@ from .models import StaffInvitation, User
 
 
 def _secure_response(response):
-    response['Referrer-Policy'] = 'no-referrer'
+    # Keep the token-bearing URL away from third parties while allowing the
+    # same-origin Referer Django requires to validate HTTPS form submissions.
+    response['Referrer-Policy'] = 'same-origin'
     response['X-Robots-Tag'] = 'noindex, nofollow'
     response['Cache-Control'] = 'no-store, max-age=0'
     return response

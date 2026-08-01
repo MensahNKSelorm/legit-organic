@@ -2,7 +2,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -107,9 +107,34 @@ class StaffInvitationTests(TestCase):
     def test_invalid_link_is_not_cached_or_indexed(self):
         response = self.client.get(reverse('staff-setup', args=['x' * 43]))
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response['Referrer-Policy'], 'no-referrer')
+        self.assertEqual(response['Referrer-Policy'], 'same-origin')
         self.assertEqual(response['X-Robots-Tag'], 'noindex, nofollow')
         self.assertIn('no-store', response['Cache-Control'])
+
+    def test_https_setup_submission_passes_real_csrf_checks(self):
+        invitation, token = self.make_invitation()
+        csrf_client = Client(enforce_csrf_checks=True)
+        path = reverse('staff-setup', args=[token])
+        get_response = csrf_client.get(
+            path, secure=True, HTTP_HOST='localhost'
+        )
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response['Referrer-Policy'], 'same-origin')
+
+        csrf_token = csrf_client.cookies['csrftoken'].value
+        post_response = csrf_client.post(
+            path,
+            {
+                'csrfmiddlewaretoken': csrf_token,
+                'new_password1': self.password,
+                'new_password2': self.password,
+            },
+            secure=True,
+            HTTP_HOST='localhost',
+            HTTP_REFERER=f'https://localhost{path}',
+        )
+        self.assertEqual(post_response.status_code, 200)
+        self.assertTrue(User.objects.filter(email=invitation.company_email).exists())
 
     def test_existing_account_blocks_acceptance(self):
         invitation, token = self.make_invitation()

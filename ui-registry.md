@@ -258,7 +258,7 @@ Last updated: 2026-08-01
 | Shadow | none |
 | Accent usage | gold identity mark, focus and primary action |
 
-**Pattern notes:** Staff onboarding is a private identity handoff, not a generic password-reset card. The setup URL must send `no-referrer`, `no-store` and `noindex` headers and must not load third-party fonts or assets while the invitation token is present. Show the assigned company login and role, never the raw token. Expired, revoked, accepted and invalid invitations replace the form with one concise lifecycle state. The owner-facing invitation list remains inside the permission-aware control-room shell.
+**Pattern notes:** Staff onboarding is a private identity handoff, not a generic password-reset card. The setup URL must send `same-origin`, `no-store` and `noindex` headers and must not load third-party fonts or assets while the invitation token is present. `same-origin` is required so Django can validate HTTPS CSRF submissions without leaking the token-bearing URL to third parties. Show the assigned company login and role, never the raw token. Expired, revoked, accepted and invalid invitations replace the form with one concise lifecycle state. The owner-facing invitation list remains inside the permission-aware control-room shell.
 
 ### Admin People and Boolean Controls
 
