@@ -99,7 +99,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
 
       {/* ── Main image ── */}
       <div
-        className="relative aspect-square rounded-2xl overflow-hidden bg-beige dark:bg-[#374151] shadow-sm"
+        className="relative aspect-[4/5] overflow-hidden bg-beige dark:bg-[#273029]"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -123,7 +123,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
 
         {/* Image counter */}
         {hasMultiple && (
-          <div className="absolute top-3 right-3 bg-black/50 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm select-none z-10">
+          <div className="absolute top-3 right-3 bg-black/60 text-white text-xs font-semibold px-3 py-2 backdrop-blur-sm select-none z-10">
             {selectedIndex + 1} / {total}
           </div>
         )}
@@ -133,7 +133,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
           <>
             <button
               onClick={() => setSelectedIndex((prev) => (prev - 1 + total) % total)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-9 md:h-9 rounded-full bg-white/80 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 flex items-center justify-center shadow-md transition-all hover:scale-110 text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/85 dark:bg-[#202621]/90 hover:bg-[#F4C430] flex items-center justify-center transition-colors text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
               aria-label="Previous image"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -144,7 +144,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
             </button>
             <button
               onClick={() => setSelectedIndex((prev) => (prev + 1) % total)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-9 md:h-9 rounded-full bg-white/80 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 flex items-center justify-center shadow-md transition-all hover:scale-110 text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/85 dark:bg-[#202621]/90 hover:bg-[#F4C430] flex items-center justify-center transition-colors text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
               aria-label="Next image"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -166,7 +166,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
               onClick={() => setSelectedIndex(idx)}
               aria-label={`View image ${idx + 1} of ${total}`}
               className={[
-                'relative shrink-0 w-20 h-20 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]',
+                'relative shrink-0 w-20 h-20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]',
                 idx === selectedIndex
                   ? 'ring-2 ring-[#F4C430] ring-offset-2 opacity-100'
                   : 'opacity-70 hover:opacity-100',
@@ -176,7 +176,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
                 src={img.src}
                 alt={img.alt}
                 fill
-                className="object-cover rounded-lg"
+                className="object-cover"
                 sizes="80px"
               />
             </button>

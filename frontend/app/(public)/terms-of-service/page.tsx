@@ -10,21 +10,16 @@ export default function TermsOfServicePage() {
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <div id="top" style={{ backgroundColor: "#0D3B2A", paddingTop: "9rem", paddingBottom: "5rem" }}>
-        <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <span className="text-ghana-gold text-sm font-semibold uppercase tracking-widest">
-            Legal
-          </span>
-          <h1 className="font-display text-5xl font-bold text-white mt-3 mb-4">
-            Terms of Service
-          </h1>
-          <p className="text-white/70 text-base">Last updated: June 2026</p>
+      <div id="top" className="bg-[#0D3B2A] pb-14 pt-36 text-white md:pb-20">
+        <div className="page-container grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
+          <div><p className="editorial-label text-[#F4C430]">Using Legit Organic</p><h1 className="display-organic mt-4 text-6xl md:text-8xl">Terms of service.</h1></div>
+          <p className="border-l border-white/25 pl-5 text-sm text-[#B8D4BD]">Effective June 2026<br />Governed by the laws of Ghana</p>
         </div>
       </div>
 
       {/* ── Content ──────────────────────────────────────────────── */}
       <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
-        <div className="max-w-4xl mx-auto px-6 py-16">
+        <div className="legal-document mx-auto max-w-5xl px-6 py-16 md:py-20">
 
           {/* 1. Acceptance of Terms */}
           <section>

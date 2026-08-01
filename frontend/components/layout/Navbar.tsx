@@ -100,9 +100,10 @@ export default function Navbar() {
     localStorage.setItem('theme', next ? 'dark' : 'light')
   }
 
-  const transparent = !scrolled && !isAuthPage
+  const lightTopRoutes = pathname === '/blog'
+  const transparent = !scrolled && !isAuthPage && !lightTopRoutes
 
-  const btnBase = 'px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap'
+  const btnBase = 'px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap'
 
   const linkColor = transparent
     ? 'text-white hover:text-white/80'
@@ -126,23 +127,23 @@ export default function Navbar() {
       className={[
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
         !transparent
-          ? 'bg-mist-white/95 backdrop-blur-md shadow-sm border-b border-sand dark:bg-[#111827]/95 dark:border-[#333]'
+          ? 'bg-mist-white/95 backdrop-blur-md border-b border-[#0D3B2A]/15 dark:bg-[#111827]/95 dark:border-[#333]'
           : 'bg-transparent',
       ].join(' ')}
     >
       <nav
-        className="page-container max-w-7xl mx-auto px-6 lg:px-8"
-        style={{ height: '68px', display: 'flex', alignItems: 'center', gap: '1.5rem' }}
+        className="page-container mx-auto flex max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8"
+        style={{ height: '76px', display: 'flex', alignItems: 'center', gap: '1.5rem' }}
       >
         {/* Logo */}
-        <Link href="/" className="shrink-0 flex items-center" style={{ minWidth: '160px' }} aria-label="Legit Organic — Home">
+        <Link href="/" className="flex min-w-0 shrink-0 items-center md:min-w-[160px]" aria-label="Legit Organic — Home">
           <Image
             src={(transparent || darkMode) ? '/images/logo-darkmode.svg' : '/images/logo-lightmode.svg'}
             alt="Legit Organic"
             width={160}
             height={44}
             priority
-            style={{ width: 'auto', height: '40px', objectFit: 'contain' }}
+            className="h-[34px] w-auto sm:h-10"
           />
         </Link>
 
@@ -172,7 +173,7 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            className={['w-9 h-9 rounded-full flex items-center justify-center transition-colors', toggleColor].join(' ')}
+                className={['w-9 h-9 flex items-center justify-center transition-colors', toggleColor].join(' ')}
             style={transparent ? { color: '#ffffff' } : undefined}
           >
             {darkMode ? <SunIcon /> : <MoonIcon />}
@@ -182,7 +183,7 @@ export default function Navbar() {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search products"
-            className={['shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-[background-color]', toggleColor].join(' ')}
+            className={['shrink-0 w-9 h-9 flex items-center justify-center transition-[background-color]', toggleColor].join(' ')}
             style={{ color: transparent ? '#ffffff' : undefined }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
@@ -274,7 +275,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/signup"
-                className={`${btnBase} bg-[#F4C430] text-[#0D3B2A] hover:bg-[#c59f2c]`}
+                className={`${btnBase} border border-[#F4C430] bg-[#F4C430] text-[#0D3B2A] hover:bg-[#fefcf7] hover:border-[#fefcf7]`}
               >
                 Sign Up
               </Link>
@@ -283,11 +284,11 @@ export default function Navbar() {
         </div>
 
         {/* Mobile right: search + cart + hamburger */}
-        <div className="md:hidden flex items-center gap-1 shrink-0">
+        <div className="ml-auto flex shrink-0 items-center gap-1 md:hidden">
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search products"
-            className={['shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-[background-color]', toggleColor].join(' ')}
+            className={['shrink-0 w-9 h-9 flex items-center justify-center transition-[background-color]', toggleColor].join(' ')}
             style={{ color: transparent ? '#ffffff' : undefined }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
@@ -389,7 +390,7 @@ export default function Navbar() {
                 <Link
                   href="/profile"
                   onClick={() => setMenuOpen(false)}
-                  className="block py-3 px-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium rounded-xl hover:bg-beige dark:hover:bg-[#2a2a2a] transition-colors"
+                  className="block border-b border-[#0D3B2A]/10 py-4 text-[#0D3B2A] dark:text-[#F9FAFB] font-medium hover:text-[#2E7D32] transition-colors"
                 >
                   Profile
                 </Link>
@@ -445,7 +446,7 @@ export default function Navbar() {
               <Link
                 href="/signup"
                 onClick={() => setMenuOpen(false)}
-                className="flex-1 text-center bg-[#F4C430] text-[#0D3B2A] font-semibold py-2 px-4 rounded-lg hover:bg-[#c59f2c] transition-colors text-sm"
+                className="flex-1 text-center bg-[#F4C430] text-[#0D3B2A] font-semibold py-2 px-4 hover:bg-[#c59f2c] transition-colors text-sm"
               >
                 Sign Up
               </Link>

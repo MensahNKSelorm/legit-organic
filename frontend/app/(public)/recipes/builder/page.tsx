@@ -335,7 +335,7 @@ function BuilderContent() {
   if (!isAuthenticated) return null
 
   return (
-    <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
+    <div className="account-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
 
       {/* ── Header ───────────────────────────────────────────── */}
       <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '1.5rem' }}>

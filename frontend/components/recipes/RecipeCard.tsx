@@ -24,7 +24,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
   const totalTime = recipe.prep_time + recipe.cook_time
 
   return (
-    <article className="group bg-mist-white dark:bg-[#1f2937] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-sand dark:border-[#374151] flex flex-col">
+    <article className="group relative flex flex-col overflow-hidden border-b border-[#0D3B2A]/20 bg-transparent dark:border-white/15">
       {/* Cover */}
       <div className="relative h-52 overflow-hidden shrink-0">
         {coverSrc ? (
@@ -45,14 +45,14 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-forest-green/20 to-transparent" />
-        <span className={`absolute top-3 right-3 text-xs font-semibold px-3 py-1 rounded-full ${diff.classes}`}>
+        <span className={`absolute top-0 right-0 text-xs font-semibold px-3 py-2 ${diff.classes}`}>
           {diff.label}
         </span>
       </div>
 
       {/* Body */}
       <div className="p-6 flex flex-col flex-1">
-        <Link href={`/recipes/${recipe.slug}`}>
+        <Link href={`/recipes/${recipe.slug}`} aria-label={`Open ${recipe.title} recipe`} className="before:absolute before:inset-0 before:content-['']">
           <h3 className="font-display text-xl font-bold text-forest-green dark:text-[#faf7f0] mb-2 group-hover:text-leaf-green dark:group-hover:text-[#81C784] transition-colors line-clamp-2">
             {recipe.title}
           </h3>
@@ -74,16 +74,16 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-2">
+        <div className="relative z-10 flex gap-2">
           <Link
             href={`/recipes/${recipe.slug}`}
-            className="flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C] transition-colors whitespace-nowrap"
+            className="flex items-center justify-center px-4 py-2 text-sm font-semibold bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C] transition-colors whitespace-nowrap"
           >
             View Recipe
           </Link>
           <Link
             href={`/recipes/builder?base=${recipe.slug}`}
-            className="px-4 py-2 rounded-lg text-sm font-semibold border-2 border-[#F4C430] text-[#0D3B2A] dark:text-[#F4C430] hover:bg-[#F4C430]/20 transition-colors whitespace-nowrap"
+            className="px-4 py-2 text-sm font-semibold border border-[#0D3B2A]/30 text-[#0D3B2A] dark:border-white/25 dark:text-[#F4C430] hover:bg-[#F4C430]/20 transition-colors whitespace-nowrap"
           >
             Customise
           </Link>

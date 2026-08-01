@@ -5,209 +5,115 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import type { Product } from '@/types'
+import type { Product, ProductDetail } from '@/types'
 import ProductCard from '@/components/products/ProductCard'
 import ProductTabs from '@/components/products/ProductTabs'
 import AddToCartButton, { WishlistButton } from '@/components/products/AddToCartButton'
 import ProductImageGallery from '@/components/products/ProductImageGallery'
 
-// ---------------------------------------------------------------------------
-// Icons
-// ---------------------------------------------------------------------------
-
-function LeafIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0 mt-0.5"
-      aria-hidden
-    >
-      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
-      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
-    </svg>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Metadata
-// ---------------------------------------------------------------------------
-
 type Props = { params: Promise<{ slug: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  try {
-    const { slug } = await params
-    const product = await api.products.detail(slug)
-    const description = product.description
-      ? product.description.replace(/<[^>]*>/g, '').slice(0, 160)
-      : `Buy ${product.name} - certified organic from verified Ghanaian farmers. Delivered fresh to your door.`
+const PREVIEW_DATA = [
+  ['preview-1', 'Perfumed White Rice', '48.00', '5 kg bag', '/images/products/p1.webp', 'Grains', 'Volta Region'],
+  ['preview-2', 'Seasonal Vegetable Box', '85.00', 'mixed box', '/images/products/p2.webp', 'Vegetables', 'Eastern Region'],
+  ['preview-3', 'Golden Maize', '30.00', '2 kg bag', '/images/products/p3.webp', 'Grains', 'Bono East'],
+  ['preview-4', 'Mixed Local Beans', '36.00', '2 kg bag', '/images/products/p4.webp', 'Legumes', 'Northern Region'],
+] as const
 
-    return {
-      title: `${product.name} — Organic ${product.category?.name || 'Produce'}`,
-      description,
-      keywords: [
-        product.name,
-        `organic ${product.name}`,
-        `buy ${product.name} Ghana`,
-        product.category?.name || '',
-        product.region?.name || '',
-        'organic food Ghana',
-      ],
-      openGraph: {
-        title: product.name,
-        description,
-        images: product.image ? [{ url: product.image }] : [],
-        type: 'website',
-      },
-    }
-  } catch {
-    return { title: 'Product | Legit Organic' }
+function previewProduct(slug: string): ProductDetail | null {
+  const index = PREVIEW_DATA.findIndex(item => item[0] === slug)
+  if (index < 0 || process.env.NODE_ENV !== 'development') return null
+  const [productSlug, name, price, unit, image, category, region] = PREVIEW_DATA[index]
+  return {
+    id: -(index + 1), slug: productSlug, name, price, unit, image,
+    description: `<p>${name} selected for its flavour, consistency and usefulness in everyday Ghanaian cooking. Sourced with care and packed to preserve quality.</p>`,
+    category: { id: -1, name: category, slug: category.toLowerCase(), description: '', image: null },
+    region: { id: -1, name: region, slug: region.toLowerCase().replaceAll(' ', '-'), country: 'Ghana' },
+    badge: index === 0 ? { id: -1, name: 'Market favourite', slug: 'market-favourite', color: '#F4C430' } : null,
+    is_featured: index === 0, is_available: true, created_at: '', updated_at: '', images: [],
+    storage_tips: '<p>Keep sealed in a cool, dry place away from direct sunlight. Transfer to an airtight container after opening.</p>',
+    nutritional_info: '<p>A wholesome pantry ingredient that supports balanced everyday meals when paired with vegetables and protein.</p>',
+    nutritional_score: 86,
   }
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const demo = previewProduct(slug)
+  if (demo) return { title: `${demo.name} — Product Preview` }
+  try {
+    const product = await api.products.detail(slug)
+    return { title: `${product.name} — ${product.category?.name || 'Fresh Produce'}`, description: product.description?.replace(/<[^>]*>/g, '').slice(0, 160) }
+  } catch { return { title: 'Product | Legit Organic' } }
+}
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params
+  const demo = previewProduct(slug)
+  const product: ProductDetail = demo || await api.products.detail(slug).catch(() => notFound())
 
-  const product = await api.products.detail(slug).catch(() => notFound())
-
-  // Related products — same category, excluding this product
   let related: Product[] = []
-  try {
-    const same = await api.products.list('category=' + product.category?.slug)
-    related = same.filter((p) => p.slug !== slug).slice(0, 3)
-  } catch {
-    // ignore
+  if (demo) {
+    related = PREVIEW_DATA.filter(item => item[0] !== slug).slice(0, 3).map(item => previewProduct(item[0]) as ProductDetail)
+  } else {
+    try {
+      const same = await api.products.list('category=' + product.category?.slug)
+      related = same.filter(item => item.slug !== slug).slice(0, 3)
+    } catch { /* related products are optional */ }
   }
 
   return (
-    <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
-
-      {/* ── Breadcrumb ─────────────────────────────────────────── */}
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '1rem' }}>
-        <div className="page-container max-w-7xl mx-auto px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-sm text-light-leaf flex-wrap" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-mist-white transition-colors">
-              Home
-            </Link>
-            <span className="opacity-50">/</span>
-            <Link href="/products" className="hover:text-mist-white transition-colors">
-              Products
-            </Link>
-            <span className="opacity-50">/</span>
-            <span className="text-ghana-gold font-medium truncate max-w-[240px]">
-              {product.name}
-            </span>
-          </nav>
+    <div className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FEFCF7]">
+      <div className="bg-[#0D3B2A] pt-[76px] text-white">
+        <div className="page-container flex flex-wrap items-center gap-2 py-5 text-xs text-[#B8D4BD]">
+          <Link href="/products" className="hover:text-white">The market</Link><span>→</span><span className="text-[#F4C430]">{product.name}</span>
         </div>
       </div>
 
-      {/* ── Product hero ───────────────────────────────────────── */}
-      <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
+      <main className="page-container py-10 md:py-16">
+        <div className="grid gap-12 lg:grid-cols-[1.12fr_.88fr] lg:gap-20">
+          <ProductImageGallery images={product.images ?? []} productName={product.name} mainImage={product.image} />
 
-          {/* Left: image gallery */}
-          <div className="lg:col-span-3">
-            <div className="relative">
-              <ProductImageGallery
-                images={product.images ?? []}
-                productName={product.name}
-                mainImage={product.image}
-              />
-              {product.badge && (
-                <span className="absolute top-4 left-4 bg-forest-green text-ghana-gold text-sm font-bold px-3 py-1.5 rounded-full z-20 shadow pointer-events-none">
-                  {product.badge?.name}
-                </span>
-              )}
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <div className="flex items-center justify-between gap-5 border-b border-[#0D3B2A]/20 pb-4 text-[10px] font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:border-white/15 dark:text-[#9FC5A4]">
+              <span>{product.category?.name}</span><span>{product.region?.name}</span>
             </div>
-          </div>
+            <h1 className="display-organic mt-8 text-5xl leading-[.9] md:text-7xl">{product.name}</h1>
+            <div className="mt-7 flex items-end gap-3">
+              <strong className="text-3xl text-[#2E7D32] dark:text-[#F4C430]">GH₵ {product.price}</strong>
+              <span className="pb-1 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">{product.unit}</span>
+            </div>
+            <div className="prose prose-lg mt-7 text-[#5B3E31] dark:prose-invert dark:text-[#D5E7D8]" dangerouslySetInnerHTML={{ __html: product.description }} />
 
-          {/* Right: details */}
-          <div className="lg:col-span-2 flex flex-col justify-center">
-
-            {/* Category · Region pill */}
-            <div className="mb-4">
-              <span className="inline-block text-xs bg-[#F5F0E6] dark:bg-[#374151] text-[#2e7d32] dark:text-[#81C784] rounded-full px-3 py-1 font-semibold uppercase tracking-wide">
-                {product.category?.name} · {product.region?.name}
-              </span>
+            <div className="mt-9 grid gap-3 sm:grid-cols-2">
+              <AddToCartButton product={product} />
+              {demo ? <button disabled className="border border-[#0D3B2A]/30 px-6 py-3 font-bold text-[#0D3B2A]/50 dark:border-white/25 dark:text-white/50">Save preview</button> : <WishlistButton productId={product.id} />}
             </div>
 
-            {/* Name */}
-            <h1 className="font-display text-3xl lg:text-4xl font-bold text-forest-green dark:text-[#faf7f0] mb-4 leading-tight">
-              {product.name}
-            </h1>
-
-            {/* Price */}
-            <div className="mb-5">
-              <span className="font-bold text-[#2E7D32] dark:text-[#81C784] text-3xl leading-tight">
-                GH₵ {product.price}
-              </span>
-              <span className="ml-2 text-sm text-[#5B3E31] dark:text-[#E6D8BD]">{product.unit}</span>
-            </div>
-
-            {/* Description */}
-            <div
-              className="prose prose-green max-w-none dark:prose-invert mb-6"
-              dangerouslySetInnerHTML={{ __html: product.description }}
-            />
-
-            <div className="border-t border-[#E6D8BD] dark:border-[#374151] mb-6" />
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="flex-1">
-                <AddToCartButton product={product} />
-              </div>
-
-              <div className="flex-1">
-                <WishlistButton productId={product.id} />
-              </div>
-            </div>
-
-            {/* Trust badge */}
-            <div className="flex items-start gap-3 p-4 bg-[#F0F7F0] dark:bg-[#1a2e1a] border border-[#C3E6CB] dark:border-[#2d4a2d] rounded-xl">
-              <span className="text-leaf-green">
-                <LeafIcon />
-              </span>
-              <p className="text-sm text-[#2E7D32] dark:text-[#81C784] font-medium leading-snug">
-                Sourced from verified Ghanaian farmers · No synthetic pesticides
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Product detail tabs ────────────────────────────────── */}
-      <div className="bg-mist-white dark:bg-[#1f2937] border-t border-[#E6D8BD] dark:border-[#374151]">
-        <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <ProductTabs product={product} />
-        </div>
-      </div>
-
-      {/* ── Related products ───────────────────────────────────── */}
-      {related.length > 0 && (
-        <div className="bg-beige dark:bg-[#111827] border-t border-[#E6D8BD] dark:border-[#374151]">
-          <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
-            <h2 className="font-display text-2xl font-bold text-forest-green dark:text-[#faf7f0] mb-8">
-              You might also like
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {related.map((p) => (
-                <ProductCard key={p.id} product={p} />
+            <div className="mt-10 grid grid-cols-3 border-y border-[#0D3B2A]/20 py-5 dark:border-white/15">
+              {[[product.category?.name, 'Category'], [product.region?.name, 'Origin'], [product.unit, 'Sold as']].map(([value, label], index) => (
+                <div key={label} className={index ? 'border-l border-[#0D3B2A]/20 pl-4 dark:border-white/15' : ''}>
+                  <strong className="display-organic block text-xl">{value}</strong><span className="text-[10px] uppercase tracking-[.14em] text-[#5B3E31] dark:text-[#9FC5A4]">{label}</span>
+                </div>
               ))}
             </div>
+
+            <p className="mt-7 border-l-2 border-[#F4C430] pl-5 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">Sourced from Ghanaian growers and handled with care from collection to delivery.</p>
           </div>
         </div>
+      </main>
+
+      <section className="border-y border-[#0D3B2A]/15 bg-[#F5F0E6] dark:border-white/15 dark:bg-[#202621]">
+        <div className="page-container pb-8 pt-16 md:pb-10 md:pt-20"><ProductTabs product={product} /></div>
+      </section>
+
+      {related.length > 0 && (
+        <section className="page-container py-20 md:py-28">
+          <div className="flex items-end justify-between gap-8 border-b border-[#0D3B2A]/20 pb-7 dark:border-white/15">
+            <h2 className="display-organic text-4xl md:text-6xl">More from the market.</h2><Link href="/products" className="font-bold">Browse everything ↗</Link>
+          </div>
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">{related.map(item => <ProductCard key={item.id} product={item} preview={!!demo} />)}</div>
+        </section>
       )}
     </div>
   )

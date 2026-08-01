@@ -42,23 +42,23 @@ export default function MyRecipesPage() {
   }
 
   return (
-    <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
+    <div className="account-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
 
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '2.5rem' }}>
-        <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between flex-wrap gap-4">
+      <div className="bg-[#0D3B2A] pb-12 pt-32 text-white">
+        <div className="page-container flex flex-wrap items-end justify-between gap-7">
           <div>
-            <p className="text-ghana-gold text-xs font-bold uppercase tracking-widest mb-1">
+            <p className="editorial-label mb-3 text-ghana-gold">
               {user ? `${user.first_name}'s Kitchen` : 'My Kitchen'}
             </p>
-            <h1 className="font-display text-3xl lg:text-4xl font-bold text-mist-white">
-              My Recipes
+            <h1 className="display-organic text-6xl text-mist-white lg:text-7xl">
+              Your kitchen notebook.
             </h1>
-            <p className="text-light-leaf mt-1 text-sm">Recipes you&apos;ve saved and built</p>
+            <p className="mt-3 text-sm text-[#B8D4BD]">Recipes you&apos;ve saved, changed and made your own.</p>
           </div>
           <Link
             href="/recipes/builder"
-            className="flex items-center gap-2 bg-[#F4C430] text-[#0D3B2A] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#c59f2c] transition-colors text-sm"
+            className="flex items-center gap-2 bg-[#F4C430] px-5 py-3 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-white"
           >
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
@@ -83,33 +83,33 @@ export default function MyRecipesPage() {
           </div>
         ) : recipes.length === 0 ? (
           /* ── Empty state ── */
-          <div className="bg-mist-white dark:bg-[#1f2937] rounded-2xl p-16 border border-sand dark:border-[#374151] text-center max-w-lg mx-auto">
-            <div className="w-16 h-16 rounded-full bg-[#F4C430]/20 flex items-center justify-center mx-auto mb-5">
+          <div className="mx-auto max-w-3xl border-y editorial-rule py-14 text-left md:grid md:grid-cols-[7rem_1fr] md:gap-10">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center bg-[#F4C430]/20 md:mb-0">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#F4C430" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
                 <path d="M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
               </svg>
             </div>
-            <h2 className="font-display text-2xl font-bold text-forest-green dark:text-[#faf7f0] mb-3">
-              No saved recipes yet
+            <div><h2 className="display-organic mb-3 text-4xl text-forest-green dark:text-[#faf7f0]">
+              The first page is still blank.
             </h2>
             <p className="text-charcoal/60 dark:text-[#9ca3af] mb-8 text-sm leading-relaxed">
-              Browse our collection of organic Ghanaian recipes and customise them to your taste — or build your own from scratch.
+              Save a recipe that worked, or begin with an ingredient and write your own version as you cook.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/recipes"
-                className="inline-block bg-[#F4C430] text-[#0D3B2A] font-semibold px-6 py-3 rounded-xl hover:bg-[#c59f2c] transition-colors text-sm"
+                className="inline-block bg-[#F4C430] px-6 py-3 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white"
               >
                 Browse Recipes
               </Link>
               <Link
                 href="/recipes/builder"
-                className="inline-block border-2 border-[#0D3B2A] dark:border-[#81C784] text-[#0D3B2A] dark:text-[#81C784] font-semibold px-6 py-3 rounded-xl hover:bg-[#0D3B2A]/5 dark:hover:bg-[#81C784]/10 transition-colors text-sm"
+                className="inline-block border-b border-[#0D3B2A] px-2 py-3 text-sm font-bold text-[#0D3B2A] transition-colors hover:text-[#2E7D32] dark:border-[#81C784] dark:text-[#81C784]"
               >
                 Build from Scratch
               </Link>
-            </div>
+            </div></div>
           </div>
         ) : (
           /* ── Recipe cards ── */
@@ -117,7 +117,7 @@ export default function MyRecipesPage() {
             {recipes.map((recipe) => (
               <article
                 key={recipe.id}
-                className="bg-mist-white dark:bg-[#1f2937] rounded-2xl border border-sand dark:border-[#374151] p-6 flex flex-col shadow-sm"
+                className="flex flex-col border-t editorial-rule bg-transparent p-6"
               >
                 <div className="flex-1 mb-5">
                   <h3 className="font-display text-lg font-bold text-forest-green dark:text-[#faf7f0] mb-2 leading-snug">

@@ -96,18 +96,18 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         aria-label="Shopping cart"
         className={[
           'fixed top-0 right-0 z-50',
-          'h-[100dvh] w-full max-w-md',
+          'h-[100dvh] w-full max-w-lg',
           'flex flex-col overflow-hidden',
-          'bg-[#FAF7F0] dark:bg-[#111827] shadow-2xl',
+          'bg-[#FAF7F0] dark:bg-[#171B18] shadow-2xl',
           'transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : 'translate-x-full',
         ].join(' ')}
       >
         {/* 1. Header — flex-shrink-0 */}
-        <div className="shrink-0 flex items-center justify-between px-6 py-5 border-b border-[#E6D8BD] dark:border-[#374151]">
+        <div className="shrink-0 flex items-end justify-between px-6 py-7 border-b border-[#0D3B2A]/20 dark:border-white/15 md:px-8">
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-[#faf7f0]">
-              Your Cart
+            <h2 className="display-organic text-4xl text-[#0D3B2A] dark:text-[#faf7f0]">
+              Your market bag
             </h2>
             {itemCount > 0 && (
               <span className="text-sm font-semibold text-[#5B3E31] dark:text-[#9ca3af]">
@@ -118,7 +118,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           <button
             onClick={onClose}
             aria-label="Close cart"
-            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors text-[#0D3B2A] dark:text-[#faf7f0]"
+            className="w-11 h-11 flex items-center justify-center border border-[#0D3B2A]/20 hover:bg-[#0D3B2A] hover:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-[#0D3B2A] transition-colors text-[#0D3B2A] dark:text-[#faf7f0]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" strokeWidth="2.5"
@@ -130,7 +130,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         </div>
 
         {/* 2. Items list — flex-1, scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 md:px-8">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
               <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#C3B89A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -138,11 +138,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <path d="M16 10a4 4 0 0 1-8 0" />
               </svg>
-              <p className="text-[#5B3E31] dark:text-[#9ca3af] font-medium">Your cart is empty</p>
+              <h3 className="display-organic text-3xl text-[#0D3B2A] dark:text-white">Your bag is waiting.</h3>
+              <p className="max-w-xs text-[#5B3E31] dark:text-[#B8D4BD]">Fill it with something fresh from the current harvest.</p>
               <Link
                 href="/products"
                 onClick={onClose}
-                className="px-5 py-2.5 bg-[#F4C430] text-[#0D3B2A] text-sm font-semibold rounded-xl hover:bg-[#C59F2C] transition-colors"
+                className="px-6 py-3 bg-[#F4C430] text-[#0D3B2A] text-sm font-bold hover:bg-[#0D3B2A] hover:text-white dark:hover:bg-white dark:hover:text-[#0D3B2A] transition-colors"
               >
                 Browse Products
               </Link>
@@ -165,13 +166,13 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 return (
                   <li key={item.product.id} className="flex gap-4 py-4 border-b border-[#E6D8BD] dark:border-[#374151] last:border-0">
                     {/* Product image */}
-                    <div className="relative w-[60px] h-[60px] rounded-xl overflow-hidden bg-[#F5F0E6] dark:bg-[#374151] shrink-0">
+                    <div className="relative w-[76px] h-[88px] overflow-hidden bg-[#F5F0E6] dark:bg-[#273029] shrink-0">
                       <Image
                         src={imageSrc}
                         alt={item.product.name}
                         fill
                         className="object-cover"
-                        sizes="60px"
+                        sizes="76px"
                       />
                     </div>
 
@@ -195,7 +196,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
                       <div className="flex items-center justify-between mt-2">
                         {/* Quantity controls */}
-                        <div className="flex items-center gap-1 border border-[#E6D8BD] dark:border-[#374151] rounded-lg overflow-hidden">
+                        <div className="flex items-center gap-1 border border-[#E6D8BD] dark:border-white/20 overflow-hidden">
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                             aria-label="Decrease quantity"
@@ -229,7 +230,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
         {/* 3. Promo code section — shrink-0, above footer */}
         {items.length > 0 && (
-          <div className="shrink-0 px-6 py-4 border-t border-[#E6D8BD] dark:border-[#374151]">
+          <div className="shrink-0 px-6 py-4 border-t border-[#E6D8BD] dark:border-white/15 md:px-8">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -241,12 +242,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 onKeyDown={(e) => { if (e.key === 'Enter') handleApplyPromo() }}
                 placeholder="Promo code"
                 disabled={!!appliedPromo}
-                className="flex-1 px-3 py-2 rounded-lg border border-[#E6D8BD] bg-[#FAF7F0] text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] dark:bg-[#1f2937] dark:border-[#374151] dark:text-[#faf7f0] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-2 border border-[#E6D8BD] bg-transparent text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] dark:border-white/20 dark:text-[#faf7f0] disabled:opacity-60 disabled:cursor-not-allowed"
               />
               <button
                 onClick={handleApplyPromo}
                 disabled={promoLoading || !!appliedPromo || !promoCode.trim()}
-                className="px-4 py-2 rounded-lg bg-[#0D3B2A] text-[#F4C430] text-sm font-semibold hover:bg-[#0a2e20] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="px-5 py-2 bg-[#0D3B2A] text-[#F4C430] text-sm font-semibold hover:bg-[#0a2e20] dark:bg-[#F4C430] dark:text-[#0D3B2A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {promoLoading ? '…' : 'Apply'}
               </button>
@@ -271,7 +272,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         )}
 
         {/* 4. Footer — flex-shrink-0, always at bottom */}
-        <div className="shrink-0 min-h-fit px-6 pt-5 pb-6 border-t border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827]">
+        <div className="shrink-0 min-h-fit px-6 pt-5 pb-6 border-t border-[#E6D8BD] dark:border-white/15 bg-[#F5F0E6] dark:bg-[#202621] md:px-8">
           {appliedPromo ? (
             <div className="mb-4 space-y-1.5">
               <div className="flex items-center justify-between">

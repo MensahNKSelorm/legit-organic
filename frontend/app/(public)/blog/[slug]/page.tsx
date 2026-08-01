@@ -85,7 +85,7 @@ export default async function BlogPostPage({ params }: Props) {
   const content = post.content ?? ''
 
   return (
-    <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
+    <div className="story-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
 
       {/* ── Breadcrumb ─────────────────────────────────────────── */}
       <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '1rem' }}>

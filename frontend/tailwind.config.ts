@@ -23,9 +23,8 @@ const config: Config = {
         "mist-white": "#FEFCF7",
       },
       fontFamily: {
-        display: ['"Fraunces"', "Georgia", "serif"],
-        sans: ["Inter", "system-ui", "sans-serif"],
-        cursive: ['"Dancing Script"', "cursive"],
+        display: ['"Boska"', "Georgia", "serif"],
+        sans: ['"Cabinet Grotesk"', "system-ui", "sans-serif"],
       },
       backgroundImage: {
         "hero-pattern": "radial-gradient(circle at 20% 80%, #2E7D3215 0%, transparent 50%), radial-gradient(circle at 80% 20%, #F4C43010 0%, transparent 50%)",

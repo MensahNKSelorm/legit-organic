@@ -84,11 +84,11 @@ export default function SignupPage() {
   }
 
   const inputClass =
-    'w-full px-4 py-3 rounded-xl border bg-cream text-charcoal text-sm focus:outline-none transition-colors'
+    'w-full border-0 border-b bg-transparent px-0 py-3 text-[#0D3B2A] outline-none transition-colors placeholder:text-[#5B3E31]/45 dark:text-[#FEFCF7] dark:placeholder:text-white/35'
   const inputBorder = (field: keyof FieldErrors) =>
     fieldErrors[field]
       ? 'border-red-400 focus:border-red-400 focus:ring-1 focus:ring-red-300'
-      : 'border-sand focus:border-leaf-green focus:ring-1 focus:ring-leaf-green'
+      : 'border-[#0D3B2A]/30 focus:border-[#2E7D32] dark:border-white/25 dark:focus:border-[#F4C430]'
 
   const validate = (): boolean => {
     const errs: FieldErrors = {}
@@ -130,17 +130,24 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center px-4 py-24">
-      <div className="w-full max-w-md">
+    <div className="grid min-h-screen bg-[#FAF7F0] pt-[76px] dark:bg-[#171B18] lg:grid-cols-[.9fr_1.1fr]">
+      <div className="relative hidden min-h-[calc(100vh-76px)] overflow-hidden bg-[#0D3B2A] lg:block">
+        <Image src="/images/hero/3.webp" alt="Produce grown in Ghana" fill priority sizes="45vw" className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0D3B2A]/90 via-[#0D3B2A]/25 to-transparent" />
+        <p className="display-organic absolute bottom-14 left-14 max-w-md text-5xl leading-[.95] text-white">Your next meal can begin with a <em className="font-normal text-[#F4C430]">better choice.</em></p>
+      </div>
+      <div className="flex items-center justify-center px-6 py-14 md:px-12">
+      <div className="w-full max-w-xl">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
+        <div className="mb-9">
+          <div className="mb-7">
             <Image
               src="/images/logo-lightmode.svg"
               alt="Legit Organic"
               width={120}
               height={60}
               className="dark:hidden"
+              style={{ width: 'auto', height: '60px' }}
             />
             <Image
               src="/images/logo-darkmode.svg"
@@ -148,15 +155,16 @@ export default function SignupPage() {
               width={120}
               height={60}
               className="hidden dark:block"
+              style={{ width: 'auto', height: '60px' }}
             />
           </div>
-          <h1 className="font-display text-3xl font-bold text-forest-green">Join the community</h1>
-          <p className="text-charcoal/60 mt-2 text-sm">
-            Access Ghana&apos;s most trusted organic marketplace
+          <h1 className="display-organic text-5xl text-[#0D3B2A] dark:text-[#FEFCF7]">Create your market account.</h1>
+          <p className="mt-3 text-[#5B3E31] dark:text-[#B8D4BD]">
+            Save recipes, manage orders and bring fresh produce home more easily.
           </p>
         </div>
 
-        <div className="bg-mist-white rounded-2xl p-8 border border-sand shadow-sm overflow-hidden">
+        <div>
           {/* Google OAuth */}
           <div className="mb-6">
             <div className="flex justify-center w-full overflow-hidden">
@@ -179,7 +187,7 @@ export default function SignupPage() {
 
           <div className="relative flex items-center mb-6">
             <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
-            <span className="px-3 text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">or continue with email</span>
+            <span className="px-3 text-xs text-[#5B3E31] dark:text-[#B8D4BD]">or continue with email</span>
             <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
           </div>
 
@@ -333,7 +341,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || (TURNSTILE_ENABLED && !turnstileToken)}
-              className="w-full bg-ghana-gold text-forest-green font-semibold py-3 rounded-xl hover:bg-dark-gold transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+              className="mt-3 flex w-full items-center justify-center gap-2 bg-[#F4C430] py-4 font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white disabled:opacity-60 dark:hover:bg-white dark:hover:text-[#0D3B2A]"
             >
               {loading ? <Spinner /> : 'Create Account'}
             </button>
@@ -346,6 +354,7 @@ export default function SignupPage() {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   )

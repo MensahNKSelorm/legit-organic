@@ -34,8 +34,8 @@
   --color-mist-white: #fefcf7;
 
   /* Typography */
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-sans: Inter, system-ui, sans-serif;
+  --font-display: "Boska", Georgia, serif;
+  --font-sans: "Cabinet Grotesk", system-ui, sans-serif;
 }
 
 /* ── CSS custom properties for non-Tailwind use ─────────────── */
@@ -64,14 +64,14 @@ html {
 body {
   background-color: #faf7f0;
   color: #333333;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Cabinet Grotesk", system-ui, sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Boska", Georgia, serif;
   line-height: 1.2;
 }
 
@@ -142,4 +142,167 @@ html.dark .text-charcoal\/60 { color: rgba(250, 247, 240, 0.6); }
 }
 .whatsapp-pulse {
   animation: whatsapp-pulse 2s infinite;
+}
+
+/* ── Brand-led storefront primitives ───────────────────────── */
+.display-organic {
+  font-family: "Boska", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.market-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: currentColor;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.market-kicker::before {
+  content: "";
+  width: 2rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* Editorial labels are deliberately quieter than the old eyebrow treatment. */
+.editorial-label {
+  font-family: "Cabinet Grotesk", system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.editorial-rule {
+  border-color: rgba(13, 59, 42, 0.22);
+}
+
+html.dark .editorial-rule {
+  border-color: rgba(250, 247, 240, 0.18);
+}
+
+.legal-document {
+  font-family: "Cabinet Grotesk", system-ui, sans-serif;
+}
+
+.account-page .rounded-2xl,
+.account-page .rounded-xl,
+.account-page .rounded-lg {
+  border-radius: 0;
+}
+
+.account-page .account-panel {
+  background: transparent;
+  border-width: 1px 0 0;
+  border-color: rgba(13, 59, 42, 0.22);
+  box-shadow: none;
+}
+
+html.dark .account-page .account-panel {
+  border-color: rgba(250, 247, 240, 0.18);
+}
+
+.story-page .rounded-2xl,
+.story-page .rounded-xl,
+.story-page .rounded-lg,
+.confirmation-page .rounded-2xl,
+.confirmation-page .rounded-xl {
+  border-radius: 0;
+}
+
+.story-page .prose {
+  font-family: "Cabinet Grotesk", system-ui, sans-serif;
+  font-size: 1.06rem;
+  line-height: 1.85;
+}
+
+.story-page .prose h2,
+.story-page .prose h3 {
+  font-family: "Boska", Georgia, serif;
+  font-weight: 500;
+}
+
+.legal-document section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.legal-document section h2 {
+  margin-top: 2.5rem;
+  font-family: "Cabinet Grotesk", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.legal-document section p,
+.legal-document section li {
+  max-width: 68ch;
+}
+
+@media (min-width: 768px) {
+  .legal-document section {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  .legal-document section h2 {
+    margin-top: 0;
+    grid-column: 1;
+    grid-row: 1 / span 20;
+  }
+
+  .legal-document section > :not(h2) {
+    grid-column: 2;
+  }
+}
+
+.field-grid {
+  background-image:
+    linear-gradient(rgba(13, 59, 42, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 59, 42, 0.055) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.grain-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.reveal-up { animation: reveal-up 0.85s cubic-bezier(.2,.75,.2,1) both; }
+.reveal-up-delay { animation: reveal-up 0.85s .14s cubic-bezier(.2,.75,.2,1) both; }
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.market-ribbon-track {
+  animation: market-ribbon 18s linear infinite;
+  will-change: transform;
+}
+
+@keyframes market-ribbon {
+  to { transform: translateX(-12.5%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

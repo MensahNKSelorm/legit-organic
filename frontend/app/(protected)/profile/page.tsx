@@ -168,7 +168,7 @@ export default function ProfilePage() {
   const fullName = user ? `${user.first_name} ${user.last_name}`.trim() : ''
 
   const inputBase =
-    'w-full px-4 py-2.5 rounded-xl border bg-cream text-charcoal text-sm focus:outline-none focus:ring-1 transition-colors'
+    'w-full border-0 border-b bg-transparent px-0 py-3 text-charcoal text-sm focus:outline-none transition-colors dark:text-white'
   const inputOk  = `${inputBase} border-sand focus:border-leaf-green focus:ring-leaf-green`
   const inputErr = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-400`
 
@@ -180,11 +180,11 @@ export default function ProfilePage() {
   ]
 
   return (
-    <>
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '8rem', paddingBottom: '4rem' }}>
-        <div className="page-container max-w-7xl mx-auto px-6 lg:px-8">
-          <h1 className="font-display text-4xl font-bold text-mist-white">My Profile</h1>
-          <p className="text-light-leaf mt-2 text-lg">Manage your account details and preferences</p>
+    <div className="account-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
+      <div className="bg-[#0D3B2A] pb-12 pt-32 text-white md:pb-16 md:pt-36">
+        <div className="page-container grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
+          <div><p className="editorial-label text-[#F4C430]">Customer ledger</p><h1 className="display-organic mt-3 text-6xl md:text-8xl">Your market account.</h1></div>
+          <p className="max-w-sm border-l border-white/20 pl-5 text-sm leading-6 text-[#B8D4BD]">Keep delivery details current, revisit saved food and follow every order.</p>
         </div>
       </div>
 
@@ -192,7 +192,7 @@ export default function ProfilePage() {
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
 
           {/* Sidebar */}
-          <div className="bg-mist-white rounded-2xl p-6 border border-sand h-fit">
+          <div className="account-panel h-fit border-t p-6">
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-24 h-24 rounded-full bg-[#F4C430] flex items-center justify-center ring-4 ring-[#0D3B2A] ring-offset-2 ring-offset-[#FAF7F0] dark:ring-offset-gray-800 shadow-xl text-[#0D3B2A] text-3xl font-bold font-sans tracking-wide mb-3">
                 {initials}
@@ -235,7 +235,7 @@ export default function ProfilePage() {
             {activeTab === 'personal' && (
               <>
                 {/* Personal info card */}
-                <div className="bg-mist-white rounded-2xl p-8 border border-sand">
+                <div className="account-panel p-8">
                   <h2 className="font-display text-xl font-bold text-forest-green mb-6">
                     Account Details
                   </h2>
@@ -427,7 +427,7 @@ export default function ProfilePage() {
 
             {/* ── My List (Wishlist) tab ── */}
             {activeTab === 'wishlist' && (
-              <div className="bg-mist-white rounded-2xl p-8 border border-sand">
+              <div className="account-panel p-8">
                 <h2 className="font-display text-xl font-bold text-forest-green mb-6">My List</h2>
 
                 {wishlistLoading ? (
@@ -508,7 +508,7 @@ export default function ProfilePage() {
 
             {/* ── My Recipes tab ── */}
             {activeTab === 'recipes' && (
-              <div className="bg-mist-white rounded-2xl p-8 border border-sand">
+              <div className="account-panel p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-display text-xl font-bold text-forest-green">My Recipes</h2>
                   <Link
@@ -590,7 +590,7 @@ export default function ProfilePage() {
 
             {/* ── Order History tab ── */}
             {activeTab === 'orders' && (
-              <div className="bg-mist-white rounded-2xl p-8 border border-sand">
+              <div className="account-panel p-8">
                 <h2 className="font-display text-xl font-bold text-forest-green mb-6">Order History</h2>
 
                 {ordersError && (
@@ -628,6 +628,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </SectionWrapper>
-    </>
+    </div>
   )
 }

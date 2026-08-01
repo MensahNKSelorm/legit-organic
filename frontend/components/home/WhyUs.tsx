@@ -1,101 +1,40 @@
-import SectionWrapper from "@/components/ui/SectionWrapper";
+import Image from 'next/image'
+import Link from 'next/link'
 
-const pillars = [
-  {
-    icon: () => (
-      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>
-    ),
-    title: "Radical Transparency",
-    description:
-      "Every product comes with a full traceability report — from the farm GPS coordinates to harvest date, storage conditions, and the farmer's name. You always know where your food came from.",
-    metric: "Full Farm Traceability",
-  },
-  {
-    icon: () => (
-      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        <polyline points="9 12 11 14 15 10"/>
-      </svg>
-    ),
-    title: "Uncompromising Quality",
-    description:
-      "All produce passes a three-stage quality check: in-field inspection, post-harvest assessment, and lab testing for pesticide residue. Only products that clear all three stages reach your door.",
-    metric: "3-Stage Quality Check",
-  },
-  {
-    icon: () => (
-      <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M12 22V11"/>
-        <path d="M12 11C12 7 8 3 4 3c0 4 4 8 8 8z"/>
-        <path d="M12 11c0-4 4-8 8-8 0 4-4 8-8 8z"/>
-      </svg>
-    ),
-    title: "Farmer Empowerment",
-    description:
-      "We pay farmers 30–40% above market rate and invest in their training. Our partnership model gives smallholder farmers access to certification, tools, and a reliable market — building a sustainable food future.",
-    metric: "30–40% Above Market Rate",
-  },
-];
+const promises = [
+  ['Know the source', 'Origin, farm and handling information should travel with the food—not disappear after harvest.'],
+  ['Choose better food', 'We focus on produce grown with care and handled for freshness, flavour and everyday nourishment.'],
+  ['Strengthen local farms', 'A shorter route to market helps growers earn fairly while households gain access to better produce.'],
+]
 
 export default function WhyUs() {
   return (
-    <SectionWrapper id="why-us" background="forest">
-      <div className="relative">
-        {/* Decorative leaf watermark */}
-        <svg
-          className="absolute -top-8 right-0 w-80 h-80 opacity-5 text-white pointer-events-none"
-          viewBox="0 0 200 280"
-          fill="currentColor"
-          aria-hidden
-        >
-          <path d="M100 10C140 10 180 50 180 110C180 180 140 260 100 270C60 260 20 180 20 110C20 50 60 10 100 10Z"/>
-        </svg>
+    <section id="why-us" className="overflow-hidden bg-[#0d3b2a] py-24 text-[#fefcf7] md:py-32">
+      <div className="page-container">
+        <h2 className="display-organic max-w-6xl text-[clamp(3.6rem,7.8vw,8.4rem)] leading-[.84]">
+          Good food should never arrive as a <em className="font-normal text-[#f4c430]">mystery.</em>
+        </h2>
 
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <span className="text-ghana-gold text-sm font-semibold uppercase tracking-widest">
-            Why Choose Us
-          </span>
-          <h2 className="font-display text-4xl font-bold text-mist-white mt-3 mb-5">
-            Our Three Core Promises
-          </h2>
-          <p className="text-light-leaf text-lg leading-relaxed max-w-xl mx-auto">
-            Legit Organic was founded on a simple belief: Ghanaians deserve to know exactly what they
-            are eating, and farmers deserve fair pay for honest work.
-          </p>
-        </div>
+        <div className="mt-16 grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:items-stretch lg:gap-0">
+          <div className="relative min-h-[520px] overflow-hidden lg:min-h-[680px]">
+            <Image src="/images/hero/4.webp" alt="Food grown and handled with care" fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <p className="absolute bottom-7 left-7 max-w-sm border-l border-[#f4c430] pl-5 text-sm leading-6 text-white/85 md:bottom-10 md:left-10">
+              Trust is grown through every decision—from the soil and the people tending it to the way produce reaches your home.
+            </p>
+          </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {pillars.map((pillar) => (
-            <div
-              key={pillar.title}
-              className="bg-[#0D3B2A]/80 backdrop-blur-sm border-t-2 border-[#F4C430] rounded-2xl p-8 shadow-lg hover:bg-[#0D3B2A]/60 transition-colors flex flex-col"
-            >
-              {/* Icon */}
-              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mb-6 text-[#F4C430]">
-                {pillar.icon()}
-              </div>
-
-              {/* Title */}
-              <h3 className="font-display text-xl font-bold text-white mb-4">{pillar.title}</h3>
-
-              {/* Description */}
-              <p className="text-light-leaf leading-relaxed">{pillar.description}</p>
-
-              {/* Badge — pinned to bottom of card */}
-              <div className="mt-auto pt-6">
-                <span className="inline-block bg-ghana-gold/20 border border-ghana-gold/40 text-ghana-gold text-xs font-semibold px-3 py-1 rounded-full">
-                  {pillar.metric}
-                </span>
-              </div>
-            </div>
-          ))}
+          <div className="flex flex-col justify-center bg-[#f5f0e6] px-7 py-10 text-[#0d3b2a] dark:bg-[#202621] dark:text-[#fefcf7] md:px-12 lg:px-14 lg:py-16">
+            {promises.map(([title, body], index) => (
+              <article key={title} className={`py-8 ${index ? 'border-t border-[#0d3b2a]/20 dark:border-white/15' : ''}`}>
+                <h3 className="display-organic text-3xl md:text-4xl">{title}</h3>
+                <p className="mt-4 max-w-lg leading-7 text-[#5b3e31] dark:text-[#b8d4bd]">{body}</p>
+              </article>
+            ))}
+            <Link href="/about" className="mt-4 inline-flex w-fit border-b border-[#0d3b2a] pb-2 font-bold dark:border-[#f4c430] dark:text-[#f4c430]">Follow the story ↗</Link>
+          </div>
         </div>
       </div>
-    </SectionWrapper>
-  );
+    </section>
+  )
 }

@@ -50,27 +50,31 @@ export default async function BlogPage({ searchParams }: Props) {
 
   const featured = !category && posts.length > 0 ? posts[0] : null
   const gridPosts = featured ? posts.slice(1) : posts
+  const previewStories = process.env.NODE_ENV === 'development' && posts.length === 0 && !category
+    ? [
+        { title: 'What freshness looks like before the market opens', desk: 'Field notes', image: '/images/hero/3.webp', excerpt: 'A closer look at harvest timing, handling and the short journey between a farm and a household.' },
+        { title: 'The case for eating with Ghana’s seasons', desk: 'Kitchen notes', image: '/images/hero/7.webp', excerpt: 'Seasonal eating is less about rules and more about noticing what is abundant, good and fairly priced.' },
+        { title: 'Meet the hands behind the harvest', desk: 'People', image: '/images/hero/1.webp', excerpt: 'The knowledge, decisions and daily labour that do not fit neatly onto a product label.' },
+      ]
+    : []
 
   return (
-    <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
-
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '9rem', paddingBottom: '5rem' }}>
-        <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <span className="text-ghana-gold text-xs font-bold uppercase tracking-widest">
-            THE LEGIT ORGANIC BLOG
-          </span>
-          <h1 className="font-display text-4xl lg:text-5xl font-bold text-white mt-3 mb-5">
-            Health, Food &amp; Farming Insights
-          </h1>
-          <p className="text-white/80 text-lg leading-relaxed max-w-xl mx-auto">
-            Research-backed articles on organic food, food safety in Ghana, nutrition, and
-            sustainable farming.
-          </p>
+    <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
+      <header className="bg-[#FAF7F0] pb-12 pt-32 text-[#0D3B2A] dark:bg-[#171B18] dark:text-white md:pb-16 md:pt-36">
+        <div className="page-container">
+          <div className="flex items-center justify-between border-y editorial-rule py-3 text-xs font-bold">
+            <span>Field reports · kitchen notes · people</span><span>Accra, Ghana</span>
+          </div>
+          <h1 className="display-organic my-8 text-center text-[clamp(5rem,14vw,12rem)] leading-[.72] tracking-[-.06em]">The Journal</h1>
+          <div className="grid gap-7 border-t editorial-rule pt-7 md:grid-cols-[1fr_1.3fr_1fr] md:items-start">
+            <p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">Published when there is something worth saying.</p>
+            <p className="display-organic text-3xl leading-tight md:text-4xl">Stories from the places where food is grown, sold and cooked.</p>
+            <p className="text-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD] md:text-right">Reporting and observation from Ghanaian farms, kitchens and the route between them.</p>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
+      <div className="page-container py-12 lg:py-20">
 
         {/* ── Category filter ──────────────────────────────────── */}
         {categories.length > 0 && (
@@ -135,10 +139,7 @@ export default async function BlogPage({ searchParams }: Props) {
           </Link>
         )}
 
-        {/* ── Post count ───────────────────────────────────────── */}
-        <p className="text-sm text-charcoal/50 dark:text-[#9ca3af] mb-6">
-          Showing {posts.length} article{posts.length !== 1 ? 's' : ''}
-        </p>
+        {posts.length > 0 && <p className="mb-6 text-sm text-charcoal/50 dark:text-[#9ca3af]">{posts.length} article{posts.length !== 1 ? 's' : ''}</p>}
 
         {/* ── Grid ─────────────────────────────────────────────── */}
         {gridPosts.length > 0 ? (
@@ -147,19 +148,26 @@ export default async function BlogPage({ searchParams }: Props) {
               <BlogCard key={post.id} post={post} />
             ))}
           </div>
+        ) : previewStories.length > 0 ? (
+          <div className="grid gap-x-8 gap-y-12 lg:grid-cols-2">
+            {previewStories.map((story, index) => (
+              <article key={story.title} className={`group border-t editorial-rule pt-5 ${index === 0 ? 'lg:col-span-2 lg:grid lg:grid-cols-[1.2fr_.8fr] lg:gap-10' : ''}`}>
+                <div className={`relative overflow-hidden ${index === 0 ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
+                  <Image src={story.image} alt="" fill className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" sizes="(max-width:768px) 100vw, 288px" />
+                </div>
+                <div className="pt-6">
+                  <p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">{story.desk}</p>
+                  <h2 className={`display-organic mt-3 leading-tight text-[#0D3B2A] dark:text-white ${index === 0 ? 'text-4xl md:text-6xl' : 'text-3xl md:text-4xl'}`}>{story.title}</h2>
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">{story.excerpt}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-charcoal/40 dark:text-[#9ca3af] text-lg mb-4">
-              No articles found.
-            </p>
-            {category && (
-              <Link
-                href="/blog"
-                className="text-sm text-leaf-green hover:underline"
-              >
-                View all articles
-              </Link>
-            )}
+          <div className="border-y editorial-rule py-12">
+            <h2 className="display-organic text-4xl text-[#0D3B2A] dark:text-white">{category ? 'Nothing has been filed under this subject yet.' : 'The first journal edition is being prepared.'}</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">Stories will appear here once they have been reported, edited and are ready to be useful.</p>
+            {category && <Link href="/blog" className="mt-7 inline-flex border-b border-current pb-1 text-sm font-bold text-[#0D3B2A] dark:text-[#F4C430]">Return to the journal ↗</Link>}
           </div>
         ) : null}
       </div>

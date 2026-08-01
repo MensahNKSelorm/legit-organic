@@ -48,8 +48,7 @@ export default function Footer() {
             </div>
 
             <p className="text-light-leaf text-sm leading-relaxed mb-6">
-              Rebuilding trust in Ghana&apos;s food ecosystem — connecting conscious consumers
-              directly with verified organic farmers across the country.
+              Bringing Ghanaian farmers, fresh produce and everyday kitchens closer together.
             </p>
 
             {/* Social icons */}
@@ -112,7 +111,7 @@ export default function Footer() {
               </h3>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.875rem" }}>
                 {links.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${category}-${link.label}`}>
                     <Link
                       href={link.href}
                       className="text-light-leaf text-sm hover:text-mist-white transition-colors"

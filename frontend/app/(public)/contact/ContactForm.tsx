@@ -31,15 +31,15 @@ export default function ContactForm() {
 
   if (submitted) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-[#E6D8BD] dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center min-h-[420px]">
-        <div className="w-16 h-16 bg-[#0D3B2A] rounded-full flex items-center justify-center mb-5">
+      <div className="flex min-h-[420px] flex-col items-start justify-center border-y editorial-rule py-12">
+        <div className="mb-6 grid h-14 w-14 place-items-center bg-[#0D3B2A]">
           <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-2">Message Sent!</h3>
-        <p className="text-[#0D3B2A]/70 dark:text-gray-300 text-sm leading-relaxed max-w-xs">
-          Thank you for reaching out. We&apos;ll be in touch within 24 hours.
+        <h3 className="display-organic mb-2 text-4xl text-[#0D3B2A] dark:text-white">Your email app is open.</h3>
+        <p className="max-w-md text-sm leading-relaxed text-[#5B3E31] dark:text-[#B8D4BD]">
+          Finish sending the prepared message there. We&apos;ll reply as soon as someone on the team is available.
         </p>
         <button
           onClick={reset}
@@ -52,16 +52,16 @@ export default function ContactForm() {
   }
 
   const inputClass =
-    'w-full px-4 py-3 rounded-xl border border-[#E6D8BD] dark:border-gray-600 bg-[#FAF7F0] dark:bg-gray-700 text-[#0D3B2A] dark:text-white placeholder:text-[#0D3B2A]/40 dark:placeholder-gray-400 text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] transition-colors'
+    'w-full border-0 border-b border-[#0D3B2A]/25 bg-transparent px-0 py-3 text-[#0D3B2A] placeholder:text-[#0D3B2A]/35 focus:border-[#2E7D32] focus:outline-none dark:border-white/20 dark:text-white dark:placeholder:text-white/35 text-base transition-colors'
 
   const labelClass =
-    'block text-xs font-semibold text-[#0D3B2A]/60 dark:text-gray-400 uppercase tracking-wide mb-1.5'
+    'block text-xs font-bold text-[#2E7D32] dark:text-[#9FC5A4] mb-1'
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-[#E6D8BD] dark:border-gray-700 shadow-sm">
-      <h2 className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white mb-6">Send a Message</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+    <div className="border-t editorial-rule pt-6 lg:pt-0 lg:border-t-0">
+      <p className="editorial-label mb-7 text-[#2E7D32] dark:text-[#9FC5A4]">Write to the team</p>
+      <form onSubmit={handleSubmit} className="grid gap-x-8 gap-y-6 md:grid-cols-2">
+        <div className="md:col-span-2">
           <label className={labelClass}>Full Name</label>
           <input
             type="text"
@@ -105,7 +105,7 @@ export default function ContactForm() {
             <select
               value={subject}
               onChange={e => setSubject(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-[#E6D8BD] dark:border-gray-600 bg-[#FAF7F0] dark:bg-gray-700 text-[#0D3B2A] dark:text-white text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] transition-colors"
+              className={`${inputClass} cursor-pointer appearance-none`}
             >
               <option>General Inquiry</option>
               <option>Order Support</option>
@@ -122,7 +122,7 @@ export default function ContactForm() {
           </div>
         </div>
 
-        <div>
+        <div className="md:col-span-2">
           <label className={labelClass}>Message</label>
           <textarea
             required
@@ -136,7 +136,7 @@ export default function ContactForm() {
 
         <button
           type="submit"
-          className="w-full bg-[#F4C430] text-[#0D3B2A] font-semibold py-3 rounded-xl hover:bg-[#e5b520] transition-colors"
+          className="mt-2 w-full bg-[#F4C430] py-4 font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white md:col-span-2"
         >
           Send Message
         </button>
