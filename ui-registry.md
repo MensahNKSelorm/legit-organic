@@ -145,7 +145,7 @@ Last updated: 2026-08-01
 - Product names use the explicit `product-name-sans` Cabinet Grotesk rule and reserve two lines. Global element defaults belong in Tailwind’s base layer so intentional font, line-height, colour and underline utilities remain effective. Category/origin reserves two lines, and descriptions reserve three lines above the mobile breakpoint.
 - Price, unit and actions remain aligned at the bottom regardless of copy length.
 - The intentionally enlarged featured product keeps its separate editorial layout; equal-height rules apply to the standard product grid and related-product grid.
-- The main market uses a compact two-column phone grid. At that width, cards use a shorter image, hide description copy and shorten “Add to Cart” to “Add”; full copy and spacing return at the small breakpoint.
+- The main market uses a compact two-column phone grid. At that width, cards use a shorter image, keep descriptions to two compact lines and shorten “Add to Cart” to “Add”; full three-line copy and spacing return at the small breakpoint.
 
 ### Homepage Recipe Teaser
 

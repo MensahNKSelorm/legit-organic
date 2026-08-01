@@ -58,7 +58,7 @@ export default function ProductCard({ product, featured = false, preview = false
           </span>
         </div>
 
-        <p className={`hidden text-sm leading-relaxed text-charcoal/70 dark:text-[#d1d5db] sm:block ${featured ? 'flex-1 line-clamp-3' : 'line-clamp-3 min-h-[4.125rem]'}`}>
+        <p className={`line-clamp-2 min-h-[2.5rem] text-[11px] leading-[1.25rem] text-charcoal/70 dark:text-[#d1d5db] sm:line-clamp-3 sm:min-h-[4.125rem] sm:text-sm sm:leading-relaxed ${featured ? 'sm:flex-1' : ''}`}>
           {stripHtml(product.description)}
         </p>
 
