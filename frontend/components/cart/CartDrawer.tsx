@@ -132,12 +132,15 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         {/* 2. Items list — flex-1, scrollable */}
         <div className="flex-1 overflow-y-auto px-6 py-4 md:px-8">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
-              <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#C3B89A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
+            <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+              <div className="relative mb-2 flex h-24 w-24 items-center justify-center border border-[#0D3B2A]/20 text-[#0D3B2A] dark:border-white/20 dark:text-[#F4C430]">
+                <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M4.5 8.5h15l-1.2 11H5.7l-1.2-11Z" />
+                  <path d="M8.5 8.5c0-2.7 1.3-4.5 3.5-4.5s3.5 1.8 3.5 4.5" />
+                  <path d="M8 13h8" />
+                </svg>
+                <span className="absolute -bottom-2 -right-2 h-5 w-5 bg-[#F4C430]" aria-hidden />
+              </div>
               <h3 className="display-organic text-3xl text-[#0D3B2A] dark:text-white">Your bag is waiting.</h3>
               <p className="max-w-xs text-[#5B3E31] dark:text-[#B8D4BD]">Fill it with something fresh from the current harvest.</p>
               <Link

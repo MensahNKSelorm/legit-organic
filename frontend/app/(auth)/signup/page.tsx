@@ -130,24 +130,24 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="grid min-h-screen bg-[#FAF7F0] pt-[76px] dark:bg-[#171B18] lg:grid-cols-[.9fr_1.1fr]">
+    <div className="grid min-h-screen bg-[#FAF7F0] pt-[76px] dark:bg-[#171B18] lg:h-screen lg:grid-cols-[.9fr_1.1fr] lg:overflow-hidden">
       <div className="relative hidden min-h-[calc(100vh-76px)] overflow-hidden bg-[#0D3B2A] lg:block">
         <Image src="/images/hero/3.webp" alt="Produce grown in Ghana" fill priority sizes="45vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0D3B2A]/90 via-[#0D3B2A]/25 to-transparent" />
         <p className="display-organic absolute bottom-14 left-14 max-w-md text-5xl leading-[.95] text-white">Your next meal can begin with a <em className="font-normal text-[#F4C430]">better choice.</em></p>
       </div>
-      <div className="flex items-center justify-center px-6 py-14 md:px-12">
+      <div className="flex items-start justify-center overflow-y-auto px-6 py-10 md:px-12 lg:py-6 xl:items-center xl:py-8">
       <div className="w-full max-w-xl">
         {/* Brand */}
-        <div className="mb-9">
-          <div className="mb-7">
+        <div className="mb-6 xl:mb-8">
+          <div className="mb-4 xl:mb-6">
             <Image
               src="/images/logo-lightmode.svg"
               alt="Legit Organic"
               width={120}
               height={60}
               className="dark:hidden"
-              style={{ width: 'auto', height: '60px' }}
+              style={{ width: 'auto', height: '48px' }}
             />
             <Image
               src="/images/logo-darkmode.svg"
@@ -155,18 +155,18 @@ export default function SignupPage() {
               width={120}
               height={60}
               className="hidden dark:block"
-              style={{ width: 'auto', height: '60px' }}
+              style={{ width: 'auto', height: '48px' }}
             />
           </div>
-          <h1 className="display-organic text-5xl text-[#0D3B2A] dark:text-[#FEFCF7]">Create your market account.</h1>
-          <p className="mt-3 text-[#5B3E31] dark:text-[#B8D4BD]">
+          <h1 className="display-organic text-4xl text-[#0D3B2A] dark:text-[#FEFCF7] xl:text-5xl">Create your market account.</h1>
+          <p className="mt-2 text-sm text-[#5B3E31] dark:text-[#B8D4BD] xl:mt-3 xl:text-base">
             Save recipes, manage orders and bring fresh produce home more easily.
           </p>
         </div>
 
         <div>
           {/* Google OAuth */}
-          <div className="mb-6">
+          <div className="mb-4 xl:mb-5">
             <div className="flex justify-center w-full overflow-hidden">
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
@@ -185,7 +185,7 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <div className="relative flex items-center mb-6">
+          <div className="relative mb-4 flex items-center xl:mb-5">
             <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
             <span className="px-3 text-xs text-[#5B3E31] dark:text-[#B8D4BD]">or continue with email</span>
             <div className="flex-1 border-t border-gray-300 dark:border-gray-600" />
@@ -197,7 +197,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-3 xl:space-y-4">
             {/* Name row */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -347,7 +347,7 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-charcoal/60 mt-6">
+          <p className="mt-4 text-center text-sm text-charcoal/60 xl:mt-6">
             Already have an account?{' '}
             <Link href="/login" className="text-leaf-green font-semibold hover:text-forest-green transition-colors">
               Sign in

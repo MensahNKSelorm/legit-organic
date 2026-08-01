@@ -197,7 +197,6 @@ export default function ProfilePage() {
 
           {/* Sidebar */}
           <aside className="h-fit lg:sticky lg:top-28">
-            <p className="mb-4 text-xs font-bold text-[#5B3E31] dark:text-[#B8D4BD]">Book index</p>
             <nav className="grid grid-cols-2 border-t editorial-rule sm:grid-cols-4 lg:block">
               {tabs.map((tab) => (
                 <button
@@ -304,14 +303,15 @@ export default function ProfilePage() {
 
                     {/* Delivery Address section */}
                     <div className="border-t editorial-rule pt-9">
-                      <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">Where the harvest goes</p><h3 className="display-organic mt-1 text-4xl text-[#0D3B2A] dark:text-white">Delivery address</h3></div>
-
-                      <div className="space-y-4">
-                        {/* Map toggle */}
+                      <div className="mb-8 grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
+                        <div>
+                          <p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">Where the harvest goes</p>
+                          <h3 className="display-organic mt-1 text-4xl text-[#0D3B2A] dark:text-white">Delivery address</h3>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setShowMap(!showMap)}
-                          className="flex items-center gap-2 border-b border-[#2E7D32] pb-1 text-sm font-bold text-[#2E7D32] transition-colors hover:text-[#0D3B2A] dark:border-[#F4C430] dark:text-[#F4C430]"
+                          className="flex w-fit items-center gap-2 border-b border-[#2E7D32] pb-1 text-sm font-bold text-[#2E7D32] transition-colors hover:text-[#0D3B2A] dark:border-[#F4C430] dark:text-[#F4C430]"
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -321,7 +321,7 @@ export default function ProfilePage() {
                         </button>
                       </div>
 
-                        {showMap && (
+                      {showMap && (
                           <div className="mb-4">
                             <LocationPicker
                               onLocationSelect={(data) => {
@@ -332,7 +332,9 @@ export default function ProfilePage() {
                               }}
                             />
                           </div>
-                        )}
+                      )}
+
+                      <div className="grid gap-6 sm:grid-cols-2">
 
                         {/* House number */}
                         <div>
@@ -521,18 +523,18 @@ export default function ProfilePage() {
                         className="flex items-start justify-between gap-4 border-b editorial-rule py-5"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-forest-green text-sm leading-snug mb-0.5 truncate">
+                          <p className="mb-0.5 truncate text-sm font-semibold leading-snug text-[#0D3B2A] dark:text-[#FEFCF7]">
                             {recipe.name}
                           </p>
                           {recipe.base_recipes.length > 0 && (
-                            <p className="text-xs text-charcoal/50 truncate">
+                            <p className="truncate text-xs text-[#5B3E31]/75 dark:text-[#B8D4BD]">
                               Built from:{' '}
-                              <span className="text-charcoal/70">
+                              <span className="text-[#0D3B2A]/75 dark:text-white/75">
                                 {recipe.base_recipes.map((r) => r.title).join(', ')}
                               </span>
                             </p>
                           )}
-                          <p className="text-xs text-charcoal/40 mt-1">
+                          <p className="mt-1 text-xs text-[#5B3E31]/60 dark:text-white/50">
                             {recipe.ingredients.length} ingredient{recipe.ingredients.length !== 1 ? 's' : ''}
                             {' · '}
                             {formatDate(recipe.created_at)}

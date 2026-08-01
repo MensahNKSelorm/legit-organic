@@ -168,12 +168,13 @@ export default function Navbar() {
         </ul>
 
         {/* Theme + Auth (desktop) */}
-        <div className="hidden md:flex items-center gap-3 shrink-0 justify-end" style={{ minWidth: '160px' }}>
+        <div className="hidden shrink-0 items-center justify-end gap-3 md:flex" style={{ minWidth: '160px' }}>
+          <div className={['flex items-center border', transparent ? 'border-white/35' : 'border-[#0D3B2A]/20 dark:border-white/25'].join(' ')}>
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
             aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                className={['w-9 h-9 flex items-center justify-center transition-colors', toggleColor].join(' ')}
+            className={['flex h-10 w-10 items-center justify-center transition-colors', toggleColor].join(' ')}
             style={transparent ? { color: '#ffffff' } : undefined}
           >
             {darkMode ? <SunIcon /> : <MoonIcon />}
@@ -183,7 +184,7 @@ export default function Navbar() {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Search products"
-            className={['shrink-0 w-9 h-9 flex items-center justify-center transition-[background-color]', toggleColor].join(' ')}
+            className={['flex h-10 w-10 shrink-0 items-center justify-center border-l transition-[background-color]', transparent ? 'border-white/35' : 'border-[#0D3B2A]/20 dark:border-white/25', toggleColor].join(' ')}
             style={{ color: transparent ? '#ffffff' : undefined }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden>
@@ -191,6 +192,7 @@ export default function Navbar() {
               <path d="m21 21-4.35-4.35"/>
             </svg>
           </button>
+          </div>
 
           {/* Cart icon */}
           <CartIcon isTransparent={transparent} />
@@ -202,10 +204,10 @@ export default function Navbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/10"
+                className={['flex h-10 items-center gap-2 border px-2 transition-colors', transparent ? 'border-white/35 hover:border-white' : 'border-[#0D3B2A]/20 hover:border-[#0D3B2A] dark:border-white/25 dark:hover:border-[#F4C430]'].join(' ')}
                 aria-label="Account menu"
               >
-                <div className="w-8 h-8 rounded-full bg-[#F4C430] flex items-center justify-center ring-2 ring-[#0D3B2A] ring-offset-1 text-[#0D3B2A] text-xs font-bold font-sans tracking-wide">
+                <div className="flex h-7 w-7 items-center justify-center bg-[#F4C430] font-sans text-[11px] font-bold tracking-wide text-[#0D3B2A]">
                   {initials}
                 </div>
                 <span
@@ -220,25 +222,35 @@ export default function Navbar() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-mist-white border border-sand rounded-xl shadow-lg py-1 z-50 dark:bg-[#1f2937] dark:border-[#374151]">
+                <div className="absolute right-0 top-full z-50 mt-3 w-72 border border-[#0D3B2A]/20 bg-[#FAF7F0] shadow-[8px_8px_0_rgba(13,59,42,.12)] dark:border-white/20 dark:bg-[#1B211D] dark:shadow-[8px_8px_0_rgba(244,196,48,.12)]">
+                  <div className="border-b border-[#0D3B2A]/15 bg-[#0D3B2A] px-5 py-5 text-white dark:border-white/15">
+                    <div className="flex items-start gap-3">
+                      <div className="display-organic flex h-11 w-11 shrink-0 items-center justify-center bg-[#F4C430] text-xl text-[#0D3B2A]">{initials}</div>
+                      <div className="min-w-0 pt-0.5">
+                        <p className="truncate text-sm font-bold">{user.first_name} {user.last_name}</p>
+                        <p className="mt-1 truncate text-xs text-white/60">{user.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-2 py-2">
                   <Link
                     href="/profile"
                     onClick={() => setDropdownOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-charcoal/70 hover:bg-beige hover:text-forest-green transition-colors dark:text-[#d1d5db] dark:hover:bg-[#374151]"
+                    className="block border-b border-[#0D3B2A]/10 px-3 py-3 text-sm font-medium text-[#0D3B2A] transition-colors hover:bg-[#F4C430]/20 dark:border-white/10 dark:text-white dark:hover:bg-white/10"
                   >
                     Profile
                   </Link>
                   <Link
                     href="/my-recipes"
                     onClick={() => setDropdownOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-charcoal/70 hover:bg-beige hover:text-forest-green transition-colors dark:text-[#d1d5db] dark:hover:bg-[#374151]"
+                    className="block border-b border-[#0D3B2A]/10 px-3 py-3 text-sm font-medium text-[#0D3B2A] transition-colors hover:bg-[#F4C430]/20 dark:border-white/10 dark:text-white dark:hover:bg-white/10"
                   >
                     My Recipes
                   </Link>
                   <Link
                     href={isB2B ? '/b2b/dashboard' : '/b2b/apply'}
                     onClick={() => setDropdownOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-charcoal/70 hover:bg-beige hover:text-forest-green transition-colors dark:text-[#d1d5db] dark:hover:bg-[#374151]"
+                    className="block border-b border-[#0D3B2A]/10 px-3 py-3 text-sm font-medium text-[#0D3B2A] transition-colors hover:bg-[#F4C430]/20 dark:border-white/10 dark:text-white dark:hover:bg-white/10"
                   >
                     {isB2B ? '🏢 B2B Dashboard' : 'B2B Portal'}
                   </Link>
@@ -246,19 +258,19 @@ export default function Navbar() {
                     <Link
                       href="/sales/dashboard"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-charcoal/70 hover:bg-beige hover:text-forest-green transition-colors dark:text-[#d1d5db] dark:hover:bg-[#374151]"
+                      className="flex items-center gap-2 border-b border-[#0D3B2A]/10 px-3 py-3 text-sm font-medium text-[#0D3B2A] transition-colors hover:bg-[#F4C430]/20 dark:border-white/10 dark:text-white dark:hover:bg-white/10"
                     >
                       <SalesIcon />
                       Sales Dashboard
                     </Link>
                   )}
-                  <div className="border-t border-sand dark:border-[#374151] my-1" />
                   <button
                     onClick={() => { logout(); setDropdownOpen(false) }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="w-full px-3 py-3 text-left text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40"
                   >
                     Logout
                   </button>
+                  </div>
                 </div>
               )}
             </div>

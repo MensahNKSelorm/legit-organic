@@ -49,7 +49,7 @@ export default function LoginPage() {
   const [needsVerification, setNeedsVerification] = useState(false)
 
   const inputClass =
-    'w-full border-0 border-b border-[#0D3B2A]/30 bg-transparent px-0 py-3 text-[#0D3B2A] outline-none transition-colors placeholder:text-[#5B3E31]/45 focus:border-[#2E7D32] dark:border-white/25 dark:text-[#FEFCF7] dark:placeholder:text-white/35 dark:focus:border-[#F4C430]'
+    'w-full border border-[#0D3B2A]/20 bg-white/45 px-4 py-3.5 text-[#0D3B2A] outline-none transition-colors placeholder:text-[#5B3E31]/45 focus:border-[#2E7D32] focus:bg-white dark:border-white/20 dark:bg-white/[.04] dark:text-[#FEFCF7] dark:placeholder:text-white/35 dark:focus:border-[#F4C430] dark:focus:bg-white/[.07]'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,7 +83,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0D3B2A]/90 via-[#0D3B2A]/20 to-transparent" />
         <p className="display-organic absolute bottom-14 left-14 max-w-lg text-5xl leading-[.95] text-white">Good to have you <em className="font-normal text-[#F4C430]">back at the market.</em></p>
       </div>
-      <div className="flex items-center justify-center px-6 py-16 md:px-12">
+      <div className="flex items-center justify-center px-7 py-16 sm:px-10 md:px-14 lg:px-16 xl:px-24">
       <div className="w-full max-w-lg">
         {/* Brand */}
         <div className="mb-10">

@@ -84,9 +84,38 @@ Files: `frontend/app/(protected)/profile/page.tsx`, `frontend/app/(protected)/my
 - Panels use top rules and transparent backgrounds.
 - Existing functional controls may retain compact borders, but structural cards remain square.
 - Profile heroes pair a large cream-paper title with one dark green identity docket; do not use a floating avatar card.
-- Account navigation is a ruled “Book index.” On mobile it becomes a two-column index; active state is a narrow gold edge, never a filled pill.
+- Account navigation begins directly with the ruled choices; do not add a label above it. On mobile it becomes a two-column index; active state is a narrow gold edge, never a filled pill.
 - Empty wishlist, recipe and order states are left-aligned editorial records with one direct link. Avoid circular icons, emojis and centered card copy.
-- Personal and delivery fields remain underline inputs. Location selection is a text action, while saving uses one square gold field.
+- Delivery fields use a clear two-column form beneath a separate heading and location action; never compress the heading and fields into one row. Saving uses one square gold field.
+- Saved recipe rows must set explicit cream/green text colors in dark mode; never depend on light-theme `charcoal` aliases.
+
+### Storefront Navigation Controls
+
+Files: `frontend/components/layout/Navbar.tsx`, `frontend/components/cart/CartIcon.tsx`
+Last updated: 2026-08-01
+
+| Property | Class |
+| --- | --- |
+| Background | page-aware transparent or cream/dark navigation surface |
+| Border | `border-[#0D3B2A]/20 dark:border-white/25` |
+| Border radius | none |
+| Text — primary | `text-[#0D3B2A] dark:text-white` |
+| Text — secondary | `text-white/60` inside the identity header |
+| Spacing | compact 40px toolbar controls; menu rows use `px-3 py-3` |
+| Hover state | border strengthens; menu rows receive a faint gold field |
+| Shadow | offset green shadow for the account menu only |
+| Accent usage | gold identity tile and cart count |
+
+**Pattern notes:** Search and theme controls share one ruled toolbar. The cart remains a separate market-basket control. Its empty state repeats the same line-drawn basket inside a square ruled frame with one offset gold marker; never revert to a generic shopping-bag icon. The account menu opens as a square identity docket with the customer’s details first and navigation second; avoid rounded floating menus and generic circular avatars.
+
+### Authentication Layout
+
+Files: `frontend/app/(auth)/login/page.tsx`, `frontend/app/(auth)/signup/page.tsx`, `frontend/components/layout/SiteFooter.tsx`
+Last updated: 2026-08-01
+
+- Authentication and verification routes never render the global footer.
+- Desktop forms must fit inside the visible viewport; signup may scroll inside its form column on shorter screens.
+- Login fields use quiet bordered surfaces with internal horizontal padding, rather than text touching an underline or page edge.
 
 ### Email Verification Transition
 

@@ -5,7 +5,7 @@ import { AuthProvider } from '@/lib/auth'
 import { CartProvider } from '@/lib/cart'
 import { WishlistProvider } from '@/lib/wishlist'
 import Navbar from '@/components/layout/Navbar'
-import Footer from '@/components/layout/Footer'
+import SiteFooter from '@/components/layout/SiteFooter'
 import VerificationBanner from '@/components/ui/VerificationBanner'
 import GoogleProvider from '@/components/providers/GoogleProvider'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
@@ -104,7 +104,7 @@ export default function RootLayout({
                 <Navbar />
                 <VerificationBanner />
                 <main>{children}</main>
-                <Footer />
+                <SiteFooter />
               </CartProvider>
             </WishlistProvider>
           </AuthProvider>
