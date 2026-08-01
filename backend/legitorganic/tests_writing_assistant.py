@@ -50,6 +50,17 @@ class WritingAssistantTests(TestCase):
         self.assertIn('restrained rewrite of those anchors', product_prompt)
         self.assertIn('when the anchors are sparse, make the answer shorter', product_prompt)
 
+    def test_complete_blog_draft_is_long_form_without_padding(self):
+        prompt = _prompt(
+            'blog', 'draft',
+            'Explain how harvest timing affects freshness for customers in Accra.',
+            {'title': 'From harvest to kitchen'}, [],
+        )
+        self.assertIn('900-1400 word first draft', prompt)
+        self.assertIn('clear editorial through-line', prompt)
+        self.assertIn('Never pad the article or invent facts', prompt)
+        self.assertIn('return a shorter complete draft', prompt)
+
     def test_requires_staff_authentication_and_model_permission(self):
         response = self.client.post(self.url, self.payload(), content_type='application/json')
         self.assertEqual(response.status_code, 302)

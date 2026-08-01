@@ -68,7 +68,7 @@ class SafeHTMLParser(HTMLParser):
         return ''.join(self.parts).strip()
 
 
-def _clean_html(value, limit=12000):
+def _clean_html(value, limit=24000):
     parser = SafeHTMLParser()
     parser.feed(str(value or '')[:limit])
     return parser.get_html()
@@ -97,7 +97,13 @@ def _prompt(kind, task, instruction, context, products):
         ('blog', 'titles'): 'Return {"titles":["...","...","..."]} with exactly three distinct editorial title ideas.',
         ('blog', 'excerpt'): 'Return {"text":"a 25-45 word excerpt."}',
         ('blog', 'outline'): 'Return {"html":"an HTML outline using h2 and ul/li only."}',
-        ('blog', 'draft'): 'Return {"html":"a useful 500-800 word first draft using p, h2, h3, ul, ol, li, strong, em and blockquote only."}',
+        ('blog', 'draft'): (
+            'Return {"html":"a substantial 900-1400 word first draft using p, h2, h3, ul, ol, li, strong, em and blockquote only."}. '
+            'Open with the subject itself, then develop a clear editorial through-line with useful sections and a natural conclusion. '
+            'Vary paragraph and section lengths. Do not repeat a heading in its opening sentence, summarize every section, force lists, '
+            'or add a generic introduction. Never pad the article or invent facts to reach the range; return a shorter complete draft when '
+            'the supplied material cannot honestly support 900 words.'
+        ),
         ('recipe', 'description'): 'Return {"text":"a 35-65 word description of the dish, its flavour and place at the table."}',
         ('recipe', 'method'): (
             'Return {"ingredients":[{"name":"...","quantity":"...","unit":"...","notes":"..."}],'
@@ -141,7 +147,7 @@ def _call_groq(prompt):
             ],
             'temperature': 0.1,
             'reasoning_effort': 'low',
-            'max_completion_tokens': 3000,
+            'max_completion_tokens': 5000,
             'response_format': {'type': 'json_object'},
         },
         timeout=20,
@@ -212,7 +218,8 @@ def writing_assistant(request):
     if not request.user.has_perm(PERMISSIONS[kind]):
         return JsonResponse({'detail': 'You do not have permission to edit this content.'}, status=403)
 
-    instruction = _plain(payload.get('instruction'), 800)
+    instruction_limit = 1600 if kind == 'blog' else 800
+    instruction = _plain(payload.get('instruction'), instruction_limit)
     if len(instruction) < 8:
         return JsonResponse({'detail': 'Add a little more direction for the draft.'}, status=400)
 
