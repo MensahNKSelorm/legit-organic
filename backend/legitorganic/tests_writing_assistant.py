@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from products.models import Product
 from users.models import User
+from .writing_assistant import SYSTEM_PROMPT
 
 
 class WritingAssistantTests(TestCase):
@@ -35,6 +36,11 @@ class WritingAssistantTests(TestCase):
         }
         data.update(overrides)
         return data
+
+    def test_editorial_prompt_forbids_plausible_sounding_inventions(self):
+        self.assertIn('Only state facts and uses explicitly supplied', SYSTEM_PROMPT)
+        self.assertIn('Never invent dish names, traditional uses', SYSTEM_PROMPT)
+        self.assertIn('Avoid puffery', SYSTEM_PROMPT)
 
     def test_requires_staff_authentication_and_model_permission(self):
         response = self.client.post(self.url, self.payload(), content_type='application/json')
