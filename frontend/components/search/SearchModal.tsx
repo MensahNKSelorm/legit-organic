@@ -34,27 +34,27 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
   return (
     <button
       onClick={() => { router.push(`/products/${product.slug}`); onClose() }}
-      className="group text-left rounded-2xl overflow-hidden bg-white dark:bg-gray-800 border border-[#E6D8BD] dark:border-gray-700 hover:shadow-md transition-shadow w-full"
+      className="group w-full border-t border-[#0D3B2A]/20 pt-3 text-left dark:border-white/15"
     >
-      <div className="relative h-28 md:h-36 bg-[#F5F0E6] dark:bg-gray-700">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#EDE5D4] dark:bg-[#273029]">
         <Image
           src={imgSrc}
           alt={product.name}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.035]"
           sizes="(max-width: 768px) 50vw, 25vw"
         />
         {product.category && (
-          <span className="absolute top-2 left-2 text-xs font-semibold bg-[#0D3B2A]/80 text-white px-2 py-0.5 rounded-full">
+          <span className="absolute left-0 top-0 bg-[#0D3B2A] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.12em] text-white">
             {product.category?.name}
           </span>
         )}
       </div>
-      <div className="p-3">
-        <p className="font-semibold text-[#0D3B2A] dark:text-white text-xs md:text-sm leading-snug group-hover:text-[#2E7D32] dark:group-hover:text-[#81C784] transition-colors line-clamp-2">
+      <div className="flex items-start justify-between gap-3 py-3">
+        <p className="text-sm font-bold leading-snug text-[#0D3B2A] transition-colors group-hover:text-[#2E7D32] dark:text-white dark:group-hover:text-[#F4C430] md:text-base">
           {product.name}
         </p>
-        <p className="text-[#2E7D32] dark:text-[#81C784] font-bold text-sm mt-1">
+        <p className="shrink-0 text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">
           GH₵ {product.price}
         </p>
       </div>
@@ -64,11 +64,11 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
 
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl overflow-hidden bg-white dark:bg-gray-800 border border-[#E6D8BD] dark:border-gray-700 animate-pulse">
-      <div className="h-28 md:h-36 bg-[#E6D8BD] dark:bg-gray-700" />
-      <div className="p-3 space-y-2">
-        <div className="h-3 bg-[#E6D8BD] dark:bg-gray-700 rounded w-3/4" />
-        <div className="h-3 bg-[#E6D8BD] dark:bg-gray-700 rounded w-1/3" />
+    <div className="animate-pulse border-t border-[#0D3B2A]/20 pt-3 dark:border-white/15">
+      <div className="aspect-[4/3] bg-[#E6D8BD] dark:bg-white/10" />
+      <div className="flex justify-between gap-4 py-3">
+        <div className="h-3 w-3/4 bg-[#E6D8BD] dark:bg-white/10" />
+        <div className="h-3 w-1/4 bg-[#E6D8BD] dark:bg-white/10" />
       </div>
     </div>
   )
@@ -79,11 +79,13 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   const [isLoading, setIsLoading] = useState(false)
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Load categories once on mount
+  // Load the live catalogue suggestions once on mount.
   useEffect(() => {
     api.products.categories().then(setCategories).catch(() => {})
+    api.products.featured().then(setSuggestedProducts).catch(() => {})
   }, [])
 
   // Autofocus + body scroll lock
@@ -133,22 +135,36 @@ export default function SearchModal({ isOpen, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex flex-col items-start md:items-center overflow-y-auto pt-0"
+      className="fixed inset-0 z-[200] overflow-y-auto bg-[#071F16]/80 backdrop-blur-sm"
       onClick={onClose}
     >
-      {/* Content panel */}
       <div
-        className="relative z-10 bg-[#FAF7F0] dark:bg-gray-900 w-[calc(100%-2rem)] mx-auto mt-16 rounded-2xl md:max-w-3xl md:mt-20 max-h-[85vh] overflow-y-auto shadow-2xl self-start md:self-auto"
+        className="relative z-10 mx-auto min-h-[72vh] w-full max-w-[1440px] bg-[#FAF7F0] shadow-[0_24px_80px_rgba(0,0,0,.28)] dark:bg-[#171B18] md:mt-5 md:w-[calc(100%-2.5rem)]"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-4 md:p-6">
+        <div className="grid min-h-[72vh] md:grid-cols-[12rem_1fr] lg:grid-cols-[15rem_1fr]">
+          <aside className="border-b border-[#0D3B2A]/20 bg-[#0D3B2A] px-6 pb-6 pt-6 text-white md:border-b-0 md:border-r md:border-white/15 md:px-7 md:py-9">
+            <div className="flex items-start justify-between md:block">
+              <p className="display-organic text-3xl text-[#F4C430]">Browse.</p>
+              <button onClick={onClose} aria-label="Close search" className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/30 text-white transition-colors hover:border-[#F4C430] hover:text-[#F4C430] md:hidden">×</button>
+            </div>
+            {!query.trim() && categories.length > 0 && (
+              <div className="mt-6 border-t border-white/25 md:mt-10">
+                {categories.map(cat => (
+                  <button key={cat.id} onClick={() => setQuery(cat.name)} className="flex w-full items-center justify-between border-b border-white/20 py-3 text-left text-sm text-white/75 transition-colors hover:text-[#F4C430]">
+                    <span>{cat.name}</span><span aria-hidden>↗</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </aside>
 
-          {/* Search input */}
-          <div className="flex items-center gap-2 border-b border-[#E6D8BD] dark:border-gray-700 pb-3 mb-4">
+          <section className="min-w-0 px-6 pb-10 pt-7 md:px-10 md:py-10 lg:px-14">
+          <div className="mb-10 flex items-center gap-3 border-b-2 border-[#0D3B2A] pb-4 dark:border-[#F4C430]">
             <svg
               viewBox="0 0 24 24" fill="none" stroke="currentColor"
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              className="w-5 h-5 md:w-6 md:h-6 text-[#0D3B2A]/40 dark:text-gray-400 shrink-0"
+              className="h-6 w-6 shrink-0 text-[#0D3B2A] dark:text-[#F4C430]"
               aria-hidden
             >
               <circle cx="11" cy="11" r="8"/>
@@ -159,14 +175,14 @@ export default function SearchModal({ isOpen, onClose }: Props) {
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search for organic rice, vegetables..."
-              className="flex-1 min-w-0 text-base md:text-xl bg-transparent text-[#0D3B2A] dark:text-white placeholder:text-[#0D3B2A]/30 dark:placeholder:text-gray-500 focus:outline-none"
+              placeholder="Search the market"
+              className="display-organic min-w-0 flex-1 bg-transparent text-2xl text-[#0D3B2A] placeholder:text-[#0D3B2A]/35 focus:outline-none dark:text-white dark:placeholder:text-white/30 md:text-4xl"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
                 aria-label="Clear search"
-                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="flex h-8 w-8 shrink-0 items-center justify-center text-xl text-[#5B3E31]/60 transition-colors hover:text-[#0D3B2A] dark:text-white/50 dark:hover:text-white"
               >
                 ×
               </button>
@@ -174,7 +190,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
             <button
               onClick={onClose}
               aria-label="Close search"
-              className="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-[#0D3B2A] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="hidden h-11 w-11 shrink-0 items-center justify-center border border-[#0D3B2A]/25 text-[#0D3B2A] transition-colors hover:border-[#0D3B2A] hover:bg-[#0D3B2A] hover:text-white dark:border-white/25 dark:text-white dark:hover:border-[#F4C430] dark:hover:bg-transparent dark:hover:text-[#F4C430] md:flex"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2.5"
@@ -185,31 +201,23 @@ export default function SearchModal({ isOpen, onClose }: Props) {
             </button>
           </div>
 
-          {/* A. EMPTY — category pills */}
           {!query.trim() && (
             <div>
-              <p className="text-[#0D3B2A] dark:text-gray-300 font-semibold mb-4">
-                What are you looking for?
-              </p>
-              {categories.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {categories.map(cat => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setQuery(cat.name)}
-                      className="px-4 py-2 rounded-full text-sm font-semibold bg-white dark:bg-gray-800 border border-[#E6D8BD] dark:border-gray-700 text-[#0D3B2A] dark:text-gray-200 hover:bg-[#0D3B2A] hover:text-white dark:hover:bg-[#2E7D32] transition-colors"
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div className="mb-5 flex items-end justify-between border-b border-[#0D3B2A]/20 pb-3 dark:border-white/15">
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-[#5B3E31]/65 dark:text-[#B8D4BD]">Suggested</p>
+                <Link href="/products" onClick={onClose} className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">View all ↗</Link>
+              </div>
+              <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+                {suggestedProducts.length > 0
+                  ? suggestedProducts.slice(0, 8).map(product => <ProductCard key={product.id} product={product} onClose={onClose} />)
+                  : [0, 1, 2, 3].map(item => <SkeletonCard key={item} />)}
+              </div>
             </div>
           )}
 
           {/* B. LOADING — skeleton cards */}
           {isLoading && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
@@ -219,10 +227,10 @@ export default function SearchModal({ isOpen, onClose }: Props) {
           {/* C. HAS RESULTS */}
           {!isLoading && searchResult?.has_results && (
             <div>
-              <p className="text-xs font-semibold text-[#0D3B2A]/50 dark:text-gray-400 uppercase tracking-widest mb-4">
-                {searchResult.results.length} result{searchResult.results.length !== 1 ? 's' : ''} for &ldquo;{searchResult.query}&rdquo;
+              <p className="mb-6 text-xs font-bold uppercase tracking-[.16em] text-[#5B3E31]/65 dark:text-[#B8D4BD]">
+                {searchResult.results.length} found
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
                 {searchResult.results.map(product => (
                   <ProductCard key={product.id} product={product} onClose={onClose} />
                 ))}
@@ -233,13 +241,8 @@ export default function SearchModal({ isOpen, onClose }: Props) {
           {/* D. NO RESULTS + RELATED */}
           {!isLoading && searchResult && !searchResult.has_results && searchResult.related.length > 0 && (
             <div>
-              <p className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white break-words pr-2 mb-1">
-                We don&apos;t have &ldquo;{searchResult.query}&rdquo; right now 😔
-              </p>
-              <p className="text-[#0D3B2A]/60 dark:text-gray-400 text-sm mb-6">
-                But you might like these:
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+              <p className="mb-6 text-xs font-bold uppercase tracking-[.16em] text-[#5B3E31]/65 dark:text-[#B8D4BD]">Closest matches</p>
+              <div className="mb-8 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
                 {searchResult.related.map(product => (
                   <ProductCard key={product.id} product={product} onClose={onClose} />
                 ))}
@@ -247,7 +250,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
               <Link
                 href="/products"
                 onClick={onClose}
-                className="text-sm font-semibold text-[#2E7D32] dark:text-[#81C784] hover:underline"
+                className="border-b border-current pb-1 text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]"
               >
                 Browse all products →
               </Link>
@@ -256,23 +259,18 @@ export default function SearchModal({ isOpen, onClose }: Props) {
 
           {/* E. NO RESULTS + NO RELATED */}
           {!isLoading && searchResult && !searchResult.has_results && searchResult.related.length === 0 && (
-            <div className="text-center py-8">
-              <p className="font-display text-xl font-bold text-[#0D3B2A] dark:text-white break-words pr-2 mb-2">
-                We don&apos;t have &ldquo;{searchResult.query}&rdquo; right now
-              </p>
-              <p className="text-[#0D3B2A]/60 dark:text-gray-400 text-sm mb-6">
-                Check back soon — we&apos;re always adding new products!
-              </p>
+            <div className="border-y border-[#0D3B2A]/20 py-10 text-left dark:border-white/15">
+              <p className="display-organic mb-7 break-words text-4xl text-[#0D3B2A] dark:text-white">Nothing found.</p>
               <Link
                 href="/products"
                 onClick={onClose}
-                className="inline-block bg-[#F4C430] text-[#0D3B2A] font-semibold px-6 py-2.5 rounded-xl hover:bg-[#c59f2c] transition-colors text-sm"
+                className="inline-block bg-[#F4C430] px-6 py-3 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white dark:hover:bg-white dark:hover:text-[#0D3B2A]"
               >
                 Browse all products →
               </Link>
             </div>
           )}
-
+          </section>
         </div>
       </div>
     </div>

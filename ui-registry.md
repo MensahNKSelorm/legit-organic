@@ -117,6 +117,25 @@ Last updated: 2026-08-01
 - Desktop forms must fit inside the visible viewport; signup may scroll inside its form column on shorter screens.
 - Login fields use quiet bordered surfaces with internal horizontal padding, rather than text touching an underline or page edge.
 
+### Market Search Catalogue
+
+File: `frontend/components/search/SearchModal.tsx`
+Last updated: 2026-08-01
+
+| Property | Class |
+| --- | --- |
+| Background | cream/dark catalogue sheet over a deep-green translucent backdrop |
+| Border | `border-[#0D3B2A]/20 dark:border-white/15` |
+| Border radius | none |
+| Text — primary | `text-[#0D3B2A] dark:text-white` |
+| Text — secondary | `text-[#5B3E31] dark:text-[#B8D4BD]` |
+| Spacing | broad catalogue field; compact ruled result cards |
+| Hover state | slight image scale; green-to-gold title shift in dark mode |
+| Shadow | one deep page-level shadow, none on result cards |
+| Accent usage | gold sidebar label, dark-mode search rule and direct actions |
+
+**Pattern notes:** Search opens as a near-full-width market catalogue rather than a rounded dialog. Categories form a ruled index in the green sidebar, never pills. The idle state loads real featured products from the live catalogue under one short “Suggested” label; never use decorative stock images or hardcoded demo products here. Results resemble produce entries on a market table: square imagery, top rules, name and price beneath. No-result language is limited to “Nothing found” and one action.
+
 ### Email Verification Transition
 
 File: `frontend/app/(auth)/check-email/page.tsx`
