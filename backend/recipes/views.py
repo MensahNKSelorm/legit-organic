@@ -1,10 +1,9 @@
 from decimal import Decimal, InvalidOperation
-import json
 import logging
 import os
 import re
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+
+import requests
 
 from django.db.models import Q
 from rest_framework import generics, status, views
@@ -46,7 +45,7 @@ def _groq_note(titles):
         f"work together: {', '.join(titles)}. Mention flavour or texture. No headings, hype, "
         "health claims, quotation marks, or instructions."
     )
-    payload = json.dumps({
+    payload = {
         'model': model,
         'messages': [
             {'role': 'system', 'content': 'You are a concise Ghanaian food editor for Legit Organic.'},
@@ -54,19 +53,22 @@ def _groq_note(titles):
         ],
         'temperature': 0.6,
         'max_tokens': 80,
-    }).encode()
-    request = Request(
-        'https://api.groq.com/openai/v1/chat/completions',
-        data=payload,
-        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-        method='POST',
-    )
+    }
     try:
-        with urlopen(request, timeout=5) as response:
-            data = json.loads(response.read().decode())
+        response = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            json=payload,
+            timeout=5,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            },
+        )
+        response.raise_for_status()
+        data = response.json()
         note = data['choices'][0]['message']['content'].strip().strip('"')
         return (note[:500], model) if note else (None, model)
-    except (HTTPError, URLError, TimeoutError, KeyError, ValueError, json.JSONDecodeError) as exc:
+    except (requests.RequestException, KeyError, ValueError) as exc:
         logger.warning('Groq recipe note unavailable: %s', exc.__class__.__name__)
         return None, model
 
