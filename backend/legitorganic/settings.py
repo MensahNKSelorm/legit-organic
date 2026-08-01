@@ -249,20 +249,26 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "People",
+                "title": "Customers",
                 "separator": True,
                 "items": [
-                    {
-                        "title": "Users",
-                        "icon": "people",
-                        "link": "/admin/users/user/",
-                        "permission": admin_permission("users.view_user"),
-                    },
                     {
                         "title": "Customers",
                         "icon": "person",
                         "link": "/admin/users/customer/",
                         "permission": admin_permission("users.view_customer"),
+                    },
+                ],
+            },
+            {
+                "title": "Staff",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Staff Accounts",
+                        "icon": "badge",
+                        "link": "/admin/users/staff/",
+                        "permission": admin_permission("users.view_staff"),
                     },
                     {
                         "title": "Staff Invitations",

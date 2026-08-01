@@ -61,6 +61,13 @@ class Customer(User):
         verbose_name_plural = 'Customers'
 
 
+class Staff(User):
+    class Meta:
+        proxy = True
+        verbose_name = 'Staff account'
+        verbose_name_plural = 'Staff accounts'
+
+
 class StaffInvitation(models.Model):
     ROLE_CHOICES = [
         ('Executive Admin', 'Executive Admin'),

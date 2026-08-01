@@ -3,7 +3,9 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib import messages
 from django.utils import timezone
 from unfold.admin import ModelAdmin, StackedInline
-from .models import User, Customer, B2BProfile, B2BDiscountTier, StaffInvitation
+from .models import (
+    User, Customer, Staff, B2BProfile, B2BDiscountTier, StaffInvitation,
+)
 from .forms import UserCreationForm, UserChangeForm, StaffInvitationAdminForm
 from sales.models import SalesRep
 
@@ -96,6 +98,54 @@ class CustomerAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+
+@admin.register(Staff)
+class StaffAdmin(ModelAdmin):
+    list_display = [
+        'email', 'first_name', 'last_name', 'staff_role',
+        'is_active', 'last_login',
+    ]
+    list_filter = ['is_active', 'groups', 'date_joined']
+    search_fields = ['email', 'first_name', 'last_name']
+    ordering = ['first_name', 'last_name', 'email']
+    filter_horizontal = ['groups']
+    fields = [
+        'email', 'first_name', 'last_name', 'staff_role',
+        'is_active', 'groups', 'last_login', 'date_joined',
+    ]
+    readonly_fields = [
+        'email', 'first_name', 'last_name', 'staff_role',
+        'last_login', 'date_joined',
+    ]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(is_staff=True)
+
+    @admin.display(description='Role')
+    def staff_role(self, obj):
+        if obj.is_superuser:
+            return 'Owner'
+        return ', '.join(obj.groups.values_list('name', flat=True)) or 'Staff'
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        if not request.user.is_superuser:
+            return False
+        # The owner account is deliberately protected from this operational
+        # screen. Owner security changes belong in the dedicated user admin.
+        return obj is None or not obj.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(StaffInvitation)

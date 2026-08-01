@@ -131,11 +131,60 @@ input.bg-primary-600:hover {
   color: #0d3b2a !important;
 }
 
-#main input,
+#main input:not([type="checkbox"]):not([type="radio"]),
 #main select,
 #main textarea,
 #main [class*="rounded-default"] {
   border-radius: 0 !important;
+}
+
+/* Boolean controls: a checkbox is a check, a switch is a switch. The generic
+   square-input rule above must never flatten a switch track around its knob. */
+#main input[type="checkbox"][class~="w-8"] {
+  width: 2.25rem !important;
+  min-width: 2.25rem !important;
+  height: 1.25rem !important;
+  border: 1px solid rgba(248, 244, 233, .28) !important;
+  border-radius: 999px !important;
+  background: #374151 !important;
+  box-shadow: none !important;
+}
+
+#main input[type="checkbox"][class~="w-8"]::after {
+  top: 3px !important;
+  left: 3px !important;
+  width: .75rem !important;
+  height: .75rem !important;
+  border-radius: 50% !important;
+  background: #f8f4e9 !important;
+  box-shadow: none !important;
+}
+
+#main input[type="checkbox"][class~="w-8"]:checked {
+  border-color: #f4c430 !important;
+  background: #2e7d32 !important;
+}
+
+#main input[type="checkbox"][class~="w-8"]:checked::after {
+  left: calc(100% - .9375rem) !important;
+  background: #f4c430 !important;
+}
+
+#main input[type="checkbox"][class~="w-4"] {
+  border-radius: 2px !important;
+  border-color: rgba(248, 244, 233, .35) !important;
+  box-shadow: none !important;
+}
+
+#main input[type="checkbox"][class~="w-4"]:checked {
+  border-color: #f4c430 !important;
+  background-color: #2e7d32 !important;
+}
+
+#main input[type="checkbox"]:focus-visible,
+#main input[type="radio"]:focus-visible {
+  outline: 2px solid #f4c430 !important;
+  outline-offset: 3px !important;
 }
 
 .ck.ck-toolbar {

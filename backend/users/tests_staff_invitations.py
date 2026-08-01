@@ -140,6 +140,31 @@ class StaffInvitationTests(TestCase):
         response = self.client.get(reverse('admin:users_staffinvitation_changelist'))
         self.assertEqual(response.status_code, 403)
 
+    def test_staff_register_is_separate_from_customers_and_owner_only(self):
+        staff = User.objects.create_user(
+            email='staff@legitorganic.com',
+            password='StaffPass!2026',
+            first_name='Staff',
+            last_name='Member',
+            is_staff=True,
+        )
+        customer = User.objects.create_user(
+            email='customer@example.com',
+            password='Customer!2026',
+            first_name='Customer',
+            last_name='Member',
+        )
+
+        self.client.force_login(self.owner)
+        owner_response = self.client.get(reverse('admin:users_staff_changelist'))
+        self.assertEqual(owner_response.status_code, 200)
+        self.assertContains(owner_response, staff.email)
+        self.assertNotContains(owner_response, customer.email)
+
+        self.client.force_login(staff)
+        staff_response = self.client.get(reverse('admin:users_staff_changelist'))
+        self.assertEqual(staff_response.status_code, 403)
+
     @patch('users.admin.StaffInvitationAdmin._deliver', return_value=True)
     def test_owner_can_create_invitation_in_admin(self, _deliver):
         self.client.force_login(self.owner)

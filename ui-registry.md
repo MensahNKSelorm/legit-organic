@@ -259,3 +259,15 @@ Last updated: 2026-08-01
 | Accent usage | gold identity mark, focus and primary action |
 
 **Pattern notes:** Staff onboarding is a private identity handoff, not a generic password-reset card. The setup URL must send `no-referrer`, `no-store` and `noindex` headers and must not load third-party fonts or assets while the invitation token is present. Show the assigned company login and role, never the raw token. Expired, revoked, accepted and invalid invitations replace the form with one concise lifecycle state. The owner-facing invitation list remains inside the permission-aware control-room shell.
+
+### Admin People and Boolean Controls
+
+Files: `backend/legitorganic/settings.py`, `backend/users/admin.py`, `backend/products/static/admin/css/legitorganic-admin.css`
+Last updated: 2026-08-01
+
+- Customers and staff are separate working areas. Never expose the mixed base User list in the primary sidebar.
+- New staff enter through Staff Invitations; accepted accounts appear under Staff Accounts.
+- Staff Accounts is an owner-only operational register for role visibility and account activation. Owner accounts remain protected from editing there.
+- Use compact square checkboxes for multi-select and table selection only.
+- Boolean yes/no fields use one coherent capsule track with a circular handle: charcoal when off, forest and gold when on.
+- Generic input-radius rules must always exclude checkboxes and radios so they cannot flatten switch tracks.
