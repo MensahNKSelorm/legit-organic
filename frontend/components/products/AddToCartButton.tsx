@@ -42,7 +42,7 @@ export function WishlistButton({ productId }: { productId: number }) {
       onClick={handleClick}
       disabled={loading}
       className={[
-        'w-full border-2 font-semibold px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2',
+        'w-full border font-semibold px-6 py-3 transition-all duration-300 flex items-center justify-center gap-2',
         inWishlist
           ? 'border-red-400 bg-red-50 text-red-500 dark:bg-red-950/30 dark:border-red-500 dark:text-red-400'
           : 'border-[#0D3B2A] dark:border-[#81C784] text-[#0D3B2A] dark:text-[#81C784] hover:bg-[#0D3B2A]/5',
@@ -85,7 +85,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
   if (inCart && cartItem) {
     return (
       <div className="flex items-center gap-3 w-full">
-        <div className="flex items-center gap-1 border-2 border-[#2E7D32] rounded-xl overflow-hidden">
+        <div className="flex items-center gap-1 border border-[#2E7D32] overflow-hidden">
           <button
             onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
             aria-label="Decrease quantity"
@@ -115,7 +115,7 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     <button
       onClick={handleAdd}
       className={[
-        'w-full font-semibold px-6 py-3 rounded-xl transition-all duration-300',
+        'w-full font-semibold px-6 py-3 transition-all duration-300',
         added
           ? 'bg-[#2E7D32] text-white'
           : 'bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C]',

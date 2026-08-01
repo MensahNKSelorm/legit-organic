@@ -1,4 +1,7 @@
 from decimal import Decimal, InvalidOperation
+import re
+
+from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -26,9 +29,28 @@ class RecipeDetailView(generics.RetrieveAPIView):
 
 
 class DefaultRecipesView(generics.ListAPIView):
-    queryset = Recipe.objects.filter(is_default=True)
     serializer_class = RecipeListSerializer
     permission_classes = []
+
+    def get_queryset(self):
+        queryset = Recipe.objects.filter(is_default=True)
+        raw_search = self.request.query_params.get('search', '').strip()[:200]
+        if not raw_search:
+            return queryset
+
+        # A plus sign represents components that the frontend will assemble
+        # into one combined meal page, e.g. "fufu + light soup". Return the
+        # candidates; the frontend selects the closest title match and then
+        # fetches each recipe's full details.
+        terms = [term.strip() for term in re.split(r'\s*\+\s*', raw_search) if term.strip()]
+        search_query = Q()
+        for term in terms:
+            search_query |= (
+                Q(title__icontains=term)
+                | Q(description__icontains=term)
+                | Q(ingredients__name__icontains=term)
+            )
+        return queryset.filter(search_query).distinct().order_by('title')
 
 
 class UserRecipeListView(generics.ListAPIView):

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import ContactForm from './ContactForm'
+import EditorialPageHeader from '@/components/ui/EditorialPageHeader'
 
 export const metadata: Metadata = {
   title: 'Contact Us',
@@ -55,7 +56,6 @@ interface ContactItem {
   label: string
   value: string
   href?: string
-  iconBg: string
 }
 
 const contactItems: ContactItem[] = [
@@ -63,85 +63,51 @@ const contactItems: ContactItem[] = [
     icon: <LocationIcon />,
     label: 'OFFICE',
     value: '13 New Aplaku, Accra, Ghana',
-    iconBg: 'bg-[#0D3B2A]',
   },
   {
     icon: <EmailIcon />,
     label: 'EMAIL',
     value: 'hello@legitorganic.com',
     href: 'mailto:hello@legitorganic.com',
-    iconBg: 'bg-[#0D3B2A]',
   },
   {
     icon: <PhoneIcon />,
     label: 'PHONE',
     value: '+233 53 956 9260',
     href: 'tel:+233539569260',
-    iconBg: 'bg-[#0D3B2A]',
   },
   {
     icon: <ClockIcon />,
     label: 'HOURS',
     value: 'Monday – Saturday, 8:00 AM – 5:00 PM GMT',
-    iconBg: 'bg-[#0D3B2A]',
   },
   {
     icon: <WhatsAppIcon />,
     label: 'WHATSAPP',
     value: '+233 53 956 9260',
     href: 'https://wa.me/233539569260',
-    iconBg: 'bg-[#25D366]',
   },
 ]
 
 export default function ContactPage() {
 
   return (
-    <>
-      {/* Hero */}
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '9rem', paddingBottom: '5rem' }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <span className="text-[#F4C430] text-sm font-semibold uppercase tracking-widest">
-            Contact Us
-          </span>
-          <h1 className="font-display text-5xl font-bold text-white mt-3 mb-5">
-            Get In Touch
-          </h1>
-          <p
-            className="text-white/80 text-lg leading-relaxed"
-            style={{ maxWidth: '40rem', margin: '0 auto' }}
-          >
-            We&apos;d love to hear from you. Reach out via any of the channels below.
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
+      <EditorialPageHeader index="Contact" title={<>Let&apos;s talk <em className="font-normal text-[#F4C430]">properly.</em></>} description="Orders, farmer partnerships, press questions or a simple hello—choose the route that suits the conversation." />
 
       {/* Main content */}
-      <section className="bg-[#FAF7F0] dark:bg-gray-900 py-16 px-6">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <section className="page-container py-14 lg:py-20">
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-[.85fr_1.15fr] lg:gap-20">
           {/* Left column — contact info + map */}
           <div>
-            <h2 className="font-display text-2xl font-bold text-[#0D3B2A] dark:text-white mb-6">
-              Contact Information
-            </h2>
+            <p className="editorial-label mb-6 text-[#2E7D32] dark:text-[#9FC5A4]">Where to find us</p>
 
-            <div className="flex flex-col gap-4">
+            <div className="border-t editorial-rule">
               {contactItems.map((item) => {
                 const card = (
-                  <div className="flex items-start gap-4 bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-[#E6D8BD] dark:border-gray-700 transition-shadow hover:shadow-md">
-                    <div
-                      className={`w-11 h-11 rounded-full ${item.iconBg} flex items-center justify-center flex-shrink-0 text-white`}
-                    >
-                      {item.icon}
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-[#B8860B] uppercase tracking-widest mb-0.5">
-                        {item.label}
-                      </p>
-                      <p className="text-[#0D3B2A] dark:text-white font-semibold text-sm leading-snug">
-                        {item.value}
-                      </p>
-                    </div>
+                  <div className="group grid grid-cols-[2rem_1fr] gap-4 border-b editorial-rule py-5 text-[#0D3B2A] transition-colors hover:text-[#2E7D32] dark:text-white">
+                    <div className="pt-1 text-[#2E7D32] dark:text-[#F4C430]">{item.icon}</div>
+                    <div><p className="text-xs font-bold text-[#8A6A22] dark:text-[#D7B951]">{item.label.toLowerCase()}</p><p className="mt-1 text-base font-semibold leading-snug">{item.value}</p></div>
                   </div>
                 )
 
@@ -154,8 +120,7 @@ export default function ContactPage() {
                 )
               })}
 
-              {/* Map */}
-              <div className="rounded-2xl overflow-hidden border border-[#E6D8BD] dark:border-gray-700 shadow-sm dark:opacity-80">
+              <div className="mt-8 overflow-hidden border editorial-rule dark:opacity-80">
                 <iframe
                   src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=New+Aplaku,Accra,Ghana`}
                   width="100%"
@@ -163,7 +128,7 @@ export default function ContactPage() {
                   style={{ border: 0 }}
                   allowFullScreen
                   loading="lazy"
-                  className="rounded-xl w-full"
+                  className="w-full"
                   title="Legit Organic location map"
                 />
               </div>
@@ -176,6 +141,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   )
 }

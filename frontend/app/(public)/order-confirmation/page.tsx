@@ -45,9 +45,9 @@ function OrderConfirmationContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#111827] pt-24 pb-16 px-4">
+    <div className="confirmation-page min-h-screen bg-[#FAF7F0] px-4 pb-16 pt-28 dark:bg-[#171B18]">
       <div className="max-w-lg mx-auto">
-        <div className="bg-white dark:bg-[#1f2937] rounded-2xl shadow-sm border border-[#E6D8BD] dark:border-[#374151] p-8 text-center">
+        <div className="border-y editorial-rule bg-transparent p-8 text-center">
           {/* Checkmark */}
           <div className="w-20 h-20 rounded-full bg-[#F0F7F0] dark:bg-[#1a2e1a] flex items-center justify-center mx-auto mb-6">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#2E7D32" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -55,8 +55,8 @@ function OrderConfirmationContent() {
             </svg>
           </div>
 
-          <h1 className="font-display text-3xl font-bold text-[#0D3B2A] dark:text-[#faf7f0] mb-2">
-            Order Confirmed!
+          <h1 className="display-organic mb-2 text-5xl text-[#0D3B2A] dark:text-[#faf7f0]">
+            Your order is in.
           </h1>
           <p className="text-[#5B3E31] dark:text-[#9ca3af] mb-1">
             Thank you for your order.

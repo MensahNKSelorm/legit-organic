@@ -18,7 +18,7 @@ export default function CartIcon({ isTransparent }: CartIconProps) {
         onClick={() => setDrawerOpen(true)}
         aria-label={`Open cart${itemCount > 0 ? `, ${itemCount} items` : ''}`}
         className={[
-          'relative w-9 h-9 flex items-center justify-center rounded-full transition-colors',
+          'relative w-9 h-9 flex items-center justify-center transition-colors',
           isTransparent
             ? 'hover:bg-white/15'
             : 'text-[#0D3B2A] dark:text-white hover:bg-[#F5F0E6] dark:hover:bg-gray-700',
@@ -34,7 +34,7 @@ export default function CartIcon({ isTransparent }: CartIconProps) {
 
         {itemCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1"
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold px-1"
             style={{ backgroundColor: '#F4C430', color: '#0D3B2A' }}
           >
             {itemCount > 99 ? '99+' : itemCount}

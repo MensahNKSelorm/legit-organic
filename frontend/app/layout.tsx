@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: 'Legit Organic — Fresh Organic Food in Ghana',
     template: '%s | Legit Organic',
   },
-  description: "Ghana's trusted organic food marketplace. Buy fresh, certified organic produce directly from verified Ghanaian farmers. Rice, vegetables, yam, spices — delivered to your door in Accra and beyond.",
+  description: "Fresh Ghanaian produce with clearer information about where it comes from, how it is handled and when it is available.",
   keywords: [
     'organic food Ghana',
     'organic produce Accra',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     url: 'https://legitorganic.com',
     siteName: 'Legit Organic',
     title: 'Legit Organic — Fresh Organic Food in Ghana',
-    description: 'Buy fresh, certified organic produce directly from verified Ghanaian farmers.',
+    description: 'Fresh Ghanaian produce, seasonal availability and practical food stories.',
     images: [
       {
         url: '/images/og-image.jpg',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Legit Organic — Fresh Organic Food in Ghana',
-    description: 'Buy fresh, certified organic produce directly from verified Ghanaian farmers.',
+    description: 'Fresh Ghanaian produce, seasonal availability and practical food stories.',
     images: ['/images/og-image.jpg'],
     creator: '@legitorganicltd',
   },
@@ -85,10 +85,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter:wght@300;400;500;600;700&display=swap"
+          href="https://api.fontshare.com/v2/css?f[]=boska@400,500,600,700&f[]=cabinet-grotesk@400,500,700,800&display=swap"
           rel="stylesheet"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />

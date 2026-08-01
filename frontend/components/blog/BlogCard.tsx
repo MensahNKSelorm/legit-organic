@@ -20,7 +20,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
   const coverSrc = getMediaUrl(post.cover_image)
   return (
     <Link href={`/blog/${post.slug}`} className="group block h-full">
-      <article className="bg-mist-white dark:bg-[#1f2937] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-sand dark:border-[#374151] flex flex-col h-full">
+      <article className="flex h-full flex-col overflow-hidden border-b border-[#0D3B2A]/20 bg-transparent dark:border-white/15">
         {/* Cover */}
         <div className="relative h-48 overflow-hidden shrink-0">
           {coverSrc ? (
@@ -50,7 +50,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
             </div>
           )}
           {post.category && (
-            <span className="absolute top-3 left-3 bg-[#F4C430]/90 text-[#0D3B2A] text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+            <span className="absolute top-0 left-0 bg-[#F4C430] text-[#0D3B2A] text-xs font-semibold px-3 py-2">
               {post.category.name}
             </span>
           )}
@@ -73,7 +73,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
           </p>
 
           <div className="flex items-center gap-2 pt-4 border-t border-sand dark:border-[#374151]">
-            <div className="w-7 h-7 rounded-full bg-[#F4C430]/30 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] text-xs font-bold shrink-0">
+            <div className="w-7 h-7 bg-[#F4C430]/30 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] text-xs font-bold shrink-0">
               {post.author_name ? post.author_name[0].toUpperCase() : '?'}
             </div>
             <span className="text-xs text-charcoal/60 dark:text-[#9ca3af] truncate">
