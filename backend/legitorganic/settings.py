@@ -129,8 +129,8 @@ INSTALLED_APPS = [
 ]
 
 UNFOLD = {
-    "SITE_TITLE": "Legit Organic",
-    "SITE_HEADER": "Legit Organic Admin",
+    "SITE_TITLE": "Legit Organic Control Room",
+    "SITE_HEADER": "Legit Organic",
     "SITE_URL": "https://legitorganic.com",
     "SITE_ICON": lambda request: static("images/logo-lightmode.svg"),
     "SITE_LOGO": lambda request: static("images/logo-lightmode.svg"),
@@ -143,6 +143,9 @@ UNFOLD = {
     ],
     "SITE_SYMBOL": "eco",
     "DASHBOARD_CALLBACK": "legitorganic.dashboard.dashboard_callback",
+    "STYLES": [
+        lambda request: static("admin/css/legitorganic-admin.css"),
+    ],
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "THEME": "auto",
@@ -163,10 +166,10 @@ UNFOLD = {
     },
     "SIDEBAR": {
         "show_search": True,
-        "show_all_applications": True,
+        "show_all_applications": False,
         "navigation": [
             {
-                "title": "Content",
+                "title": "Catalogue & Stories",
                 "separator": True,
                 "items": [
                     {
@@ -207,7 +210,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Orders",
+                "title": "Commerce",
                 "separator": True,
                 "items": [
                     {
@@ -228,7 +231,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Users",
+                "title": "People",
                 "separator": True,
                 "items": [
                     {
@@ -244,7 +247,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "B2B Portal",
+                "title": "Wholesale",
                 "separator": True,
                 "items": [
                     {
@@ -260,7 +263,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Sales Reps",
+                "title": "Sales Team",
                 "separator": True,
                 "items": [
                     {
@@ -281,7 +284,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Website",
+                "title": "Useful Links",
                 "separator": True,
                 "items": [
                     {

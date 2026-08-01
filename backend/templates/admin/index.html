@@ -3,489 +3,174 @@
 
 {% block extrahead %}
 {{ block.super }}
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=boska@400,500,600&f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
 <style>
-/* ── Layout containers ──────────────────────────────────────────────────── */
-.dashboard-container {
-  padding: 1rem;
-}
-@media (min-width: 640px) {
-  .dashboard-container {
-    padding: 2rem;
-  }
-}
-
-/* ── Header ─────────────────────────────────────────────────────────────── */
-.dashboard-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-.dashboard-header-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-@media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .dashboard-header-buttons {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
-/* ── KPI grid ────────────────────────────────────────────────────────────── */
-.dashboard-grid-kpi {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-/* ── Stats chips grid ────────────────────────────────────────────────────── */
-.dashboard-grid-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-/* ── Charts grid (equal columns) ─────────────────────────────────────────── */
-.dashboard-grid-charts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-/* ── Charts grid (wide + narrow) ─────────────────────────────────────────── */
-.dashboard-grid-charts-wide {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-@media (max-width: 768px) {
-  .dashboard-grid-charts-wide {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── KPI card ────────────────────────────────────────────────────────────── */
-.kpi-card {
-  border-radius: 16px;
-  padding: 1.25rem;
-}
-@media (min-width: 640px) {
-  .kpi-card {
-    padding: 1.5rem;
-  }
-}
-
-/* ── KPI value typography ─────────────────────────────────────────────────── */
-.kpi-value {
-  font-size: clamp(1.4rem, 3vw, 1.75rem);
-  font-weight: 700;
-  line-height: 1.2;
-  margin-top: 0.25rem;
-}
-
-/* ── Chart card ──────────────────────────────────────────────────────────── */
-.chart-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 1rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-.dark .chart-card {
-  background: #1f2937;
-  border-color: #374151;
-}
-@media (min-width: 640px) {
-  .chart-card {
-    padding: 1.5rem;
-  }
-}
-
-/* ── Chart title typography ──────────────────────────────────────────────── */
-.chart-title {
-  font-size: clamp(0.9rem, 2vw, 1rem);
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-/* ── Canvas wrapper ──────────────────────────────────────────────────────── */
-.chart-canvas-container {
-  height: 250px;
-  position: relative;
-}
-@media (min-width: 769px) {
-  .chart-canvas-container {
-    height: 300px;
-  }
-}
-
-/* ── Stats chip ──────────────────────────────────────────────────────────── */
-.stat-chip {
-  border-radius: 12px;
-  padding: 0.875rem;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  transition: box-shadow 0.15s;
-}
-.stat-chip:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-}
+  .lo-dashboard { --forest:#0d3b2a; --leaf:#2e7d32; --gold:#f4c430; --paper:#faf7f0; --ink:#173126; --muted:#6f746c; font-family:"Cabinet Grotesk",sans-serif; padding:1.25rem; color:var(--ink); }
+  .dark .lo-dashboard { --paper:#171b18; --ink:#f8f4e9; --muted:#aebcaf; }
+  .lo-display { font-family:"Boska",serif; font-weight:500; }
+  .lo-hero { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(18rem,.55fr); min-height:19rem; background:var(--forest); color:white; }
+  .lo-hero-main { padding:2.25rem; display:flex; flex-direction:column; justify-content:space-between; }
+  .lo-hero h1 { max-width:50rem; font-size:clamp(3rem,5vw,5.7rem); line-height:.88; letter-spacing:-.035em; }
+  .lo-hero h1 em { color:var(--gold); font-weight:400; }
+  .lo-kicker { color:var(--gold); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+  .lo-owner-card { padding:2rem; background:var(--gold); color:var(--forest); display:flex; flex-direction:column; justify-content:space-between; }
+  .lo-owner-card strong { font-size:1.4rem; }
+  .lo-rule { border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
+  .lo-section { margin-top:2.4rem; }
+  .lo-section-head { display:flex; align-items:end; justify-content:space-between; gap:1rem; border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); padding-bottom:1rem; margin-bottom:1.2rem; }
+  .lo-section-head h2 { font-size:clamp(2rem,3vw,3.4rem); line-height:.95; }
+  .lo-section-head p { color:var(--muted); font-size:.82rem; }
+  .lo-analytics { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(18rem,.65fr); gap:1.25rem; }
+  .lo-analytics-secondary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.25rem; margin-top:1.25rem; }
+  .lo-snapshot { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); background:var(--forest); color:white; }
+  .lo-snapshot-item { min-width:0; padding:1.25rem; border-right:1px solid rgba(255,255,255,.16); }
+  .lo-snapshot-item:last-child { border-right:0; }
+  .lo-snapshot-item span { display:block; color:rgba(255,255,255,.62); font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+  .lo-snapshot-item strong { display:block; margin-top:.45rem; color:var(--gold); font-family:"Boska",serif; font-size:clamp(1.5rem,2.4vw,2.35rem); font-weight:500; line-height:1; white-space:nowrap; }
+  .lo-chart { min-width:0; border:1px solid color-mix(in srgb,var(--ink) 20%,transparent); padding:1.25rem; }
+  .lo-chart-featured { background:var(--forest); border-color:var(--forest); color:white; }
+  .lo-chart-featured .lo-chart-head span { color:rgba(255,255,255,.58); }
+  .lo-chart-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+  .lo-chart-head h3 { font-size:.82rem; font-weight:800; }
+  .lo-chart-head span { color:var(--muted); font-size:.7rem; }
+  .lo-chart-wrap { position:relative; height:18rem; }
+  .lo-chart-wrap.lo-chart-compact { height:14rem; }
+  .lo-chart-empty { height:100%; display:grid; place-items:center; border-top:1px solid color-mix(in srgb,var(--ink) 12%,transparent); color:var(--muted); text-align:center; }
+  .lo-chart-empty span { max-width:13rem; font-size:.78rem; line-height:1.45; }
+  .lo-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-left:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
+  .lo-action { min-height:8.5rem; padding:1.2rem; border-right:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); display:flex; flex-direction:column; justify-content:space-between; color:var(--ink); text-decoration:none; transition:.18s ease; }
+  .lo-action:hover { background:var(--gold); color:var(--forest); }
+  .lo-action .material-symbols-outlined { font-size:1.6rem; }
+  .lo-attention { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
+  .lo-attention a { padding:1.2rem 1rem; border-right:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); color:var(--ink); text-decoration:none; }
+  .lo-attention a:last-child { border-right:0; }
+  .lo-attention strong { display:block; font-family:"Boska",serif; font-size:2.7rem; line-height:1; }
+  .lo-attention span { display:block; margin-top:.55rem; color:var(--muted); font-size:.75rem; }
+  .lo-main-grid { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(18rem,.65fr); gap:2rem; }
+  .lo-orders { width:100%; border-collapse:collapse; }
+  .lo-orders th { padding:.75rem .5rem; border-bottom:1px solid color-mix(in srgb,var(--ink) 25%,transparent); color:var(--muted); text-align:left; font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; }
+  .lo-orders td { padding:1rem .5rem; border-bottom:1px solid color-mix(in srgb,var(--ink) 14%,transparent); font-size:.82rem; vertical-align:top; }
+  .lo-orders a { color:var(--ink); font-weight:700; text-decoration:none; }
+  .lo-status { display:inline-block; border-bottom:2px solid var(--gold); padding-bottom:.12rem; font-size:.72rem; font-weight:700; }
+  .lo-metrics { background:var(--forest); color:white; padding:1.5rem; }
+  .lo-metric { display:flex; align-items:end; justify-content:space-between; gap:1rem; padding:1.1rem 0; border-bottom:1px solid rgba(255,255,255,.17); }
+  .lo-metric:last-child { border-bottom:0; }
+  .lo-metric span { color:rgba(255,255,255,.62); font-size:.76rem; }
+  .lo-metric strong { font-family:"Boska",serif; color:var(--gold); font-size:1.9rem; font-weight:500; }
+  .lo-link { color:var(--leaf); border-bottom:1px solid currentColor; font-size:.75rem; font-weight:800; text-decoration:none; }
+  .dark .lo-link { color:var(--gold); }
+  @media(max-width:1000px){ .lo-analytics-secondary{grid-template-columns:1fr 1fr}.lo-analytics-secondary .lo-chart:last-child{grid-column:1/-1}.lo-snapshot{grid-template-columns:repeat(3,1fr)}.lo-snapshot-item{border-bottom:1px solid rgba(255,255,255,.16)} }
+  @media(max-width:900px){ .lo-hero,.lo-main-grid,.lo-analytics{grid-template-columns:1fr}.lo-attention{grid-template-columns:repeat(2,1fr)}.lo-attention a:last-child{grid-column:span 2}.lo-owner-card{min-height:11rem}.lo-dashboard{padding:.75rem} }
+  @media(max-width:560px){ .lo-attention,.lo-analytics-secondary{grid-template-columns:1fr}.lo-analytics-secondary .lo-chart:last-child{grid-column:auto}.lo-snapshot{grid-template-columns:1fr 1fr}.lo-snapshot-item strong{white-space:normal}.lo-attention a:last-child{grid-column:auto}.lo-hero-main{padding:1.5rem}.lo-orders th:nth-child(3),.lo-orders td:nth-child(3){display:none} }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
+<div class="lo-dashboard">
+  <header class="lo-hero">
+    <div class="lo-hero-main">
+      <div>
+        <p class="lo-kicker">{{ today_label }}</p>
+        <h1 class="lo-display">{{ greeting }},<br><em>{{ request.user.first_name|default:"Owner" }}.</em></h1>
+      </div>
+    </div>
+    <div class="lo-owner-card">
+      <span class="material-symbols-outlined" style="font-size:2.2rem">eco</span>
+      <div><span style="display:block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.14em">Signed in as</span><strong>{{ role_label }}</strong><span style="display:block;margin-top:.35rem;font-size:.78rem">{{ request.user.email }}</span></div>
+    </div>
+  </header>
 
-  {# ── Page title ────────────────────────────────────────────────────────── #}
-  <div class="dashboard-header">
+  {% if can_see_finance or dashboard_role == 'owner' %}
+  <section class="lo-section">
+    <div class="lo-section-head"><h2 class="lo-display">Analytics.</h2><span class="lo-kicker">Live view</span></div>
+    <div class="lo-snapshot">
+      <div class="lo-snapshot-item"><span>Revenue · month</span><strong>{{ kpi.this_month_revenue }}</strong></div>
+      <div class="lo-snapshot-item"><span>Orders · month</span><strong>{{ kpi.orders_this_month }}</strong></div>
+      <div class="lo-snapshot-item"><span>Average order</span><strong>{{ kpi.avg_order_value }}</strong></div>
+      <div class="lo-snapshot-item"><span>Payments won</span><strong>{{ analytics.payment_success_rate }}%</strong></div>
+      <div class="lo-snapshot-item"><span>Repeat customers</span><strong>{{ analytics.repeat_customer_rate }}%</strong></div>
+    </div>
+    <div class="lo-analytics" style="margin-top:1.25rem">
+      <div class="lo-chart lo-chart-featured"><div class="lo-chart-head"><h3>Sales movement</h3><span>30 days</span></div><div class="lo-chart-wrap"><canvas id="revenueChart"></canvas></div></div>
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Order status</h3><span>Now</span></div><div class="lo-chart-wrap">{% if has_order_status_data %}<canvas id="statusChart"></canvas>{% else %}<div class="lo-chart-empty"><span>No orders to sort yet.</span></div>{% endif %}</div></div>
+    </div>
+    <div class="lo-analytics-secondary">
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Best sellers</h3><span>Units</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_product_sales_data %}<canvas id="productsChart"></canvas>{% else %}<div class="lo-chart-empty"><span>Product rankings begin with the first order.</span></div>{% endif %}</div></div>
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Customer growth</h3><span>6 months</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_customer_growth_data %}<canvas id="customersChart"></canvas>{% else %}<div class="lo-chart-empty"><span>New customers will appear here.</span></div>{% endif %}</div></div>
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Order channels</h3><span>{{ analytics.promo_orders }} promo orders</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_channel_data %}<canvas id="channelChart"></canvas>{% else %}<div class="lo-chart-empty"><span>Channel share begins with the first order.</span></div>{% endif %}</div></div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if quick_actions %}
+  <section class="lo-section">
+    <div class="lo-section-head"><h2 class="lo-display">Actions.</h2></div>
+    <div class="lo-actions">
+      {% for action in quick_actions %}<a class="lo-action" href="{{ action.href }}"><span class="material-symbols-outlined">{{ action.icon }}</span><strong>{{ action.label }} ↗</strong></a>{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if dashboard_role == 'owner' or dashboard_role == 'operations' or dashboard_role == 'content' %}
+  <section class="lo-section">
+    <div class="lo-section-head"><h2 class="lo-display">Attention.</h2><span class="lo-kicker">Now</span></div>
+    <div class="lo-attention">
+      <a href="/admin/orders/order/?status__exact=whatsapp_pending"><strong>{{ attention.awaiting_payment }}</strong><span>Awaiting payment</span></a>
+      <a href="/admin/orders/order/?status__exact=processing"><strong>{{ attention.processing }}</strong><span>Orders processing</span></a>
+      <a href="/admin/users/b2bprofile/?status__exact=pending"><strong>{{ attention.b2b_pending }}</strong><span>B2B applications</span></a>
+      <a href="/admin/products/product/?is_available__exact=0"><strong>{{ attention.unavailable_products }}</strong><span>Unavailable products</span></a>
+      <a href="/admin/blog/blogpost/?is_published__exact=0"><strong>{{ attention.draft_posts }}</strong><span>Draft stories</span></a>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="lo-section {% if perms.orders.view_order %}lo-main-grid{% endif %}">
+    {% if perms.orders.view_order %}
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Legit Organic — live store metrics</p>
+      <div class="lo-section-head"><h2 class="lo-display">Orders.</h2><a class="lo-link" href="/admin/orders/order/">View all ↗</a></div>
+      <div style="overflow-x:auto"><table class="lo-orders"><thead><tr><th>Reference</th><th>Customer</th><th>Status</th><th>Total</th></tr></thead><tbody>
+      {% for order in recent_orders %}<tr><td><a href="/admin/orders/order/{{ order.pk }}/change/">{{ order.reference }}</a><br><small style="color:var(--muted)">{{ order.created_at|date:"d M, H:i" }}</small></td><td>{% if order.guest_name %}{{ order.guest_name }}{% elif order.user %}{{ order.user.get_full_name|default:order.user.email }}{% else %}Guest{% endif %}</td><td><span class="lo-status">{{ order.get_status_display }}</span></td><td><strong>GH₵ {{ order.total_amount }}</strong></td></tr>{% empty %}<tr><td colspan="4">No orders yet.</td></tr>{% endfor %}
+      </tbody></table></div>
     </div>
-    <div class="dashboard-header-buttons">
-      <a href="/admin/orders/order/"
-         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
-                bg-primary-700 text-white hover:bg-primary-800 transition-colors">
-        <span class="material-symbols-outlined text-base">receipt_long</span>
-        View Orders
-      </a>
-      <a href="/admin/orders/order/export-all/"
-         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
-                border border-primary-700 text-primary-700 dark:text-primary-300 dark:border-primary-600
-                hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors">
-        <span class="material-symbols-outlined text-base">download</span>
-        Export Excel
-      </a>
-    </div>
-  </div>
+    {% endif %}
 
-  {# ── Row 1: Revenue & Orders KPIs ─────────────────────────────────────── #}
-  <div class="dashboard-grid-kpi">
-
-    {# Total Revenue #}
-    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Revenue</p>
-          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.total_revenue }}</p>
-          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">This month: {{ kpi.this_month_revenue }}</p>
-        </div>
-        <span class="material-symbols-outlined text-3xl text-primary-600">payments</span>
-      </div>
-      {% if kpi.revenue_change != 0 %}
-      <div class="mt-3 flex items-center gap-1 text-xs font-medium
-                  {% if kpi.revenue_change > 0 %}text-green-600{% else %}text-red-500{% endif %}">
-        <span class="material-symbols-outlined text-sm">
-          {% if kpi.revenue_change > 0 %}trending_up{% else %}trending_down{% endif %}
-        </span>
-        {{ kpi.revenue_change }}% vs last month
-      </div>
-      {% endif %}
-    </div>
-
-    {# Total Orders #}
-    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Orders</p>
-          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.total_orders }}</p>
-          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">This month: {{ kpi.orders_this_month }}</p>
-        </div>
-        <span class="material-symbols-outlined text-3xl text-blue-500">shopping_bag</span>
-      </div>
-      {% if kpi.orders_change != 0 %}
-      <div class="mt-3 flex items-center gap-1 text-xs font-medium
-                  {% if kpi.orders_change > 0 %}text-green-600{% else %}text-red-500{% endif %}">
-        <span class="material-symbols-outlined text-sm">
-          {% if kpi.orders_change > 0 %}trending_up{% else %}trending_down{% endif %}
-        </span>
-        {{ kpi.orders_change }}% vs last month
-      </div>
-      {% endif %}
-    </div>
-
-    {# Avg Order Value #}
-    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Avg Order Value</p>
-          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.avg_order_value }}</p>
-          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Delivered: {{ kpi.delivered_orders }}</p>
-        </div>
-        <span class="material-symbols-outlined text-3xl text-amber-500">analytics</span>
-      </div>
-      <div class="mt-3 flex items-center gap-1 text-xs font-medium text-amber-600">
-        <span class="material-symbols-outlined text-sm">pending</span>
-        {{ kpi.pending_orders }} awaiting payment
-      </div>
-    </div>
-
-    {# Customers #}
-    <div class="kpi-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div class="flex items-start justify-between">
-        <div>
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Customers</p>
-          <p class="kpi-value text-gray-900 dark:text-white">{{ kpi.total_customers }}</p>
-          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">New this month: {{ kpi.new_customers_this_month }}</p>
-        </div>
-        <span class="material-symbols-outlined text-3xl text-purple-500">people</span>
-      </div>
-    </div>
-
-  </div>
-
-  {# ── Row 2: Content & source quick stats ──────────────────────────────── #}
-  <div class="dashboard-grid-stats">
-
-    <a href="/admin/products/product/"
-       class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <span class="material-symbols-outlined text-2xl text-primary-600">shopping_basket</span>
-      <div>
-        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.total_products }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Products</p>
-      </div>
-    </a>
-
-    <a href="/admin/blog/blogpost/"
-       class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <span class="material-symbols-outlined text-2xl text-blue-500">article</span>
-      <div>
-        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.total_blog_posts }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Blog Posts</p>
-      </div>
-    </a>
-
-    <a href="/admin/recipes/recipe/"
-       class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <span class="material-symbols-outlined text-2xl text-orange-500">restaurant_menu</span>
-      <div>
-        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.total_recipes }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Recipes</p>
-      </div>
-    </a>
-
-    <div class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <span class="material-symbols-outlined text-2xl text-green-600">chat</span>
-      <div>
-        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.whatsapp_orders }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">WhatsApp</p>
-      </div>
-    </div>
-
-    <div class="stat-chip bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <span class="material-symbols-outlined text-2xl text-indigo-500">credit_card</span>
-      <div>
-        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ kpi.paystack_orders }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Paystack</p>
-      </div>
-    </div>
-
-  </div>
-
-  {# ── Charts Row 1: Revenue (wide) + Donut ─────────────────────────────── #}
-  <div class="dashboard-grid-charts-wide">
-
-    <div class="chart-card">
-      <h2 class="chart-title text-gray-700 dark:text-gray-200">Revenue &amp; Orders — Last 30 Days</h2>
-      <div class="chart-canvas-container">
-        <canvas id="revenueChart"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <h2 class="chart-title text-gray-700 dark:text-gray-200">Orders by Status</h2>
-      <div class="chart-canvas-container flex items-center justify-center">
-        <canvas id="donutChart"></canvas>
-      </div>
-    </div>
-
-  </div>
-
-  {# ── Charts Row 2: Top Products (wide) + Customers ────────────────────── #}
-  <div class="dashboard-grid-charts-wide">
-
-    <div class="chart-card">
-      <h2 class="chart-title text-gray-700 dark:text-gray-200">Top Products by Quantity Sold</h2>
-      <div class="chart-canvas-container">
-        <canvas id="topProductsChart"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <h2 class="chart-title text-gray-700 dark:text-gray-200">New Customers — Last 6 Months</h2>
-      <div class="chart-canvas-container">
-        <canvas id="customerChart"></canvas>
-      </div>
-    </div>
-
-  </div>
+    {% if can_see_finance or dashboard_role == 'owner' %}
+    <aside class="lo-metrics">
+      <p class="lo-kicker">Business pulse</p>
+      <div class="lo-metric"><span>Revenue</span><strong>{{ kpi.total_revenue }}</strong></div>
+      <div class="lo-metric"><span>This month</span><strong>{{ kpi.this_month_revenue }}</strong></div>
+      <div class="lo-metric"><span>Orders</span><strong>{{ kpi.total_orders }}</strong></div>
+      <div class="lo-metric"><span>Average order</span><strong>{{ kpi.avg_order_value }}</strong></div>
+      <div class="lo-metric"><span>Customers</span><strong>{{ kpi.total_customers }}</strong></div>
+    </aside>
+    {% else %}
+    <aside class="lo-metrics"><p class="lo-kicker">Your workspace</p><div class="lo-metric"><span>Products available</span><strong>{{ kpi.total_products }}</strong></div><div class="lo-metric"><span>Published stories</span><strong>{{ kpi.total_blog_posts }}</strong></div><div class="lo-metric"><span>Recipes</span><strong>{{ kpi.total_recipes }}</strong></div></aside>
+    {% endif %}
+  </section>
 
 </div>
 
-{# ── Chart.js ──────────────────────────────────────────────────────────── #}
+{% if can_see_finance or dashboard_role == 'owner' %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 (function () {
-  // Detect dark mode
-  const dark = document.documentElement.classList.contains('dark') ||
-               window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const gridColor  = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-  const labelColor = dark ? '#9CA3AF' : '#6B7280';
-
-  const FOREST_GREEN = '#0D3B2A';
-  const GHANA_GOLD   = '#F4C430';
-  const BLUE         = '#2196F3';
-
-  // ── Revenue chart ──────────────────────────────────────────────────────
-  const revCtx = document.getElementById('revenueChart').getContext('2d');
-  new Chart(revCtx, {
-    type: 'line',
-    data: {
-      labels: {{ chart_revenue_labels|safe }},
-      datasets: [
-        {
-          label: 'Revenue (GH₵)',
-          data: {{ chart_revenue_data|safe }},
-          borderColor: FOREST_GREEN,
-          backgroundColor: 'rgba(13,59,42,0.08)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          yAxisID: 'y',
-        },
-        {
-          label: 'Orders',
-          data: {{ chart_orders_data|safe }},
-          borderColor: GHANA_GOLD,
-          backgroundColor: 'rgba(244,196,48,0.12)',
-          borderWidth: 2,
-          fill: false,
-          tension: 0.4,
-          pointRadius: 2,
-          pointHoverRadius: 5,
-          yAxisID: 'y1',
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { labels: { color: labelColor, boxWidth: 12, font: { size: 11 } } } },
-      scales: {
-        x: {
-          ticks: { color: labelColor, maxTicksLimit: 10, font: { size: 10 } },
-          grid:  { color: gridColor },
-        },
-        y: {
-          type: 'linear',
-          position: 'left',
-          ticks: { color: labelColor, font: { size: 10 }, callback: v => 'GH₵' + v.toLocaleString() },
-          grid:  { color: gridColor },
-        },
-        y1: {
-          type: 'linear',
-          position: 'right',
-          ticks: { color: labelColor, font: { size: 10 } },
-          grid:  { drawOnChartArea: false },
-        },
-      },
-    },
-  });
-
-  // ── Donut chart ────────────────────────────────────────────────────────
-  const donutCtx = document.getElementById('donutChart').getContext('2d');
-  new Chart(donutCtx, {
-    type: 'doughnut',
-    data: {
-      labels: {{ chart_donut_labels|safe }},
-      datasets: [{
-        data:            {{ chart_donut_data|safe }},
-        backgroundColor: {{ chart_donut_colors|safe }},
-        borderWidth: 2,
-        borderColor: dark ? '#1F2937' : '#FFFFFF',
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '60%',
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: labelColor, boxWidth: 10, font: { size: 10 }, padding: 8 },
-        },
-      },
-    },
-  });
-
-  // ── Top products horizontal bar ─────────────────────────────────────────
-  const prodCtx = document.getElementById('topProductsChart').getContext('2d');
-  new Chart(prodCtx, {
-    type: 'bar',
-    data: {
-      labels:   {{ chart_top_product_labels|safe }},
-      datasets: [{
-        label: 'Units Sold',
-        data:  {{ chart_top_product_data|safe }},
-        backgroundColor: FOREST_GREEN,
-        borderRadius: 4,
-      }],
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: labelColor, font: { size: 10 } }, grid: { color: gridColor } },
-        y: { ticks: { color: labelColor, font: { size: 10 } }, grid: { display: false } },
-      },
-    },
-  });
-
-  // ── New customers bar ──────────────────────────────────────────────────
-  const custCtx = document.getElementById('customerChart').getContext('2d');
-  new Chart(custCtx, {
-    type: 'bar',
-    data: {
-      labels:   {{ chart_customer_labels|safe }},
-      datasets: [{
-        label: 'New Customers',
-        data:  {{ chart_customer_data|safe }},
-        backgroundColor: BLUE,
-        borderRadius: 4,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: labelColor, font: { size: 10 } }, grid: { display: false } },
-        y: {
-          ticks: { color: labelColor, font: { size: 10 }, stepSize: 1 },
-          grid:  { color: gridColor },
-        },
-      },
-    },
-  });
+  const dark = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const ink = dark ? '#E7E9E4' : '#173126';
+  const grid = dark ? 'rgba(255,255,255,.08)' : 'rgba(13,59,42,.1)';
+  const salesInk = '#F8F4E9';
+  const salesGrid = 'rgba(255,255,255,.13)';
+  const common = { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:ink,boxWidth:10,font:{family:'Cabinet Grotesk',size:11}}}} };
+  new Chart(document.getElementById('revenueChart'), {type:'line',data:{labels:{{ chart_revenue_labels|safe }},datasets:[{label:'Revenue',data:{{ chart_revenue_data|safe }},borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,fill:true,tension:.35,pointRadius:2,pointBackgroundColor:'#F4C430',yAxisID:'y'},{label:'Orders',data:{{ chart_orders_data|safe }},borderColor:'#82C68A',borderWidth:2,tension:.35,pointRadius:2,pointBackgroundColor:'#82C68A',yAxisID:'y1'}]},options:{...common,plugins:{legend:{labels:{color:salesInk,boxWidth:10,font:{family:'Cabinet Grotesk',size:11}}}},scales:{x:{ticks:{color:salesInk,maxTicksLimit:8},grid:{display:false}},y:{ticks:{color:salesInk,callback:v=>'GH₵'+v},grid:{color:salesGrid}},y1:{position:'right',ticks:{color:salesInk,stepSize:1},grid:{display:false}}}}});
+  const statusCanvas = document.getElementById('statusChart');
+  if (statusCanvas) new Chart(statusCanvas, {type:'doughnut',data:{labels:{{ chart_donut_labels|safe }},datasets:[{data:{{ chart_donut_data|safe }},backgroundColor:{{ chart_donut_colors|safe }},borderColor:dark?'#171B18':'#FAF7F0',borderWidth:3}]},options:{...common,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Cabinet Grotesk',size:10}}}}}});
+  const productsCanvas = document.getElementById('productsChart');
+  if (productsCanvas) new Chart(productsCanvas, {type:'bar',data:{labels:{{ chart_top_product_labels|safe }},datasets:[{data:{{ chart_top_product_data|safe }},backgroundColor:'#F4C430',borderRadius:0}]},options:{...common,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}},y:{ticks:{color:ink},grid:{display:false}}}}});
+  const customersCanvas = document.getElementById('customersChart');
+  if (customersCanvas) new Chart(customersCanvas, {type:'line',data:{labels:{{ chart_customer_labels|safe }},datasets:[{data:{{ chart_customer_data|safe }},borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,pointRadius:4,pointBackgroundColor:'#F4C430',fill:true,tension:.3}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:ink,maxRotation:0},grid:{display:false}},y:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}}}}});
+  const channelCanvas = document.getElementById('channelChart');
+  if (channelCanvas) new Chart(channelCanvas, {type:'doughnut',data:{labels:{{ chart_channel_labels|safe }},datasets:[{data:{{ chart_channel_data|safe }},backgroundColor:['#82C68A','#F4C430'],borderColor:dark?'#171B18':'#FAF7F0',borderWidth:3}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Cabinet Grotesk',size:10}}}}}});
 })();
 </script>
+{% endif %}
 {% endblock %}

@@ -8,11 +8,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        # Clear existing groups to start fresh
-        Group.objects.filter(name__in=[
-            'Content Team', 'Operations', 'Finance'
-        ]).delete()
-
         # Get all permissions we need
         def get_perms(app_label, model, actions):
             ct = ContentType.objects.filter(
@@ -104,9 +99,29 @@ class Command(BaseCommand):
             f'✓ Finance — {len(finance_perms)} permissions'
         ))
 
+        # ── SALES & MARKETING ────────────────────────────────────
+        sales_marketing, _ = Group.objects.get_or_create(name='Sales & Marketing')
+        sales_perms = []
+        sales_perms += list(get_perms('orders', 'promocode',
+                                      ['add', 'change', 'view', 'delete']))
+        sales_perms += list(get_perms('sales', 'salesrep',
+                                      ['add', 'change', 'view']))
+        sales_perms += list(get_perms('sales', 'referredcustomer',
+                                      ['add', 'change', 'view']))
+        sales_perms += list(get_perms('sales', 'commission', ['view']))
+        sales_perms += list(get_perms('orders', 'order', ['view']))
+        sales_perms += list(get_perms('users', 'user', ['view']))
+        sales_perms += list(get_perms('products', 'product', ['view']))
+        sales_perms += list(get_perms('blog', 'blogpost', ['view']))
+        sales_marketing.permissions.set(sales_perms)
+        self.stdout.write(self.style.SUCCESS(
+            f'✓ Sales & Marketing — {len(sales_perms)} permissions'
+        ))
+
         self.stdout.write(self.style.SUCCESS('''
 Groups created successfully:
 - Content Team: manage products, blog, recipes
 - Operations: manage orders, view users and products
 - Finance: read-only access to orders and users
+- Sales & Marketing: manage promos, reps and referrals; view reporting
         '''))

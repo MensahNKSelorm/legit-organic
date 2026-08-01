@@ -46,19 +46,19 @@ class ProductAdmin(ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at', 'image']
     fieldsets = (
-        ('Basic Info', {
+        ('Product identity', {
             'fields': ('name', 'slug', 'description', 'category'),
         }),
-        ('Pricing', {
+        ('Price & pack', {
             'fields': ('price', 'unit'),
         }),
-        ('Origin', {
+        ('Farm & provenance', {
             'fields': ('region', 'badge'),
         }),
-        ('Status', {
+        ('Storefront state', {
             'fields': ('is_featured', 'is_available'),
         }),
-        ('Nutrition & Storage', {
+        ('Nutrition, care & storage', {
             'fields': ('nutritional_score', 'nutritional_info', 'storage_tips'),
             'classes': ('collapse',),
         }),

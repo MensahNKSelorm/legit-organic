@@ -1,0 +1,168 @@
+/* Legit Organic control-room shell */
+nav.bg-base-50.flex.flex-col.min-h-screen {
+  background: #0d3b2a !important;
+  color: #f8f4e9 !important;
+  border-right: 0 !important;
+  font-family: "Cabinet Grotesk", sans-serif;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen > div:first-child {
+  border-bottom-color: rgba(255, 255, 255, .14) !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen input {
+  background: rgba(255, 255, 255, .08) !important;
+  border: 1px solid rgba(255, 255, 255, .18) !important;
+  border-radius: 0 !important;
+  color: #fff !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen input::placeholder {
+  color: rgba(255, 255, 255, .5) !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen h3,
+nav.bg-base-50.flex.flex-col.min-h-screen [class*="uppercase"] {
+  color: #f4c430 !important;
+  font-size: .65rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .14em !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen a[href^="/admin/"] {
+  border-radius: 0 !important;
+  color: rgba(255, 255, 255, .78) !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen a[href^="/admin/"]:hover {
+  background: rgba(244, 196, 48, .12) !important;
+  color: #fff !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen a[href="/admin/"],
+nav.bg-base-50.flex.flex-col.min-h-screen a[class*="bg-primary"] {
+  color: #f4c430 !important;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen .material-symbols-outlined {
+  color: #f4c430;
+}
+
+nav.bg-base-50.flex.flex-col.min-h-screen [class*="border-base"] {
+  border-color: rgba(255, 255, 255, .14) !important;
+}
+
+.dark nav.bg-base-50.flex.flex-col.min-h-screen {
+  background: #09291d !important;
+}
+
+/* Editorial content forms */
+:is(#product_form, #blogpost_form, #recipe_form) {
+  --lo-form-forest: #0d3b2a;
+  --lo-form-gold: #f4c430;
+  --lo-form-paper: #faf7f0;
+  --lo-form-rule: rgba(13, 59, 42, .2);
+  font-family: "Cabinet Grotesk", sans-serif;
+}
+
+.dark :is(#product_form, #blogpost_form, #recipe_form) {
+  --lo-form-paper: #171b18;
+  --lo-form-rule: rgba(255, 255, 255, .16);
+}
+
+:is(#product_form, #blogpost_form, #recipe_form) > div.flex {
+  gap: 1rem !important;
+}
+
+:is(#product_form, #blogpost_form, #recipe_form) > div.flex::before {
+  display: block;
+  padding: 1.35rem 1.5rem;
+  background: var(--lo-form-forest);
+  color: var(--lo-form-gold);
+  font-family: "Boska", serif;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 500;
+  line-height: .95;
+  letter-spacing: -.02em;
+}
+
+#product_form > div.flex::before { content: "Market shelf."; }
+#blogpost_form > div.flex::before { content: "Field journal."; }
+#recipe_form > div.flex::before { content: "Kitchen notebook."; }
+
+:is(#product_form, #blogpost_form, #recipe_form) fieldset.module {
+  overflow: hidden;
+  border: 1px solid var(--lo-form-rule) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+:is(#product_form, #blogpost_form, #recipe_form) fieldset.module > h2 {
+  margin: 0 !important;
+  padding: .8rem 1rem !important;
+  background: color-mix(in srgb, var(--lo-form-forest) 8%, transparent) !important;
+  border-bottom: 1px solid var(--lo-form-rule) !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  font-size: .68rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase;
+}
+
+.dark :is(#product_form, #blogpost_form, #recipe_form) fieldset.module > h2 {
+  background: rgba(255, 255, 255, .04) !important;
+  color: var(--lo-form-gold) !important;
+}
+
+:is(#product_form, #blogpost_form, #recipe_form) input:not([type="checkbox"]):not([type="radio"]),
+:is(#product_form, #blogpost_form, #recipe_form) textarea,
+:is(#product_form, #blogpost_form, #recipe_form) select,
+:is(#product_form, #blogpost_form, #recipe_form) .ck-editor__editable,
+:is(#product_form, #blogpost_form, #recipe_form) .ck-toolbar {
+  border-radius: 0 !important;
+}
+
+:is(#product_form, #blogpost_form, #recipe_form) input:focus,
+:is(#product_form, #blogpost_form, #recipe_form) textarea:focus,
+:is(#product_form, #blogpost_form, #recipe_form) select:focus {
+  border-color: var(--lo-form-gold) !important;
+  box-shadow: 0 0 0 1px var(--lo-form-gold) !important;
+}
+
+:is(#product_form, #blogpost_form, #recipe_form) .submit-row button,
+:is(#product_form, #blogpost_form, #recipe_form) input[type="submit"] {
+  border-radius: 0 !important;
+  font-weight: 800 !important;
+}
+
+#product_form fieldset:nth-of-type(4),
+#blogpost_form fieldset:nth-of-type(4),
+#recipe_form fieldset:nth-of-type(5) {
+  border-color: color-mix(in srgb, var(--lo-form-gold) 60%, var(--lo-form-rule)) !important;
+}
+
+@media (min-width: 900px) {
+  :is(#product_form, #blogpost_form, #recipe_form) > div.flex {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  :is(#product_form, #blogpost_form, #recipe_form) > div.flex::before,
+  :is(#product_form, #blogpost_form, #recipe_form) > div.flex > :first-child,
+  :is(#product_form, #blogpost_form, #recipe_form) > div.flex > div:not(.module),
+  :is(#product_form, #blogpost_form, #recipe_form) > div.flex > script {
+    grid-column: 1 / -1;
+  }
+
+  #product_form fieldset:nth-of-type(4),
+  #product_form fieldset:nth-of-type(5),
+  #product_form fieldset:nth-of-type(6),
+  #blogpost_form fieldset:nth-of-type(4),
+  #blogpost_form fieldset:nth-of-type(5),
+  #recipe_form fieldset:nth-of-type(5),
+  #recipe_form fieldset:nth-of-type(6) {
+    grid-column: 1 / -1;
+  }
+}

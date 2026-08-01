@@ -39,20 +39,20 @@ class RecipeAdmin(ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     inlines = [RecipeIngredientInline, RecipeStepInline, RecipePairingInline]
     fieldsets = (
-        ('Basic Info', {
+        ('The dish', {
             'fields': ('title', 'slug', 'description'),
         }),
-        ('Media', {
+        ('Photography & film', {
             'fields': ('cover_image', 'video_url'),
         }),
-        ('Details', {
+        ('Time at the stove', {
             'fields': ('prep_time', 'cook_time', 'servings', 'difficulty'),
         }),
-        ('Nutrition', {
+        ('Nutrition note', {
             'fields': ('nutritional_score',),
             'classes': ('collapse',),
         }),
-        ('Attribution', {
+        ('Ownership', {
             'fields': ('is_default', 'created_by'),
         }),
         ('Timestamps', {
