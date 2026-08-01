@@ -133,6 +133,7 @@ export default async function RecipeDetailPage({ params }: Props) {
           <h1 className="font-display text-3xl lg:text-5xl font-bold text-mist-white mb-5 leading-tight max-w-3xl">
             {recipe.title}
           </h1>
+          <AddDishSearch currentTitles={[recipe.title]} catalogue={catalogue.map(item => item.title)} />
           <div className="flex flex-wrap items-center gap-4 text-light-leaf text-sm mb-8">
             {recipe.prep_time > 0 && (
               <span>{formatTime(recipe.prep_time)} prep</span>
@@ -246,8 +247,7 @@ export default async function RecipeDetailPage({ params }: Props) {
                 <h2 className="display-organic text-4xl text-forest-green dark:text-[#faf7f0]">
                   Ingredients
                 </h2>
-                <CombinedRecipeEditor title={recipe.title} baseRecipeIds={[recipe.id]} initialIngredients={editableIngredients} returnTo={`/recipes/${recipe.slug}`} />
-                <AddDishSearch currentTitles={[recipe.title]} catalogue={catalogue.map(item => item.title)} />
+                <CombinedRecipeEditor key={recipe.slug} title={recipe.title} baseRecipeIds={[recipe.id]} initialIngredients={editableIngredients} returnTo={`/recipes/${recipe.slug}`} />
               </section>
 
             {/* Steps */}

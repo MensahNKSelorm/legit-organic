@@ -52,6 +52,9 @@ File: `frontend/app/(public)/recipes/page.tsx`
 - Ingredient fields are always editable in place and grouped by recipe. Save remains disabled until a field changes; logged-out customers are asked to log in only when saving. Product matches appear as shop links without changing the public recipe.
 - Recipe pages keep structural language short: use “Ingredients” and “Method”; avoid stacking editorial headings above functional content.
 - Single recipes use “Recipe notebook.” Combinations state their component count and can add further dishes without a two-recipe limit.
+- “Add dish +” belongs beside the recipe title and opens a compact overlay; do not repeat it below the ingredient editor.
+- Recipe queries accept `+`, `and`, commas, or catalogue-aware whitespace. Never split raw spaces without longest-title matching because recipe names may contain several words.
+- Private recipe titles are editable for authenticated customers and participate in the same dirty/save state as ingredient edits.
 - Empty video areas use a dark, 16:9 admin-preview field with a restrained play control; replace it with the real video only when one is configured.
 
 ### Editorial Empty State

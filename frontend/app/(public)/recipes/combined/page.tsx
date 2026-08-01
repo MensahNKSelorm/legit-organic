@@ -7,6 +7,7 @@ import type { Product, Recipe, RecipeWithPairings } from '@/types'
 import { getMediaUrl } from '@/lib/media'
 import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
 import AddDishSearch from '@/components/recipes/AddDishSearch'
+import { normaliseRecipeText, parseRecipeQuery } from '@/lib/recipe-query'
 
 const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -36,14 +37,9 @@ const demoRecipes: DemoRecipe[] = [
 ]
 
 const clean = (value: string) => value.replace(/<[^>]*>/g, '').trim()
-const normalise = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+const normalise = normaliseRecipeText
 
-async function getRecipes(query: string): Promise<RecipeWithPairings[]> {
-  const terms = query.split('+').map(term => term.trim()).filter(Boolean)
-  const results: Recipe[] = await fetch(`${INTERNAL_API}/api/recipes/default/?search=${encodeURIComponent(query)}`, { next: { revalidate: 0 } })
-    .then(response => response.ok ? response.json() : [])
-    .catch(() => [])
-
+async function getRecipes(terms: string[], results: Recipe[]): Promise<RecipeWithPairings[]> {
   const selected = terms.map(term => {
     const needle = normalise(term)
     return results.find(recipe => normalise(recipe.title) === needle)
@@ -58,11 +54,10 @@ async function getRecipes(query: string): Promise<RecipeWithPairings[]> {
 
 export default async function CombinedRecipePage({ searchParams }: Props) {
   const { q: rawQuery } = await searchParams
-  const query = rawQuery?.trim().slice(0, 200).replace(/\s+and\s+/gi, ' + ') || ''
+  const query = rawQuery?.trim().slice(0, 200) || ''
   if (!query) notFound()
 
-  const [realRecipes, catalogueRecipes, products] = await Promise.all([
-    getRecipes(query),
+  const [catalogueRecipes, products] = await Promise.all([
     fetch(`${INTERNAL_API}/api/recipes/default/`, { next: { revalidate: 0 } }).then(response => response.ok ? response.json() as Promise<Recipe[]> : []).catch(() => []),
     fetch(`${INTERNAL_API}/api/products/`, { next: { revalidate: 0 } }).then(async response => {
       if (!response.ok) return []
@@ -70,7 +65,9 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
       return (Array.isArray(data) ? data : data.results || []) as Product[]
     }).catch(() => []),
   ])
-  const terms = query.split('+').map(term => term.trim()).filter(Boolean)
+  const catalogueTitles = [...catalogueRecipes.map(recipe => recipe.title), ...demoRecipes.map(recipe => recipe.title)]
+  const terms = parseRecipeQuery(query, catalogueTitles)
+  const realRecipes = await getRecipes(terms, catalogueRecipes)
   const matchProduct = (name: string) => products.find(product => normalise(product.name) === normalise(name))
     || products.find(product => normalise(product.name).includes(normalise(name)) || normalise(name).includes(normalise(product.name)))
   const recipes = terms.map(term => {
@@ -133,8 +130,7 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
     group: recipe.title,
     ...ingredient,
   })))
-  const catalogueTitles = [...catalogueRecipes.map(recipe => recipe.title), ...demoRecipes.map(recipe => recipe.title)]
-    .filter((name, index, all) => all.findIndex(item => normalise(item) === normalise(name)) === index)
+  const uniqueCatalogueTitles = catalogueTitles.filter((name, index, all) => all.findIndex(item => normalise(item) === normalise(name)) === index)
   const isCombination = recipes.length > 1
 
   return (
@@ -148,6 +144,7 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
             <Link href="/recipes" className="border-b border-white/50 pb-1 text-sm">Back to the recipe shelf</Link>
             <p className="mt-10 text-sm font-bold text-[#F4C430]">{isCombination ? `${recipes.length}-part meal` : 'Recipe notebook'}</p>
             <h1 className="display-organic mt-4 max-w-3xl text-5xl leading-[.95] md:text-7xl">{recipes.map((recipe, index) => <span key={recipe.slug}>{index > 0 && <span className="font-normal text-white/35"> + </span>}<Link href={recipe.href} className="underline decoration-white/25 underline-offset-8 hover:decoration-[#F4C430]">{recipe.title}</Link></span>)}</h1>
+            <AddDishSearch currentTitles={recipes.map(recipe => recipe.title)} catalogue={uniqueCatalogueTitles} />
             <p className="mt-7 max-w-2xl text-base leading-7 text-white/75">{mealDescription}</p>
             <dl className="mt-9 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/25 pt-5 text-sm">
               <div><dt className="text-white/55">Prep</dt><dd className="font-bold">{totalPrep} min</dd></div>
@@ -162,8 +159,7 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
         <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:gap-20">
           <section>
             <h2 className="display-organic text-5xl">Ingredients</h2>
-            <CombinedRecipeEditor title={title} baseRecipeIds={recipes.flatMap(recipe => recipe.id ? [recipe.id] : [])} initialIngredients={editableIngredients} returnTo={`/recipes/combined?q=${encodeURIComponent(query)}`} />
-            <AddDishSearch currentTitles={recipes.map(recipe => recipe.title)} catalogue={catalogueTitles} />
+            <CombinedRecipeEditor key={terms.map(normalise).join('|')} title={title} baseRecipeIds={recipes.flatMap(recipe => recipe.id ? [recipe.id] : [])} initialIngredients={editableIngredients} returnTo={`/recipes/combined?q=${encodeURIComponent(query)}`} />
           </section>
           <section>
             <h2 className="display-organic text-5xl">Method</h2>

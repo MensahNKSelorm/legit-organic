@@ -2,29 +2,21 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { normaliseRecipeText, parseRecipeDraft } from '@/lib/recipe-query'
 
 type Suggestion = { title: string }
-
-const normaliseJoiner = (value: string) => value.replace(/\s+and\s+/gi, ' + ')
-const normalise = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 
 export default function RecipeSearch({ recipes, initialQuery = '' }: { recipes: Suggestion[]; initialQuery?: string }) {
   const [query, setQuery] = useState(initialQuery)
   const [focused, setFocused] = useState(false)
 
   const options = useMemo(() => {
-    const canonical = normaliseJoiner(query)
-    const parts = canonical.split('+').map(part => part.trim())
-    const current = parts.at(-1) || ''
     if (!query.trim()) return []
-
-    const earlier = parts.slice(0, -1).map(part => {
-      const exact = recipes.find(recipe => normalise(recipe.title) === normalise(part))
-      return exact?.title || part
-    })
+    const catalogue = recipes.map(recipe => recipe.title)
+    const { selected: earlier, fragment: current } = parseRecipeDraft(query, catalogue)
     const matches = recipes
-      .filter(recipe => !earlier.some(title => normalise(title) === normalise(recipe.title)))
-      .filter(recipe => !current || normalise(recipe.title).includes(normalise(current)))
+      .filter(recipe => !earlier.some(title => normaliseRecipeText(title) === normaliseRecipeText(recipe.title)))
+      .filter(recipe => !current || normaliseRecipeText(recipe.title).includes(normaliseRecipeText(current)))
       .slice(0, 6)
 
     return matches.map(recipe => {
@@ -54,7 +46,7 @@ export default function RecipeSearch({ recipes, initialQuery = '' }: { recipes: 
           onChange={event => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 150)}
-          placeholder="Try fufu + light soup, or fufu and light soup"
+          placeholder="Try fufu light soup, fufu + light soup, or use a comma"
           className="min-w-0 flex-1 border-0 border-b-2 border-[#0D3B2A] bg-transparent px-0 py-3 text-xl text-[#0D3B2A] placeholder:text-[#0D3B2A]/35 focus:border-[#2E7D32] focus:outline-none dark:border-white dark:text-white dark:placeholder:text-white/35 md:text-2xl"
         />
         <button type="submit" className="shrink-0 bg-[#F4C430] px-6 py-3.5 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white dark:hover:bg-white dark:hover:text-[#0D3B2A]">Search</button>

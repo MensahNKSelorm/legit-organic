@@ -10,6 +10,7 @@ import type { Recipe } from '@/types'
 const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 import RecipeCard from '@/components/recipes/RecipeCard'
 import RecipeSearch from '@/components/recipes/RecipeSearch'
+import { normaliseRecipeText, parseRecipeQuery } from '@/lib/recipe-query'
 
 export const metadata: Metadata = {
   title: 'Recipes — Traditional Ghanaian Cuisine with Organic Ingredients',
@@ -19,35 +20,36 @@ export const metadata: Metadata = {
 
 type Props = { searchParams: Promise<{ q?: string }> }
 
+const demoCatalogue = [
+  { title: 'Fufu', note: 'Pounded cassava and plantain with a smooth, elastic finish.', time: '50 minutes', image: '/images/hero/4.webp' },
+  { title: 'Light soup', note: 'A clear, peppery tomato soup made for pairing with a swallow.', time: '1 hour', image: '/images/hero/8.webp' },
+  { title: 'Groundnut soup', note: 'Groundnut paste simmered with tomato, aromatics and your chosen protein.', time: '1 hour 15 minutes', image: '/images/hero/6.webp' },
+  { title: 'Palm nut soup', note: 'A deeply flavoured soup built from palm fruit concentrate and spices.', time: '1 hour 30 minutes', image: '/images/hero/7.webp' },
+  { title: 'Ebunebunu soup', note: 'A green soup of cocoyam leaves, herbs and warming pepper.', time: '55 minutes', image: '/images/hero/3.webp' },
+  { title: 'Kontomire stew', note: 'Cocoyam leaves cooked down with egusi, tomato and aromatics.', time: '50 minutes', image: '/images/hero/9.webp' },
+  { title: 'Plain rice', note: 'Separate, tender grains ready for stew, soup or sauce.', time: '30 minutes', image: '/images/products/p1.webp' },
+  { title: 'Garden egg stew', note: 'Slow-cooked garden eggs, tomato and smoked fish.', time: '45 minutes', image: '/images/products/p2.webp' },
+]
+
 export default async function RecipesPage({ searchParams }: Props) {
   const { q: rawQuery } = await searchParams
   const query = rawQuery?.trim().slice(0, 200) || ''
-  const combinedQuery = query.replace(/\s+and\s+/gi, ' + ')
-  if (combinedQuery.includes('+')) {
-    redirect(`/recipes/combined?q=${encodeURIComponent(combinedQuery)}`)
-  }
-  const recipes: Recipe[] = await fetch(`${INTERNAL_API}/api/recipes/default/${query ? `?search=${encodeURIComponent(query)}` : ''}`, {
+  const allRecipes: Recipe[] = await fetch(`${INTERNAL_API}/api/recipes/default/`, {
     headers: { 'Content-Type': 'application/json' },
     next: { revalidate: 0 },
   }).then(r => r.ok ? r.json() : []).catch(() => [])
-
-  const demoCatalogue = [
-    { title: 'Fufu', note: 'Pounded cassava and plantain with a smooth, elastic finish.', time: '50 minutes', image: '/images/hero/4.webp' },
-    { title: 'Light soup', note: 'A clear, peppery tomato soup made for pairing with a swallow.', time: '1 hour', image: '/images/hero/8.webp' },
-    { title: 'Groundnut soup', note: 'Groundnut paste simmered with tomato, aromatics and your chosen protein.', time: '1 hour 15 minutes', image: '/images/hero/6.webp' },
-    { title: 'Palm nut soup', note: 'A deeply flavoured soup built from palm fruit concentrate and spices.', time: '1 hour 30 minutes', image: '/images/hero/7.webp' },
-    { title: 'Ebunebunu soup', note: 'A green soup of cocoyam leaves, herbs and warming pepper.', time: '55 minutes', image: '/images/hero/3.webp' },
-    { title: 'Kontomire stew', note: 'Cocoyam leaves cooked down with egusi, tomato and aromatics.', time: '50 minutes', image: '/images/hero/9.webp' },
-    { title: 'Plain rice', note: 'Separate, tender grains ready for stew, soup or sauce.', time: '30 minutes', image: '/images/products/p1.webp' },
-    { title: 'Garden egg stew', note: 'Slow-cooked garden eggs, tomato and smoked fish.', time: '45 minutes', image: '/images/products/p2.webp' },
-  ]
-  const queryTerms = query.toLowerCase().split('+').map(term => term.trim()).filter(Boolean)
+  const catalogueTitles = [...allRecipes.map(recipe => recipe.title), ...demoCatalogue.map(recipe => recipe.title)]
+  const parsedQuery = parseRecipeQuery(query, catalogueTitles)
+  if (parsedQuery.length > 1) redirect(`/recipes/combined?q=${encodeURIComponent(parsedQuery.join(' + '))}`)
+  const searchTerm = parsedQuery[0] || ''
+  const recipes = query ? allRecipes.filter(recipe => normaliseRecipeText(`${recipe.title} ${recipe.description}`).includes(normaliseRecipeText(searchTerm))) : allRecipes
+  const queryTerms = searchTerm ? [normaliseRecipeText(searchTerm)] : []
   const realTitles = new Set(recipes.map(recipe => recipe.title.toLowerCase()))
   const previewRecipes = demoCatalogue.filter(recipe =>
     !realTitles.has(recipe.title.toLowerCase()) &&
     (!queryTerms.length || queryTerms.some(term => `${recipe.title} ${recipe.note}`.toLowerCase().includes(term)))
   )
-  const suggestions = [...recipes.map(recipe => ({ title: recipe.title })), ...demoCatalogue.map(recipe => ({ title: recipe.title }))]
+  const suggestions = [...allRecipes.map(recipe => ({ title: recipe.title })), ...demoCatalogue.map(recipe => ({ title: recipe.title }))]
     .filter((recipe, index, all) => all.findIndex(item => item.title.toLowerCase() === recipe.title.toLowerCase()) === index)
 
   return (
