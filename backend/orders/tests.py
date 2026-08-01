@@ -1,8 +1,12 @@
 from decimal import Decimal
+from io import BytesIO
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.core.management import call_command
 from django.test import TestCase, override_settings
+from django.urls import reverse
+from openpyxl import load_workbook
 from rest_framework.test import APIClient
 
 from users.models import User
@@ -184,7 +188,12 @@ class AtomicOrderCreationTests(TestCase):
     def _payload(self, items, **extra):
         base = {
             'items': items,
-            'delivery_address': 'Accra',
+            'delivery_address': '10 Farm Road, Accra, Greater Accra',
+            'phone_number': '0200000000',
+            'street_address': 'Farm Road',
+            'house_number': '10',
+            'city': 'Accra',
+            'delivery_region': 'Greater Accra',
             'order_source': 'whatsapp',
             'guest_name': 'Guest',
             'guest_phone': '0200000000',
@@ -192,6 +201,31 @@ class AtomicOrderCreationTests(TestCase):
         }
         base.update(extra)
         return base
+
+    def test_guest_order_requires_phone_and_structured_address(self):
+        payload = self._payload([{'product_id': self.product.id, 'quantity': 1}])
+        payload['guest_phone'] = ''
+        payload['phone_number'] = ''
+        payload['street_address'] = ''
+        resp = self.client.post(CREATE_URL, payload, format='json')
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_authenticated_checkout_updates_customer_delivery_profile(self):
+        user = User.objects.create_user(
+            email='buyer@example.com', password='x', first_name='Ama', last_name='Mensah',
+            email_verified=True,
+        )
+        self.client.force_authenticate(user)
+        payload = self._payload([{'product_id': self.product.id, 'quantity': 1}])
+        resp = self.client.post(CREATE_URL, payload, format='json')
+        self.assertEqual(resp.status_code, 201)
+        user.refresh_from_db()
+        order = Order.objects.get(reference=resp.data['reference'])
+        self.assertEqual(user.phone_number, '0200000000')
+        self.assertEqual(user.street_address, 'Farm Road')
+        self.assertEqual(order.guest_phone, '0200000000')
+        self.assertEqual(order.delivery_address, '10, Farm Road, Accra, Greater Accra')
 
     def test_invalid_product_leaves_no_orphan_order(self):
         before = Order.objects.count()
@@ -225,3 +259,106 @@ class AtomicOrderCreationTests(TestCase):
         self.assertEqual(promo.times_used, 1)
         order = Order.objects.get(reference=resp.data['reference'])
         self.assertEqual(order.discount_amount, Decimal('10.00'))
+
+
+class OwnerOrderReportTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='report-buyer@example.com', password='x', first_name='Esi',
+            last_name='Owusu', phone_number='0244000000', email_verified=True,
+        )
+        self.order = Order.objects.create(
+            user=self.user, reference='LO-REPORT1',
+            delivery_address='10 Farm Road, Accra, Greater Accra',
+            guest_phone='0244000000', total_amount=Decimal('25.00'),
+            status='pending', payment_status='pending', order_source='paystack',
+        )
+
+    @override_settings(ORDER_REPORT_EMAIL='legitorganic9@gmail.com')
+    @patch('users.emails.resend.Emails.send')
+    def test_payment_and_delivery_reports_are_each_sent_once(self, mock_send):
+        with self.captureOnCommitCallbacks(execute=True):
+            self.order.payment_status = 'success'
+            self.order.status = 'processing'
+            self.order.save(update_fields=['payment_status', 'status'])
+        self.order.refresh_from_db()
+        self.assertIsNotNone(self.order.payment_report_sent_at)
+        self.assertEqual(mock_send.call_count, 2)  # customer status + owner report
+        owner_payload = mock_send.call_args_list[-1].args[0]
+        self.assertEqual(owner_payload['to'], ['legitorganic9@gmail.com'])
+        self.assertIn('Payment received', owner_payload['subject'])
+
+        # Saving the same successful state again must not send another report.
+        with self.captureOnCommitCallbacks(execute=True):
+            self.order.save(update_fields=['updated_at'])
+        self.assertEqual(mock_send.call_count, 2)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            self.order.status = 'delivered'
+            self.order.save(update_fields=['status'])
+        self.order.refresh_from_db()
+        self.assertIsNotNone(self.order.delivery_report_sent_at)
+        self.assertEqual(mock_send.call_count, 4)  # customer status + owner report
+        self.assertIn('Order delivered', mock_send.call_args_list[-1].args[0]['subject'])
+
+    @patch('users.emails.resend.Emails.send', side_effect=RuntimeError('mail down'))
+    def test_failed_report_remains_retryable(self, _mock_send):
+        with self.captureOnCommitCallbacks(execute=True):
+            self.order.payment_status = 'success'
+            self.order.save(update_fields=['payment_status'])
+        self.order.refresh_from_db()
+        self.assertIsNone(self.order.payment_report_sent_at)
+        self.assertEqual(self.order.payment_report_attempts, 1)
+
+        with patch('users.emails.resend.Emails.send') as retry_send:
+            call_command('retry_order_reports')
+        self.order.refresh_from_db()
+        self.assertIsNotNone(self.order.payment_report_sent_at)
+        self.assertEqual(self.order.payment_report_attempts, 2)
+        retry_send.assert_called_once()
+
+
+class OrderExportAdminTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_superuser(
+            email='owner@legitorganic.com', password='x', first_name='Owner', last_name='User'
+        )
+        self.client.force_login(self.staff)
+        self.match = Order.objects.create(
+            reference='LO-EXPORT-MATCH', delivery_address='Accra', guest_name='Ama Match',
+            guest_phone='0244000000', total_amount=Decimal('30.00'),
+            status='delivered', payment_status='success', order_source='whatsapp',
+        )
+        Order.objects.create(
+            reference='LO-EXPORT-OTHER', delivery_address='Kumasi', guest_name='Kojo Other',
+            guest_phone='0200000000', total_amount=Decimal('15.00'),
+            status='pending', payment_status='pending', order_source='paystack',
+        )
+
+    def test_orders_page_shows_visible_export_workspace(self):
+        response = self.client.get(reverse('admin:orders_order_changelist'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Order reporting')
+        self.assertContains(response, 'Download Excel')
+
+    def test_export_filters_customer_status_payment_and_channel(self):
+        response = self.client.get(reverse('admin:orders-export-all'), {
+            'customer': 'Ama Match', 'status': 'delivered',
+            'payment_status': 'success', 'source': 'whatsapp',
+        })
+        self.assertEqual(response.status_code, 200)
+        workbook = load_workbook(BytesIO(response.content), read_only=True)
+        sheet = workbook['Orders Summary']
+        references = [sheet.cell(row=row, column=1).value for row in range(5, sheet.max_row)]
+        self.assertIn('LO-EXPORT-MATCH', references)
+        self.assertNotIn('LO-EXPORT-OTHER', references)
+        self.assertIn('Customer/reference: Ama Match', sheet['A2'].value)
+
+    def test_invalid_or_reversed_dates_return_to_orders_with_message(self):
+        url = reverse('admin:orders-export-all')
+        response = self.client.get(url, {'date_from': 'not-a-date'})
+        self.assertRedirects(response, reverse('admin:orders_order_changelist'))
+        response = self.client.get(url, {
+            'date_from': '2026-08-10', 'date_to': '2026-08-01',
+        })
+        self.assertRedirects(response, reverse('admin:orders_order_changelist'))

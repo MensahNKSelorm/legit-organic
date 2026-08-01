@@ -85,7 +85,12 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
     return { itemsList, discountLine, finalTotal }
   }
 
-  const openWhatsApp = async (deliveryAddress: string, latitude?: number, longitude?: number) => {
+  const openWhatsApp = async (
+    deliveryAddress: string,
+    details: AddressData,
+    latitude?: number,
+    longitude?: number
+  ) => {
     const { itemsList, discountLine, finalTotal } = buildOrderLines()
     const customerLine = `*Customer:* ${user!.first_name} ${user!.last_name}\n*Email:* ${user!.email}`
 
@@ -94,6 +99,11 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
       const order = await api.orders.create({
         items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
         delivery_address: deliveryAddress,
+        phone_number: details.phone_number,
+        house_number: details.house_number,
+        street_address: details.street_address,
+        city: details.city,
+        delivery_region: details.delivery_region,
         promo_code: promoCode || undefined,
         order_source: 'whatsapp',
       })
@@ -121,20 +131,30 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
       return
     }
 
-    const hasAddress = user.street_address && user.city && user.delivery_region
-    if (!hasAddress) {
+    const hasDeliveryDetails =
+      user.phone_number && user.street_address && user.city && user.delivery_region
+    if (!hasDeliveryDetails) {
       setShowAddressModal(true)
       return
     }
 
     setIsLoading(true)
-    await openWhatsApp(buildDeliveryAddress(user))
+    await openWhatsApp(buildDeliveryAddress(user), {
+      phone_number: user.phone_number || '',
+      house_number: user.house_number || '',
+      street_address: user.street_address || '',
+      city: user.city || '',
+      delivery_region: user.delivery_region || '',
+    })
   }
 
   const handleAddressSaved = async (addressData: AddressData) => {
     setShowAddressModal(false)
     setIsLoading(true)
-    await openWhatsApp(buildDeliveryAddress(addressData), addressData.latitude, addressData.longitude)
+    await openWhatsApp(
+      buildDeliveryAddress(addressData), addressData,
+      addressData.latitude, addressData.longitude
+    )
   }
 
   const handleGuestSubmit = async (guestData: GuestData) => {
@@ -152,6 +172,11 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
         delivery_address: deliveryAddress,
         guest_name: `${guestData.first_name} ${guestData.last_name}`,
         guest_phone: guestData.phone_number,
+        phone_number: guestData.phone_number,
+        house_number: guestData.house_number,
+        street_address: guestData.street_address,
+        city: guestData.city,
+        delivery_region: guestData.delivery_region,
         guest_email: '',
         order_source: 'whatsapp',
         promo_code: promoCode || undefined,

@@ -16,6 +16,15 @@ python manage.py migrate
 python manage.py collectstatic --noinput
 deactivate
 
+# Retry transient owner-report email failures in the background. The oneshot
+# service runs as the same unprivileged account as Django.
+install -m 0644 ../deploy/systemd/legitorganic-order-reports.service \
+    /etc/systemd/system/legitorganic-order-reports.service
+install -m 0644 ../deploy/systemd/legitorganic-order-reports.timer \
+    /etc/systemd/system/legitorganic-order-reports.timer
+systemctl daemon-reload
+systemctl enable --now legitorganic-order-reports.timer
+
 # Frontend
 cd ../frontend
 npm install

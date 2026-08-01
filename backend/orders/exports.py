@@ -13,7 +13,9 @@ WHITE        = 'FFFFFF'
 GREY         = 'F5F5F5'
 
 
-def generate_orders_excel(orders, date_from=None, date_to=None, status_filter=None):
+def generate_orders_excel(
+    orders, date_from=None, date_to=None, status_filter=None, filters=None
+):
     wb = openpyxl.Workbook()
 
     # ── Shared styles ────────────────────────────────────────────────────────
@@ -44,7 +46,11 @@ def generate_orders_excel(orders, date_from=None, date_to=None, status_filter=No
         date_range = f' | From: {date_from}'
     elif date_to:
         date_range = f' | To: {date_to}'
-    date_cell.value = f'Generated: {generated_at}{date_range}'
+    active_filters = ', '.join(
+        f'{label}: {value}' for label, value in (filters or {}).items() if value
+    )
+    filter_text = f' | Filters: {active_filters}' if active_filters else ''
+    date_cell.value = f'Generated: {generated_at}{date_range}{filter_text}'
     date_cell.font = Font(size=10, color='666666')
     date_cell.alignment = Alignment(horizontal='center')
     ws1.row_dimensions[2].height = 20
@@ -79,7 +85,7 @@ def generate_orders_excel(orders, date_from=None, date_to=None, status_filter=No
         if order.user:
             customer_name  = f'{order.user.first_name} {order.user.last_name}'.strip()
             customer_email = order.user.email
-            customer_phone = getattr(order.user, 'phone_number', None) or '-'
+            customer_phone = order.guest_phone or getattr(order.user, 'phone_number', None) or '-'
         else:
             customer_name  = order.guest_name  or 'Guest'
             customer_email = order.guest_email or '-'

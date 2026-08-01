@@ -265,6 +265,8 @@ class ExportOrdersView(APIView):
         date_to       = request.query_params.get('date_to')
         status_filter = request.query_params.get('status')
         source_filter = request.query_params.get('source')
+        payment_filter = request.query_params.get('payment_status')
+        customer = request.query_params.get('customer', '').strip()
 
         orders = Order.objects.select_related(
             'user', 'promo_code'
@@ -280,9 +282,29 @@ class ExportOrdersView(APIView):
             orders = orders.filter(status=status_filter)
         if source_filter and source_filter != 'all':
             orders = orders.filter(order_source=source_filter)
+        if payment_filter and payment_filter != 'all':
+            orders = orders.filter(payment_status=payment_filter)
+        if customer:
+            from django.db.models import Q
+            orders = orders.filter(
+                Q(reference__icontains=customer)
+                | Q(user__email__icontains=customer)
+                | Q(user__first_name__icontains=customer)
+                | Q(user__last_name__icontains=customer)
+                | Q(guest_name__icontains=customer)
+                | Q(guest_email__icontains=customer)
+                | Q(guest_phone__icontains=customer)
+            )
 
         from .exports import generate_orders_excel
-        return generate_orders_excel(list(orders), date_from, date_to, status_filter)
+        return generate_orders_excel(
+            list(orders), date_from, date_to, status_filter,
+            filters={
+                'Date from': date_from, 'Date to': date_to,
+                'Order status': status_filter, 'Payment status': payment_filter,
+                'Channel': source_filter, 'Customer/reference': customer,
+            },
+        )
 
 
 class OrderReceiptView(APIView):

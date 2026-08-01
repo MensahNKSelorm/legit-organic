@@ -322,6 +322,11 @@ export const api = {
     create: (data: {
       items: { product_id: number; quantity: number }[]
       delivery_address: string
+      phone_number: string
+      house_number?: string
+      street_address: string
+      city: string
+      delivery_region: string
       promo_code?: string
       order_source?: string
     }) =>
@@ -334,6 +339,11 @@ export const api = {
       delivery_address: string
       guest_name: string
       guest_phone: string
+      phone_number: string
+      house_number?: string
+      street_address: string
+      city: string
+      delivery_region: string
       guest_email?: string
       order_source: string
       promo_code?: string

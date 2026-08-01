@@ -71,12 +71,16 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 @admin.register(Customer)
 class CustomerAdmin(ModelAdmin):
     list_display = ['email', 'first_name', 'last_name',
-                    'phone_number', 'email_verified', 'date_joined', 'is_active']
+                    'phone_number', 'city', 'delivery_region',
+                    'email_verified', 'date_joined', 'is_active']
     # email_verified toggleable straight from the list — used to mark the known
     # legitimate customers verified before verification-gating is deployed.
     list_editable = ['email_verified']
     list_filter = ['email_verified', 'is_active', 'date_joined']
-    search_fields = ['email', 'first_name', 'last_name', 'phone_number']
+    search_fields = [
+        'email', 'first_name', 'last_name', 'phone_number',
+        'street_address', 'city', 'delivery_region',
+    ]
     ordering = ['-date_joined']
     readonly_fields = ['date_joined', 'last_login']
     # Explicit fields so email_verified is editable on the detail page while the

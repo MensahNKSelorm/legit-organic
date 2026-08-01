@@ -1,4 +1,9 @@
 from django.contrib import admin
+from django.contrib import messages
+from django.db.models import Q
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.dateparse import parse_date
 from unfold.admin import ModelAdmin, TabularInline
 from .models import Cart, CartItem, Order, OrderItem
 from .promo_models import PromoCode
@@ -57,6 +62,7 @@ class OrderItemInline(TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
+    change_list_template = 'admin/orders/order/change_list.html'
     actions = [export_to_excel]
     list_display = ['reference', 'get_customer', 'status', 'payment_status',
                     'order_source', 'total_amount', 'created_at']
@@ -70,6 +76,9 @@ class OrderAdmin(ModelAdmin):
         'user', 'guest_name', 'guest_phone', 'guest_email',
         'total_amount', 'discount_amount', 'promo_code',
         'delivery_address', 'order_source',
+        'payment_report_sent_at', 'delivery_report_sent_at',
+        'payment_report_attempts', 'delivery_report_attempts',
+        'payment_report_error', 'delivery_report_error',
     ]
     inlines = [OrderItemInline]
     fieldsets = (
@@ -79,6 +88,9 @@ class OrderAdmin(ModelAdmin):
                 'guest_name', 'guest_email', 'guest_phone',
                 'total_amount', 'discount_amount', 'promo_code',
                 'delivery_address',
+                'payment_report_sent_at', 'delivery_report_sent_at',
+                'payment_report_attempts', 'delivery_report_attempts',
+                'payment_report_error', 'delivery_report_error',
             ),
         }),
         ('Status', {
@@ -112,12 +124,73 @@ class OrderAdmin(ModelAdmin):
 
     def export_all_view(self, request):
         from .exports import generate_orders_excel
+        if not self.has_view_permission(request):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+
+        date_from = request.GET.get('date_from', '').strip()
+        date_to = request.GET.get('date_to', '').strip()
+        status_filter = request.GET.get('status', '').strip()
+        payment_filter = request.GET.get('payment_status', '').strip()
+        source_filter = request.GET.get('source', '').strip()
+        customer = request.GET.get('customer', '').strip()
+
+        if (date_from and parse_date(date_from) is None) or (
+            date_to and parse_date(date_to) is None
+        ):
+            messages.error(request, 'Choose valid From and To dates before exporting.')
+            return redirect('admin:orders_order_changelist')
+        if date_from and date_to and parse_date(date_from) > parse_date(date_to):
+            messages.error(request, 'The From date cannot be later than the To date.')
+            return redirect('admin:orders_order_changelist')
+
         orders = Order.objects.select_related(
             'user', 'promo_code'
         ).prefetch_related(
             'items', 'items__product'
         ).order_by('-created_at')
-        return generate_orders_excel(list(orders))
+        if date_from:
+            orders = orders.filter(created_at__date__gte=date_from)
+        if date_to:
+            orders = orders.filter(created_at__date__lte=date_to)
+        if status_filter:
+            orders = orders.filter(status=status_filter)
+        if payment_filter:
+            orders = orders.filter(payment_status=payment_filter)
+        if source_filter:
+            orders = orders.filter(order_source=source_filter)
+        if customer:
+            orders = orders.filter(
+                Q(reference__icontains=customer)
+                | Q(user__email__icontains=customer)
+                | Q(user__first_name__icontains=customer)
+                | Q(user__last_name__icontains=customer)
+                | Q(guest_name__icontains=customer)
+                | Q(guest_email__icontains=customer)
+                | Q(guest_phone__icontains=customer)
+            )
+
+        filters = {
+            'Date from': date_from,
+            'Date to': date_to,
+            'Order status': status_filter,
+            'Payment status': payment_filter,
+            'Channel': source_filter,
+            'Customer/reference': customer,
+        }
+        return generate_orders_excel(
+            list(orders), date_from, date_to, status_filter, filters=filters
+        )
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({
+            'order_export_url': reverse('admin:orders-export-all'),
+            'order_status_choices': Order.STATUS_CHOICES,
+            'payment_status_choices': Order.PAYMENT_STATUS_CHOICES,
+            'order_source_choices': Order._meta.get_field('order_source').choices,
+        })
+        return super().changelist_view(request, extra_context=extra_context)
 
     @admin.display(description='Customer')
     def get_customer(self, obj):

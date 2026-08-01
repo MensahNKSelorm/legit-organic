@@ -3,6 +3,66 @@ from django.conf import settings
 from django.utils.html import escape
 
 
+def send_owner_order_report(order, event):
+    """Send a concise internal report when payment succeeds or delivery completes."""
+    recipient = settings.ORDER_REPORT_EMAIL
+    if not recipient:
+        return
+
+    customer_name = (
+        f'{order.user.first_name} {order.user.last_name}'.strip()
+        if order.user else order.guest_name
+    ) or 'Guest customer'
+    customer_email = order.user.email if order.user else order.guest_email
+    customer_phone = order.guest_phone or (
+        getattr(order.user, 'phone_number', '') if order.user else ''
+    )
+    rows = ''.join(
+        f'<tr><td style="padding:8px 0;border-bottom:1px solid #dce7df;">'
+        f'{escape(item.product.name if item.product else "Deleted product")}</td>'
+        f'<td style="padding:8px 0;border-bottom:1px solid #dce7df;text-align:center;">'
+        f'{item.quantity}</td>'
+        f'<td style="padding:8px 0;border-bottom:1px solid #dce7df;text-align:right;">'
+        f'GH&#8373;{item.subtotal:.2f}</td></tr>'
+        for item in order.items.all()
+    )
+    is_paid = event == 'payment_success'
+    heading = 'Payment received' if is_paid else 'Order delivered'
+    subject = f'{heading}: {order.reference}'
+
+    resend.Emails.send({
+        'from': f'Legit Organic <{settings.DEFAULT_FROM_EMAIL}>',
+        'to': [recipient],
+        'subject': subject,
+        'html': f"""
+        <!doctype html><html><body style="margin:0;background:#f5f1e8;font-family:Arial,sans-serif;color:#173b2b;">
+          <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
+            <div style="background:#0d3b2a;color:#fff;padding:30px;border-top:6px solid #f4c430;">
+              <p style="margin:0 0 10px;color:#f4c430;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Order report</p>
+              <h1 style="margin:0;font-size:30px;">{heading}</h1>
+              <p style="margin:10px 0 0;color:#d7e5d9;">{escape(order.reference)}</p>
+            </div>
+            <div style="background:#fff;padding:30px;">
+              <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                <tr><td style="padding:6px 0;color:#66756c;">Customer</td><td style="text-align:right;font-weight:700;">{escape(customer_name)}</td></tr>
+                <tr><td style="padding:6px 0;color:#66756c;">Email</td><td style="text-align:right;">{escape(customer_email or 'Not supplied')}</td></tr>
+                <tr><td style="padding:6px 0;color:#66756c;">Phone</td><td style="text-align:right;">{escape(customer_phone or 'Not supplied')}</td></tr>
+                <tr><td style="padding:6px 0;color:#66756c;">Channel</td><td style="text-align:right;">{escape(order.get_order_source_display())}</td></tr>
+                <tr><td style="padding:6px 0;color:#66756c;">Delivery</td><td style="text-align:right;max-width:360px;">{escape(order.delivery_address or 'Not supplied')}</td></tr>
+              </table>
+              <h2 style="font-size:17px;margin:26px 0 8px;">Order contents</h2>
+              <table style="width:100%;border-collapse:collapse;font-size:14px;">{rows}</table>
+              <div style="margin-top:22px;padding:16px;background:#eff6ef;font-size:18px;font-weight:700;">
+                Total: GH&#8373;{order.final_amount:.2f}
+              </div>
+              <a href="{settings.DASHBOARD_URL}/admin/orders/order/{order.pk}/change/" style="display:inline-block;margin-top:24px;background:#f4c430;color:#0d3b2a;padding:13px 20px;text-decoration:none;font-weight:700;">Open order</a>
+            </div>
+          </div>
+        </body></html>
+        """,
+    })
+
+
 def send_welcome_email(user):
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",

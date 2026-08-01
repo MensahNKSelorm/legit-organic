@@ -1,3 +1,4 @@
+import re
 import uuid
 from decimal import Decimal
 from django.db import transaction
@@ -134,6 +135,55 @@ class CreateOrderSerializer(serializers.Serializer):
     guest_phone = serializers.CharField(required=False, allow_blank=True, default='')
     guest_email = serializers.CharField(required=False, allow_blank=True, default='')
     order_source = serializers.CharField(required=False, default='whatsapp')
+    phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    house_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    street_address = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    city = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    delivery_region = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    def validate(self, attrs):
+        request = self.context['request']
+        if request.user.is_authenticated:
+            user = request.user
+            phone = (attrs.get('phone_number') or user.phone_number or '').replace(' ', '')
+            street = (attrs.get('street_address') or user.street_address or '').strip()
+            city = (attrs.get('city') or user.city or '').strip()
+            region = (attrs.get('delivery_region') or user.delivery_region or '').strip()
+            house = (attrs.get('house_number') or user.house_number or '').strip()
+        else:
+            phone = (attrs.get('phone_number') or attrs.get('guest_phone') or '').replace(' ', '')
+            street = (attrs.get('street_address') or '').strip()
+            city = (attrs.get('city') or '').strip()
+            region = (attrs.get('delivery_region') or '').strip()
+            house = (attrs.get('house_number') or '').strip()
+            if not (attrs.get('guest_name') or '').strip():
+                raise serializers.ValidationError({'guest_name': 'Customer name is required.'})
+
+        if not phone:
+            raise serializers.ValidationError({'guest_phone': 'A phone number is required.'})
+        if not re.fullmatch(r'(?:\+233|0)[0-9]{9}', phone):
+            raise serializers.ValidationError({
+                'guest_phone': 'Enter a valid Ghana phone number, for example 0244123456.'
+            })
+        missing = [
+            label for label, value in (
+                ('street_address', street), ('city', city), ('delivery_region', region)
+            ) if not value
+        ]
+        if missing:
+            raise serializers.ValidationError({
+                field: 'This delivery field is required.' for field in missing
+            })
+
+        attrs['phone_number'] = phone
+        attrs['house_number'] = house
+        attrs['street_address'] = street
+        attrs['city'] = city
+        attrs['delivery_region'] = region
+        attrs['delivery_address'] = ', '.join(p for p in (house, street, city, region) if p)
+        if not request.user.is_authenticated:
+            attrs['guest_phone'] = phone
+        return attrs
 
     def validate_items(self, items):
         if not items:
@@ -150,22 +200,17 @@ class CreateOrderSerializer(serializers.Serializer):
         guest_phone = validated_data.get('guest_phone', '')
         guest_email = validated_data.get('guest_email', '')
         order_source = validated_data.get('order_source', 'whatsapp')
+        phone_number = validated_data.pop('phone_number', '')
+        house_number = validated_data.pop('house_number', '')
+        street_address = validated_data.pop('street_address', '')
+        city = validated_data.pop('city', '')
+        delivery_region = validated_data.pop('delivery_region', '')
 
         if is_auth:
             user = request.user
             guest_name = f'{user.first_name} {user.last_name}'.strip() or user.email
             guest_email = user.email
-            guest_phone = getattr(user, 'phone_number', '') or ''
-
-        if is_auth and not delivery_address:
-            user = request.user
-            parts = [
-                getattr(user, 'house_number', ''),
-                getattr(user, 'street_address', ''),
-                getattr(user, 'city', ''),
-                getattr(user, 'delivery_region', ''),
-            ]
-            delivery_address = ', '.join(p for p in parts if p)
+            guest_phone = phone_number
 
         order_status = 'whatsapp_pending' if order_source == 'whatsapp' else 'pending'
 
@@ -173,6 +218,16 @@ class CreateOrderSerializer(serializers.Serializer):
         # in one transaction so a failure can never leave an orphaned Order or a
         # partial set of OrderItems behind.
         with transaction.atomic():
+            if is_auth:
+                user.phone_number = phone_number
+                user.house_number = house_number
+                user.street_address = street_address
+                user.city = city
+                user.delivery_region = delivery_region
+                user.save(update_fields=[
+                    'phone_number', 'house_number', 'street_address',
+                    'city', 'delivery_region',
+                ])
             product_ids = [item['product_id'] for item in items_data]
             products = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
             missing = [pid for pid in product_ids if pid not in products]

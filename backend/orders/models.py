@@ -7,6 +7,11 @@ from .promo_models import PromoCode  # noqa: F401 — registers with orders app
 logger = logging.getLogger(__name__)
 
 
+def _send_owner_report(order_id, event):
+    from .reporting import send_owner_report_once
+    send_owner_report_once(order_id, event)
+
+
 class Cart(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart'
@@ -67,6 +72,12 @@ class Order(models.Model):
     guest_name = models.CharField(max_length=200, blank=True)
     guest_phone = models.CharField(max_length=20, blank=True)
     guest_email = models.CharField(max_length=255, blank=True)
+    payment_report_sent_at = models.DateTimeField(null=True, blank=True, editable=False)
+    delivery_report_sent_at = models.DateTimeField(null=True, blank=True, editable=False)
+    payment_report_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
+    delivery_report_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
+    payment_report_error = models.CharField(max_length=500, blank=True, editable=False)
+    delivery_report_error = models.CharField(max_length=500, blank=True, editable=False)
     order_source = models.CharField(
         max_length=20,
         choices=[('paystack', 'Paystack'), ('whatsapp', 'WhatsApp')],
@@ -82,12 +93,29 @@ class Order(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original_status = self.status
+        self.__original_payment_status = self.payment_status
 
     def save(self, *args, **kwargs):
         is_update = self.pk is not None
         old_status = self.__original_status
         status_changed = self.status != old_status
+        payment_became_successful = (
+            self.payment_status == 'success'
+            and self.__original_payment_status != 'success'
+        )
         super().save(*args, **kwargs)
+
+        report_events = []
+        if is_update and payment_became_successful:
+            report_events.append('payment_success')
+        if is_update and status_changed and self.status == 'delivered':
+            report_events.append('delivered')
+        for event in report_events:
+            order_id = self.pk
+            from django.db import transaction
+            transaction.on_commit(
+                lambda event=event: _send_owner_report(order_id, event)
+            )
 
         if status_changed and self.status in [
             'paid', 'processing', 'shipped', 'delivered', 'cancelled'
@@ -186,6 +214,7 @@ class Order(models.Model):
                 )
 
         self.__original_status = self.status
+        self.__original_payment_status = self.payment_status
 
     def __str__(self):
         customer = str(self.user) if self.user else self.guest_name or 'Guest'
