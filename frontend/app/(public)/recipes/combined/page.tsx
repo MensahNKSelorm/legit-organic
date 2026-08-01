@@ -80,8 +80,8 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
   const servings = Math.min(...recipes.map(recipe => recipe.servings))
 
   return (
-    <main className="min-h-screen bg-[#FAF7F0] pt-[76px] text-[#0D3B2A] dark:bg-[#171B18] dark:text-white">
-      <header className="grid min-h-[62vh] bg-[#0D3B2A] lg:grid-cols-[.9fr_1.1fr]">
+    <main className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-white">
+      <header className="grid min-h-[62vh] bg-[#0D3B2A] pt-[76px] lg:grid-cols-[.9fr_1.1fr]">
         <div className="relative min-h-[42vh] overflow-hidden">
           <Image src={recipes[0].image} alt={title} fill priority className="object-cover" sizes="(max-width:1024px) 100vw, 45vw" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
