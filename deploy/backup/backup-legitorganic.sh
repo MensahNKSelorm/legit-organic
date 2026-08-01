@@ -17,10 +17,20 @@ MEDIA_BACKUP="$BACKUP_DIR/media_$TIMESTAMP.tar.gz"
 DB_TMP="$DB_BACKUP.tmp"
 MEDIA_TMP="$MEDIA_BACKUP.tmp"
 
-cleanup() {
+on_exit() {
+    status=$?
     rm -f "$DB_TMP" "$MEDIA_TMP"
+    trap - EXIT
+
+    if (( status != 0 )); then
+        /var/www/legitorganic/backend/venv/bin/python \
+            /usr/local/libexec/legitorganic-backup-alert.py \
+            --status "$status" || echo "Backup alert delivery also failed" >&2
+    fi
+
+    exit "$status"
 }
-trap cleanup EXIT
+trap on_exit EXIT
 
 install -d -o root -g root -m 700 "$BACKUP_DIR"
 
