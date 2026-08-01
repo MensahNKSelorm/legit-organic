@@ -3,9 +3,10 @@ export const dynamic = 'force-dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import type { Recipe, RecipeWithPairings } from '@/types'
+import type { Product, Recipe, RecipeWithPairings } from '@/types'
 import { getMediaUrl } from '@/lib/media'
 import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
+import AddDishSearch from '@/components/recipes/AddDishSearch'
 
 const INTERNAL_API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -60,8 +61,18 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
   const query = rawQuery?.trim().slice(0, 200).replace(/\s+and\s+/gi, ' + ') || ''
   if (!query) notFound()
 
-  const realRecipes = await getRecipes(query)
+  const [realRecipes, catalogueRecipes, products] = await Promise.all([
+    getRecipes(query),
+    fetch(`${INTERNAL_API}/api/recipes/default/`, { next: { revalidate: 0 } }).then(response => response.ok ? response.json() as Promise<Recipe[]> : []).catch(() => []),
+    fetch(`${INTERNAL_API}/api/products/`, { next: { revalidate: 0 } }).then(async response => {
+      if (!response.ok) return []
+      const data = await response.json()
+      return (Array.isArray(data) ? data : data.results || []) as Product[]
+    }).catch(() => []),
+  ])
   const terms = query.split('+').map(term => term.trim()).filter(Boolean)
+  const matchProduct = (name: string) => products.find(product => normalise(product.name) === normalise(name))
+    || products.find(product => normalise(product.name).includes(normalise(name)) || normalise(name).includes(normalise(product.name)))
   const recipes = terms.map(term => {
     const real = realRecipes.find(recipe => normalise(recipe.title) === normalise(term))
       || realRecipes.find(recipe => normalise(recipe.title).includes(normalise(term)))
@@ -75,15 +86,17 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
       cookTime: real.cook_time,
       servings: real.servings,
       image: getMediaUrl(real.cover_image) || '/images/hero/8.webp',
-      ingredients: real.ingredients.map(ingredient => ({
+      ingredients: real.ingredients.map(ingredient => {
+        const product = ingredient.product || matchProduct(ingredient.name)
+        return {
         name: ingredient.name,
         quantity: ingredient.quantity,
         unit: ingredient.unit,
         notes: ingredient.notes,
-        productId: ingredient.product?.id ?? null,
-        productName: ingredient.product?.name ?? null,
-        productSlug: ingredient.product?.slug ?? null,
-      })),
+        productId: product?.id ?? null,
+        productName: product?.name ?? null,
+        productSlug: product?.slug ?? null,
+      }}),
       steps: real.steps.map(step => clean(step.instruction)),
     }
     const demo = demoRecipes.find(recipe => normalise(recipe.title) === normalise(term))
@@ -98,7 +111,10 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
       cookTime: demo.cookTime,
       servings: demo.servings,
       image: demo.image,
-      ingredients: demo.ingredients.map(name => ({ name, quantity: '1', unit: 'portion', notes: '', productId: null, productName: null, productSlug: null })),
+      ingredients: demo.ingredients.map(name => {
+        const product = matchProduct(name)
+        return { name, quantity: '1', unit: 'portion', notes: '', productId: product?.id ?? null, productName: product?.name ?? null, productSlug: product?.slug ?? null }
+      }),
       steps: demo.steps,
     }
   }).filter((recipe): recipe is NonNullable<typeof recipe> => Boolean(recipe))
@@ -117,6 +133,9 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
     group: recipe.title,
     ...ingredient,
   })))
+  const catalogueTitles = [...catalogueRecipes.map(recipe => recipe.title), ...demoRecipes.map(recipe => recipe.title)]
+    .filter((name, index, all) => all.findIndex(item => normalise(item) === normalise(name)) === index)
+  const isCombination = recipes.length > 1
 
   return (
     <main className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-white">
@@ -127,7 +146,7 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
         <div className="flex items-center px-6 py-14 text-white md:px-12 lg:px-16">
           <div>
             <Link href="/recipes" className="border-b border-white/50 pb-1 text-sm">Back to the recipe shelf</Link>
-            <p className="mt-10 text-sm font-bold text-[#F4C430]">Your combined plate</p>
+            <p className="mt-10 text-sm font-bold text-[#F4C430]">{isCombination ? `${recipes.length}-part meal` : 'Recipe notebook'}</p>
             <h1 className="display-organic mt-4 max-w-3xl text-5xl leading-[.95] md:text-7xl">{recipes.map((recipe, index) => <span key={recipe.slug}>{index > 0 && <span className="font-normal text-white/35"> + </span>}<Link href={recipe.href} className="underline decoration-white/25 underline-offset-8 hover:decoration-[#F4C430]">{recipe.title}</Link></span>)}</h1>
             <p className="mt-7 max-w-2xl text-base leading-7 text-white/75">{mealDescription}</p>
             <dl className="mt-9 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/25 pt-5 text-sm">
@@ -140,19 +159,15 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
       </header>
 
       <div className="page-container py-14 lg:py-20">
-        <div className="grid gap-14 lg:grid-cols-[.8fr_1.2fr] lg:gap-20">
+        <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:gap-20">
           <section>
-            <p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">Everything you need</p>
-            <h2 className="display-organic mt-3 text-5xl">Ingredients, kept in their place.</h2>
-            <div className="mt-10 space-y-10">
-              {recipes.map(recipe => <div key={recipe.slug} className="border-t editorial-rule pt-5"><h3 className="display-organic text-3xl">For the <Link href={recipe.href} className="underline decoration-[#0D3B2A]/25 underline-offset-4 hover:decoration-[#2E7D32] dark:decoration-white/25">{recipe.title}</Link></h3><ul className="mt-4 space-y-2 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">{recipe.ingredients.map((ingredient, index) => <li key={`${ingredient.name}-${index}`}><span className="font-bold text-[#0D3B2A] dark:text-white">{ingredient.quantity} {ingredient.unit}</span> {ingredient.productSlug ? <Link href={`/products/${ingredient.productSlug}`} className="underline decoration-[#2E7D32]/40 underline-offset-2">{ingredient.name}</Link> : ingredient.name}</li>)}</ul></div>)}
-            </div>
+            <h2 className="display-organic text-5xl">Ingredients</h2>
             <CombinedRecipeEditor title={title} baseRecipeIds={recipes.flatMap(recipe => recipe.id ? [recipe.id] : [])} initialIngredients={editableIngredients} returnTo={`/recipes/combined?q=${encodeURIComponent(query)}`} />
+            <AddDishSearch currentTitles={recipes.map(recipe => recipe.title)} catalogue={catalogueTitles} />
           </section>
           <section>
-            <p className="text-sm font-bold text-[#2E7D32] dark:text-[#9FC5A4]">Cook the plate</p>
-            <h2 className="display-organic mt-3 text-5xl">Make each part. Meet at the table.</h2>
-            <div className="mt-10 space-y-12">
+            <h2 className="display-organic text-5xl">Method</h2>
+            <div className="mt-8 space-y-12">
               {recipes.map(recipe => <div key={recipe.slug} className="border-t editorial-rule pt-6"><div className="flex items-baseline justify-between gap-5"><h3 className="display-organic text-3xl"><Link href={recipe.href} className="underline decoration-[#0D3B2A]/25 underline-offset-4 hover:decoration-[#2E7D32] dark:decoration-white/25">{recipe.title}</Link></h3><span className="text-xs font-bold text-[#5B3E31] dark:text-[#B8D4BD]">{recipe.prepTime + recipe.cookTime} min</span></div><ol className="mt-6 space-y-5">{recipe.steps.map((step, index) => <li key={`${recipe.slug}-${index}`} className="grid grid-cols-[2rem_1fr] gap-3 text-sm leading-7"><span className="font-bold text-[#2E7D32] dark:text-[#F4C430]">{index + 1}</span><span className="text-[#5B3E31] dark:text-[#B8D4BD]">{step}</span></li>)}</ol></div>)}
             </div>
           </section>

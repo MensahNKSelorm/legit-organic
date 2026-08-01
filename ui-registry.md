@@ -49,7 +49,9 @@ File: `frontend/app/(public)/recipes/page.tsx`
 - Autocomplete suggestions are square, ruled editorial rows beneath the long search line. `+` and `and` both create a combined-meal suggestion.
 - Combined-meal heroes use a real split-image collage from the selected recipe covers; do not invent a single misleading food photograph.
 - Recipe names remain links in the hero, ingredient groups and preparation groups so customers can return to one component.
-- Logged-in ingredient edits create a private copy in My Recipes. Inline fields keep the underline treatment and offer product matches from the shop without changing the public recipe.
+- Ingredient fields are always editable in place and grouped by recipe. Save remains disabled until a field changes; logged-out customers are asked to log in only when saving. Product matches appear as shop links without changing the public recipe.
+- Recipe pages keep structural language short: use “Ingredients” and “Method”; avoid stacking editorial headings above functional content.
+- Single recipes use “Recipe notebook.” Combinations state their component count and can add further dishes without a two-recipe limit.
 - Empty video areas use a dark, 16:9 admin-preview field with a restrained play control; replace it with the real video only when one is configured.
 
 ### Editorial Empty State

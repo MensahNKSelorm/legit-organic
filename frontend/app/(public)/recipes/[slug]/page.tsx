@@ -7,6 +7,8 @@ import { api } from '@/lib/api'
 import type { RecipeWithPairings } from '@/types'
 import RecipeDetailActions from '@/components/recipes/RecipeDetailActions'
 import { getMediaUrl } from '@/lib/media'
+import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
+import AddDishSearch from '@/components/recipes/AddDishSearch'
 
 
 type Props = { params: Promise<{ slug: string }> }
@@ -68,8 +70,28 @@ function getEmbedUrl(url: string): string {
 export default async function RecipeDetailPage({ params }: Props) {
   const { slug } = await params
   const recipe = await api.recipes.detail(slug).catch(() => notFound())
+  const [catalogue, products] = await Promise.all([
+    api.recipes.default().catch(() => []),
+    api.products.list().catch(() => []),
+  ])
   const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, color: '#6b7280' }
   const coverSrc = getMediaUrl(recipe.cover_image)
+  const normaliseName = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const editableIngredients: EditableMealIngredient[] = recipe.ingredients.map((ingredient, index) => {
+    const matchedProduct = ingredient.product || products.find(product => normaliseName(product.name) === normaliseName(ingredient.name))
+      || products.find(product => normaliseName(product.name).includes(normaliseName(ingredient.name)) || normaliseName(ingredient.name).includes(normaliseName(product.name)))
+    return {
+      key: `${recipe.slug}-${index}`,
+      group: recipe.title,
+      name: ingredient.name,
+      quantity: ingredient.quantity,
+      unit: ingredient.unit,
+      notes: ingredient.notes,
+      productId: matchedProduct?.id ?? null,
+      productName: matchedProduct?.name ?? null,
+      productSlug: matchedProduct?.slug ?? null,
+    }
+  })
 
   return (
     <div className="story-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
@@ -220,39 +242,13 @@ export default async function RecipeDetailPage({ params }: Props) {
             )}
 
             {/* Ingredients */}
-            {recipe.ingredients.length > 0 && (
-              <section>
-                <h2 className="font-display text-2xl font-bold text-forest-green dark:text-[#faf7f0] mb-6">
+            <section>
+                <h2 className="display-organic text-4xl text-forest-green dark:text-[#faf7f0]">
                   Ingredients
                 </h2>
-                <ul className="space-y-3">
-                  {recipe.ingredients.map((ing) => (
-                    <li key={ing.id} className="flex items-start gap-3">
-                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#F4C430] shrink-0" />
-                      <span className="text-charcoal/80 dark:text-[#d1d5db]">
-                        <span className="font-semibold text-forest-green dark:text-[#faf7f0]">
-                          {ing.quantity}{ing.unit ? ` ${ing.unit}` : ''}
-                        </span>
-                        {' '}
-                        {ing.product ? (
-                          <Link
-                            href={`/products/${ing.product.slug}`}
-                            className="text-[#2E7D32] dark:text-[#81C784] hover:underline"
-                          >
-                            {ing.name}
-                          </Link>
-                        ) : (
-                          ing.name
-                        )}
-                        {ing.notes && (
-                          <span className="text-charcoal/40 dark:text-[#9ca3af] text-sm"> — {ing.notes}</span>
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <CombinedRecipeEditor title={recipe.title} baseRecipeIds={[recipe.id]} initialIngredients={editableIngredients} returnTo={`/recipes/${recipe.slug}`} />
+                <AddDishSearch currentTitles={[recipe.title]} catalogue={catalogue.map(item => item.title)} />
               </section>
-            )}
 
             {/* Steps */}
             {recipe.steps.length > 0 && (
