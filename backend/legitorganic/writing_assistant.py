@@ -91,7 +91,7 @@ def _context(payload):
 
 def _prompt(kind, task, instruction, context, products):
     requirements = {
-        ('product', 'description'): 'Return {"text":"45-85 useful words using only supplied flavour, texture and practical-use facts."}',
+        ('product', 'description'): 'Return {"text":"25-70 useful words using only supplied flavour, texture and practical-use facts. Prefer a short truthful draft to padding sparse facts."}',
         ('product', 'storage'): 'Return {"text":"concise storage and handling guidance using only known facts."}',
         ('product', 'nutrition'): 'Return {"text":"careful general nutrition copy with no measurements or medical claims unless supplied in the form."}',
         ('blog', 'titles'): 'Return {"titles":["...","...","..."]} with exactly three distinct editorial title ideas.',
@@ -111,7 +111,10 @@ def _prompt(kind, task, instruction, context, products):
     )
     grounding = (
         "\nUse only the factual anchors written in the staff instruction and current form. "
-        "Do not introduce other named foods, ingredients, dishes, places or traditions."
+        "Treat this as a restrained rewrite of those anchors, not a request for culinary knowledge. "
+        "Do not add preparation steps or introduce other foods, ingredients, dish types, places, "
+        "traditions, qualities or uses. Every factual claim in the answer must be traceable to words "
+        "in the supplied anchors; when the anchors are sparse, make the answer shorter."
         if kind in {'product', 'recipe'} and task != 'method' else ''
     )
     return (
@@ -136,7 +139,7 @@ def _call_groq(prompt):
                 {'role': 'system', 'content': SYSTEM_PROMPT},
                 {'role': 'user', 'content': prompt},
             ],
-            'temperature': 0.3,
+            'temperature': 0.1,
             'reasoning_effort': 'low',
             'max_completion_tokens': 3000,
             'response_format': {'type': 'json_object'},

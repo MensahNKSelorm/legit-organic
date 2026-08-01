@@ -47,7 +47,8 @@ class WritingAssistantTests(TestCase):
         )
         self.assertNotIn('Tomatoes', product_prompt)
         self.assertNotIn('Onions', product_prompt)
-        self.assertIn('Do not introduce other named foods', product_prompt)
+        self.assertIn('restrained rewrite of those anchors', product_prompt)
+        self.assertIn('when the anchors are sparse, make the answer shorter', product_prompt)
 
     def test_requires_staff_authentication_and_model_permission(self):
         response = self.client.post(self.url, self.payload(), content_type='application/json')
