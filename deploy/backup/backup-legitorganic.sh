@@ -14,6 +14,7 @@ RESTIC_ENV=/etc/legitorganic-backup/restic.env
 TIMESTAMP=$(date -u +%Y-%m-%d_%H-%M)
 DB_BACKUP="$BACKUP_DIR/db_$TIMESTAMP.sql.gz"
 MEDIA_BACKUP="$BACKUP_DIR/media_$TIMESTAMP.tar.gz"
+RESTIC_DB_BACKUP="$BACKUP_DIR/latest.sql.gz"
 DB_TMP="$DB_BACKUP.tmp"
 MEDIA_TMP="$MEDIA_BACKUP.tmp"
 
@@ -38,6 +39,7 @@ pg_dump -h localhost -p 5433 -U legitorganic_user legitorganic | gzip -9 > "$DB_
 test -s "$DB_TMP"
 gzip -t "$DB_TMP"
 mv "$DB_TMP" "$DB_BACKUP"
+cp --preserve=mode "$DB_BACKUP" "$RESTIC_DB_BACKUP"
 
 tar -C "$(dirname "$MEDIA_DIR")" -czf "$MEDIA_TMP" "$(basename "$MEDIA_DIR")"
 test -s "$MEDIA_TMP"
@@ -54,7 +56,7 @@ source "$RESTIC_ENV"
 set +a
 
 restic backup \
-    "$DB_BACKUP" \
+    "$RESTIC_DB_BACKUP" \
     "$MEDIA_DIR" \
     /var/www/legitorganic/backend/.env \
     /var/www/legitorganic/frontend/.env.local \
@@ -66,6 +68,7 @@ restic backup \
 
 restic forget \
     --tag automatic \
+    --group-by host,tags \
     --keep-daily 14 \
     --keep-weekly 8 \
     --keep-monthly 12 \
