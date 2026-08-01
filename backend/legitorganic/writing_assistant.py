@@ -98,11 +98,15 @@ def _prompt(kind, task, instruction, context, products):
         ('blog', 'excerpt'): 'Return {"text":"a 25-45 word excerpt."}',
         ('blog', 'outline'): 'Return {"html":"an HTML outline using h2 and ul/li only."}',
         ('blog', 'draft'): (
-            'Return {"html":"a substantial 900-1400 word first draft using p, h2, h3, ul, ol, li, strong, em and blockquote only."}. '
-            'Open with the subject itself, then develop a clear editorial through-line with useful sections and a natural conclusion. '
-            'Vary paragraph and section lengths. Do not repeat a heading in its opening sentence, summarize every section, force lists, '
-            'or add a generic introduction. Never pad the article or invent facts to reach the range; return a shorter complete draft when '
-            'the supplied material cannot honestly support 900 words.'
+            'Return {"html":"a substantial 900-1400 word first draft using p, h2, h3, ul, ol, li, strong and em only."}. '
+            'Open directly with the subject in plain prose, then develop one clear editorial through-line with useful sections and a natural ending. '
+            'Use prose by default and lists only when the supplied material is genuinely list-shaped. Vary paragraph and section lengths. '
+            'Do not use metaphors in the opening; do not add a quotation; do not create headings named Introduction, Why it matters, Examples, '
+            'Tips, Sample structure, Conclusion or Concluding thoughts. Do not repeat a heading in its opening sentence or summarize every section. '
+            'The brief is the complete factual boundary: do not add named foods, places, markets, farms, preparation methods, storage instructions, '
+            'price claims, taste claims or examples unless they appear in the staff instruction or current form. You may connect and organise supplied '
+            'ideas, but you may not fill gaps with general culinary knowledge. Never pad the article or invent facts to reach the range; return a shorter complete '
+            'draft when the supplied material cannot honestly support 900 words.'
         ),
         ('recipe', 'description'): 'Return {"text":"a 35-65 word description of the dish, its flavour and place at the table."}',
         ('recipe', 'method'): (

@@ -60,6 +60,10 @@ class WritingAssistantTests(TestCase):
         self.assertIn('clear editorial through-line', prompt)
         self.assertIn('Never pad the article or invent facts', prompt)
         self.assertIn('return a shorter complete draft', prompt)
+        self.assertIn('brief is the complete factual boundary', prompt)
+        self.assertIn('may not fill gaps with general culinary knowledge', prompt)
+        self.assertIn('do not create headings named Introduction', prompt)
+        self.assertNotIn('blockquote only', prompt)
 
     def test_requires_staff_authentication_and_model_permission(self):
         response = self.client.post(self.url, self.payload(), content_type='application/json')
