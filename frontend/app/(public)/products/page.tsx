@@ -93,7 +93,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         {products.length === 0 ? (
           <p className="border-b border-[#0D3B2A]/20 py-24 text-[#5B3E31] dark:border-white/15 dark:text-[#B8D4BD]">Nothing is available in this part of the market right now.</p>
         ) : (
-          <div className="mt-12 grid grid-cols-1 gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-7 sm:gap-y-14 lg:grid-cols-3">
             {products.map((product, index) => (
               <div key={product.id} className={`h-full ${index === 0 && !activeCategory ? 'sm:col-span-2 lg:col-span-2' : ''}`}>
                 <ProductCard product={product} featured={index === 0 && !activeCategory} preview={usingDemo} />
