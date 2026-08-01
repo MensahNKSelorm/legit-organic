@@ -21,6 +21,13 @@ cd ../frontend
 npm install
 npm run build
 
+# Runtime-owned paths must remain writable after root performs a deployment.
+if id -u legitorganic >/dev/null 2>&1; then
+    install -d -o legitorganic -g legitorganic ../backend/media
+    touch ../backend/django_errors.log
+    chown -R legitorganic:legitorganic ../backend/media ../backend/django_errors.log .next
+fi
+
 # Restart services
 systemctl restart legitorganic
 if systemctl cat legitorganic-frontend.service >/dev/null 2>&1; then
