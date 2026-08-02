@@ -51,3 +51,22 @@ class BlogPost(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+
+class BlogTopic(models.Model):
+    """Editable pool of subjects for the weekly auto-blog. Manage entirely in the
+    Django admin — add, edit, or deactivate topics at any time, no code change."""
+    topic = models.CharField(
+        max_length=200,
+        help_text='Subject + web-search query, e.g. "Soil health for smallholder farms in Ghana"',
+    )
+    category = models.CharField(max_length=100, default='Agriculture')
+    is_active = models.BooleanField(default=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['topic']
+
+    def __str__(self):
+        return self.topic

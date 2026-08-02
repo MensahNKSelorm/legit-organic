@@ -1,6 +1,6 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
-from .models import BlogCategory, BlogPost
+from .models import BlogCategory, BlogPost, BlogTopic
 
 
 @admin.register(BlogCategory)
@@ -8,6 +8,14 @@ class BlogCategoryAdmin(ModelAdmin):
     list_display = ['name', 'slug']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(BlogTopic)
+class BlogTopicAdmin(ModelAdmin):
+    list_display = ['topic', 'category', 'is_active', 'last_used_at']
+    list_editable = ['is_active']
+    list_filter = ['is_active', 'category']
+    search_fields = ['topic']
 
 
 @admin.register(BlogPost)

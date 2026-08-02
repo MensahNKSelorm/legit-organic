@@ -1,0 +1,10 @@
+[Unit]
+Description=Generate the Legit Organic weekly blog draft every Monday morning
+
+[Timer]
+OnCalendar=Mon *-*-* 07:00:00
+Persistent=true
+Unit=legitorganic-weekly-blog.service
+
+[Install]
+WantedBy=timers.target
