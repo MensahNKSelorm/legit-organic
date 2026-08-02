@@ -7,6 +7,8 @@ Type=oneshot
 User=legitorganic
 Group=legitorganic
 WorkingDirectory=/var/www/legitorganic/backend
+# Room for research + generation + a 429 retry or two.
+TimeoutStartSec=300
 ExecStart=/var/www/legitorganic/backend/venv/bin/python manage.py generate_weekly_blog
 
 [Install]
