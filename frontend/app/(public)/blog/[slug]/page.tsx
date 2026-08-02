@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { api } from '@/lib/api'
 import type { BlogPost } from '@/types'
 import { getMediaUrl } from '@/lib/media'
-import BlogCard from '@/components/blog/BlogCard'
+import ArticleShare from '@/components/blog/ArticleShare'
 
 // ---------------------------------------------------------------------------
 // Metadata
@@ -63,9 +63,8 @@ function readingTime(text: string): string {
   return `${Math.max(1, Math.ceil(words / 200))} min read`
 }
 
-
 // ---------------------------------------------------------------------------
-// Page
+// Page — a single-column newspaper reading experience (The Journal)
 // ---------------------------------------------------------------------------
 
 export default async function BlogPostPage({ params }: Props) {
@@ -87,178 +86,111 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <div className="story-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
 
-      {/* ── Breadcrumb ─────────────────────────────────────────── */}
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '1rem' }}>
-        <div className="page-container max-w-7xl mx-auto px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-sm text-light-leaf flex-wrap" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-mist-white transition-colors">
-              Home
+      {/* ── Masthead ─────────────────────────────────────────────── */}
+      <header className="pt-32 pb-10 text-[#0D3B2A] dark:text-[#FAF7F0] md:pt-36 md:pb-14">
+        <div className="page-container max-w-4xl">
+          {/* Section line */}
+          <div className="flex items-center justify-between border-y editorial-rule py-3 editorial-label text-[#5B3E31] dark:text-[#B8D4BD]">
+            <Link
+              href={`/blog${post.category?.slug ? `?category=${post.category.slug}` : ''}`}
+              className="transition-colors hover:text-[#0D3B2A] dark:hover:text-white"
+            >
+              {post.category?.name ?? 'Field report'}
             </Link>
-            <span className="opacity-50">/</span>
-            <Link href="/blog" className="hover:text-mist-white transition-colors">
-              Blog
-            </Link>
-            <span className="opacity-50">/</span>
-            <span className="text-ghana-gold font-medium truncate max-w-[240px]">
-              {post.title}
-            </span>
-          </nav>
-        </div>
-      </div>
+            <span>Accra, Ghana</span>
+          </div>
 
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <div
-        className="relative overflow-hidden"
-        style={{ backgroundColor: '#0D3B2A', minHeight: '340px' }}
-      >
-        {coverSrc && (
-          <Image
-            src={coverSrc}
-            alt={post.title}
-            fill
-            className="object-cover opacity-25"
-            sizes="100vw"
-            priority
-          />
-        )}
-        <div className="relative z-10 page-container max-w-4xl mx-auto px-6 lg:px-8 py-16 pb-20">
-          <span className="inline-block bg-[#F4C430]/20 text-[#F4C430] text-xs font-semibold px-3 py-1 rounded-full mb-5">
-            {post.category?.name}
-          </span>
-          <h1 className="font-display text-3xl lg:text-5xl font-bold text-mist-white mb-6 leading-tight">
+          {/* Headline */}
+          <h1 className="display-organic mt-8 text-[clamp(2.4rem,6vw,4.75rem)] leading-[0.98] tracking-[-0.03em] md:mt-10">
             {post.title}
           </h1>
-          <div className="flex flex-wrap items-center gap-3 text-light-leaf text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#F4C430]/30 flex items-center justify-center text-[#F4C430] text-xs font-bold shrink-0">
-                {post.author_name ? post.author_name[0].toUpperCase() : '?'}
-              </div>
-              <span>{post.author_name}</span>
-            </div>
-            <span className="opacity-40">·</span>
-            <span>{formatDate(post.published_at)}</span>
+
+          {/* Standfirst */}
+          {post.excerpt && (
+            <p className="display-organic mt-6 max-w-3xl text-2xl leading-tight text-[#5B3E31] dark:text-[#B8D4BD] md:text-3xl">
+              {post.excerpt}
+            </p>
+          )}
+
+          {/* Byline */}
+          <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 border-t editorial-rule pt-5 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">
+            <span className="editorial-label text-[#0D3B2A] dark:text-[#FAF7F0]">
+              By {post.author_name || 'Legit Organic'}
+            </span>
+            {post.published_at && (
+              <>
+                <span className="opacity-40">·</span>
+                <span>{formatDate(post.published_at)}</span>
+              </>
+            )}
             <span className="opacity-40">·</span>
             <span>{readingTime(content || post.excerpt)}</span>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* ── Content + Sidebar ──────────────────────────────────── */}
-      <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12 lg:gap-16 items-start">
-
-          {/* Left: article body */}
-          <div>
-            {content ? (
-              <div
-                className="prose prose-green max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: content }}
-              />
-            ) : (
-              <div className="space-y-5 text-charcoal/70 dark:text-[#d1d5db]">
-                <p className="text-lg leading-relaxed">{post.excerpt}</p>
-                <p className="text-sm text-charcoal/40 dark:text-[#9ca3af] italic">
-                  Full article content is being prepared. Check back soon.
-                </p>
-              </div>
-            )}
-
-            {/* Share */}
-            <div className="mt-12 pt-8 border-t border-[#E6D8BD] dark:border-[#374151]">
-              <p className="text-xs font-bold uppercase tracking-wide text-charcoal/40 dark:text-[#9ca3af] mb-4">
-                Share this article
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <button className="px-4 py-2 rounded-lg text-sm font-medium bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2]/20 transition-colors">
-                  X / Twitter
-                </button>
-                <button className="px-4 py-2 rounded-lg text-sm font-medium bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors">
-                  WhatsApp
-                </button>
-                <button className="px-4 py-2 rounded-lg text-sm font-medium bg-[#E6D8BD] dark:bg-[#374151] text-charcoal dark:text-[#d1d5db] hover:bg-[#d1c9aa] dark:hover:bg-[#4b5563] transition-colors">
-                  Copy Link
-                </button>
-              </div>
-            </div>
+      {/* ── Lead image (only if one is set) ──────────────────────── */}
+      {coverSrc && (
+        <figure className="page-container max-w-5xl">
+          <div className="relative aspect-[16/9] overflow-hidden">
+            <Image src={coverSrc} alt={post.title} fill className="object-cover" sizes="100vw" priority />
           </div>
+        </figure>
+      )}
 
-          {/* Right: sidebar */}
-          <div className="space-y-6 lg:sticky lg:top-24">
-
-            {/* Author card */}
-            <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-2xl p-6">
-              <p className="text-xs font-bold uppercase tracking-wide text-charcoal/40 dark:text-[#9ca3af] mb-4">
-                Written by
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#F4C430] flex items-center justify-center text-[#0D3B2A] font-bold text-lg shrink-0">
-                  {post.author_name ? post.author_name[0].toUpperCase() : '?'}
-                </div>
-                <div>
-                  <p className="font-semibold text-forest-green dark:text-[#faf7f0]">
-                    {post.author_name}
-                  </p>
-                  <p className="text-xs text-charcoal/50 dark:text-[#9ca3af] mt-0.5">
-                    Legit Organic Editorial
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* TOC placeholder */}
-            <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-2xl p-6">
-              <p className="text-xs font-bold uppercase tracking-wide text-charcoal/40 dark:text-[#9ca3af] mb-4">
-                In this article
-              </p>
-              <p className="text-sm text-charcoal/40 dark:text-[#9ca3af] italic">
-                Table of contents coming soon.
-              </p>
-            </div>
-
-            {/* Related in sidebar */}
-            {related.length > 0 && (
-              <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-2xl p-6">
-                <p className="text-xs font-bold uppercase tracking-wide text-charcoal/40 dark:text-[#9ca3af] mb-4">
-                  More in {post.category?.name}
-                </p>
-                <ul className="space-y-4">
-                  {related.slice(0, 2).map((p) => (
-                    <li key={p.id}>
-                      <Link href={`/blog/${p.slug}`} className="group">
-                        <p className="text-sm font-semibold text-forest-green dark:text-[#faf7f0] group-hover:text-leaf-green dark:group-hover:text-[#81C784] transition-colors line-clamp-2 leading-snug">
-                          {p.title}
-                        </p>
-                        <p className="text-xs text-charcoal/40 dark:text-[#9ca3af] mt-1">
-                          {new Date(p.published_at).toLocaleDateString('en-GH', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </p>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+      {/* ── Article column ───────────────────────────────────────── */}
+      <article className="page-container max-w-2xl py-10 md:py-14">
+        {content ? (
+          <div className="journal-article" dangerouslySetInnerHTML={{ __html: content }} />
+        ) : (
+          <div className="space-y-5 text-[#5B3E31] dark:text-[#B8D4BD]">
+            <p className="text-lg leading-relaxed">{post.excerpt}</p>
+            <p className="text-sm italic opacity-60">Full article content is being prepared.</p>
           </div>
+        )}
+
+        <div className="mt-14 border-t editorial-rule pt-6">
+          <ArticleShare title={post.title} slug={slug} />
         </div>
-      </div>
+      </article>
 
-      {/* ── Related posts ──────────────────────────────────────── */}
+      {/* ── More field reports ───────────────────────────────────── */}
       {related.length > 0 && (
-        <div className="bg-beige dark:bg-[#111827] border-t border-[#E6D8BD] dark:border-[#374151]">
-          <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
-            <h2 className="font-display text-2xl font-bold text-forest-green dark:text-[#faf7f0] mb-8">
-              More from {post.category?.name}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {related.map((p) => (
-                <BlogCard key={p.id} post={p} />
-              ))}
+        <section className="border-t editorial-rule">
+          <div className="page-container max-w-4xl py-12 md:py-16">
+            <div className="flex items-baseline justify-between border-b editorial-rule pb-3">
+              <h2 className="display-organic text-3xl text-[#0D3B2A] dark:text-[#FAF7F0] md:text-4xl">
+                More field reports
+              </h2>
+              <Link
+                href="/blog"
+                className="editorial-label text-[#5B3E31] transition-colors hover:text-[#0D3B2A] dark:text-[#B8D4BD] dark:hover:text-white"
+              >
+                The Journal →
+              </Link>
             </div>
+            <ul>
+              {related.map((p) => (
+                <li key={p.id} className="border-b editorial-rule">
+                  <Link href={`/blog/${p.slug}`} className="group block py-6">
+                    <h3 className="display-organic text-xl leading-snug text-[#0D3B2A] transition-colors group-hover:text-[#2E7D32] dark:text-[#FAF7F0] dark:group-hover:text-[#9FC5A4] md:text-2xl">
+                      {p.title}
+                    </h3>
+                    {p.excerpt && (
+                      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#5B3E31] line-clamp-2 dark:text-[#B8D4BD]">
+                        {p.excerpt}
+                      </p>
+                    )}
+                    <span className="editorial-label mt-3 block text-[#5B3E31]/70 dark:text-[#B8D4BD]/70">
+                      {post.category?.name}
+                      {p.published_at ? ` · ${formatDate(p.published_at)}` : ''}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+        </section>
       )}
     </div>
   )
