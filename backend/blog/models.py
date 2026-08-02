@@ -22,7 +22,7 @@ class BlogCategory(models.Model):
 
 class BlogPost(models.Model):
     title = models.CharField(max_length=300)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(max_length=220, unique=True, blank=True)
     content = CKEditor5Field(config_name='extends')
     excerpt = models.TextField(blank=True)
     cover_image = models.ImageField(upload_to='blog/', blank=True, null=True)

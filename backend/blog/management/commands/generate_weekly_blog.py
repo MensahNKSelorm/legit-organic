@@ -19,6 +19,7 @@ import os
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.utils.text import slugify
 
 from blog.models import BlogPost, BlogCategory, BlogTopic
 from blog.research import gather_research
@@ -138,8 +139,16 @@ class Command(BaseCommand):
             return
 
         category, _ = BlogCategory.objects.get_or_create(name=category_name, defaults={'slug': ''})
+        # Bounded, unique slug — AI titles can exceed the default slug length and
+        # two runs could share a title.
+        base = slugify(draft['title'])[:200] or 'weekly-post'
+        slug, n = base, 2
+        while BlogPost.objects.filter(slug=slug).exists():
+            slug = f'{base}-{n}'
+            n += 1
         post = BlogPost.objects.create(
             title=draft['title'],
+            slug=slug,
             content=draft['content'],
             excerpt=draft['excerpt'],
             tags=draft['tags'],
