@@ -22,10 +22,9 @@ TAVILY_URL = 'https://api.tavily.com/search'
 MIN_SOURCES = 3
 
 
-def fetch_web(topic, limit=9):
+def fetch_web(topic, limit=6):
     """Tavily search for the topic. Returns a list of
-    {title, snippet, url, source} dicts; empty when TAVILY_API_KEY is unset.
-    More results = more grounded material for a longer post."""
+    {title, snippet, url, source} dicts; empty when TAVILY_API_KEY is unset."""
     api_key = os.getenv('TAVILY_API_KEY', '').strip()
     if not api_key:
         logger.info('TAVILY_API_KEY not set; skipping web research.')
