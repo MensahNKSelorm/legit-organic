@@ -235,6 +235,87 @@ html.dark .account-page .account-panel {
   font-weight: 500;
 }
 
+/* ── Journal article body (blog reading page) ─────────────────── */
+.journal-article {
+  font-family: "Cabinet Grotesk", system-ui, sans-serif;
+  color: #3a352f;
+  font-size: 1.14rem;
+  line-height: 1.85;
+}
+html.dark .journal-article { color: #D9E4DB; }
+
+.journal-article > p { margin: 0 0 1.4rem; }
+
+/* Lead paragraph gets a drop cap, like a printed feature. */
+.journal-article > p:first-of-type { font-size: 1.2rem; }
+.journal-article > p:first-of-type::first-letter {
+  font-family: "Boska", Georgia, serif;
+  font-weight: 500;
+  float: left;
+  font-size: 3.9rem;
+  line-height: 0.78;
+  padding: 0.35rem 0.6rem 0 0;
+  color: #0D3B2A;
+}
+html.dark .journal-article > p:first-of-type::first-letter { color: #FAF7F0; }
+
+.journal-article h2 {
+  font-family: "Boska", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.9rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #0D3B2A;
+  margin: 2.8rem 0 1rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(13, 59, 42, 0.18);
+}
+html.dark .journal-article h2 { color: #FAF7F0; border-top-color: rgba(250, 247, 240, 0.16); }
+
+.journal-article h3 {
+  font-family: "Boska", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.42rem;
+  color: #0D3B2A;
+  margin: 2rem 0 0.7rem;
+}
+html.dark .journal-article h3 { color: #FAF7F0; }
+
+.journal-article a {
+  color: #0D3B2A;
+  text-decoration: underline;
+  text-decoration-color: #F4C430;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+html.dark .journal-article a { color: #FAF7F0; }
+.journal-article a:hover { color: #2E7D32; }
+
+.journal-article strong { color: #0D3B2A; font-weight: 700; }
+html.dark .journal-article strong { color: #FAF7F0; }
+
+.journal-article ul, .journal-article ol { margin: 0 0 1.4rem; padding-left: 1.4rem; }
+.journal-article li { margin: 0 0 0.5rem; }
+.journal-article ul li::marker { color: #F4C430; }
+.journal-article ol li::marker { color: #F4C430; font-weight: 700; }
+
+.journal-article blockquote {
+  border-left: 3px solid #F4C430;
+  margin: 1.9rem 0;
+  padding: 0.2rem 0 0.2rem 1.4rem;
+  font-family: "Boska", Georgia, serif;
+  font-size: 1.35rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: #0D3B2A;
+}
+html.dark .journal-article blockquote { color: #FAF7F0; }
+
+/* "Further reading" heading + source list the generator appends. */
+.journal-article h3 + ul { list-style: none; padding-left: 0; }
+.journal-article h3 + ul li { border-top: 1px solid rgba(13, 59, 42, 0.14); padding: 0.6rem 0; margin: 0; }
+html.dark .journal-article h3 + ul li { border-top-color: rgba(250, 247, 240, 0.14); }
+
 .legal-document section {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
