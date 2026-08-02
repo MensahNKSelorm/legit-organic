@@ -41,12 +41,12 @@ def build_prompt(topic, sources):
         f"Topic: {topic}\n\n"
         f"RESEARCH (write only from these facts; do not add outside claims):\n\n"
         f"{_research_block(sources)}\n\n"
-        f"Write one blog post of roughly {target} words on the topic for a general Ghanaian "
-        "audience, using only the research above. Develop several distinct points into full "
-        "paragraphs under clear h2/h3 subheadings, with an engaging opening and a real ending. "
-        "Draw on all of the research to reach a substantial length — but never pad, repeat, or "
-        "invent facts to hit the word count. If the research cannot support the full length, "
-        "write a shorter complete post instead."
+        f"Write a full, in-depth blog post of {target} words for a general Ghanaian audience, "
+        "using only the research above. Cover several distinct points, each as its own section "
+        "with an h2/h3 subheading and a few developed paragraphs, plus an engaging opening and a "
+        "real ending. Use every relevant source and explore each angle thoroughly so the post "
+        "reaches the target length honestly. Never pad, repeat, or invent facts to hit the count "
+        "— if the research genuinely cannot support the length, write a shorter complete post."
     )
 
 
@@ -54,22 +54,27 @@ def call_groq(prompt):
     api_key = os.getenv('GROQ_API_KEY', '').strip()
     if not api_key:
         raise RuntimeError('groq_not_configured')
-    model = os.getenv('GROQ_MODEL', 'openai/gpt-oss-20b').strip()
+    # Blog uses its own model (default: a large-context model) so it can be fed
+    # plenty of research AND given room to write a full-length post. Independent
+    # of the admin writing assistant's GROQ_MODEL; override via BLOG_GROQ_MODEL.
+    model = os.getenv('BLOG_GROQ_MODEL', 'llama-3.3-70b-versatile').strip()
+    payload = {
+        'model': model,
+        'messages': [
+            {'role': 'system', 'content': SYSTEM_PROMPT},
+            {'role': 'user', 'content': prompt},
+        ],
+        'temperature': 0.4,
+        'max_completion_tokens': 8000,
+        'response_format': {'type': 'json_object'},
+    }
+    if 'gpt-oss' in model:  # reasoning_effort is a gpt-oss-only parameter
+        payload['reasoning_effort'] = 'low'
     resp = requests.post(
         GROQ_URL,
         headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-        json={
-            'model': model,
-            'messages': [
-                {'role': 'system', 'content': SYSTEM_PROMPT},
-                {'role': 'user', 'content': prompt},
-            ],
-            'temperature': 0.4,
-            'reasoning_effort': 'low',
-            'max_completion_tokens': 6000,
-            'response_format': {'type': 'json_object'},
-        },
-        timeout=40,
+        json=payload,
+        timeout=60,
     )
     resp.raise_for_status()
     return json.loads(resp.json()['choices'][0]['message']['content'])
