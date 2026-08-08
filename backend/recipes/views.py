@@ -113,13 +113,15 @@ class RecipeCombinationNoteView(views.APIView):
 
 
 class RecipeListView(generics.ListAPIView):
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.filter(is_published=True)
     serializer_class = RecipeListSerializer
     permission_classes = []
 
 
 class RecipeDetailView(generics.RetrieveAPIView):
-    queryset = Recipe.objects.prefetch_related('ingredients__product', 'steps', 'pairings__suggested_recipe')
+    queryset = Recipe.objects.filter(is_published=True).prefetch_related(
+        'ingredients__product', 'steps', 'pairings__suggested_recipe'
+    )
     serializer_class = RecipeDetailWithPairingsSerializer
     permission_classes = []
     lookup_field = 'slug'
@@ -130,7 +132,7 @@ class DefaultRecipesView(generics.ListAPIView):
     permission_classes = []
 
     def get_queryset(self):
-        queryset = Recipe.objects.filter(is_default=True)
+        queryset = Recipe.objects.filter(is_default=True, is_published=True)
         raw_search = self.request.query_params.get('search', '').strip()[:200]
         if not raw_search:
             return queryset

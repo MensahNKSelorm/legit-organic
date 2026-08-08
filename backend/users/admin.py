@@ -2,11 +2,16 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.html import format_html
+from django.urls import reverse
 from unfold.admin import ModelAdmin, StackedInline
 from .models import (
     User, Customer, Staff, B2BProfile, B2BDiscountTier, StaffInvitation,
 )
-from .forms import UserCreationForm, UserChangeForm, StaffInvitationAdminForm
+from .forms import (
+    StaffAccessAdminForm, StaffInvitationAdminForm,
+    UserChangeForm, UserCreationForm,
+)
 from sales.models import SalesRep
 
 
@@ -70,6 +75,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(ModelAdmin):
+    actions = ['deactivate_customers', 'reactivate_customers']
     list_display = ['email', 'first_name', 'last_name',
                     'phone_number', 'city', 'delivery_region',
                     'email_verified', 'date_joined', 'is_active']
@@ -82,15 +88,16 @@ class CustomerAdmin(ModelAdmin):
         'street_address', 'city', 'delivery_region',
     ]
     ordering = ['-date_joined']
-    readonly_fields = ['date_joined', 'last_login']
     # Explicit fields so email_verified is editable on the detail page while the
     # raw password hash field is not exposed on this proxy admin.
     fields = [
         'email', 'first_name', 'last_name', 'phone_number',
         'email_verified', 'is_active',
         'house_number', 'street_address', 'city', 'delivery_region',
-        'date_joined', 'last_login',
+        'date_joined', 'last_login', 'anonymization_control',
     ]
+
+    readonly_fields = ['date_joined', 'last_login', 'anonymization_control']
 
     def get_queryset(self, request):
         return super().get_queryset(request).filter(
@@ -101,11 +108,51 @@ class CustomerAdmin(ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
+        return False
+
+    @admin.display(description='Privacy controls')
+    def anonymization_control(self, obj):
+        if not obj or not obj.pk:
+            return 'Customer record unavailable.'
+        url = reverse('staff-security:anonymize-customer', args=[obj.pk])
+        return format_html('<a href="{}">Owner-only account anonymisation</a>', url)
+
+    @admin.action(description='Deactivate selected customer accounts')
+    def deactivate_customers(self, request, queryset):
+        from security.audit import record_event
+        from security.models import AuditEvent
+        count = 0
+        for customer in queryset.filter(is_active=True):
+            customer.is_active = False
+            customer.save(update_fields=['is_active'])
+            record_event(
+                action='customer.deactivated', request=request, target=customer,
+                severity=AuditEvent.Severity.SENSITIVE,
+                before={'is_active': True}, after={'is_active': False},
+            )
+            count += 1
+        self.message_user(request, f'Deactivated {count} customer account(s).')
+
+    @admin.action(description='Reactivate selected customer accounts')
+    def reactivate_customers(self, request, queryset):
+        from security.audit import record_event
+        from security.models import AuditEvent
+        count = 0
+        for customer in queryset.filter(is_active=False):
+            customer.is_active = True
+            customer.save(update_fields=['is_active'])
+            record_event(
+                action='customer.reactivated', request=request, target=customer,
+                severity=AuditEvent.Severity.SENSITIVE,
+                before={'is_active': False}, after={'is_active': True},
+            )
+            count += 1
+        self.message_user(request, f'Reactivated {count} customer account(s).')
 
 
 @admin.register(Staff)
 class StaffAdmin(ModelAdmin):
+    form = StaffAccessAdminForm
     list_display = [
         'email', 'first_name', 'last_name', 'staff_role',
         'is_active', 'last_login',
@@ -116,11 +163,13 @@ class StaffAdmin(ModelAdmin):
     filter_horizontal = ['groups']
     fields = [
         'email', 'first_name', 'last_name', 'staff_role',
-        'is_active', 'groups', 'last_login', 'date_joined',
+        'is_active', 'groups', 'access_change_reason',
+        'owner_password', 'owner_otp_token',
+        'security_controls', 'last_login', 'date_joined',
     ]
     readonly_fields = [
         'email', 'first_name', 'last_name', 'staff_role',
-        'last_login', 'date_joined',
+        'security_controls', 'last_login', 'date_joined',
     ]
 
     def get_queryset(self, request):
@@ -131,6 +180,13 @@ class StaffAdmin(ModelAdmin):
         if obj.is_superuser:
             return 'Owner'
         return ', '.join(obj.groups.values_list('name', flat=True)) or 'Staff'
+
+    @admin.display(description='Account security')
+    def security_controls(self, obj):
+        if not obj or obj.is_superuser:
+            return 'Owner security is managed from the signed-in account.'
+        url = reverse('staff-security:reset-staff', args=[obj.pk])
+        return format_html('<a href="{}">Reset 2FA and revoke sessions</a>', url)
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -151,6 +207,55 @@ class StaffAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        base_form = super().get_form(request, obj, change, **kwargs)
+
+        class RequestAwareStaffForm(base_form):
+            def __init__(self, *args, **form_kwargs):
+                form_kwargs['request'] = request
+                super().__init__(*args, **form_kwargs)
+
+        return RequestAwareStaffForm
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            old = User.objects.get(pk=obj.pk)
+            obj._security_old_active = old.is_active
+            obj._security_old_groups = set(old.groups.values_list('name', flat=True))
+        super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        if not change:
+            return
+        obj = form.instance
+        old_groups = getattr(obj, '_security_old_groups', set())
+        new_groups = set(obj.groups.values_list('name', flat=True))
+        active_changed = getattr(obj, '_security_old_active', obj.is_active) != obj.is_active
+        if old_groups != new_groups or active_changed:
+            from security.audit import record_event, revoke_user_sessions
+            from security.models import AuditEvent, StaffSecurityProfile
+            profile, _ = StaffSecurityProfile.objects.get_or_create(user=obj)
+            profile.security_version += 1
+            profile.save(update_fields=['security_version', 'updated_at'])
+            revoked = revoke_user_sessions(obj)
+            record_event(
+                action='staff.access_changed', request=request, target=obj,
+                severity=AuditEvent.Severity.CRITICAL,
+                before={
+                    'roles': sorted(old_groups),
+                    'is_active': getattr(obj, '_security_old_active', obj.is_active),
+                },
+                after={'roles': sorted(new_groups), 'is_active': obj.is_active},
+                reason=form.cleaned_data.get('access_change_reason', ''),
+                metadata={
+                    'sessions_revoked': revoked,
+                    'recovery_code_used': getattr(
+                        form, 'access_recovery_code_used', False
+                    ),
+                },
+            )
+
 
 @admin.register(StaffInvitation)
 class StaffInvitationAdmin(ModelAdmin):
@@ -168,7 +273,10 @@ class StaffInvitationAdmin(ModelAdmin):
 
     def get_fields(self, request, obj=None):
         if obj is None:
-            return ['first_name', 'last_name', 'company_email', 'delivery_email', 'role']
+            return [
+                'first_name', 'last_name', 'company_email', 'delivery_email', 'role',
+                'invitation_reason', 'owner_password', 'owner_otp_token',
+            ]
         return [
             'first_name', 'last_name', 'company_email', 'delivery_email', 'role',
             'invitation_status', 'delivery_status', 'delivery_error',
@@ -180,6 +288,16 @@ class StaffInvitationAdmin(ModelAdmin):
         if obj is None:
             return []
         return self.get_fields(request, obj)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        base_form = super().get_form(request, obj, change, **kwargs)
+
+        class RequestAwareInvitationForm(base_form):
+            def __init__(self, *args, **form_kwargs):
+                form_kwargs['request'] = request
+                super().__init__(*args, **form_kwargs)
+
+        return RequestAwareInvitationForm
 
     @admin.display(description='Name')
     def full_name(self, obj):
@@ -196,6 +314,23 @@ class StaffInvitationAdmin(ModelAdmin):
         obj.invited_by = request.user
         raw_token = obj.issue_token()
         super().save_model(request, obj, form, change)
+        from security.audit import record_event
+        from security.models import AuditEvent
+        record_event(
+            action='staff.invited', request=request, target=obj,
+            severity=AuditEvent.Severity.CRITICAL,
+            reason=form.cleaned_data.get('invitation_reason', ''),
+            after={
+                'company_email': obj.company_email,
+                'delivery_email': obj.delivery_email,
+                'role': obj.role,
+            },
+            metadata={
+                'recovery_code_used': getattr(
+                    form, 'invitation_recovery_code_used', False
+                ),
+            },
+        )
         delivered = self._deliver(obj, raw_token)
         if delivered:
             self.message_user(

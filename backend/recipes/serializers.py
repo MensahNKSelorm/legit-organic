@@ -30,7 +30,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ['id', 'title', 'slug', 'description', 'cover_image',
                   'prep_time', 'cook_time', 'servings', 'difficulty',
-                  'is_default', 'nutritional_score', 'video_url', 'created_at']
+                  'is_default', 'is_published', 'nutritional_score', 'video_url', 'created_at']
         read_only_fields = ['id', 'slug', 'created_at']
 
 

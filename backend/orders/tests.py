@@ -2,11 +2,14 @@ from decimal import Decimal
 from io import BytesIO
 from unittest.mock import patch
 
+from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from openpyxl import load_workbook
+from django_otp.oath import totp
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from rest_framework.test import APIClient
 
 from users.models import User
@@ -358,7 +361,83 @@ class OrderExportAdminTests(TestCase):
         url = reverse('admin:orders-export-all')
         response = self.client.get(url, {'date_from': 'not-a-date'})
         self.assertRedirects(response, reverse('admin:orders_order_changelist'))
-        response = self.client.get(url, {
-            'date_from': '2026-08-10', 'date_to': '2026-08-01',
+
+
+class OrderAdminSecurityTests(TestCase):
+    def setUp(self):
+        call_command('setup_groups', verbosity=0)
+        self.owner = User.objects.create_superuser(
+            email='secure-owner@example.com', password='StrongPass123!',
+            first_name='Secure', last_name='Owner',
+        )
+        self.device = TOTPDevice.objects.create(
+            user=self.owner, name='Authenticator', confirmed=True,
+        )
+        self.order = Order.objects.create(
+            reference='LO-MANUAL-SECURE', delivery_address='Accra',
+            guest_name='Customer', guest_phone='0244000000',
+            total_amount=Decimal('40.00'), status='pending',
+            payment_status='pending', order_source='whatsapp',
+        )
+
+    def _token(self, device=None):
+        device = device or self.device
+        return str(totp(
+            device.bin_key, step=device.step, t0=device.t0,
+            digits=device.digits, drift=device.drift,
+        )).zfill(device.digits)
+
+    @staticmethod
+    def _inline_management():
+        return {
+            'items-TOTAL_FORMS': '0',
+            'items-INITIAL_FORMS': '0',
+            'items-MIN_NUM_FORMS': '0',
+            'items-MAX_NUM_FORMS': '1000',
+        }
+
+    @patch('users.emails.resend.Emails.send')
+    def test_owner_manual_payment_correction_requires_reason_password_and_2fa(self, _mail):
+        self.client.force_login(self.owner)
+        url = reverse('admin:orders_order_change', args=[self.order.pk])
+        denied_payload = {
+            'status': 'pending', 'payment_status': 'success',
+            'payment_change_reason': '', 'current_password': 'wrong', 'otp_token': '000000',
+            '_save': 'Save',
+            **self._inline_management(),
+        }
+        denied = self.client.post(url, denied_payload)
+        self.assertEqual(denied.status_code, 200)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, 'pending')
+
+        allowed = self.client.post(url, {
+            'status': 'pending', 'payment_status': 'success',
+            'payment_change_reason': 'MoMo receipt matched',
+            'current_password': 'StrongPass123!', 'otp_token': self._token(),
+            '_save': 'Save',
+            **self._inline_management(),
         })
-        self.assertRedirects(response, reverse('admin:orders_order_changelist'))
+        self.assertEqual(allowed.status_code, 302)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, 'success')
+        from security.models import AuditEvent
+        event = AuditEvent.objects.get(action='order.payment_corrected')
+        self.assertEqual(event.reason, 'MoMo receipt matched')
+
+    def test_operations_can_change_fulfilment_but_not_payment(self):
+        operator = User.objects.create_user(
+            email='ops@legitorganic.com', password='StrongPass123!', first_name='Op',
+            last_name='User', is_staff=True, email_verified=True,
+        )
+        operator.groups.add(Group.objects.get(name='Operations'))
+        self.client.force_login(operator)
+        url = reverse('admin:orders_order_change', args=[self.order.pk])
+        response = self.client.post(url, {
+            'status': 'processing', 'payment_status': 'success', '_save': 'Save',
+            **self._inline_management(),
+        })
+        self.assertEqual(response.status_code, 302)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'processing')
+        self.assertEqual(self.order.payment_status, 'pending')

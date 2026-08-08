@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 from .models import BlogCategory, BlogPost, BlogTopic
 
@@ -29,7 +31,7 @@ class BlogPostAdmin(ModelAdmin):
     search_fields = ['title', 'content', 'excerpt']
     list_editable = ['is_published']
     prepopulated_fields = {'slug': ('title',)}
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'permanent_delete_control']
     date_hierarchy = 'published_at'
     fieldsets = (
         ('The story', {
@@ -45,7 +47,31 @@ class BlogPostAdmin(ModelAdmin):
             'fields': ('is_published', 'published_at'),
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at', 'updated_at', 'permanent_delete_control'),
             'classes': ('collapse',),
         }),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='Exceptional deletion')
+    def permanent_delete_control(self, obj):
+        if not obj or not obj.pk:
+            return 'Save the post before managing deletion.'
+        url = reverse(
+            'staff-security:exceptional-delete',
+            args=['blog', 'blogpost', obj.pk],
+        )
+        return format_html('<a href="{}">Owner-only permanent deletion</a>', url)
+
+    def save_model(self, request, obj, form, change):
+        old_published = BlogPost.objects.get(pk=obj.pk).is_published if change else None
+        super().save_model(request, obj, form, change)
+        if change:
+            from security.audit import record_boolean_state_change
+            record_boolean_state_change(
+                request=request, target=obj, field='is_published',
+                old_value=old_published, new_value=obj.is_published,
+                action='blog.publication_changed',
+            )

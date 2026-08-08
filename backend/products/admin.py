@@ -68,3 +68,17 @@ class ProductAdmin(ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        old_available = Product.objects.get(pk=obj.pk).is_available if change else None
+        super().save_model(request, obj, form, change)
+        if change:
+            from security.audit import record_boolean_state_change
+            record_boolean_state_change(
+                request=request, target=obj, field='is_available',
+                old_value=old_available, new_value=obj.is_available,
+                action='product.availability_changed',
+            )

@@ -297,6 +297,20 @@ class ExportOrdersView(APIView):
             )
 
         from .exports import generate_orders_excel
+        from security.audit import record_event
+        from security.models import AuditEvent
+        record_event(
+            action='order.exported', request=request,
+            severity=AuditEvent.Severity.SENSITIVE,
+            metadata={
+                'scope': 'api_filtered', 'count': orders.count(),
+                'filters': {
+                    'date_from': date_from, 'date_to': date_to,
+                    'status': status_filter, 'payment_status': payment_filter,
+                    'source': source_filter, 'customer': customer,
+                },
+            },
+        )
         return generate_orders_excel(
             list(orders), date_from, date_to, status_filter,
             filters={

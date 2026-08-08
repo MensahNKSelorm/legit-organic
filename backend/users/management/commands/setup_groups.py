@@ -26,27 +26,27 @@ class Command(BaseCommand):
         content_team, _ = Group.objects.get_or_create(name='Content Team')
         content_perms = []
 
-        # Products - full CRUD
+        # Products - create/edit/view; archive instead of permanent deletion.
         content_perms += list(get_perms('products', 'product',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
         content_perms += list(get_perms('products', 'category',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
 
         # Blog - full CRUD
         content_perms += list(get_perms('blog', 'blogpost',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
         content_perms += list(get_perms('blog', 'blogcategory',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
 
         # Recipes - full CRUD
         content_perms += list(get_perms('recipes', 'recipe',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
         content_perms += list(get_perms('recipes', 'recipeingredient',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
         content_perms += list(get_perms('recipes', 'recipestep',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
         content_perms += list(get_perms('recipes', 'recipepairing',
-                                        ['add', 'change', 'view', 'delete']))
+                                        ['add', 'change', 'view']))
 
         content_team.permissions.set(content_perms)
         self.stdout.write(self.style.SUCCESS(
@@ -126,7 +126,7 @@ class Command(BaseCommand):
         product_perms = []
         for model in ['product', 'productimage', 'category', 'region', 'badge']:
             product_perms += list(get_perms(
-                'products', model, ['add', 'change', 'view', 'delete']
+                'products', model, ['add', 'change', 'view']
             ))
         product_perms += list(get_perms('orders', 'order', ['view']))
         product_perms += list(get_perms('orders', 'orderitem', ['view']))
@@ -150,7 +150,7 @@ class Command(BaseCommand):
         for app_label, models in business_models.items():
             for model in models:
                 executive_perms += list(get_perms(
-                    app_label, model, ['add', 'change', 'view', 'delete']
+                    app_label, model, ['add', 'change', 'view']
                 ))
         executive_perms += list(get_perms('orders', 'cart', ['view']))
         executive_perms += list(get_perms('orders', 'cartitem', ['view']))
