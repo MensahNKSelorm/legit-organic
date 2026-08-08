@@ -19,6 +19,8 @@ env/
 
 # Media uploads (optional)
 media/
+!frontend/app/api/media/
+!frontend/app/api/media/**
 
 # Byte-compiled / cache
 *.egg-info/
