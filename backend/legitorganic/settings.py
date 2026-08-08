@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import resend
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 from django.templatetags.static import static
 
 
@@ -122,6 +123,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'axes',
     # local
     'users',
     'products',
@@ -130,10 +134,15 @@ INSTALLED_APPS = [
     'orders',
     'sales',
     'notifications',
+    'security.apps.SecurityConfig',
 ]
 
 def admin_permission(permission):
     return lambda request: request.user.has_perm(permission)
+
+
+def staff_access(request):
+    return request.user.is_authenticated and request.user.is_staff
 
 
 UNFOLD = {
@@ -267,6 +276,18 @@ UNFOLD = {
                 "title": "Staff",
                 "separator": True,
                 "items": [
+                    {
+                        "title": "My account security",
+                        "icon": "shield_lock",
+                        "link": "/staff/security/setup/",
+                        "permission": staff_access,
+                    },
+                    {
+                        "title": "Security audit",
+                        "icon": "policy",
+                        "link": "/admin/security/auditevent/",
+                        "permission": staff_access,
+                    },
                     {
                         "title": "Staff Accounts",
                         "icon": "badge",
@@ -411,6 +432,29 @@ CKEDITOR_5_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 AUTH_USER_MODEL = 'users.User'
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Deploy in enrollment mode first. Switch to "enforce" only after the owner
+# has enrolled and safely stored the recovery codes.
+STAFF_2FA_MODE = os.getenv('STAFF_2FA_MODE', 'enroll').strip().lower()
+if STAFF_2FA_MODE not in {'enroll', 'enforce'}:
+    raise ImproperlyConfigured('STAFF_2FA_MODE must be either "enroll" or "enforce".')
+STAFF_OWNER_2FA_REQUIRED = _env_bool('STAFF_OWNER_2FA_REQUIRED', 'True')
+STAFF_IDLE_TIMEOUT_SECONDS = int(os.getenv('STAFF_IDLE_TIMEOUT_SECONDS', '1800'))
+STAFF_ABSOLUTE_SESSION_SECONDS = int(os.getenv('STAFF_ABSOLUTE_SESSION_SECONDS', '28800'))
+
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 0.25  # hours (15 minutes)
+AXES_RESET_ON_SUCCESS = True
+# Lock the account and the source IP independently. A nested pair would only
+# lock the exact username+IP combination and lets distributed attacks continue.
+AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']
+AXES_IPWARE_PROXY_COUNT = 1
+AXES_IPWARE_META_PRECEDENCE_ORDER = ('HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR')
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -418,6 +462,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
+    'axes.middleware.AxesMiddleware',
+    'security.middleware.StaffSecurityMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

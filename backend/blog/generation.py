@@ -8,8 +8,10 @@ import json
 import logging
 import os
 import time
+from urllib.parse import urlparse
 
 import requests
+from django.utils.html import escape
 
 from legitorganic.writing_assistant import _clean_html
 
@@ -98,11 +100,21 @@ def call_groq(prompt):
 
 
 def _sources_html(sources):
-    items = ''.join(
-        f'<li><a href="{s.get("url", "")}" rel="nofollow noopener" target="_blank">'
-        f'{(s.get("title") or s.get("url") or "").strip()[:160]}</a></li>'
-        for s in sources if s.get('url')
-    )
+    items = []
+    for source in sources:
+        url = str(source.get('url') or '').strip()
+        parsed = urlparse(url)
+        if (
+            parsed.scheme not in {'http', 'https'} or not parsed.netloc
+            or any(char in url for char in '\"\'<>\r\n\t ')
+        ):
+            continue
+        title = str(source.get('title') or url).strip()[:160]
+        items.append(
+            f'<li><a href="{escape(url)}" rel="nofollow noopener" target="_blank">'
+            f'{escape(title)}</a></li>'
+        )
+    items = ''.join(items)
     if not items:
         return ''
     return f'<h3>Further reading</h3><ul>{items}</ul>'

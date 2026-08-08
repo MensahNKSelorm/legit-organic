@@ -7,6 +7,7 @@ from django.utils.dateparse import parse_date
 from unfold.admin import ModelAdmin, TabularInline
 from .models import Cart, CartItem, Order, OrderItem
 from .promo_models import PromoCode
+from .forms import OrderAdminForm
 
 
 @admin.action(description='📊 Export selected orders to Excel')
@@ -15,6 +16,13 @@ def export_to_excel(modeladmin, request, queryset):
     orders = queryset.select_related(
         'user', 'promo_code'
     ).prefetch_related('items', 'items__product')
+    from security.audit import record_event
+    from security.models import AuditEvent
+    record_event(
+        action='order.exported', request=request,
+        severity=AuditEvent.Severity.SENSITIVE,
+        metadata={'scope': 'selected', 'count': orders.count()},
+    )
     return generate_orders_excel(list(orders))
 
 
@@ -62,6 +70,7 @@ class OrderItemInline(TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
+    form = OrderAdminForm
     change_list_template = 'admin/orders/order/change_list.html'
     actions = [export_to_excel]
     list_display = ['reference', 'get_customer', 'status', 'payment_status',
@@ -94,8 +103,11 @@ class OrderAdmin(ModelAdmin):
             ),
         }),
         ('Status', {
-            'fields': ('status', 'payment_status'),
-            'description': 'Only these fields can be edited.',
+            'fields': (
+                'status', 'payment_status', 'payment_change_reason',
+                'current_password', 'otp_token',
+            ),
+            'description': 'Fulfilment and payment authority are enforced separately.',
         }),
         ('Payment', {
             'fields': ('paystack_id',),
@@ -108,7 +120,71 @@ class OrderAdmin(ModelAdmin):
     )
 
     def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+    def _can_correct_payment(self, request):
+        return request.user.is_superuser or request.user.groups.filter(
+            name='Executive Admin'
+        ).exists()
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if obj and (obj.order_source == 'paystack' or not self._can_correct_payment(request)):
+            fields.extend(['payment_status'])
+        return list(dict.fromkeys(fields))
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if obj and (obj.order_source == 'paystack' or not self._can_correct_payment(request)):
+            adjusted = []
+            for title, options in fieldsets:
+                options = options.copy()
+                if title == 'Status':
+                    options['fields'] = ('status', 'payment_status')
+                adjusted.append((title, options))
+            return tuple(adjusted)
+        return fieldsets
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        base_form = super().get_form(request, obj, change, **kwargs)
+
+        class RequestAwareOrderForm(base_form):
+            def __init__(self, *args, **form_kwargs):
+                form_kwargs['request'] = request
+                super().__init__(*args, **form_kwargs)
+
+        return RequestAwareOrderForm
+
+    def save_model(self, request, obj, form, change):
+        old = Order.objects.get(pk=obj.pk) if change else None
+        if old and obj.payment_status != old.payment_status and not self._can_correct_payment(request):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied('You cannot change payment status.')
+        super().save_model(request, obj, form, change)
+        if old and obj.status != old.status:
+            from security.audit import record_event
+            from security.models import AuditEvent
+            record_event(
+                action='order.status_changed', request=request, target=obj,
+                severity=AuditEvent.Severity.SENSITIVE,
+                before={'status': old.status}, after={'status': obj.status},
+            )
+        if old and obj.payment_status != old.payment_status:
+            from security.audit import record_event
+            from security.models import AuditEvent
+            record_event(
+                action='order.payment_corrected', request=request, target=obj,
+                severity=AuditEvent.Severity.CRITICAL,
+                reason=form.cleaned_data.get('payment_change_reason', ''),
+                before={'payment_status': old.payment_status},
+                after={'payment_status': obj.payment_status},
+                metadata={
+                    'recovery_code_used': getattr(form, 'payment_recovery_code_used', False)
+                },
+            )
 
     def get_urls(self):
         from django.urls import path
@@ -178,6 +254,16 @@ class OrderAdmin(ModelAdmin):
             'Channel': source_filter,
             'Customer/reference': customer,
         }
+        from security.audit import record_event
+        from security.models import AuditEvent
+        record_event(
+            action='order.exported', request=request,
+            severity=AuditEvent.Severity.SENSITIVE,
+            metadata={
+                'scope': 'filtered', 'count': orders.count(),
+                'filters': {key: value for key, value in filters.items() if value},
+            },
+        )
         return generate_orders_excel(
             list(orders), date_from, date_to, status_filter, filters=filters
         )

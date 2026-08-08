@@ -20,6 +20,7 @@ def health(request):
 
 urlpatterns = [
     path('staff/setup/<str:token>/', staff_setup, name='staff-setup'),
+    path('staff/security/', include('security.urls')),
     path('admin/writing-assistant/', writing_assistant, name='writing-assistant'),
     path('admin/', admin.site.urls),
 

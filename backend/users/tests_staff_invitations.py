@@ -6,6 +6,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from security.models import AuditEvent
 from .forms import StaffInvitationAdminForm
 from .models import StaffInvitation, User
 
@@ -214,16 +215,23 @@ class StaffInvitationTests(TestCase):
     @patch('users.admin.StaffInvitationAdmin._deliver', return_value=True)
     def test_owner_can_create_invitation_in_admin(self, _deliver):
         self.client.force_login(self.owner)
-        response = self.client.post(reverse('admin:users_staffinvitation_add'), {
-            'first_name': 'Kojo',
-            'last_name': 'Asare',
-            'company_email': '',
-            'delivery_email': 'kojo@example.com',
-            'role': self.role.name,
-            '_save': 'Save',
-        })
+        with patch('security.auth.verify_staff_code', return_value=(True, False)):
+            response = self.client.post(reverse('admin:users_staffinvitation_add'), {
+                'first_name': 'Kojo',
+                'last_name': 'Asare',
+                'company_email': '',
+                'delivery_email': 'kojo@example.com',
+                'role': self.role.name,
+                'invitation_reason': 'New catalogue manager',
+                'owner_password': 'OwnerPass!2026',
+                'owner_otp_token': '123456',
+                '_save': 'Save',
+            })
         self.assertEqual(response.status_code, 302)
         invitation = StaffInvitation.objects.get(delivery_email='kojo@example.com')
         self.assertEqual(invitation.company_email, 'kojo.asare@legitorganic.com')
         self.assertEqual(invitation.invited_by, self.owner)
         self.assertTrue(invitation.token_digest)
+        event = AuditEvent.objects.get(action='staff.invited')
+        self.assertEqual(event.reason, 'New catalogue manager')
+        self.assertEqual(event.target_id, str(invitation.pk))

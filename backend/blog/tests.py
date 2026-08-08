@@ -86,6 +86,31 @@ class GenerationTests(TestCase):
         with self.assertRaises(ValueError):
             generate_post('topic', [{'title': 'S', 'snippet': 'x', 'url': 'http://e/1', 'source': 'Web'}])
 
+    @mock.patch('blog.generation.call_groq')
+    def test_research_source_html_is_escaped_and_unsafe_urls_rejected(self, m_call):
+        m_call.return_value = {
+            'title': 'T', 'excerpt': 'E', 'tags': 'a', 'content_html': '<p>Safe</p>',
+        }
+        from blog.generation import generate_post
+        draft = generate_post('topic', [
+            {
+                'title': '<img src=x onerror=alert(1)>', 'snippet': 'x',
+                'url': 'https://example.com/safe', 'source': 'Web',
+            },
+            {
+                'title': 'Unsafe attribute URL', 'snippet': 'x',
+                'url': 'https://example.com/?q=\" onmouseover=alert(1)', 'source': 'Web',
+            },
+            {
+                'title': 'Unsafe protocol', 'snippet': 'x',
+                'url': 'javascript:alert(1)', 'source': 'Web',
+            },
+        ])
+        self.assertNotIn('<img', draft['content'])
+        self.assertNotIn('javascript:', draft['content'])
+        self.assertNotIn('onmouseover=', draft['content'])
+        self.assertIn('&lt;img', draft['content'])
+
 
 class ResearchTests(TestCase):
     def test_web_search_disabled_without_key(self):

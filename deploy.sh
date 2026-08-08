@@ -13,6 +13,7 @@ cd backend
 source venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py setup_groups
 python manage.py collectstatic --noinput
 deactivate
 

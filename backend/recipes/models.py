@@ -28,6 +28,9 @@ class Recipe(models.Model):
         help_text='YouTube or video URL for recipe preparation video'
     )
     is_default = models.BooleanField(default=False, help_text='Curated by Legit Organic')
+    is_published = models.BooleanField(
+        default=True, help_text='Uncheck to archive this recipe from the public website.'
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='recipes'
