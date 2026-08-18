@@ -339,8 +339,14 @@ class SeevCashWebhookView(APIView):
                 )
                 payload_amount = _webhook_value(payload, {'finalamount', 'amount'})
                 try:
-                    payload_amount = int(payload_amount)
-                except (TypeError, ValueError):
+                    webhook_amount = Decimal(str(payload_amount))
+                    if webhook_amount == order.final_amount:
+                        payload_amount = expected_minor
+                    elif webhook_amount == Decimal(expected_minor):
+                        payload_amount = expected_minor
+                    else:
+                        payload_amount = int(webhook_amount)
+                except (TypeError, ValueError, ArithmeticError):
                     payload_amount = expected_minor
                 payload_currency = _webhook_value(payload, {'currency'})
                 transaction_id = _webhook_value(

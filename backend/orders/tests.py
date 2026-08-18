@@ -219,6 +219,20 @@ class SeevCashWebhookTests(TestCase):
         self.assertEqual(self.order.payment_status, 'success')
         self.assertEqual(self.order.provider_transaction_id, 'txn-nested')
 
+    def test_signed_success_accepts_webhook_amount_in_major_units(self):
+        self.order.checkout_reference = 'PAY-MAJOR-UNITS'
+        self.order.save(update_fields=['checkout_reference'])
+        response = self.post_event(payload={
+            'data': {
+                'checkoutReference': 'PAY-MAJOR-UNITS',
+                'amount': '50.00',
+                'currency': 'GHS',
+            }
+        })
+        self.assertEqual(response.status_code, 200)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, 'success')
+
     @patch('orders.views.verify_checkout')
     def test_same_delivery_and_retry_delivery_are_idempotent(self, mock_verify):
         mock_verify.return_value = seevcash_ok(reference='SEEV-WEBHOOK')
