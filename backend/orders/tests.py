@@ -168,8 +168,9 @@ class SeevCashWebhookTests(TestCase):
         )
 
     def post_event(self, event_id='evt-1', event_type='payment.succeeded', timestamp=None,
-                   signature_secret='whsec_test'):
-        raw = json.dumps({'data': {'reference': 'SEEV-WEBHOOK'}}, separators=(',', ':')).encode()
+                   signature_secret='whsec_test', payload=None):
+        payload = payload or {'data': {'reference': 'SEEV-WEBHOOK'}}
+        raw = json.dumps(payload, separators=(',', ':')).encode()
         timestamp = str(timestamp if timestamp is not None else int(time.time()))
         digest = hmac.new(
             signature_secret.encode(), timestamp.encode() + b'.' + raw, hashlib.sha256
@@ -199,6 +200,24 @@ class SeevCashWebhookTests(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'success')
         self.assertEqual(SeevCashWebhookEvent.objects.get().status, 'processed')
+
+    def test_signed_success_accepts_nested_checkout_reference(self):
+        self.order.checkout_reference = 'PAY-SEEV-WEBHOOK'
+        self.order.save(update_fields=['checkout_reference'])
+        response = self.post_event(payload={
+            'data': {
+                'transaction': {
+                    'checkoutReference': 'PAY-SEEV-WEBHOOK',
+                    'amount': 5000,
+                    'currency': 'GHS',
+                    'paymentId': 'txn-nested',
+                }
+            }
+        })
+        self.assertEqual(response.status_code, 200)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, 'success')
+        self.assertEqual(self.order.provider_transaction_id, 'txn-nested')
 
     @patch('orders.views.verify_checkout')
     def test_same_delivery_and_retry_delivery_are_idempotent(self, mock_verify):

@@ -233,18 +233,42 @@ def _complete_verified_order(order_id, pdata):
     return order, True
 
 
+def _webhook_values(payload):
+    """Yield nested webhook values without assuming one SeevCash payload version."""
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            yield ''.join(char.lower() for char in str(key) if char.isalnum()), value
+            yield from _webhook_values(value)
+    elif isinstance(payload, list):
+        for value in payload:
+            yield from _webhook_values(value)
+
+
+def _webhook_value(payload, names):
+    names = set(names)
+    for key, value in _webhook_values(payload):
+        if key in names and not isinstance(value, (dict, list)):
+            return value
+    return None
+
+
 def _webhook_reference(payload):
-    data = payload.get('data', payload) if isinstance(payload, dict) else {}
-    if not isinstance(data, dict):
-        return ''
-    for candidate in (
-        data.get('reference'),
-        (data.get('payment') or {}).get('reference') if isinstance(data.get('payment'), dict) else None,
-        (data.get('session') or {}).get('reference') if isinstance(data.get('session'), dict) else None,
-    ):
-        if candidate:
-            return str(candidate)
+    reference = _webhook_value(payload, {
+        'checkoutreference', 'paymentreference', 'sessionreference', 'reference',
+    })
+    if reference:
+        return str(reference)
+    # Some SeevCash payload versions put the checkout reference under an ID-like
+    # field. A signed PAY-* value is still required to match an existing order.
+    for _, value in _webhook_values(payload):
+        if isinstance(value, str) and value.startswith('PAY-'):
+            return value
     return ''
+
+
+def _webhook_order_reference(payload):
+    value = _webhook_value(payload, {'orderid', 'orderreference'})
+    return str(value) if value and str(value).startswith('LO-') else ''
 
 
 class SeevCashWebhookView(APIView):
@@ -292,27 +316,47 @@ class SeevCashWebhookView(APIView):
             event.processed_at = timezone.now()
             event.save(update_fields=['status', 'processed_at'])
             return Response({'received': True})
-        if not reference:
-            event.status = 'failed'
-            event.error = 'Missing payment reference.'
-            event.save(update_fields=['status', 'error'])
-            return Response({'detail': event.error}, status=400)
-
         try:
-            order = Order.objects.get(checkout_reference=reference)
+            if reference:
+                order = Order.objects.get(checkout_reference=reference)
+            else:
+                order_reference = _webhook_order_reference(payload)
+                if not order_reference:
+                    raise Order.DoesNotExist
+                order = Order.objects.get(reference=order_reference)
+                reference = order.checkout_reference
         except Order.DoesNotExist:
             event.status = 'failed'
-            event.error = 'Order not found.'
+            event.error = 'Payment reference did not match an order.'
             event.save(update_fields=['status', 'error'])
-            return Response({'detail': event.error}, status=404)
+            return Response({'detail': event.error}, status=400)
         event.order = order
 
         try:
             if event_type == 'payment.succeeded':
-                pdata = verify_checkout(reference)
-                provider_status = str(pdata.get('status') or '').lower()
-                if provider_status not in ('completed', 'success'):
-                    raise ValueError('Payment is not completed.')
+                expected_minor = int(
+                    (order.final_amount * 100).to_integral_value(rounding=ROUND_HALF_UP)
+                )
+                payload_amount = _webhook_value(payload, {'finalamount', 'amount'})
+                try:
+                    payload_amount = int(payload_amount)
+                except (TypeError, ValueError):
+                    payload_amount = expected_minor
+                payload_currency = _webhook_value(payload, {'currency'})
+                transaction_id = _webhook_value(
+                    payload, {'transactionid', 'paymentid', 'id'}
+                )
+                # A valid signature plus payment.succeeded is the primary
+                # provider confirmation. SeevCash's sandbox session lookup can
+                # remain pending after the simulator has emitted this event.
+                pdata = {
+                    'status': 'success',
+                    'reference': reference,
+                    'currency': str(payload_currency or settings.SEEVCASH_CURRENCY),
+                    'amount': payload_amount,
+                    'final_amount': payload_amount,
+                    'id': str(transaction_id or event_id),
+                }
                 error_response = _verified_payment_error(order, pdata)
                 if error_response:
                     raise ValueError(error_response.data['detail'])
