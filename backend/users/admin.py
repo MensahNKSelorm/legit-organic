@@ -6,7 +6,8 @@ from django.utils.html import format_html
 from django.urls import reverse
 from unfold.admin import ModelAdmin, StackedInline
 from .models import (
-    User, Customer, Staff, B2BProfile, B2BDiscountTier, StaffInvitation,
+    User, Customer, Staff, B2BProfile, BusinessPrice, BusinessPriceList,
+    StaffInvitation,
 )
 from .forms import (
     StaffAccessAdminForm, StaffInvitationAdminForm,
@@ -410,19 +411,27 @@ class StaffInvitationAdmin(ModelAdmin):
         return False
 
 
-@admin.register(B2BDiscountTier)
-class B2BDiscountTierAdmin(ModelAdmin):
-    list_display = ['name', 'discount_percent', 'min_order_amount', 'max_order_amount', 'description']
-    ordering = ['min_order_amount']
+class BusinessPriceInline(StackedInline):
+    model = BusinessPrice
+    extra = 0
+    autocomplete_fields = ['product']
+
+
+@admin.register(BusinessPriceList)
+class BusinessPriceListAdmin(ModelAdmin):
+    list_display = ['name', 'is_default', 'is_active', 'updated_at']
+    list_filter = ['is_default', 'is_active']
+    search_fields = ['name', 'description']
+    inlines = [BusinessPriceInline]
 
 
 @admin.register(B2BProfile)
 class B2BProfileAdmin(ModelAdmin):
     list_display = [
         'company_name', 'get_email', 'business_type', 'status',
-        'tier', 'created_at',
+        'price_list', 'created_at',
     ]
-    list_filter = ['status', 'business_type', 'tier']
+    list_filter = ['status', 'business_type', 'price_list']
     search_fields = ['company_name', 'business_email', 'contact_person', 'business_phone']
     ordering = ['-created_at']
     readonly_fields = ['user', 'created_at', 'updated_at', 'approved_at']
@@ -437,7 +446,7 @@ class B2BProfileAdmin(ModelAdmin):
             ),
         }),
         ('Review', {
-            'fields': ('status', 'tier', 'rejection_reason', 'notes'),
+            'fields': ('status', 'price_list', 'rejection_reason', 'notes'),
         }),
         ('Timestamps', {
             'fields': ('approved_at', 'created_at', 'updated_at'),
@@ -462,6 +471,10 @@ class B2BProfileAdmin(ModelAdmin):
 
         if obj.status == 'approved' and previous_status != 'approved':
             obj.approved_at = timezone.now()
+            if not obj.price_list:
+                obj.price_list = BusinessPriceList.objects.filter(
+                    is_default=True, is_active=True
+                ).first()
 
             if not obj.user:
                 from django.contrib.auth import get_user_model

@@ -4,7 +4,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://legitorganic.com'
 
   const staticPages = [
-    '', '/products', '/blog', '/recipes',
+    '', '/products', '/subscriptions', '/b2b', '/blog', '/recipes',
     '/about', '/contact', '/privacy-policy', '/terms-of-service',
   ].map(path => ({
     url: `${baseUrl}${path}`,

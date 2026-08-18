@@ -4,7 +4,9 @@ from django.db import transaction
 from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
-from .models import User, WishlistItem, B2BProfile, B2BDiscountTier
+from .models import (
+    B2BProfile, BusinessPrice, BusinessPriceList, User, WishlistItem,
+)
 from products.serializers import ProductSerializer
 
 
@@ -155,17 +157,26 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         return item
 
 
-class B2BDiscountTierSerializer(serializers.ModelSerializer):
+class BusinessPriceSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
     class Meta:
-        model = B2BDiscountTier
+        model = BusinessPrice
         fields = [
-            'id', 'name', 'min_order_amount', 'max_order_amount',
-            'discount_percent', 'description',
+            'id', 'product', 'unit_price', 'minimum_quantity', 'is_available',
         ]
 
 
+class BusinessPriceListSerializer(serializers.ModelSerializer):
+    prices = BusinessPriceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = BusinessPriceList
+        fields = ['id', 'name', 'description', 'prices']
+
+
 class B2BProfileSerializer(serializers.ModelSerializer):
-    tier = B2BDiscountTierSerializer(read_only=True)
+    price_list = BusinessPriceListSerializer(read_only=True)
     business_type_display = serializers.CharField(
         source='get_business_type_display', read_only=True
     )
@@ -180,9 +191,9 @@ class B2BProfileSerializer(serializers.ModelSerializer):
             'contact_person', 'business_phone', 'business_email',
             'business_address', 'business_registration',
             'estimated_monthly_order', 'status', 'status_display',
-            'tier', 'rejection_reason', 'approved_at', 'created_at',
+            'price_list', 'rejection_reason', 'approved_at', 'created_at',
         ]
         read_only_fields = [
-            'id', 'status', 'status_display', 'tier', 'rejection_reason',
+            'id', 'status', 'status_display', 'price_list', 'rejection_reason',
             'approved_at', 'created_at',
         ]

@@ -66,6 +66,32 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [showGuestModal, setShowGuestModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [checkoutMode, setCheckoutMode] = useState<'seevcash' | 'whatsapp'>('seevcash')
+  const [checkoutError, setCheckoutError] = useState('')
+  const [pendingSeevOrder, setPendingSeevOrder] = useState<string | null>(null)
+
+  const showCheckoutError = (error: unknown) => {
+    setCheckoutError(
+      error instanceof Error
+        ? error.message
+        : 'We could not open SeevCash checkout. Please try again.'
+    )
+  }
+
+  const openExistingSeevCheckout = async (reference: string, guest: boolean) => {
+    setCheckoutError('')
+    setIsLoading(true)
+    try {
+      const checkout = guest
+        ? await api.orders.initializeGuestPayment(reference)
+        : await api.orders.initializePayment(reference)
+      window.location.assign(checkout.checkout_url)
+    } catch (error) {
+      showCheckoutError(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const buildOrderLines = () => {
     const itemsList = items
@@ -126,6 +152,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
   }
 
   const handleWhatsAppOrder = async () => {
+    setCheckoutMode('whatsapp')
     if (!user) {
       setShowGuestModal(true)
       return
@@ -148,8 +175,67 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
     })
   }
 
+  const startSeevCashOrder = async (deliveryAddress: string, details: AddressData) => {
+    if (pendingSeevOrder) {
+      await openExistingSeevCheckout(pendingSeevOrder, false)
+      return
+    }
+    setCheckoutError('')
+    setIsLoading(true)
+    try {
+      const order = await api.orders.create({
+        items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
+        delivery_address: deliveryAddress,
+        phone_number: details.phone_number,
+        house_number: details.house_number,
+        street_address: details.street_address,
+        city: details.city,
+        delivery_region: details.delivery_region,
+        promo_code: promoCode || undefined,
+        order_source: 'seevcash',
+      })
+      setPendingSeevOrder(order.reference)
+      const checkout = await api.orders.initializePayment(order.reference)
+      window.location.assign(checkout.checkout_url)
+    } catch (error) {
+      showCheckoutError(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSeevCashOrder = async () => {
+    setCheckoutMode('seevcash')
+    setCheckoutError('')
+    if (pendingSeevOrder) {
+      await openExistingSeevCheckout(pendingSeevOrder, !user)
+      return
+    }
+    if (!user) {
+      setShowGuestModal(true)
+      return
+    }
+    const hasDeliveryDetails =
+      user.phone_number && user.street_address && user.city && user.delivery_region
+    if (!hasDeliveryDetails) {
+      setShowAddressModal(true)
+      return
+    }
+    await startSeevCashOrder(buildDeliveryAddress(user), {
+      phone_number: user.phone_number || '',
+      house_number: user.house_number || '',
+      street_address: user.street_address || '',
+      city: user.city || '',
+      delivery_region: user.delivery_region || '',
+    })
+  }
+
   const handleAddressSaved = async (addressData: AddressData) => {
     setShowAddressModal(false)
+    if (checkoutMode === 'seevcash') {
+      await startSeevCashOrder(buildDeliveryAddress(addressData), addressData)
+      return
+    }
     setIsLoading(true)
     await openWhatsApp(
       buildDeliveryAddress(addressData), addressData,
@@ -165,6 +251,35 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
     const { itemsList, discountLine, finalTotal } = buildOrderLines()
     const customerLine = `*Customer:* ${guestData.first_name} ${guestData.last_name}\n*Phone:* ${guestData.phone_number}`
 
+    if (checkoutMode === 'seevcash') {
+      setCheckoutError('')
+      try {
+        const order = await api.orders.createGuest({
+          items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
+          delivery_address: deliveryAddress,
+          guest_name: `${guestData.first_name} ${guestData.last_name}`,
+          guest_phone: guestData.phone_number,
+          phone_number: guestData.phone_number,
+          house_number: guestData.house_number,
+          street_address: guestData.street_address,
+          city: guestData.city,
+          delivery_region: guestData.delivery_region,
+          guest_email: guestData.email,
+          order_source: 'seevcash',
+          promo_code: promoCode || undefined,
+        })
+        setPendingSeevOrder(order.reference)
+        const checkout = await api.orders.initializeGuestPayment(order.reference)
+        window.location.assign(checkout.checkout_url)
+        return
+      } catch (error) {
+        showCheckoutError(error)
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
+
     let reference: string | undefined
     try {
       const order = await api.orders.createGuest({
@@ -177,7 +292,7 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
         street_address: guestData.street_address,
         city: guestData.city,
         delivery_region: guestData.delivery_region,
-        guest_email: '',
+        guest_email: guestData.email,
         order_source: 'whatsapp',
         promo_code: promoCode || undefined,
       })
@@ -201,6 +316,18 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
 
   return (
     <>
+      {checkoutError && (
+        <div role="alert" className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {checkoutError} Your order is safe—use the button below to retry.
+        </div>
+      )}
+      <button
+        onClick={handleSeevCashOrder}
+        disabled={items.length === 0 || isLoading}
+        className="mb-3 w-full rounded-xl bg-[#0D3B2A] py-3 font-semibold text-white transition-colors hover:bg-[#174F3A] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isLoading && checkoutMode === 'seevcash' ? 'Opening secure checkout…' : 'Pay securely with SeevCash'}
+      </button>
       <button
         onClick={handleWhatsAppOrder}
         disabled={items.length === 0 || isLoading}

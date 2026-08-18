@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../tokens.css";
 @plugin "@tailwindcss/typography";
 @config "../tailwind.config.ts";
 
@@ -60,9 +61,11 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
 
   body {
+    overflow-x: clip;
     background-color: #faf7f0;
     color: #333333;
     font-family: "Cabinet Grotesk", system-ui, sans-serif;
@@ -71,7 +74,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: "Boska", Georgia, serif;
     line-height: 1.2;
   }
@@ -104,7 +112,7 @@
 /* ── Layout utility ──────────────────────────────────────────── */
 .page-container {
   width: 100%;
-  max-width: 80rem;   /* 1280px — same as Tailwind max-w-7xl */
+  max-width: 80rem; /* 1280px — same as Tailwind max-w-7xl */
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.5rem;
@@ -114,28 +122,52 @@
 /* ── Dark mode ───────────────────────────────────────────────── */
 
 /* Section backgrounds */
-html.dark .bg-cream  { background-color: #1a1a1a; }
-html.dark .bg-beige  { background-color: #222222; }
+html.dark .bg-cream {
+  background-color: #1a1a1a;
+}
+html.dark .bg-beige {
+  background-color: #222222;
+}
 
 /* Card / surface backgrounds */
-html.dark .bg-mist-white { background-color: #2a2a2a; }
+html.dark .bg-mist-white {
+  background-color: #2a2a2a;
+}
 
 /* Border overrides so card borders stay visible */
-html.dark .border-sand { border-color: #3a3a3a; }
+html.dark .border-sand {
+  border-color: #3a3a3a;
+}
 
 /* Body text overrides — charcoal becomes light on dark surfaces */
-html.dark .text-charcoal { color: #faf7f0; }
+html.dark .text-charcoal {
+  color: #faf7f0;
+}
 
 /* Opacity variants used for body copy on cards */
-html.dark .text-charcoal\/70 { color: rgba(250, 247, 240, 0.7); }
-html.dark .text-charcoal\/80 { color: rgba(250, 247, 240, 0.8); }
-html.dark .text-charcoal\/50 { color: rgba(250, 247, 240, 0.5); }
-html.dark .text-charcoal\/60 { color: rgba(250, 247, 240, 0.6); }
+html.dark .text-charcoal\/70 {
+  color: rgba(250, 247, 240, 0.7);
+}
+html.dark .text-charcoal\/80 {
+  color: rgba(250, 247, 240, 0.8);
+}
+html.dark .text-charcoal\/50 {
+  color: rgba(250, 247, 240, 0.5);
+}
+html.dark .text-charcoal\/60 {
+  color: rgba(250, 247, 240, 0.6);
+}
 
 /* ── Hero image transition ───────────────────────────────────── */
 @keyframes hero-text-in {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-text-enter {
@@ -143,9 +175,15 @@ html.dark .text-charcoal\/60 { color: rgba(250, 247, 240, 0.6); }
 }
 
 @keyframes whatsapp-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
-  70%  { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
 }
 .whatsapp-pulse {
   animation: whatsapp-pulse 2s infinite;
@@ -242,12 +280,18 @@ html.dark .account-page .account-panel {
   font-size: 1.14rem;
   line-height: 1.85;
 }
-html.dark .journal-article { color: #D9E4DB; }
+html.dark .journal-article {
+  color: #d9e4db;
+}
 
-.journal-article > p { margin: 0 0 1.4rem; }
+.journal-article > p {
+  margin: 0 0 1.4rem;
+}
 
 /* Lead paragraph gets a drop cap, like a printed feature. */
-.journal-article > p:first-of-type { font-size: 1.2rem; }
+.journal-article > p:first-of-type {
+  font-size: 1.2rem;
+}
 .journal-article > p:first-of-type::first-letter {
   font-family: "Boska", Georgia, serif;
   font-weight: 500;
@@ -255,9 +299,11 @@ html.dark .journal-article { color: #D9E4DB; }
   font-size: 3.9rem;
   line-height: 0.78;
   padding: 0.35rem 0.6rem 0 0;
-  color: #0D3B2A;
+  color: #0d3b2a;
 }
-html.dark .journal-article > p:first-of-type::first-letter { color: #FAF7F0; }
+html.dark .journal-article > p:first-of-type::first-letter {
+  color: #faf7f0;
+}
 
 .journal-article h2 {
   font-family: "Boska", Georgia, serif;
@@ -265,56 +311,92 @@ html.dark .journal-article > p:first-of-type::first-letter { color: #FAF7F0; }
   font-size: 1.9rem;
   line-height: 1.15;
   letter-spacing: -0.02em;
-  color: #0D3B2A;
+  color: #0d3b2a;
   margin: 2.8rem 0 1rem;
   padding-top: 1.4rem;
   border-top: 1px solid rgba(13, 59, 42, 0.18);
 }
-html.dark .journal-article h2 { color: #FAF7F0; border-top-color: rgba(250, 247, 240, 0.16); }
+html.dark .journal-article h2 {
+  color: #faf7f0;
+  border-top-color: rgba(250, 247, 240, 0.16);
+}
 
 .journal-article h3 {
   font-family: "Boska", Georgia, serif;
   font-weight: 500;
   font-size: 1.42rem;
-  color: #0D3B2A;
+  color: #0d3b2a;
   margin: 2rem 0 0.7rem;
 }
-html.dark .journal-article h3 { color: #FAF7F0; }
+html.dark .journal-article h3 {
+  color: #faf7f0;
+}
 
 .journal-article a {
-  color: #0D3B2A;
+  color: #0d3b2a;
   text-decoration: underline;
-  text-decoration-color: #F4C430;
+  text-decoration-color: #f4c430;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
-html.dark .journal-article a { color: #FAF7F0; }
-.journal-article a:hover { color: #2E7D32; }
+html.dark .journal-article a {
+  color: #faf7f0;
+}
+.journal-article a:hover {
+  color: #2e7d32;
+}
 
-.journal-article strong { color: #0D3B2A; font-weight: 700; }
-html.dark .journal-article strong { color: #FAF7F0; }
+.journal-article strong {
+  color: #0d3b2a;
+  font-weight: 700;
+}
+html.dark .journal-article strong {
+  color: #faf7f0;
+}
 
-.journal-article ul, .journal-article ol { margin: 0 0 1.4rem; padding-left: 1.4rem; }
-.journal-article li { margin: 0 0 0.5rem; }
-.journal-article ul li::marker { color: #F4C430; }
-.journal-article ol li::marker { color: #F4C430; font-weight: 700; }
+.journal-article ul,
+.journal-article ol {
+  margin: 0 0 1.4rem;
+  padding-left: 1.4rem;
+}
+.journal-article li {
+  margin: 0 0 0.5rem;
+}
+.journal-article ul li::marker {
+  color: #f4c430;
+}
+.journal-article ol li::marker {
+  color: #f4c430;
+  font-weight: 700;
+}
 
 .journal-article blockquote {
-  border-left: 3px solid #F4C430;
+  border-left: 3px solid #f4c430;
   margin: 1.9rem 0;
   padding: 0.2rem 0 0.2rem 1.4rem;
   font-family: "Boska", Georgia, serif;
   font-size: 1.35rem;
   font-style: italic;
   line-height: 1.4;
-  color: #0D3B2A;
+  color: #0d3b2a;
 }
-html.dark .journal-article blockquote { color: #FAF7F0; }
+html.dark .journal-article blockquote {
+  color: #faf7f0;
+}
 
 /* "Further reading" heading + source list the generator appends. */
-.journal-article h3 + ul { list-style: none; padding-left: 0; }
-.journal-article h3 + ul li { border-top: 1px solid rgba(13, 59, 42, 0.14); padding: 0.6rem 0; margin: 0; }
-html.dark .journal-article h3 + ul li { border-top-color: rgba(250, 247, 240, 0.14); }
+.journal-article h3 + ul {
+  list-style: none;
+  padding-left: 0;
+}
+.journal-article h3 + ul li {
+  border-top: 1px solid rgba(13, 59, 42, 0.14);
+  padding: 0.6rem 0;
+  margin: 0;
+}
+html.dark .journal-article h3 + ul li {
+  border-top-color: rgba(250, 247, 240, 0.14);
+}
 
 .legal-document section {
   display: grid;
@@ -369,12 +451,22 @@ html.dark .journal-article h3 + ul li { border-top-color: rgba(250, 247, 240, 0.
   mix-blend-mode: soft-light;
 }
 
-.reveal-up { animation: reveal-up 0.85s cubic-bezier(.2,.75,.2,1) both; }
-.reveal-up-delay { animation: reveal-up 0.85s .14s cubic-bezier(.2,.75,.2,1) both; }
+.reveal-up {
+  animation: reveal-up 0.85s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+.reveal-up-delay {
+  animation: reveal-up 0.85s 0.14s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
 
 @keyframes reveal-up {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .market-ribbon-track {
@@ -383,11 +475,15 @@ html.dark .journal-article h3 + ul li { border-top-color: rgba(250, 247, 240, 0.
 }
 
 @keyframes market-ribbon {
-  to { transform: translateX(-12.5%); }
+  to {
+    transform: translateX(-12.5%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

@@ -1,7 +1,6 @@
 import logging
 import secrets
 from datetime import timedelta
-from decimal import Decimal
 from django.conf import settings
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -10,10 +9,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
-from .models import User, WishlistItem, B2BProfile, B2BDiscountTier
+from .models import User, WishlistItem, B2BProfile, BusinessPriceList
 from .serializers import (
     RegisterSerializer, UserSerializer, WishlistItemSerializer,
-    B2BProfileSerializer, B2BDiscountTierSerializer,
+    B2BProfileSerializer, BusinessPriceListSerializer,
 )
 from .emails import (
     send_welcome_email, send_verification_email,
@@ -211,6 +210,17 @@ class B2BApplyView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     throttle_scope = 'b2b_apply'
 
+    def create(self, request, *args, **kwargs):
+        # B2B applications are public and were being targeted by distributed
+        # bots. Per-IP throttling is not sufficient when addresses rotate, so
+        # enforce the same server-verified Turnstile boundary as registration.
+        if not verify_turnstile(request.data.get('turnstile_token'), _client_ip(request)):
+            return Response(
+                {'detail': 'Captcha verification failed. Please try again.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         email = self.request.data.get('business_email', '')
         if B2BProfile.objects.filter(business_email=email).exists():
@@ -283,24 +293,18 @@ class B2BStatusView(APIView):
 
     def get(self, request):
         try:
-            profile = B2BProfile.objects.select_related('tier').get(user=request.user)
+            profile = B2BProfile.objects.select_related('price_list').get(user=request.user)
         except B2BProfile.DoesNotExist:
             return Response({'status': None}, status=status.HTTP_200_OK)
         return Response(B2BProfileSerializer(profile).data, status=status.HTTP_200_OK)
 
 
-class B2BDiscountTiersView(generics.ListAPIView):
-    queryset = B2BDiscountTier.objects.all()
-    serializer_class = B2BDiscountTierSerializer
-    permission_classes = []
-
-
-class B2BDiscountCalculateView(APIView):
+class B2BPriceListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
+    def get(self, request):
         try:
-            profile = B2BProfile.objects.select_related('tier').get(
+            profile = B2BProfile.objects.select_related('price_list').get(
                 user=request.user, status='approved'
             )
         except B2BProfile.DoesNotExist:
@@ -309,28 +313,13 @@ class B2BDiscountCalculateView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        try:
-            order_total = Decimal(str(request.data.get('order_total', 0)))
-        except Exception:
-            return Response({'error': 'Invalid order_total.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        tier = profile.tier
-        if not tier:
-            return Response({
-                'discount_percent': '0.00',
-                'discount_amount': '0.00',
-                'final_amount': str(order_total),
-                'tier': None,
-            })
-
-        discount_amount = (order_total * tier.discount_percent / Decimal('100')).quantize(Decimal('0.01'))
-        final_amount = order_total - discount_amount
-
+        price_list = profile.price_list or BusinessPriceList.objects.filter(
+            is_default=True, is_active=True
+        ).first()
+        if not price_list:
+            return Response({'price_list': None})
         return Response({
-            'discount_percent': str(tier.discount_percent),
-            'discount_amount': str(discount_amount),
-            'final_amount': str(final_amount),
-            'tier': B2BDiscountTierSerializer(tier).data,
+            'price_list': BusinessPriceListSerializer(price_list).data,
         })
 
 

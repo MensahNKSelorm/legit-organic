@@ -36,8 +36,8 @@ class OrderAdminForm(forms.ModelForm):
         old = Order.objects.get(pk=self.instance.pk)
         new_payment = cleaned.get('payment_status', old.payment_status)
         if new_payment != old.payment_status:
-            if old.order_source == 'paystack':
-                self.add_error('payment_status', 'Paystack payment state is controlled by verified Paystack responses.')
+            if old.order_source in ('paystack', 'seevcash', 'subscription'):
+                self.add_error('payment_status', 'Gateway payment state is controlled by verified provider responses.')
             if not (cleaned.get('payment_change_reason') or '').strip():
                 self.add_error('payment_change_reason', 'Explain why this payment correction is necessary.')
             if self.request is None or not self.request.user.check_password(

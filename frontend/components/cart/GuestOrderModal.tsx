@@ -7,6 +7,7 @@ import LocationPicker from '@/components/ui/LocationPicker'
 export interface GuestData {
   first_name: string
   last_name: string
+  email: string
   phone_number: string
   house_number: string
   street_address: string
@@ -43,12 +44,14 @@ const GHANA_REGIONS = [
 ]
 
 const PHONE_RE = /^(\+233|0)[0-9]{9}$/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type FormErrors = Partial<Record<keyof GuestData, string>>
 
 export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrderModalProps) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [houseNumber, setHouseNumber] = useState('')
   const [streetAddress, setStreetAddress] = useState('')
@@ -72,6 +75,7 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
     if (isOpen) {
       setFirstName('')
       setLastName('')
+      setEmail('')
       setPhoneNumber('')
       setHouseNumber('')
       setStreetAddress('')
@@ -87,6 +91,7 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
     const next: FormErrors = {}
     if (!firstName.trim()) next.first_name = 'First name is required.'
     if (!lastName.trim()) next.last_name = 'Last name is required.'
+    if (!EMAIL_RE.test(email.trim())) next.email = 'Enter a valid email address.'
     if (!phoneNumber.trim()) {
       next.phone_number = 'Phone number is required.'
     } else if (!PHONE_RE.test(phoneNumber.replace(/\s/g, ''))) {
@@ -105,6 +110,7 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
     onSubmit({
       first_name: firstName.trim(),
       last_name: lastName.trim(),
+      email: email.trim(),
       phone_number: phoneNumber.replace(/\s/g, ''),
       house_number: houseNumber.trim(),
       street_address: streetAddress.trim(),
@@ -147,7 +153,7 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
             <div>
               <h2 className="font-display text-lg font-bold text-[#0D3B2A]">Quick Order Details</h2>
               <p className="text-xs text-[#5B3E31] mt-0.5">
-                No account needed — just fill in your details and we&apos;ll connect you via WhatsApp
+                No account needed — enter your delivery and SeevCash receipt details
               </p>
             </div>
             <button
@@ -195,6 +201,20 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
                     <p className="mt-1 text-xs text-red-500">{errors.last_name}</p>
                   )}
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#0D3B2A] mb-1.5">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })) }}
+                  placeholder="you@example.com"
+                  className={errors.email ? inputErr : inputOk}
+                />
+                {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
               </div>
 
               {/* Phone */}

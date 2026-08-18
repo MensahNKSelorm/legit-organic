@@ -12,9 +12,9 @@ import NotificationBell from '@/components/ui/NotificationBell'
 const navLinks = [
   { label: 'Home',     href: '/' },
   { label: 'Products', href: '/products' },
+  { label: 'Weekly',   href: '/subscriptions' },
   { label: 'Recipes',  href: '/recipes' },
   { label: 'Blog',     href: '/blog' },
-  { label: 'About',    href: '/about' },
 ]
 
 function SunIcon() {
@@ -100,7 +100,8 @@ export default function Navbar() {
     localStorage.setItem('theme', next ? 'dark' : 'light')
   }
 
-  const lightTopRoutes = pathname === '/blog' || pathname === '/profile'
+  const lightTopRoutes = pathname === '/blog' || pathname === '/profile' ||
+                         pathname.startsWith('/subscriptions') || pathname.startsWith('/b2b')
   const transparent = !scrolled && !isAuthPage && !lightTopRoutes
 
   const btnBase = 'px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap'

@@ -1,19 +1,26 @@
 from decimal import ROUND_HALF_UP, Decimal
+import hashlib
+import hmac
+import json
+import time
 
-import requests
 from django.conf import settings
 from django.db import transaction
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Cart, CartItem, Order
+from .models import Cart, CartItem, Order, SeevCashWebhookEvent
 from .promo_models import PromoCode
 from .serializers import (
     CartSerializer, CartItemSerializer,
     OrderSerializer, CreateOrderSerializer,
 )
 from products.models import Product
+from legitorganic.seevcash import SeevCashError, create_checkout, verify_checkout
 
 
 class CartView(APIView):
@@ -85,17 +92,71 @@ class CreateOrderView(APIView):
         return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
 
+def _customer_name(order):
+    if order.user:
+        return order.user.get_full_name() or order.user.email
+    return order.guest_name
+
+
+class InitializePaymentView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, reference):
+        order = get_object_or_404(Order.objects.prefetch_related('items__product'), reference=reference)
+        if order.user_id and (not request.user.is_authenticated or order.user_id != request.user.id):
+            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+        if order.payment_status == 'success':
+            return Response({'detail': 'This order is already paid.'}, status=status.HTTP_400_BAD_REQUEST)
+        email = order.user.email if order.user_id else order.guest_email
+        if not email:
+            return Response(
+                {'detail': 'A customer email is required for SeevCash checkout.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not settings.SEEVCASH_SECRET_KEY:
+            return Response(
+                {'detail': 'SeevCash payments are not configured.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        amount = int((order.final_amount * 100).to_integral_value(rounding=ROUND_HALF_UP))
+        try:
+            session = create_checkout(
+                recipient={
+                    'name': _customer_name(order), 'email': email,
+                    'phone': order.guest_phone, 'address': order.delivery_address,
+                },
+                amount_minor=amount,
+                redirect_url=f'{settings.FRONTEND_URL}/payment?order={order.reference}',
+                meta={'orderId': order.reference, 'kind': order.order_source},
+                idempotency_key=f'order-{order.pk}-checkout',
+                channels=['mobile_money'],
+            )
+        except SeevCashError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        order.payment_provider = 'seevcash'
+        order.checkout_reference = session.reference
+        order.checkout_url = session.checkout_url
+        order.checkout_expires_at = parse_datetime(session.expires_at) if session.expires_at else None
+        if order.order_source != 'subscription':
+            order.order_source = 'seevcash'
+        order.save(update_fields=[
+            'payment_provider', 'checkout_reference', 'checkout_url',
+            'checkout_expires_at', 'order_source', 'updated_at',
+        ])
+        return Response({'checkout_url': session.checkout_url, 'reference': session.reference})
+
+
 class VerifyPaymentView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        reference = request.data.get('reference')
-        if not reference:
+        session_reference = request.data.get('reference')
+        order_reference = request.data.get('order_reference')
+        if not session_reference and not order_reference:
             return Response({'detail': 'Reference is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            order = Order.objects.get(reference=reference, user=request.user)
-        except Order.DoesNotExist:
+        filters = {'checkout_reference': session_reference} if session_reference else {'reference': order_reference}
+        order = get_object_or_404(Order, **filters)
+        if order.user_id and (not request.user.is_authenticated or order.user_id != request.user.id):
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         # Idempotency: an already-verified order returns its current state and is not
@@ -103,94 +164,175 @@ class VerifyPaymentView(APIView):
         if order.payment_status == 'success':
             return Response(OrderSerializer(order).data)
 
-        secret_key = settings.PAYSTACK_SECRET_KEY
-        # Fail CLOSED: an order is never marked paid without a positive verification
-        # from Paystack. If verification cannot be performed, the payment stays pending.
-        if not secret_key:
+        provider_reference = session_reference or order.checkout_reference
+        if not provider_reference:
             return Response(
-                {'detail': 'Payment verification is not configured.'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                {'detail': 'This order has no SeevCash checkout.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-
         try:
-            resp = requests.get(
-                f'https://api.paystack.co/transaction/verify/{reference}',
-                headers={'Authorization': f'Bearer {secret_key}'},
-                timeout=15,
-            )
-        except requests.RequestException:
-            return Response(
-                {'detail': 'Could not reach the payment provider. Please try again.'},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            pdata = verify_checkout(provider_reference)
+        except SeevCashError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
-        try:
-            payload = resp.json()
-        except ValueError:
+        error_response = _verified_payment_error(order, pdata)
+        provider_status = str(pdata.get('status') or '').lower()
+        if provider_status not in ('completed', 'success'):
+            if provider_status in ('failed', 'cancelled'):
+                order.payment_status = 'failed'
+                order.save(update_fields=['payment_status'])
             return Response(
-                {'detail': 'Invalid response from the payment provider.'},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
-
-        pdata = payload.get('data') or {}
-        if not payload.get('status') or pdata.get('status') != 'success':
-            order.payment_status = 'failed'
-            order.save(update_fields=['payment_status'])
-            return Response(
-                {'detail': 'Payment verification failed.'},
+                {'detail': f'Payment is {provider_status or "not completed"}.'},
                 status=status.HTTP_402_PAYMENT_REQUIRED,
             )
 
-        # The transaction Paystack verified must be the one we asked about.
-        if pdata.get('reference') != reference:
-            return Response(
-                {'detail': 'Payment reference mismatch.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Currency must match what we charge in.
-        if (pdata.get('currency') or '').upper() != settings.PAYSTACK_CURRENCY.upper():
-            return Response(
-                {'detail': 'Payment currency mismatch.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Amount check. Paystack reports the amount in the minor unit (pesewas),
-        # i.e. the charged value × 100. Reject underpayment; overpayment is allowed.
-        expected_minor = int(
-            (order.final_amount * 100).to_integral_value(rounding=ROUND_HALF_UP)
-        )
-        paid_minor = pdata.get('amount')
-        if not isinstance(paid_minor, int) or paid_minor < expected_minor:
-            return Response(
-                {'detail': 'Payment amount mismatch.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if error_response:
+            return error_response
 
         # All checks passed — perform the state transition exactly once, even under
         # concurrent verification requests. select_for_update() serialises the two
         # requests; whichever loses the race reloads a row already marked 'success'
         # and returns without re-running the transition side effects (which fire
         # from Order.save(): confirmation email, status email, commissions).
-        with transaction.atomic():
-            locked = Order.objects.select_for_update().get(pk=order.pk)
-            if locked.payment_status == 'success':
-                return Response(OrderSerializer(locked).data)
-
-            locked.paystack_id = str(pdata.get('id', '') or '')
-            locked.payment_status = 'success'
-            locked.status = 'processing'
-            locked.save(update_fields=['payment_status', 'status', 'paystack_id'])
-            order = locked
-
-        try:
-            from users.emails import send_order_confirmation_email
-            if order.user:
-                send_order_confirmation_email(order.user, order)
-        except Exception:
-            pass  # Never let email failure break the payment confirmation
+        order, _ = _complete_verified_order(order.pk, pdata)
 
         return Response(OrderSerializer(order).data)
+
+
+def _verified_payment_error(order, pdata):
+    if str(pdata.get('reference') or '') != order.checkout_reference:
+        return Response({'detail': 'Payment reference mismatch.'}, status=400)
+    if (pdata.get('currency') or '').upper() != settings.SEEVCASH_CURRENCY.upper():
+        return Response({'detail': 'Payment currency mismatch.'}, status=400)
+    expected_minor = int((order.final_amount * 100).to_integral_value(rounding=ROUND_HALF_UP))
+    paid_minor = pdata.get('final_amount', pdata.get('amount'))
+    if not isinstance(paid_minor, int) or paid_minor < expected_minor:
+        return Response({'detail': 'Payment amount mismatch.'}, status=400)
+    return None
+
+
+def _complete_verified_order(order_id, pdata):
+    with transaction.atomic():
+        order = Order.objects.select_for_update().get(pk=order_id)
+        if order.payment_status == 'success':
+            return order, False
+        order.provider_transaction_id = str(pdata.get('id', '') or '')
+        order.payment_status = 'success'
+        order.status = 'processing'
+        order.save(update_fields=['payment_status', 'status', 'provider_transaction_id'])
+
+    if hasattr(order, 'subscription_week'):
+        from subscriptions.services import finalize_paid_week
+        finalize_paid_week(order.subscription_week.pk, pdata)
+    try:
+        from users.emails import send_order_confirmation_email
+        if order.user:
+            send_order_confirmation_email(order.user, order)
+    except Exception:
+        pass
+    return order, True
+
+
+def _webhook_reference(payload):
+    data = payload.get('data', payload) if isinstance(payload, dict) else {}
+    if not isinstance(data, dict):
+        return ''
+    for candidate in (
+        data.get('reference'),
+        (data.get('payment') or {}).get('reference') if isinstance(data.get('payment'), dict) else None,
+        (data.get('session') or {}).get('reference') if isinstance(data.get('session'), dict) else None,
+    ):
+        if candidate:
+            return str(candidate)
+    return ''
+
+
+class SeevCashWebhookView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        secret = settings.SEEVCASH_WEBHOOK_SECRET
+        if not secret:
+            return Response({'detail': 'Webhook signing is not configured.'}, status=503)
+
+        raw_body = request.body
+        event_id = request.headers.get('X-Seev-Event-ID', '')
+        event_type = request.headers.get('X-Seev-Event-Type', '')
+        timestamp = request.headers.get('X-Seev-Timestamp', '')
+        supplied_signature = request.headers.get('X-Seev-Signature', '')
+        try:
+            timestamp_value = int(timestamp)
+        except (TypeError, ValueError):
+            return Response({'detail': 'Invalid webhook timestamp.'}, status=401)
+        if abs(int(time.time()) - timestamp_value) > 300:
+            return Response({'detail': 'Stale webhook timestamp.'}, status=401)
+        signed = timestamp.encode() + b'.' + raw_body
+        expected = 'v1=' + hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, supplied_signature):
+            return Response({'detail': 'Invalid webhook signature.'}, status=401)
+        if not event_id or not event_type:
+            return Response({'detail': 'Missing webhook headers.'}, status=400)
+        try:
+            payload = json.loads(raw_body.decode('utf-8'))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return Response({'detail': 'Invalid JSON payload.'}, status=400)
+
+        payload_hash = hashlib.sha256(raw_body).hexdigest()
+        event, created = SeevCashWebhookEvent.objects.get_or_create(
+            event_id=event_id,
+            defaults={'event_type': event_type, 'payload_hash': payload_hash},
+        )
+        if not created and event.status in ('processed', 'ignored'):
+            return Response({'received': True})
+
+        reference = _webhook_reference(payload)
+        if event_type not in ('payment.succeeded', 'payment.failed'):
+            event.status = 'ignored'
+            event.processed_at = timezone.now()
+            event.save(update_fields=['status', 'processed_at'])
+            return Response({'received': True})
+        if not reference:
+            event.status = 'failed'
+            event.error = 'Missing payment reference.'
+            event.save(update_fields=['status', 'error'])
+            return Response({'detail': event.error}, status=400)
+
+        try:
+            order = Order.objects.get(checkout_reference=reference)
+        except Order.DoesNotExist:
+            event.status = 'failed'
+            event.error = 'Order not found.'
+            event.save(update_fields=['status', 'error'])
+            return Response({'detail': event.error}, status=404)
+        event.order = order
+
+        try:
+            if event_type == 'payment.succeeded':
+                pdata = verify_checkout(reference)
+                provider_status = str(pdata.get('status') or '').lower()
+                if provider_status not in ('completed', 'success'):
+                    raise ValueError('Payment is not completed.')
+                error_response = _verified_payment_error(order, pdata)
+                if error_response:
+                    raise ValueError(error_response.data['detail'])
+                _complete_verified_order(order.pk, pdata)
+            else:
+                with transaction.atomic():
+                    locked = Order.objects.select_for_update().get(pk=order.pk)
+                    if locked.payment_status == 'pending':
+                        locked.payment_status = 'failed'
+                        locked.save(update_fields=['payment_status'])
+            event.status = 'processed'
+            event.error = ''
+            event.processed_at = timezone.now()
+            event.save(update_fields=['order', 'status', 'error', 'processed_at'])
+        except (SeevCashError, ValueError) as exc:
+            event.status = 'failed'
+            event.error = str(exc)[:500]
+            event.save(update_fields=['order', 'status', 'error'])
+            return Response({'detail': str(exc)}, status=502)
+        return Response({'received': True})
 
 
 class ValidatePromoView(APIView):

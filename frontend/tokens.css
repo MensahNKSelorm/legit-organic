@@ -1,0 +1,66 @@
+/* Hallmark · macrostructure: Narrative Workflow · tone: assured-organic · anchor hue: leaf-green */
+:root {
+  --color-b2b-paper: oklch(96.5% 0.018 86);
+  --color-b2b-paper-raised: oklch(98.8% 0.009 86);
+  --color-b2b-paper-soft: oklch(90% 0.018 145);
+  --color-b2b-sand: oklch(91% 0.028 84);
+  --color-b2b-hero: oklch(29% 0.076 151);
+  --color-b2b-hero-ink: oklch(98% 0.01 90);
+  --color-b2b-hero-soft: oklch(82% 0.04 145);
+  --color-b2b-hero-rule: oklch(98% 0.01 90 / 0.3);
+  --color-b2b-hero-panel: oklch(34% 0.067 151);
+  --color-b2b-tomato: oklch(64% 0.19 35);
+  --color-b2b-aubergine: oklch(46% 0.11 326);
+  --color-b2b-image-shade: oklch(15% 0.03 151 / 0.88);
+  --color-b2b-ink: oklch(31% 0.074 151);
+  --color-b2b-ink-soft: oklch(43% 0.025 110);
+  --color-b2b-ink-muted: oklch(53% 0.018 105);
+  --color-b2b-leaf: oklch(51% 0.132 143);
+  --color-b2b-leaf-soft: oklch(70% 0.105 139);
+  --color-b2b-gold: oklch(82% 0.166 91);
+  --color-b2b-gold-soft: oklch(91% 0.078 91);
+  --color-b2b-rule: oklch(31% 0.074 151 / 0.15);
+  --color-b2b-rule-strong: oklch(31% 0.074 151 / 0.28);
+  --color-b2b-focus: oklch(82% 0.166 91);
+  --color-b2b-focus-outer: oklch(31% 0.074 151);
+  --font-b2b-display: "Boska", Georgia, serif;
+  --font-b2b-body: "Cabinet Grotesk", system-ui, sans-serif;
+  --space-b2b-xs: 0.5rem;
+  --space-b2b-sm: 1rem;
+  --space-b2b-md: 1.5rem;
+  --space-b2b-lg: 2rem;
+  --space-b2b-xl: 3rem;
+  --space-b2b-2xl: 4.5rem;
+  --text-b2b-xs: 0.72rem;
+  --ease-b2b-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-b2b-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-b2b-short: 180ms;
+  --dur-b2b-long: 620ms;
+  --radius-b2b-control: 0.4rem;
+  --radius-b2b-panel: 0.75rem;
+}
+html.dark {
+  --color-b2b-paper: oklch(21% 0.023 145);
+  --color-b2b-paper-raised: oklch(25% 0.025 145);
+  --color-b2b-paper-soft: oklch(85% 0.021 145);
+  --color-b2b-sand: oklch(26% 0.028 84);
+  --color-b2b-hero: oklch(16% 0.035 151);
+  --color-b2b-hero-ink: oklch(97% 0.012 90);
+  --color-b2b-hero-soft: oklch(78% 0.04 145);
+  --color-b2b-hero-rule: oklch(97% 0.012 90 / 0.3);
+  --color-b2b-hero-panel: oklch(21% 0.038 151);
+  --color-b2b-tomato: oklch(68% 0.18 35);
+  --color-b2b-aubergine: oklch(61% 0.1 326);
+  --color-b2b-image-shade: oklch(10% 0.02 151 / 0.9);
+  --color-b2b-ink: oklch(95% 0.016 92);
+  --color-b2b-ink-soft: oklch(82% 0.025 143);
+  --color-b2b-ink-muted: oklch(68% 0.025 143);
+  --color-b2b-leaf: oklch(72% 0.13 142);
+  --color-b2b-leaf-soft: oklch(57% 0.11 142);
+  --color-b2b-gold: oklch(84% 0.16 91);
+  --color-b2b-gold-soft: oklch(34% 0.06 91);
+  --color-b2b-rule: oklch(95% 0.016 92 / 0.13);
+  --color-b2b-rule-strong: oklch(95% 0.016 92 / 0.25);
+  --color-b2b-focus: oklch(84% 0.16 91);
+  --color-b2b-focus-outer: oklch(95% 0.016 92);
+}

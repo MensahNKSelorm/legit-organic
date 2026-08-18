@@ -3,7 +3,8 @@ import type {
   BlogPost, BlogCategory,
   Recipe, RecipeWithPairings, UserRecipe,
   User, Order, PromoCode, WishlistItem,
-  B2BDiscountTier, B2BProfile,
+  B2BProfile, BusinessPriceList, DeliveryZone, FoodSubscription,
+  SubscriptionPlan, WholesaleQuote,
   SalesRepProfile, ReferredCustomer, CommissionSummary,
   AppNotification, NotificationResponse,
 } from '@/types'
@@ -280,26 +281,57 @@ export const api = {
       business_address: string
       estimated_monthly_order?: string
       business_registration?: string
+      turnstile_token?: string
     }) => fetchAPI<B2BProfile>('/api/users/b2b/apply/', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
     status: () => fetchWithAuth<B2BProfile | { status: null }>('/api/users/b2b/status/'),
-    tiers: () => fetchAPI<B2BDiscountTier[]>('/api/users/b2b/tiers/'),
-    calculateDiscount: (orderTotal: number) => fetchWithAuth<{
-      discount_percent: string
-      discount_amount: string
-      final_amount: string
-      tier: B2BDiscountTier | null
-    }>('/api/users/b2b/calculate/', {
-      method: 'POST',
-      body: JSON.stringify({ order_total: orderTotal }),
-    }),
+    prices: () => fetchWithAuth<{ price_list: BusinessPriceList | null }>('/api/users/b2b/prices/'),
     setupPassword: (uid: string, token: string, password: string) =>
       fetchAPI<{ message: string; access: string; refresh: string; user: import('@/types').User }>(
         '/api/users/b2b/setup-password/',
         { method: 'POST', body: JSON.stringify({ uid, token, password }) },
       ),
+  },
+  subscriptions: {
+    plans: (audience: 'household' | 'business' = 'household') =>
+      fetchAPI<SubscriptionPlan[]>(`/api/subscriptions/plans/?audience=${audience}`),
+    zones: () => fetchAPI<DeliveryZone[]>('/api/subscriptions/zones/'),
+    list: () => fetchWithAuth<FoodSubscription[]>('/api/subscriptions/'),
+    create: (data: {
+      name?: string
+      audience: 'household' | 'business'
+      plan?: number | null
+      delivery_zone: number
+      delivery_address: string
+      contact_phone: string
+      payment_method: 'card' | 'mobile_money'
+      items?: Array<{ product_id: number; quantity: number; can_substitute?: boolean }>
+    }) => fetchWithAuth<FoodSubscription>('/api/subscriptions/', {
+      method: 'POST', body: JSON.stringify(data),
+    }),
+    action: (id: number, action: 'pause' | 'resume' | 'cancel' | 'skip') =>
+      fetchWithAuth<FoodSubscription>(`/api/subscriptions/${id}/${action}/`, { method: 'POST' }),
+    initializePayment: (id: number) => fetchWithAuth<{ checkout_url: string; reference: string }>(
+      `/api/subscriptions/${id}/payment/`, { method: 'POST' },
+    ),
+    verifyPayment: (reference?: string, weekId?: number) => fetchWithAuth<FoodSubscription>(
+      '/api/subscriptions/payment/verify/', {
+        method: 'POST', body: JSON.stringify({ reference, week_id: weekId }),
+      },
+    ),
+    quotes: {
+      list: () => fetchWithAuth<WholesaleQuote[]>('/api/subscriptions/business/quotes/'),
+      create: (data: {
+        requested_delivery_date?: string
+        is_recurring: boolean
+        customer_note?: string
+        items: Array<{ product_id: number; quantity: number; requested_unit?: string; note?: string }>
+      }) => fetchWithAuth<WholesaleQuote>('/api/subscriptions/business/quotes/', {
+        method: 'POST', body: JSON.stringify(data),
+      }),
+    },
   },
   sales: {
     validateCode: (code: string) =>
@@ -352,10 +384,18 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    verifyPayment: (reference: string) =>
+    initializePayment: (reference: string) =>
+      fetchWithAuth<{ checkout_url: string; reference: string }>(
+        `/api/orders/${reference}/checkout/`, { method: 'POST' },
+      ),
+    initializeGuestPayment: (reference: string) =>
+      fetchAPI<{ checkout_url: string; reference: string }>(
+        `/api/orders/${reference}/checkout/`, { method: 'POST' },
+      ),
+    verifyPayment: (reference?: string, orderReference?: string) =>
       fetchWithAuth<Order>('/api/orders/verify-payment/', {
         method: 'POST',
-        body: JSON.stringify({ reference }),
+        body: JSON.stringify({ reference, order_reference: orderReference }),
       }),
     validatePromo: (code: string, order_amount: number) =>
       fetchWithAuth<PromoCode>('/api/orders/validate-promo/', {

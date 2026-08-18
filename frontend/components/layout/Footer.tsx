@@ -9,6 +9,7 @@ const footerLinks = {
   ],
   Explore: [
     { label: "Products",    href: "/products" },
+    { label: "Weekly Delivery", href: "/subscriptions" },
     { label: "Recipes",     href: "/recipes" },
     { label: "Blog",        href: "/blog" },
     { label: "Health Tips", href: "/blog?tag=health" },
@@ -19,6 +20,7 @@ const footerLinks = {
     { label: "Sign Up",     href: "/signup" },
     { label: "My Recipes",  href: "/my-recipes" },
     { label: "Profile",     href: "/profile" },
+    { label: "My Deliveries", href: "/subscriptions/manage" },
   ],
   Legal: [
     { label: "Privacy Policy",    href: "/privacy-policy" },

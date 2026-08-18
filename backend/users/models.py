@@ -170,18 +170,42 @@ class StaffInvitation(models.Model):
         return hashlib.sha256(token.encode('utf-8')).hexdigest()
 
 
-class B2BDiscountTier(models.Model):
-    name = models.CharField(max_length=50)
-    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    max_order_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    discount_percent = models.DecimalField(max_digits=5, decimal_places=2)
-    description = models.TextField(blank=True)
+class BusinessPriceList(models.Model):
+    name = models.CharField(max_length=120, unique=True)
+    description = models.CharField(max_length=200, blank=True)
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['min_order_amount']
+        ordering = ['-is_default', 'name']
 
     def __str__(self):
-        return f'{self.name} ({self.discount_percent}%)'
+        return self.name
+
+
+class BusinessPrice(models.Model):
+    price_list = models.ForeignKey(
+        BusinessPriceList, on_delete=models.CASCADE, related_name='prices'
+    )
+    product = models.ForeignKey(
+        'products.Product', on_delete=models.PROTECT, related_name='business_prices'
+    )
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    minimum_quantity = models.PositiveIntegerField(default=1)
+    is_available = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['product__name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['price_list', 'product'], name='unique_business_product_price'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.price_list} · {self.product}'
 
 
 class B2BProfile(models.Model):
@@ -215,12 +239,12 @@ class B2BProfile(models.Model):
     business_registration = models.CharField(max_length=100, blank=True)
     estimated_monthly_order = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    tier = models.ForeignKey(
-        B2BDiscountTier,
+    price_list = models.ForeignKey(
+        BusinessPriceList,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='profiles',
+        related_name='businesses',
     )
     rejection_reason = models.TextField(blank=True)
     notes = models.TextField(blank=True)

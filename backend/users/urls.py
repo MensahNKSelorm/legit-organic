@@ -3,7 +3,7 @@ from .views import (
     RegisterView, ProfileView, VerifyEmailView,
     ResendVerificationView, GoogleAuthView,
     WishlistView, WishlistItemDeleteView,
-    B2BApplyView, B2BStatusView, B2BDiscountTiersView, B2BDiscountCalculateView,
+    B2BApplyView, B2BStatusView, B2BPriceListView,
     B2BSetupPasswordView,
 )
 
@@ -17,7 +17,6 @@ urlpatterns = [
     path('wishlist/<int:pk>/', WishlistItemDeleteView.as_view(), name='wishlist-delete'),
     path('b2b/apply/', B2BApplyView.as_view(), name='b2b-apply'),
     path('b2b/status/', B2BStatusView.as_view(), name='b2b-status'),
-    path('b2b/tiers/', B2BDiscountTiersView.as_view(), name='b2b-tiers'),
-    path('b2b/calculate/', B2BDiscountCalculateView.as_view(), name='b2b-calculate'),
+    path('b2b/prices/', B2BPriceListView.as_view(), name='b2b-prices'),
     path('b2b/setup-password/', B2BSetupPasswordView.as_view(), name='b2b-setup-password'),
 ]

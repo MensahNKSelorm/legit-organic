@@ -76,6 +76,8 @@ class Command(BaseCommand):
         # Products - view only
         ops_perms += list(get_perms('products', 'product', ['view']))
         ops_perms += list(get_perms('products', 'category', ['view']))
+        for model in ['subscription', 'subscriptionweek', 'deliveryzone', 'wholesalequote']:
+            ops_perms += list(get_perms('subscriptions', model, ['change', 'view']))
 
         operations.permissions.set(ops_perms)
         self.stdout.write(self.style.SUCCESS(
@@ -95,6 +97,8 @@ class Command(BaseCommand):
         # Users - view only (for order context)
         finance_perms += list(get_perms('users', 'user', ['view']))
         finance_perms += list(get_perms('users', 'customer', ['view']))
+        for model in ['subscription', 'subscriptionweek', 'wholesalequote']:
+            finance_perms += list(get_perms('subscriptions', model, ['view']))
 
         finance.permissions.set(finance_perms)
         self.stdout.write(self.style.SUCCESS(
@@ -145,7 +149,12 @@ class Command(BaseCommand):
             'recipes': ['recipe', 'recipeingredient', 'recipestep', 'recipepairing'],
             'orders': ['order', 'orderitem', 'promocode'],
             'sales': ['salesrep', 'referredcustomer'],
-            'users': ['b2bprofile', 'b2bdiscounttier'],
+            'users': ['b2bprofile', 'businesspricelist', 'businessprice'],
+            'subscriptions': [
+                'deliveryzone', 'subscriptionplan', 'subscriptionplanitem',
+                'subscription', 'subscriptionitem', 'subscriptionweek',
+                'wholesalequote', 'wholesalequoteitem',
+            ],
         }
         for app_label, models in business_models.items():
             for model in models:

@@ -197,8 +197,8 @@ export interface Order {
   id: number
   reference: string
   status: 'pending' | 'whatsapp_pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  payment_status: 'pending' | 'success' | 'failed'
-  order_source: 'paystack' | 'whatsapp'
+  payment_status: 'pending' | 'success' | 'failed' | 'expired'
+  order_source: 'seevcash' | 'subscription' | 'paystack' | 'whatsapp'
   total_amount: string
   discount_amount: string
   promo_code?: string
@@ -237,13 +237,19 @@ export interface ApiError {
   errors?: Record<string, string[]>
 }
 
-export interface B2BDiscountTier {
+export interface BusinessPrice {
+  id: number
+  product: Product
+  unit_price: string
+  minimum_quantity: number
+  is_available: boolean
+}
+
+export interface BusinessPriceList {
   id: number
   name: string
-  min_order_amount: string
-  max_order_amount: string | null
-  discount_percent: string
   description: string
+  prices: BusinessPrice[]
 }
 
 export interface B2BProfile {
@@ -258,10 +264,108 @@ export interface B2BProfile {
   estimated_monthly_order: string | null
   status: 'pending' | 'approved' | 'rejected'
   status_display: string
-  tier: B2BDiscountTier | null
+  price_list: BusinessPriceList | null
   rejection_reason: string
   approved_at: string | null
   created_at: string
+}
+
+export interface DeliveryZone {
+  id: number
+  name: string
+  slug: string
+  delivery_weekday: number
+  delivery_day: string
+  cutoff_hours: number
+  delivery_fee: string
+}
+
+export interface SubscriptionPlanItem {
+  id: number
+  product: Product
+  quantity: number
+  can_swap: boolean
+}
+
+export interface SubscriptionPlan {
+  id: number
+  name: string
+  slug: string
+  audience: 'household' | 'business'
+  plan_type: 'curated' | 'custom'
+  short_description: string
+  weekly_price: string
+  household_size: number | null
+  image: string | null
+  is_featured: boolean
+  items: SubscriptionPlanItem[]
+}
+
+export interface SubscriptionItem {
+  id: number
+  product: Product
+  quantity: number
+  unit_price: string
+  subtotal: string
+  can_substitute: boolean
+  display_order: number
+}
+
+export interface SubscriptionWeek {
+  id: number
+  delivery_date: string
+  cutoff_at: string
+  status: string
+  subtotal: string
+  delivery_fee: string
+  total: string
+  payment_reference: string | null
+  paid_at: string | null
+  customer_note: string
+  order: number | null
+}
+
+export interface FoodSubscription {
+  id: number
+  name: string
+  audience: 'household' | 'business'
+  status: 'draft' | 'active' | 'paused' | 'cancelled'
+  plan: number | null
+  plan_detail: SubscriptionPlan | null
+  delivery_zone: number
+  delivery_zone_detail: DeliveryZone
+  delivery_address: string
+  contact_phone: string
+  payment_method: 'card' | 'mobile_money'
+  weekly_subtotal: string
+  weekly_delivery_fee: string
+  weekly_total: string
+  next_delivery_date: string | null
+  card_brand: string
+  card_last4: string
+  items: SubscriptionItem[]
+  weeks: SubscriptionWeek[]
+  created_at: string
+}
+
+export interface WholesaleQuote {
+  id: number
+  status: string
+  requested_delivery_date: string | null
+  is_recurring: boolean
+  customer_note: string
+  quoted_subtotal: string | null
+  valid_until: string | null
+  items: Array<{
+    id: number
+    product: Product
+    quantity: number
+    requested_unit: string
+    quoted_unit_price: string | null
+    note: string
+  }>
+  created_at: string
+  updated_at: string
 }
 
 export interface SalesRepProfile {

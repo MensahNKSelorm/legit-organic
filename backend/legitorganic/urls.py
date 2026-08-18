@@ -39,6 +39,7 @@ urlpatterns = [
     path('api/orders/', include('orders.urls')),
     path('api/sales/', include('sales.urls')),
     path('api/notifications/', include('notifications.urls')),
+    path('api/subscriptions/', include('subscriptions.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
 ]
 

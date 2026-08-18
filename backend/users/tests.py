@@ -5,13 +5,14 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from .models import User
+from .models import B2BProfile, User
 
 REGISTER_URL = '/api/users/register/'
 TOKEN_URL = '/api/auth/token/'
 VERIFY_URL = '/api/users/verify-email/'
 RESEND_URL = '/api/users/resend-verification/'
 GOOGLE_URL = '/api/users/google/'
+B2B_APPLY_URL = '/api/users/b2b/apply/'
 
 STRONG = 'StrongPass123'
 
@@ -23,6 +24,17 @@ def reg_payload(email='new@example.com'):
         'last_name': 'User',
         'password': STRONG,
         'password_confirm': STRONG,
+    }
+
+
+def b2b_payload(email='trade@example.com'):
+    return {
+        'company_name': 'Market Kitchen',
+        'business_type': 'restaurant',
+        'contact_person': 'Ama Mensah',
+        'business_phone': '+233200000000',
+        'business_email': email,
+        'business_address': 'Accra',
     }
 
 
@@ -79,6 +91,36 @@ class RegistrationGatingTests(TestCase):
         resp = self.client.post(REGISTER_URL, reg_payload(), format='json')
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(User.objects.filter(email='new@example.com').exists())
+
+
+class B2BApplicationBotProtectionTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+
+    @override_settings(TURNSTILE_ENABLED=True, TURNSTILE_SECRET_KEY='secret')
+    def test_missing_turnstile_token_cannot_create_application(self):
+        resp = self.client.post(B2B_APPLY_URL, b2b_payload(), format='json')
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(B2BProfile.objects.exists())
+
+    @override_settings(TURNSTILE_ENABLED=True, TURNSTILE_SECRET_KEY='secret')
+    @patch('users.turnstile.requests.post')
+    def test_failed_turnstile_cannot_create_application(self, mock_post):
+        mock_post.return_value.json.return_value = {'success': False}
+        payload = {**b2b_payload(), 'turnstile_token': 'fake-token'}
+        resp = self.client.post(B2B_APPLY_URL, payload, format='json')
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(B2BProfile.objects.exists())
+
+    @override_settings(TURNSTILE_ENABLED=True, TURNSTILE_SECRET_KEY='secret')
+    @patch('users.turnstile.requests.post')
+    def test_valid_turnstile_preserves_real_application_flow(self, mock_post):
+        mock_post.return_value.json.return_value = {'success': True}
+        payload = {**b2b_payload(), 'turnstile_token': 'valid-token'}
+        resp = self.client.post(B2B_APPLY_URL, payload, format='json')
+        self.assertEqual(resp.status_code, 201, resp.data)
+        self.assertTrue(B2BProfile.objects.filter(business_email='trade@example.com').exists())
 
 
 class LoginGatingTests(TestCase):

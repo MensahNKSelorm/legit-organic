@@ -81,7 +81,9 @@ class OrderAdmin(ModelAdmin):
     list_editable = []
     ordering = ['-created_at']
     readonly_fields = [
-        'reference', 'paystack_id', 'created_at', 'updated_at',
+        'reference', 'paystack_id', 'payment_provider', 'provider_transaction_id',
+        'checkout_reference', 'checkout_url', 'checkout_expires_at',
+        'created_at', 'updated_at',
         'user', 'guest_name', 'guest_phone', 'guest_email',
         'total_amount', 'discount_amount', 'promo_code',
         'delivery_address', 'order_source',
@@ -110,7 +112,10 @@ class OrderAdmin(ModelAdmin):
             'description': 'Fulfilment and payment authority are enforced separately.',
         }),
         ('Payment', {
-            'fields': ('paystack_id',),
+            'fields': (
+                'payment_provider', 'provider_transaction_id', 'checkout_reference',
+                'checkout_url', 'checkout_expires_at', 'paystack_id',
+            ),
             'classes': ('collapse',),
         }),
         ('Timestamps', {
@@ -132,13 +137,13 @@ class OrderAdmin(ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
-        if obj and (obj.order_source == 'paystack' or not self._can_correct_payment(request)):
+        if obj and (obj.order_source in ('paystack', 'seevcash', 'subscription') or not self._can_correct_payment(request)):
             fields.extend(['payment_status'])
         return list(dict.fromkeys(fields))
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        if obj and (obj.order_source == 'paystack' or not self._can_correct_payment(request)):
+        if obj and (obj.order_source in ('paystack', 'seevcash', 'subscription') or not self._can_correct_payment(request)):
             adjusted = []
             for title, options in fieldsets:
                 options = options.copy()

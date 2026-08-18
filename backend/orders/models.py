@@ -47,6 +47,7 @@ class Order(models.Model):
         ('pending', 'Pending'),
         ('success', 'Success'),
         ('failed', 'Failed'),
+        ('expired', 'Expired'),
     ]
 
     user = models.ForeignKey(
@@ -58,6 +59,11 @@ class Order(models.Model):
     )
     reference = models.CharField(max_length=100, unique=True)
     paystack_id = models.CharField(max_length=100, blank=True)
+    payment_provider = models.CharField(max_length=30, blank=True)
+    provider_transaction_id = models.CharField(max_length=120, blank=True)
+    checkout_reference = models.CharField(max_length=120, blank=True, db_index=True)
+    checkout_url = models.URLField(max_length=500, blank=True)
+    checkout_expires_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(
         max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending'
@@ -80,7 +86,10 @@ class Order(models.Model):
     delivery_report_error = models.CharField(max_length=500, blank=True, editable=False)
     order_source = models.CharField(
         max_length=20,
-        choices=[('paystack', 'Paystack'), ('whatsapp', 'WhatsApp')],
+        choices=[
+            ('seevcash', 'SeevCash'), ('subscription', 'Subscription renewal'),
+            ('paystack', 'Paystack (legacy)'), ('whatsapp', 'WhatsApp'),
+        ],
         default='whatsapp',
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -219,6 +228,30 @@ class Order(models.Model):
     def __str__(self):
         customer = str(self.user) if self.user else self.guest_name or 'Guest'
         return f"Order {self.reference} — {customer} ({self.status})"
+
+
+class SeevCashWebhookEvent(models.Model):
+    STATUS_CHOICES = [
+        ('processing', 'Processing'),
+        ('processed', 'Processed'),
+        ('ignored', 'Ignored'),
+        ('failed', 'Failed'),
+    ]
+
+    event_id = models.CharField(max_length=160, unique=True)
+    event_type = models.CharField(max_length=80)
+    payload_hash = models.CharField(max_length=64)
+    order = models.ForeignKey(
+        Order, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='seevcash_webhook_events',
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='processing')
+    error = models.CharField(max_length=500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.event_type} — {self.event_id}'
 
 
 class OrderItem(models.Model):

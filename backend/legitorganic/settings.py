@@ -66,6 +66,19 @@ PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
 # Currency Paystack transactions are expected to settle in (ISO 4217).
 PAYSTACK_CURRENCY = os.getenv('PAYSTACK_CURRENCY', 'GHS')
 
+# SeevCash Checkout API. Keep the checkout secret server-side; the public key is
+# retained for future provider widgets but is not required by the hosted REST flow.
+SEEVCASH_PUBLIC_KEY = os.getenv('SEEVCASH_PUBLIC_KEY', '')
+SEEVCASH_SECRET_KEY = os.getenv(
+    'SEEVCASH_SECRET_KEY', os.getenv('SEEV_CHECKOUT_API_KEY', '')
+)
+SEEVCASH_CURRENCY = os.getenv('SEEVCASH_CURRENCY', 'GHS')
+SEEVCASH_BASE_URL = os.getenv('SEEVCASH_BASE_URL', 'https://api.seevplus.com').rstrip('/')
+SEEVCASH_TIMEOUT = int(os.getenv('SEEVCASH_TIMEOUT', '15'))
+SEEVCASH_WEBHOOK_SECRET = os.getenv(
+    'SEEVCASH_WEBHOOK_SECRET', os.getenv('SEEV_WEBHOOK_SECRET', '')
+)
+
 # Cloudflare Turnstile — configurable, and OFF until a secret key is provisioned.
 # With no key set (current dev + production), registration is unaffected.
 TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
@@ -134,6 +147,7 @@ INSTALLED_APPS = [
     'orders',
     'sales',
     'notifications',
+    'subscriptions.apps.SubscriptionsConfig',
     'security.apps.SecurityConfig',
 ]
 
@@ -261,6 +275,36 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Weekly Delivery",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Plans",
+                        "icon": "inventory_2",
+                        "link": "/admin/subscriptions/subscriptionplan/",
+                        "permission": admin_permission("subscriptions.view_subscriptionplan"),
+                    },
+                    {
+                        "title": "Subscribers",
+                        "icon": "event_repeat",
+                        "link": "/admin/subscriptions/subscription/",
+                        "permission": admin_permission("subscriptions.view_subscription"),
+                    },
+                    {
+                        "title": "Weekly deliveries",
+                        "icon": "local_shipping",
+                        "link": "/admin/subscriptions/subscriptionweek/",
+                        "permission": admin_permission("subscriptions.view_subscriptionweek"),
+                    },
+                    {
+                        "title": "Delivery zones",
+                        "icon": "map",
+                        "link": "/admin/subscriptions/deliveryzone/",
+                        "permission": admin_permission("subscriptions.view_deliveryzone"),
+                    },
+                ],
+            },
+            {
                 "title": "Customers",
                 "separator": True,
                 "items": [
@@ -313,10 +357,16 @@ UNFOLD = {
                         "permission": admin_permission("users.view_b2bprofile"),
                     },
                     {
-                        "title": "Discount Tiers",
-                        "icon": "percent",
-                        "link": "/admin/users/b2bdiscounttier/",
-                        "permission": admin_permission("users.view_b2bdiscounttier"),
+                        "title": "Business Prices",
+                        "icon": "price_change",
+                        "link": "/admin/users/businesspricelist/",
+                        "permission": admin_permission("users.view_businesspricelist"),
+                    },
+                    {
+                        "title": "Wholesale Quotes",
+                        "icon": "request_quote",
+                        "link": "/admin/subscriptions/wholesalequote/",
+                        "permission": admin_permission("subscriptions.view_wholesalequote"),
                     },
                 ],
             },
