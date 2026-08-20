@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
+import { WishlistProvider } from '@/lib/wishlist'
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -27,5 +28,5 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     return null
   }
 
-  return <>{children}</>
+  return <WishlistProvider>{children}</WishlistProvider>
 }

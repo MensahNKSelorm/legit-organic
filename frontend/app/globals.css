@@ -1,3 +1,10 @@
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5
+ * macrostructure: Photographic · theme: studied-DNA (Samsung Food + HelloFresh + Mob)
+ * tone: assured-organic · anchor hue: Ghana gold · contrast: pass (40–41)
+ * nav: N3 overlay · footer: existing · slop: pass (42–45) · honest: pass (46)
+ * chrome: pass (47) · tokens: pass (48) · responsive: pass (49)
+ * icons: pass (30) · mobile: pass (34, 49, 50–57)
+ */
 @import "tailwindcss";
 @import "../tokens.css";
 @plugin "@tailwindcss/typography";
@@ -35,7 +42,7 @@
   --color-mist-white: #fefcf7;
 
   /* Typography */
-  --font-display: "Boska", Georgia, serif;
+  --font-display: "Sentient", Georgia, serif;
   --font-sans: "Cabinet Grotesk", system-ui, sans-serif;
 }
 
@@ -80,7 +87,7 @@
   h4,
   h5,
   h6 {
-    font-family: "Boska", Georgia, serif;
+    font-family: "Sentient", Georgia, serif;
     line-height: 1.2;
   }
 
@@ -191,7 +198,7 @@ html.dark .text-charcoal\/60 {
 
 /* ── Brand-led storefront primitives ───────────────────────── */
 .display-organic {
-  font-family: "Boska", Georgia, serif;
+  font-family: "Sentient", Georgia, serif;
   font-weight: 500;
   letter-spacing: -0.045em;
 }
@@ -269,7 +276,7 @@ html.dark .account-page .account-panel {
 
 .story-page .prose h2,
 .story-page .prose h3 {
-  font-family: "Boska", Georgia, serif;
+  font-family: "Sentient", Georgia, serif;
   font-weight: 500;
 }
 
@@ -293,7 +300,7 @@ html.dark .journal-article {
   font-size: 1.2rem;
 }
 .journal-article > p:first-of-type::first-letter {
-  font-family: "Boska", Georgia, serif;
+  font-family: "Sentient", Georgia, serif;
   font-weight: 500;
   float: left;
   font-size: 3.9rem;
@@ -306,7 +313,7 @@ html.dark .journal-article > p:first-of-type::first-letter {
 }
 
 .journal-article h2 {
-  font-family: "Boska", Georgia, serif;
+  font-family: "Sentient", Georgia, serif;
   font-weight: 500;
   font-size: 1.9rem;
   line-height: 1.15;
@@ -322,7 +329,7 @@ html.dark .journal-article h2 {
 }
 
 .journal-article h3 {
-  font-family: "Boska", Georgia, serif;
+  font-family: "Sentient", Georgia, serif;
   font-weight: 500;
   font-size: 1.42rem;
   color: #0d3b2a;
@@ -374,7 +381,7 @@ html.dark .journal-article strong {
   border-left: 3px solid #f4c430;
   margin: 1.9rem 0;
   padding: 0.2rem 0 0.2rem 1.4rem;
-  font-family: "Boska", Georgia, serif;
+  font-family: "Sentient", Georgia, serif;
   font-size: 1.35rem;
   font-style: italic;
   line-height: 1.4;

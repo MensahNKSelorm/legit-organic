@@ -1,255 +1,180 @@
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.colors import HexColor, white
-from reportlab.lib.units import cm
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable,
-)
-from reportlab.lib.enums import TA_CENTER
+import io
+from pathlib import Path
+
+from django.conf import settings
 from django.http import HttpResponse
 from django.utils import timezone
-import io
-import urllib.request
+from reportlab.lib.colors import HexColor, white
+from reportlab.lib.enums import TA_RIGHT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.platypus import HRFlowable, Image, KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-FOREST_GREEN = HexColor('#0D3B2A')
-GHANA_GOLD   = HexColor('#F4C430')
-LIGHT_GREEN  = HexColor('#E8F5E9')
-CREAM        = HexColor('#FAF7F0')
-CHARCOAL     = HexColor('#333333')
-GREY         = HexColor('#9CA3AF')
+FOREST = HexColor('#0D3B2A')
+LEAF = HexColor('#2E7D32')
+GOLD = HexColor('#F4C430')
+CREAM = HexColor('#FAF7F0')
+PALE_GREEN = HexColor('#EDF7EE')
+INK = HexColor('#18231D')
+MUTED = HexColor('#6F756F')
+LINE = HexColor('#DDD7CB')
+
+
+def _money(value):
+    return f'GHS {float(value or 0):,.2f}'
+
+
+def _brand_mark(styles):
+    """Render the real brand artwork when the monorepo asset is available."""
+    try:
+        import cairosvg
+        logo_path = Path(settings.BASE_DIR).parent / 'frontend' / 'public' / 'images' / 'logo-lightmode.svg'
+        png = cairosvg.svg2png(bytestring=logo_path.read_bytes(), output_width=710)
+        mark = Image(io.BytesIO(png), width=5.1 * cm, height=2.01 * cm)
+        mark.hAlign = 'LEFT'
+        return mark
+    except Exception:
+        return Paragraph('LEGIT ORGANIC', styles['brand'])
+
+
+def _page_frame(canvas, doc):
+    canvas.saveState()
+    width, height = A4
+    canvas.setFillColor(FOREST)
+    canvas.rect(0, height - 0.34 * cm, width, 0.34 * cm, stroke=0, fill=1)
+    canvas.setFillColor(GOLD)
+    canvas.rect(0, height - 0.42 * cm, width, 0.08 * cm, stroke=0, fill=1)
+    canvas.setStrokeColor(LINE)
+    canvas.line(doc.leftMargin, 1.42 * cm, width - doc.rightMargin, 1.42 * cm)
+    canvas.setFillColor(MUTED)
+    canvas.setFont('Helvetica', 7.5)
+    canvas.drawString(doc.leftMargin, 0.92 * cm, 'legitorganic.com  |  hello@legitorganic.com  |  Accra, Ghana')
+    canvas.drawRightString(width - doc.rightMargin, 0.92 * cm, f'Page {doc.page}')
+    canvas.restoreState()
 
 
 def generate_receipt_pdf(order):
     buffer = io.BytesIO()
-
     doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=2 * cm,
-        leftMargin=2 * cm,
-        topMargin=2 * cm,
-        bottomMargin=2 * cm,
+        buffer, pagesize=A4, rightMargin=1.7 * cm, leftMargin=1.7 * cm,
+        topMargin=1.45 * cm, bottomMargin=1.8 * cm,
+        title=f'Legit Organic receipt {order.reference}', author='Legit Organic Limited',
     )
-
-    styles = getSampleStyleSheet()
+    base = getSampleStyleSheet()
+    styles = {
+        'brand': ParagraphStyle('Brand', fontName='Helvetica-Bold', fontSize=18, leading=20, textColor=FOREST),
+        'eyebrow': ParagraphStyle('Eyebrow', fontName='Helvetica-Bold', fontSize=7.5, leading=10, textColor=LEAF, spaceAfter=4),
+        'title': ParagraphStyle('Title', fontName='Helvetica-Bold', fontSize=28, leading=31, textColor=INK),
+        'right': ParagraphStyle('Right', parent=base['Normal'], alignment=TA_RIGHT, fontSize=8.5, leading=13, textColor=MUTED),
+        'body': ParagraphStyle('Body', parent=base['Normal'], fontSize=9, leading=14, textColor=INK),
+        'muted': ParagraphStyle('Muted', parent=base['Normal'], fontSize=8, leading=12, textColor=MUTED),
+        'label': ParagraphStyle('Label', fontName='Helvetica-Bold', fontSize=7, leading=10, textColor=MUTED),
+        'amount': ParagraphStyle('Amount', fontName='Helvetica-Bold', fontSize=20, leading=22, alignment=TA_RIGHT, textColor=FOREST),
+    }
     story = []
 
-    # ── Header ───────────────────────────────────────────────────────────────
-    try:
-        import cairosvg
-        from reportlab.platypus import Image as RLImage
-        logo_url  = 'https://api.legitorganic.com/static/images/logo-lightmode.svg'
-        svg_data  = urllib.request.urlopen(logo_url, timeout=5).read()
-        png_data  = cairosvg.svg2png(bytestring=svg_data, output_width=300)
-        logo_buf  = io.BytesIO(png_data)
-        logo_img  = RLImage(logo_buf, width=6 * cm, height=3 * cm, kind='proportional')
-        logo_img.hAlign = 'CENTER'
-        story.append(Spacer(1, 0.3 * cm))
-        story.append(logo_img)
-        story.append(Spacer(1, 0.3 * cm))
-    except Exception:
-        story.append(HRFlowable(
-            width='100%', thickness=8, color=FOREST_GREEN, spaceAfter=0.4 * cm,
-        ))
-        story.append(Paragraph(
-            'LEGIT ORGANIC',
-            ParagraphStyle(
-                'co',
-                alignment=TA_CENTER,
-                spaceAfter=2,
-                fontName='Helvetica-Bold',
-                fontSize=24,
-                textColor=FOREST_GREEN,
-            ),
-        ))
-        story.append(Paragraph(
-            'LIMITED',
-            ParagraphStyle(
-                'ltd',
-                alignment=TA_CENTER,
-                spaceAfter=4,
-                fontName='Helvetica-Bold',
-                fontSize=14,
-                textColor=GHANA_GOLD,
-            ),
-        ))
+    source_label = 'WEEKLY DELIVERY' if order.order_source == 'subscription' else 'MARKET ORDER'
+    header = Table([
+        [_brand_mark(styles), Paragraph(source_label, styles['right'])],
+        [Paragraph('Food with a clear way home.', styles['muted']), Paragraph(f'<b>{order.reference}</b><br/>{order.created_at.strftime("%d %B %Y")}', styles['right'])],
+    ], colWidths=[10.5 * cm, 6.6 * cm])
+    header.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'), ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0), ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+    ]))
+    story.extend([header, Spacer(1, 0.75 * cm)])
 
-    tagline_style = ParagraphStyle(
-        'Tagline',
-        parent=styles['Normal'],
-        fontSize=10,
-        textColor=GREY,
-        spaceAfter=4,
-        alignment=TA_CENTER,
-    )
-    story.append(Paragraph('Farm to Table, With Trust', tagline_style))
-    story.append(Paragraph(
-        'Accra, Ghana · hello@legitorganic.com · +233 539 569 260',
-        tagline_style,
-    ))
-    story.append(Spacer(1, 0.3 * cm))
+    paid = order.payment_status == 'success'
+    status_display = {
+        'pending': 'Awaiting payment', 'whatsapp_pending': 'Awaiting payment',
+        'paid': 'Payment confirmed', 'processing': 'Being prepared',
+        'shipped': 'On the way', 'delivered': 'Delivered', 'cancelled': 'Cancelled',
+    }.get(order.status, order.status.replace('_', ' ').title())
+    payment_label = 'PAID' if paid else order.payment_status.upper()
+    provider_label = 'SeevCash' if order.payment_provider.lower() == 'seevcash' else (order.payment_provider.title() or 'payment provider')
+    payment_line = f'Paid securely via {provider_label}' if paid else f'Payment via {provider_label} is not yet confirmed'
+    summary = Table([
+        [Paragraph('RECEIPT', styles['eyebrow']), Paragraph(payment_label, styles['eyebrow'])],
+        [Paragraph('Order summary', styles['title']), Paragraph(_money(order.final_amount), styles['amount'])],
+        [Paragraph(f'{status_display}  |  {payment_line}', styles['muted']), ''],
+    ], colWidths=[10.5 * cm, 6.6 * cm])
+    summary.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), PALE_GREEN if paid else CREAM),
+        ('BOX', (0, 0), (-1, -1), 0.7, HexColor('#BFD2C2') if paid else LINE),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'), ('SPAN', (0, 2), (1, 2)),
+        ('LEFTPADDING', (0, 0), (-1, -1), 14), ('RIGHTPADDING', (0, 0), (-1, -1), 14),
+        ('TOPPADDING', (0, 0), (-1, 0), 12), ('BOTTOMPADDING', (0, 1), (-1, 1), 8),
+        ('BOTTOMPADDING', (0, 2), (-1, 2), 12),
+    ]))
+    story.extend([summary, Spacer(1, 0.7 * cm)])
 
-    story.append(HRFlowable(
-        width='100%', thickness=3, color=GHANA_GOLD, spaceAfter=0.5 * cm,
-    ))
-
-    receipt_style = ParagraphStyle(
-        'Receipt',
-        parent=styles['Title'],
-        fontSize=18,
-        textColor=FOREST_GREEN,
-        spaceAfter=0.3 * cm,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold',
-    )
-    story.append(Paragraph('RECEIPT', receipt_style))
-
-    # ── Order info table ──────────────────────────────────────────────────────
     if order.user:
-        customer_name  = f'{order.user.first_name} {order.user.last_name}'.strip()
+        customer_name = order.user.get_full_name().strip() or order.user.email
         customer_email = order.user.email
         customer_phone = getattr(order.user, 'phone_number', None) or '-'
     else:
-        customer_name  = order.guest_name  or 'Guest Customer'
+        customer_name = order.guest_name or 'Guest customer'
         customer_email = order.guest_email or '-'
         customer_phone = order.guest_phone or '-'
 
-    status_display = {
-        'whatsapp_pending': 'Awaiting Payment',
-        'paid':             'Paid',
-        'processing':       'Processing',
-        'shipped':          'Shipped',
-        'delivered':        'Delivered',
-        'cancelled':        'Cancelled',
-    }.get(order.status, order.status.title())
-
-    info_data = [
-        ['Reference:', order.reference,        'Date:',   order.created_at.strftime('%d %B %Y')],
-        ['Customer:', customer_name,           'Status:', status_display],
-        ['Email:',    customer_email,          'Phone:',  customer_phone],
-        ['Delivery:', order.delivery_address or '-', '',  ''],
-    ]
-
-    info_table = Table(info_data, colWidths=[3 * cm, 7 * cm, 2.5 * cm, 5 * cm])
-    info_table.setStyle(TableStyle([
-        ('FONTNAME',       (0, 0), (0, -1),  'Helvetica-Bold'),
-        ('FONTNAME',       (2, 0), (2, -1),  'Helvetica-Bold'),
-        ('FONTSIZE',       (0, 0), (-1, -1), 9),
-        ('TEXTCOLOR',      (0, 0), (0, -1),  FOREST_GREEN),
-        ('TEXTCOLOR',      (2, 0), (2, -1),  FOREST_GREEN),
-        ('TEXTCOLOR',      (1, 0), (1, -1),  CHARCOAL),
-        ('TEXTCOLOR',      (3, 0), (3, -1),  CHARCOAL),
-        ('VALIGN',         (0, 0), (-1, -1), 'TOP'),
-        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [CREAM, white]),
-        ('TOPPADDING',     (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING',  (0, 0), (-1, -1), 6),
-        ('LEFTPADDING',    (0, 0), (-1, -1), 6),
+    parties = Table([
+        [Paragraph('DELIVER TO', styles['label']), Paragraph('SOLD BY', styles['label'])],
+        [Paragraph(f'<b>{customer_name}</b><br/>{customer_email}<br/>{customer_phone}<br/>{order.delivery_address or "Delivery address not provided"}', styles['body']),
+         Paragraph('<b>Legit Organic Limited</b><br/>Accra, Ghana<br/>hello@legitorganic.com<br/>+233 539 569 260', styles['body'])],
+    ], colWidths=[8.55 * cm, 8.55 * cm])
+    parties.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'), ('BOX', (0, 0), (-1, -1), 0.6, LINE),
+        ('LINEBEFORE', (1, 0), (1, -1), 0.6, LINE), ('BACKGROUND', (0, 0), (-1, 0), CREAM),
+        ('LEFTPADDING', (0, 0), (-1, -1), 12), ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 9), ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
     ]))
-    story.append(info_table)
-    story.append(Spacer(1, 0.5 * cm))
+    story.extend([parties, Spacer(1, 0.7 * cm), Paragraph('WHAT YOU ORDERED', styles['eyebrow'])])
 
-    # ── Items table ───────────────────────────────────────────────────────────
-    story.append(HRFlowable(width='100%', thickness=1, color=FOREST_GREEN))
-    story.append(Spacer(1, 0.2 * cm))
-
-    items_header = [['Product', 'Qty', 'Unit Price', 'Subtotal']]
-    items_data = []
-
+    item_rows = [['Item', 'Qty', 'Unit price', 'Amount']]
     for item in order.items.all():
-        product_name = item.product.name if item.product else 'Product (Deleted)'
-        unit_price   = float(item.unit_price)
-        subtotal     = unit_price * item.quantity
-        items_data.append([
-            product_name,
-            str(item.quantity),
-            f'GHS {unit_price:.2f}',
-            f'GHS {subtotal:.2f}',
-        ])
-
-    items_table = Table(
-        items_header + items_data,
-        colWidths=[9 * cm, 2 * cm, 3.5 * cm, 3 * cm],
-    )
-    items_table.setStyle(TableStyle([
-        # Header row
-        ('BACKGROUND',     (0, 0),  (-1, 0),  FOREST_GREEN),
-        ('TEXTCOLOR',      (0, 0),  (-1, 0),  white),
-        ('FONTNAME',       (0, 0),  (-1, 0),  'Helvetica-Bold'),
-        ('FONTSIZE',       (0, 0),  (-1, 0),  10),
-        ('ALIGN',          (1, 0),  (-1, -1), 'RIGHT'),
-        ('ALIGN',          (0, 0),  (0, -1),  'LEFT'),
-        # Data rows
-        ('FONTSIZE',       (0, 1),  (-1, -1), 9),
-        ('ROWBACKGROUNDS', (0, 1),  (-1, -1), [white, LIGHT_GREEN]),
-        ('TOPPADDING',     (0, 0),  (-1, -1), 8),
-        ('BOTTOMPADDING',  (0, 0),  (-1, -1), 8),
-        ('LEFTPADDING',    (0, 0),  (-1, -1), 8),
-        ('RIGHTPADDING',   (0, 0),  (-1, -1), 8),
-        ('GRID',           (0, 0),  (-1, -1), 0.5, HexColor('#E5E7EB')),
+        name = item.product.name if item.product else 'Product no longer listed'
+        item_rows.append([Paragraph(name, styles['body']), str(item.quantity), _money(item.unit_price), _money(float(item.unit_price) * item.quantity)])
+    items = Table(item_rows, colWidths=[8.7 * cm, 1.6 * cm, 3.4 * cm, 3.4 * cm], repeatRows=1)
+    items.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), FOREST), ('TEXTCOLOR', (0, 0), (-1, 0), white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LINEBELOW', (0, 1), (-1, -1), 0.5, LINE), ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, CREAM]),
+        ('TOPPADDING', (0, 0), (-1, -1), 9), ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8), ('RIGHTPADDING', (0, 0), (-1, -1), 8),
     ]))
-    story.append(items_table)
-    story.append(Spacer(1, 0.3 * cm))
+    story.extend([items, Spacer(1, 0.45 * cm)])
 
-    # ── Totals ────────────────────────────────────────────────────────────────
+    subtotal = float(order.total_amount or 0)
     discount = float(order.discount_amount or 0)
-    total    = float(order.total_amount or 0)
-    final    = total - discount
+    totals_rows = [['Subtotal', _money(subtotal)]]
+    if discount:
+        promo = f' ({order.promo_code.code})' if order.promo_code else ''
+        totals_rows.append([f'Discount{promo}', f'-{_money(discount)}'])
+    totals_rows.append(['Total paid' if paid else 'Total', _money(order.final_amount)])
+    totals = Table(totals_rows, colWidths=[4.1 * cm, 3.5 * cm], hAlign='RIGHT')
+    last = len(totals_rows) - 1
+    totals.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'), ('TEXTCOLOR', (0, 0), (-1, -2), MUTED),
+        ('FONTSIZE', (0, 0), (-1, -1), 9), ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6), ('LINEABOVE', (0, last), (-1, last), 1, FOREST),
+        ('FONTNAME', (0, last), (-1, last), 'Helvetica-Bold'), ('FONTSIZE', (0, last), (-1, last), 12),
+        ('TEXTCOLOR', (0, last), (-1, last), FOREST), ('BACKGROUND', (0, last), (-1, last), PALE_GREEN),
+    ]))
+    story.extend([totals, Spacer(1, 0.75 * cm)])
 
-    totals_data = []
-    if order.promo_code:
-        totals_data.append(['Subtotal:', f'GHS {total:.2f}'])
-        totals_data.append([f'Discount ({order.promo_code.code}):', f'-GHS {discount:.2f}'])
-    totals_data.append(['TOTAL PAID:', f'GHS {final:.2f}'])
+    note = ('This receipt covers a customer-approved weekly delivery. Future renewals are never charged automatically.'
+            if order.order_source == 'subscription'
+            else 'Keep this receipt for your records. Your order reference is the quickest way for us to help.')
+    story.append(KeepTogether([
+        HRFlowable(width='100%', thickness=0.7, color=LINE, spaceAfter=0.3 * cm), Paragraph(note, styles['muted']),
+        Spacer(1, 0.16 * cm), Paragraph(f'Issued {timezone.localtime().strftime("%d %B %Y at %H:%M")}. Thank you for choosing food grown with care.', styles['muted']),
+    ]))
 
-    totals_table = Table(totals_data, colWidths=[13.5 * cm, 4 * cm])
-
-    style_cmds = [
-        ('ALIGN',         (0, 0), (-1, -1), 'RIGHT'),
-        ('FONTSIZE',      (0, 0), (-1, -1), 10),
-        ('TOPPADDING',    (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-    ]
-    last_row = len(totals_data) - 1
-    style_cmds += [
-        ('FONTNAME',      (0, last_row), (-1, last_row), 'Helvetica-Bold'),
-        ('FONTSIZE',      (0, last_row), (-1, last_row), 12),
-        ('BACKGROUND',    (0, last_row), (-1, last_row), GHANA_GOLD),
-        ('TEXTCOLOR',     (0, last_row), (-1, last_row), FOREST_GREEN),
-        ('TOPPADDING',    (0, last_row), (-1, last_row), 8),
-        ('BOTTOMPADDING', (0, last_row), (-1, last_row), 8),
-    ]
-    totals_table.setStyle(TableStyle(style_cmds))
-    story.append(totals_table)
-    story.append(Spacer(1, 0.5 * cm))
-
-    # ── Footer ────────────────────────────────────────────────────────────────
-    story.append(HRFlowable(
-        width='100%', thickness=2, color=GHANA_GOLD, spaceAfter=0.3 * cm,
-    ))
-
-    footer_style = ParagraphStyle(
-        'Footer',
-        parent=styles['Normal'],
-        fontSize=8,
-        textColor=GREY,
-        alignment=TA_CENTER,
-        spaceAfter=4,
-    )
-    story.append(Paragraph(
-        'Thank you for choosing Legit Organic! '
-        'We are committed to delivering clean, genuine organic food.',
-        footer_style,
-    ))
-    story.append(Paragraph(
-        f'Generated on {timezone.now().strftime("%d %B %Y at %H:%M")} · legitorganic.com',
-        footer_style,
-    ))
-
-    doc.build(story)
+    doc.build(story, onFirstPage=_page_frame, onLaterPages=_page_frame)
     buffer.seek(0)
-
-    filename = f'LegitOrganic_Receipt_{order.reference}.pdf'
     response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Disposition'] = f'attachment; filename="LegitOrganic_Receipt_{order.reference}.pdf"'
     return response

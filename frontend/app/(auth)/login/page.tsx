@@ -41,6 +41,12 @@ function Spinner() {
 export default function LoginPage() {
   const { login, googleLogin } = useAuth()
 
+  const returnTo = () => {
+    if (typeof window === 'undefined') return undefined
+    const next = new URLSearchParams(window.location.search).get('next')
+    return next && next.startsWith('/') && !next.startsWith('//') ? next : undefined
+  }
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -57,7 +63,7 @@ export default function LoginPage() {
     setNeedsVerification(false)
     setLoading(true)
     try {
-      await login(email, password)
+      await login(email, password, returnTo())
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Something went wrong.'
       const lower = msg.toLowerCase()
@@ -116,7 +122,7 @@ export default function LoginPage() {
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
                   if (credentialResponse.credential) {
-                    googleLogin(credentialResponse.credential).catch(() =>
+                    googleLogin(credentialResponse.credential, returnTo()).catch(() =>
                       setError('Google login failed. Please try again.')
                     )
                   }

@@ -40,8 +40,6 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
     let city = ''
     let region = ''
 
-    console.log('[LocationPicker] address_components:', components.map(c => ({ types: c.types, long_name: c.long_name })))
-
     components.forEach(component => {
       const types = component.types
       if (types.includes('street_number')) streetNumber = component.long_name
@@ -235,7 +233,6 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
       setMarker(markerInstance)
       setIsLoading(false)
 
-      getCurrentLocation()
     }).catch(() => {
       setError('Failed to load map. Please enter address manually.')
       setIsLoading(false)

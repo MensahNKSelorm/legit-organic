@@ -167,8 +167,8 @@ export default function ProfilePage() {
   const fullName = user ? `${user.first_name} ${user.last_name}`.trim() : ''
 
   const inputBase =
-    'w-full border-0 border-b bg-transparent px-0 py-3 text-charcoal text-sm focus:outline-none transition-colors dark:text-white'
-  const inputOk  = `${inputBase} border-sand focus:border-leaf-green focus:ring-leaf-green`
+    'w-full border-0 border-b bg-transparent px-0 py-3 text-charcoal text-sm placeholder:text-charcoal/35 focus:outline-none transition-colors dark:text-white dark:placeholder:text-white/35'
+  const inputOk  = `${inputBase} border-sand focus:border-leaf-green focus:ring-leaf-green dark:border-white/25 dark:focus:border-[#F4C430]`
   const inputErr = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-400`
 
   const tabs: { id: Tab; label: string }[] = [
@@ -213,6 +213,13 @@ export default function ProfilePage() {
                 </button>
               ))}
             </nav>
+            <Link
+              href="/subscriptions/manage"
+              className="mt-5 flex w-full items-center justify-between border border-[#0D3B2A]/25 bg-[#0D3B2A] px-4 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 dark:border-[#F4C430]/40 dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
+            >
+              <span>Weekly Deliveries</span>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </Link>
           </aside>
 
           {/* Main panel */}
@@ -226,12 +233,12 @@ export default function ProfilePage() {
                   <div className="mb-10 grid gap-4 border-b editorial-rule pb-7 md:grid-cols-[1fr_auto] md:items-end"><div><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">Personal record</p><h2 className="display-organic mt-2 text-5xl text-[#0D3B2A] dark:text-white md:text-6xl">Account details</h2></div><p className="max-w-xs text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">Names, contact details and the address we use for delivery.</p></div>
 
                   {saveStatus === 'success' && (
-                    <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+                    <div className="mb-5 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-400/30 dark:bg-green-400/10 dark:text-green-200">
                       Changes saved successfully.
                     </div>
                   )}
                   {saveStatus === 'error' && (
-                    <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    <div className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200">
                       {saveError}
                     </div>
                   )}
@@ -240,7 +247,7 @@ export default function ProfilePage() {
                     {/* Name row */}
                     <div className="grid grid-cols-1 gap-7 sm:grid-cols-2">
                       <div>
-                        <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                        <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                           First Name <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -252,7 +259,7 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                        <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                           Last Name <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -267,7 +274,7 @@ export default function ProfilePage() {
 
                     {/* Email */}
                     <div>
-                      <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                      <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                         Email Address
                       </label>
                       <input
@@ -276,12 +283,12 @@ export default function ProfilePage() {
                         readOnly
                         className={`${inputOk} opacity-60 cursor-not-allowed`}
                       />
-                      <p className="mt-1 text-xs text-charcoal/40">Email cannot be changed.</p>
+                      <p className="mt-1 text-xs text-charcoal/50 dark:text-white/50">Email cannot be changed.</p>
                     </div>
 
                     {/* Phone */}
                     <div>
-                      <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                      <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                         Phone Number
                       </label>
                       <input
@@ -295,7 +302,7 @@ export default function ProfilePage() {
                       {phoneError ? (
                         <p className="mt-1 text-xs text-red-500">{phoneError}</p>
                       ) : (
-                        <p className="mt-1 text-xs text-charcoal/40">
+                        <p className="mt-1 text-xs text-charcoal/50 dark:text-white/50">
                           Format: +233244123456 or 0244123456
                         </p>
                       )}
@@ -338,7 +345,7 @@ export default function ProfilePage() {
 
                         {/* House number */}
                         <div>
-                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                          <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                             House / Apartment Number
                           </label>
                           <input
@@ -346,13 +353,13 @@ export default function ProfilePage() {
                             value={houseNumber}
                             onChange={(e) => setHouseNumber(e.target.value)}
                             placeholder="e.g. A14, Flat 3"
-                            className={inputOk}
+                            className={`${inputOk} dark:[color-scheme:dark]`}
                           />
                         </div>
 
                         {/* Street address */}
                         <div>
-                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                          <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                             Street Address
                           </label>
                           <input
@@ -366,7 +373,7 @@ export default function ProfilePage() {
 
                         {/* City */}
                         <div>
-                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                          <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                             City
                           </label>
                           <input
@@ -380,7 +387,7 @@ export default function ProfilePage() {
 
                         {/* Region */}
                         <div>
-                          <label className="block text-sm font-semibold text-charcoal/70 mb-1.5">
+                          <label className="mb-1.5 block text-sm font-semibold text-charcoal/70 dark:text-white/75">
                             Region
                           </label>
                           <select
@@ -422,7 +429,7 @@ export default function ProfilePage() {
                 {wishlistLoading ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-3">
                     <span className="inline-block w-8 h-8 border-2 border-leaf-green border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-charcoal/40">Loading your list…</span>
+                    <span className="text-sm text-charcoal/50 dark:text-white/55">Loading your list…</span>
                   </div>
                 ) : wishlistItems.length === 0 ? (
                   <div className="border-b editorial-rule py-12 text-left">
@@ -437,10 +444,10 @@ export default function ProfilePage() {
                       return (
                         <li
                           key={item.id}
-                          className="flex items-center gap-4 border-b editorial-rule py-5"
+                          className="flex items-center gap-4 border-b editorial-rule py-5 text-[#0D3B2A] dark:text-white"
                         >
                           {/* Image */}
-                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-beige flex-shrink-0">
+                          <div className="h-16 w-16 flex-shrink-0 overflow-hidden bg-beige dark:bg-white/[.06]">
                             {imgSrc ? (
                               <Image
                                 src={imgSrc}
@@ -450,16 +457,16 @@ export default function ProfilePage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-charcoal/20 text-xs">No img</div>
+                              <div className="flex h-full w-full items-center justify-center text-xs text-charcoal/30 dark:text-white/35">No image</div>
                             )}
                           </div>
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">
-                            <Link href={`/products/${item.product.slug}`} className="font-semibold text-forest-green text-sm leading-snug hover:text-leaf-green transition-colors truncate block">
+                            <Link href={`/products/${item.product.slug}`} className="block truncate text-sm font-semibold leading-snug text-forest-green transition-colors hover:text-leaf-green dark:text-white dark:hover:text-[#F4C430]">
                               {item.product.name}
                             </Link>
-                            <p className="text-xs text-charcoal/50 mt-0.5">
+                            <p className="mt-0.5 text-xs text-charcoal/60 dark:text-white/55">
                               GH₵ {item.product.price} · {item.product.unit}
                             </p>
                           </div>
@@ -468,14 +475,14 @@ export default function ProfilePage() {
                           <div className="flex items-center gap-2 shrink-0">
                             <button
                               onClick={() => addToCart(item.product)}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-forest-green text-mist-white hover:opacity-90 transition-opacity"
+                              className="border border-forest-green bg-forest-green px-3 py-2 text-xs font-semibold text-mist-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:border-[#F4C430] dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
                             >
                               Add to Cart
                             </button>
                             <button
                               onClick={() => removeWishlistItem(item.id)}
                               aria-label="Remove from list"
-                              className="w-7 h-7 flex items-center justify-center rounded-lg border border-red-200 text-red-400 hover:bg-red-50 transition-colors text-sm font-bold"
+                              className="flex size-8 items-center justify-center border border-red-200 text-sm font-bold text-red-500 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 dark:border-red-400/35 dark:text-red-300 dark:hover:bg-red-400/10"
                             >
                               ×
                             </button>

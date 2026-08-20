@@ -23,7 +23,7 @@ const config: Config = {
         "mist-white": "#FEFCF7",
       },
       fontFamily: {
-        display: ['"Boska"', "Georgia", "serif"],
+        display: ['"Sentient"', "Georgia", "serif"],
         sans: ['"Cabinet Grotesk"', "system-ui", "sans-serif"],
       },
       backgroundImage: {

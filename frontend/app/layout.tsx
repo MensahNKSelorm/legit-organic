@@ -3,11 +3,9 @@ import { Suspense } from 'react'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth'
 import { CartProvider } from '@/lib/cart'
-import { WishlistProvider } from '@/lib/wishlist'
 import Navbar from '@/components/layout/Navbar'
 import SiteFooter from '@/components/layout/SiteFooter'
 import VerificationBanner from '@/components/ui/VerificationBanner'
-import GoogleProvider from '@/components/providers/GoogleProvider'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
 import { ReferralCapture } from '@/components/ReferralCapture'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
@@ -88,7 +86,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://api.fontshare.com" />
         <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
         <link
-          href="https://api.fontshare.com/v2/css?f[]=boska@400,500,600,700&f[]=cabinet-grotesk@400,500,700,800&display=swap"
+          href="https://api.fontshare.com/v2/css?f[]=sentient@400,500,600,700&f[]=cabinet-grotesk@400,500,700,800&display=swap"
           rel="stylesheet"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -97,18 +95,14 @@ export default function RootLayout({
         <meta name="theme-color" content="#0D3B2A" />
       </head>
       <body className="antialiased">
-        <GoogleProvider>
-          <AuthProvider>
-            <WishlistProvider>
-              <CartProvider>
-                <Navbar />
-                <VerificationBanner />
-                <main>{children}</main>
-                <SiteFooter />
-              </CartProvider>
-            </WishlistProvider>
-          </AuthProvider>
-        </GoogleProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Navbar />
+            <VerificationBanner />
+            <main>{children}</main>
+            <SiteFooter />
+          </CartProvider>
+        </AuthProvider>
         <WhatsAppButton />
         <Suspense fallback={null}>
           <ReferralCapture />

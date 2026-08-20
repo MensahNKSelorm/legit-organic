@@ -86,14 +86,16 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           'fixed top-0 right-0 z-50',
           'h-[100dvh] w-full max-w-lg',
           'flex flex-col overflow-hidden',
-          'bg-[#FAF7F0] dark:bg-[#171B18] shadow-2xl',
+          'border-l border-[#0D3B2A]/15 bg-[#FAF7F0] shadow-[-12px_0_36px_rgba(13,59,42,.14)] dark:border-white/15 dark:bg-[#171B18] dark:shadow-[-12px_0_36px_rgba(0,0,0,.35)]',
           'transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : 'translate-x-full',
         ].join(' ')}
       >
         {/* 1. Header — flex-shrink-0 */}
-        <div className="shrink-0 flex items-end justify-between px-6 py-7 border-b border-[#0D3B2A]/20 dark:border-white/15 md:px-8">
-          <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-start justify-between border-b border-[#0D3B2A]/20 px-6 py-7 dark:border-white/15 md:px-8">
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:text-[#F4C430]">Current harvest</p>
+            <div className="flex flex-wrap items-baseline gap-x-2">
             <h2 className="display-organic text-4xl text-[#0D3B2A] dark:text-[#faf7f0]">
               Your market bag
             </h2>
@@ -102,6 +104,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 ({itemCount} {itemCount === 1 ? 'item' : 'items'})
               </span>
             )}
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -134,7 +137,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               <Link
                 href="/products"
                 onClick={onClose}
-                className="px-6 py-3 bg-[#F4C430] text-[#0D3B2A] text-sm font-bold hover:bg-[#0D3B2A] hover:text-white dark:hover:bg-white dark:hover:text-[#0D3B2A] transition-colors"
+                className="bg-[#F4C430] px-6 py-3 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 dark:hover:bg-white dark:hover:text-[#0D3B2A]"
               >
                 Browse Products
               </Link>
@@ -233,12 +236,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 onKeyDown={(e) => { if (e.key === 'Enter') handleApplyPromo() }}
                 placeholder="Promo code"
                 disabled={!!appliedPromo}
-                className="flex-1 px-3 py-2 border border-[#E6D8BD] bg-transparent text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32] dark:border-white/20 dark:text-[#faf7f0] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 border border-[#E6D8BD] bg-transparent px-3 py-2 text-sm text-[#0D3B2A] placeholder:text-[#5B3E31]/45 focus:border-[#2E7D32] focus:outline-none focus:ring-1 focus:ring-[#2E7D32] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/25 dark:text-[#faf7f0] dark:placeholder:text-white/40 dark:focus:border-[#F4C430] dark:focus:ring-[#F4C430]"
               />
               <button
                 onClick={handleApplyPromo}
                 disabled={promoLoading || !!appliedPromo || !promoCode.trim()}
-                className="px-5 py-2 bg-[#0D3B2A] text-[#F4C430] text-sm font-semibold hover:bg-[#0a2e20] dark:bg-[#F4C430] dark:text-[#0D3B2A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="bg-[#0D3B2A] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F4C430] dark:text-[#0D3B2A]"
               >
                 {promoLoading ? '…' : 'Apply'}
               </button>
@@ -293,7 +296,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           <Link
             href="/products"
             onClick={onClose}
-            className="block text-center mt-3 text-sm text-[#5B3E31] dark:text-[#9ca3af] hover:text-[#0D3B2A] dark:hover:text-[#faf7f0] transition-colors"
+            className="mt-3 block text-center text-sm font-medium text-[#5B3E31] underline decoration-transparent underline-offset-4 transition-colors hover:text-[#0D3B2A] hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:text-[#B8C0B9] dark:hover:text-white"
           >
             Continue Shopping
           </Link>

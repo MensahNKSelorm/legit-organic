@@ -2,35 +2,29 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import type { Order } from '@/types'
+import Link from 'next/link'
+import type { Order, Product } from '@/types'
 import { getMediaUrl } from '@/lib/media'
 import { api } from '@/lib/api'
 
-const PLACEHOLDERS = [
-  '/images/products/p1.webp',
-  '/images/products/p2.webp',
-  '/images/products/p3.webp',
-  '/images/products/p4.webp',
-]
-
 const STEPS = [
-  { key: 'whatsapp_pending', label: 'Order Placed',       icon: '📋' },
-  { key: 'paid',             label: 'Payment Confirmed',  icon: '✅' },
-  { key: 'processing',       label: 'Being Prepared',     icon: '🌿' },
-  { key: 'shipped',          label: 'On the Way',         icon: '🚚' },
-  { key: 'delivered',        label: 'Delivered',          icon: '🎉' },
+  { key: 'whatsapp_pending', label: 'Order placed', icon: 'order' },
+  { key: 'paid', label: 'Payment confirmed', icon: 'payment' },
+  { key: 'processing', label: 'Being prepared', icon: 'prepare' },
+  { key: 'shipped', label: 'On the way', icon: 'delivery' },
+  { key: 'delivered', label: 'Delivered', icon: 'delivered' },
 ]
 
 const STEP_ORDER = ['whatsapp_pending', 'paid', 'processing', 'shipped', 'delivered']
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  pending:          { label: 'Awaiting Payment',  cls: 'bg-yellow-100 text-yellow-800' },
-  whatsapp_pending: { label: 'Awaiting Payment',  cls: 'bg-yellow-100 text-yellow-800' },
-  paid:             { label: 'Payment Confirmed', cls: 'bg-blue-100 text-blue-800'   },
-  processing:       { label: 'Being Prepared',    cls: 'bg-orange-100 text-orange-800' },
-  shipped:          { label: 'On the Way',        cls: 'bg-purple-100 text-purple-800' },
-  delivered:        { label: 'Delivered',         cls: 'bg-green-100 text-green-800' },
-  cancelled:        { label: 'Cancelled',         cls: 'bg-red-100 text-red-700'     },
+  pending: { label: 'Awaiting payment', cls: 'border-[#D7A90B]/35 bg-[#FFF8DC] text-[#765B00] dark:border-[#F4C430]/35 dark:bg-[#F4C430]/10 dark:text-[#FFE681]' },
+  whatsapp_pending: { label: 'Awaiting payment', cls: 'border-[#D7A90B]/35 bg-[#FFF8DC] text-[#765B00] dark:border-[#F4C430]/35 dark:bg-[#F4C430]/10 dark:text-[#FFE681]' },
+  paid: { label: 'Payment confirmed', cls: 'border-[#2E7D32]/25 bg-[#EDF7EE] text-[#215D26] dark:border-[#72B77A]/30 dark:bg-[#72B77A]/10 dark:text-[#A9E1AF]' },
+  processing: { label: 'Being prepared', cls: 'border-[#2E7D32]/25 bg-[#EDF7EE] text-[#215D26] dark:border-[#72B77A]/30 dark:bg-[#72B77A]/10 dark:text-[#A9E1AF]' },
+  shipped: { label: 'On the way', cls: 'border-[#315A80]/25 bg-[#EEF5FA] text-[#294B6A] dark:border-[#78A9D2]/30 dark:bg-[#78A9D2]/10 dark:text-[#B6D7F2]' },
+  delivered: { label: 'Delivered', cls: 'border-[#2E7D32]/25 bg-[#E8F5E9] text-[#215D26] dark:border-[#72B77A]/30 dark:bg-[#72B77A]/10 dark:text-[#A9E1AF]' },
+  cancelled: { label: 'Cancelled', cls: 'border-red-200 bg-red-50 text-red-700 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200' },
 }
 
 function formatDate(iso: string) {
@@ -48,19 +42,35 @@ function CheckIcon() {
   )
 }
 
+function StatusIcon({ name }: { name: string }) {
+  const common = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (name === 'order') return <svg {...common} aria-hidden><path d="M7 3h10v4H7z"/><path d="M5 5H4v16h16V5h-1"/><path d="M8 12h8M8 16h5"/></svg>
+  if (name === 'payment') return <svg {...common} aria-hidden><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg>
+  if (name === 'prepare') return <svg {...common} aria-hidden><path d="M12 21V10M12 14c-4 0-7-2-7-6 4 0 7 2 7 6ZM12 11c4 0 7-2 7-6-4 0-7 2-7 6Z"/></svg>
+  if (name === 'delivery') return <svg {...common} aria-hidden><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+  return <svg {...common} aria-hidden><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="9"/></svg>
+}
+
+function CloseIcon() {
+  return <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18"/></svg>
+}
+
 function PinIcon() {
   return (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      className="shrink-0 mt-0.5 text-[#2E7D32]">
+      className="mt-0.5 shrink-0 text-[#2E7D32] dark:text-[#F4C430]">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
   )
 }
 
-const getProductImage = (product: any): string => {
-  if (product.images && product.images.length > 0) {
+const getProductImage = (
+  product: Order['items'][number]['product'] | Product
+): string => {
+  if (!product) return '/images/products/p1.webp'
+  if ('images' in product && product.images && product.images.length > 0) {
     return getMediaUrl(product.images[0].image) || '/images/products/p1.webp'
   }
   if (product.image) {
@@ -93,8 +103,9 @@ export default function OrderCard({ order }: { order: Order }) {
     }
   }
 
-  const currentStep = STEP_ORDER.indexOf(order.status)
+  const currentStep = STEP_ORDER.indexOf(order.status === 'pending' ? 'whatsapp_pending' : order.status)
   const isCancelled = order.status === 'cancelled'
+  const isSubscription = order.order_source === 'subscription'
   const badge = STATUS_BADGE[order.status] ?? { label: order.status, cls: 'bg-gray-100 text-gray-700' }
 
   const stepCompleted = (idx: number) => {
@@ -109,34 +120,33 @@ export default function OrderCard({ order }: { order: Order }) {
   }
 
   return (
-    <div className={[
-      'rounded-2xl border bg-white transition-all duration-300',
+    <article className={[
+      'relative overflow-hidden border bg-[#FFFEFA] transition-colors duration-300 dark:bg-[#202622]',
       expanded
-        ? 'border-[#2E7D32] shadow-md'
-        : 'border-[#E6D8BD] shadow-sm hover:shadow-md',
+        ? 'border-[#2E7D32]'
+        : 'border-[#D9D0C0] hover:border-[#9CB09F] dark:border-white/15 dark:hover:border-white/30',
     ].join(' ')}>
+      <div className={`absolute inset-y-0 left-0 w-1 ${isSubscription ? 'bg-[#F4C430]' : 'bg-[#2E7D32]'}`} />
 
       {/* ── Header (always visible, click to toggle) ── */}
       <button
         onClick={() => setExpanded((e) => !e)}
-        className="w-full text-left px-5 py-4 flex items-center gap-4"
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-4 px-6 py-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2E7D32]"
       >
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="font-mono font-bold text-[#0D3B2A] text-sm tracking-tight">
-              {order.reference}
-            </span>
-            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${badge.cls}`}>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-[.14em] text-[#2E7D32] dark:text-[#F4C430]">{isSubscription ? 'Weekly delivery' : 'Market order'}</span>
+            <span className={`border px-2.5 py-1 text-[11px] font-semibold ${badge.cls}`}>
               {badge.label}
             </span>
           </div>
-          <div className="flex flex-wrap gap-x-4 text-xs text-[#5B3E31]">
-            <span>{formatDate(order.created_at)}</span>
-            <span className="font-semibold text-[#2E7D32]">
-              GH₵ {parseFloat(order.total_amount).toFixed(2)}
-            </span>
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <span className="font-mono text-sm font-bold tracking-tight text-[#0D3B2A] dark:text-white">{order.reference}</span>
+            <span className="text-xs text-[#6F675D] dark:text-[#B8C0B9]">Placed {formatDate(order.created_at)}</span>
           </div>
         </div>
+        <span className="hidden text-right sm:block"><span className="block text-[10px] font-bold uppercase tracking-[.14em] text-[#81786C] dark:text-[#AAB4AB]">Order total</span><span className="mt-1 block text-lg font-semibold text-[#0D3B2A] dark:text-white">GH₵ {parseFloat(order.total_amount).toFixed(2)}</span></span>
 
         {/* Chevron */}
         <svg
@@ -144,7 +154,7 @@ export default function OrderCard({ order }: { order: Order }) {
           stroke="currentColor" strokeWidth="2.5"
           fill="none" strokeLinecap="round" strokeLinejoin="round"
           className={[
-            'text-[#0D3B2A] shrink-0 transition-transform duration-300',
+            'shrink-0 text-[#0D3B2A] transition-transform duration-300 dark:text-white',
             expanded ? 'rotate-180' : '',
           ].join(' ')}
         >
@@ -157,7 +167,7 @@ export default function OrderCard({ order }: { order: Order }) {
         'overflow-hidden transition-all duration-500 ease-in-out',
         expanded ? 'max-h-[1800px] opacity-100' : 'max-h-0 opacity-0',
       ].join(' ')}>
-        <div className="px-5 pb-6 space-y-6 border-t border-[#E6D8BD]">
+        <div className="space-y-6 border-t border-[#D9D0C0] px-6 pb-6 dark:border-white/15">
 
           {/* ── Progress tracker ── */}
           {!isCancelled && (
@@ -165,11 +175,11 @@ export default function OrderCard({ order }: { order: Order }) {
 
               {/* Delivered celebration banner */}
               {order.status === 'delivered' && (
-                <div className="mb-6 p-4 bg-[#F0FFF4] border border-[#2E7D32] rounded-xl flex items-center gap-3">
-                  <span className="text-3xl">🎉</span>
+                <div className="mb-6 flex items-center gap-3 border border-[#2E7D32]/25 bg-[#EDF7EE] p-4 dark:border-[#72B77A]/25 dark:bg-[#72B77A]/10">
+                  <span className="grid size-9 shrink-0 place-items-center bg-[#2E7D32] text-white"><StatusIcon name="delivered" /></span>
                   <div>
-                    <p className="font-semibold text-[#0D3B2A]">Order Delivered!</p>
-                    <p className="text-sm text-[#2E7D32]">
+                    <p className="font-semibold text-[#0D3B2A] dark:text-white">Order delivered</p>
+                    <p className="text-sm text-[#2E7D32] dark:text-[#B9DDBD]">
                       Thank you for choosing Legit Organic. We hope you enjoy your fresh organic produce!
                     </p>
                   </div>
@@ -187,7 +197,7 @@ export default function OrderCard({ order }: { order: Order }) {
                     <div key={step.key} className="flex-1 flex flex-col items-center relative">
                       {/* Connecting line — spans from center of this circle to center of next */}
                       {!isLast && (
-                        <div className="absolute top-[18px] left-1/2 right-[-50%] h-[2px] z-0 bg-[#E6D8BD] overflow-hidden">
+                        <div className="absolute top-[18px] left-1/2 right-[-50%] z-0 h-[2px] overflow-hidden bg-[#E6D8BD] dark:bg-white/15">
                           <div
                             className="absolute inset-y-0 left-0 bg-[#2E7D32] transition-all duration-700"
                             style={{
@@ -200,22 +210,22 @@ export default function OrderCard({ order }: { order: Order }) {
 
                       {/* Circle */}
                       <div className={[
-                        'relative z-10 w-9 h-9 rounded-full flex items-center justify-center text-base transition-all duration-300',
+                        'relative z-10 flex size-9 items-center justify-center border transition-all duration-300',
                         isCompleted
-                          ? 'bg-[#2E7D32] text-white'
+                          ? 'border-[#2E7D32] bg-[#2E7D32] text-white'
                           : isCurrent
-                          ? 'bg-[#F4C430] text-[#0D3B2A] animate-pulse ring-4 ring-[#F4C430]/30'
-                          : 'bg-[#F5F0E6] text-[#9CA3AF]',
+                          ? 'border-[#D4A800] bg-[#F4C430] text-[#0D3B2A] shadow-[0_0_0_5px_rgba(244,196,48,.18),0_0_24px_rgba(244,196,48,.28)]'
+                          : 'border-[#D9D0C0] bg-[#F7F3EA] text-[#9B958C] dark:border-white/15 dark:bg-white/[.04] dark:text-[#7F8A82]',
                       ].join(' ')}>
-                        {isCompleted ? <CheckIcon /> : step.icon}
+                        {isCompleted ? <CheckIcon /> : <StatusIcon name={step.icon} />}
                       </div>
 
                       {/* Label */}
                       <span className={[
                         'mt-2 text-xs text-center leading-snug px-1',
                         isCompleted || isCurrent
-                          ? 'text-[#0D3B2A] font-semibold'
-                          : 'text-[#9CA3AF]',
+                          ? 'font-semibold text-[#0D3B2A] dark:text-white'
+                          : 'text-[#9CA3AF] dark:text-[#7F8A82]',
                       ].join(' ')}>
                         {step.label}
                       </span>
@@ -236,17 +246,17 @@ export default function OrderCard({ order }: { order: Order }) {
                       {/* Track column */}
                       <div className="flex flex-col items-center">
                         <div className={[
-                          'w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 transition-all duration-300',
+                          'flex size-8 shrink-0 items-center justify-center border transition-all duration-300',
                           isCompleted
-                            ? 'bg-[#2E7D32] text-white'
+                            ? 'border-[#2E7D32] bg-[#2E7D32] text-white'
                             : isCurrent
-                            ? 'bg-[#F4C430] text-[#0D3B2A] animate-pulse ring-4 ring-[#F4C430]/30'
-                            : 'bg-[#F5F0E6] text-[#9CA3AF]',
+                            ? 'border-[#D4A800] bg-[#F4C430] text-[#0D3B2A] shadow-[0_0_0_5px_rgba(244,196,48,.18)]'
+                            : 'border-[#D9D0C0] bg-[#F7F3EA] text-[#9B958C] dark:border-white/15 dark:bg-white/[.04] dark:text-[#7F8A82]',
                         ].join(' ')}>
-                          {isCompleted ? <CheckIcon /> : step.icon}
+                          {isCompleted ? <CheckIcon /> : <StatusIcon name={step.icon} />}
                         </div>
                         {!isLast && (
-                          <div className="w-[2px] flex-1 my-1 min-h-[20px] overflow-hidden bg-[#E6D8BD]">
+                          <div className="my-1 min-h-[20px] w-[2px] flex-1 overflow-hidden bg-[#E6D8BD] dark:bg-white/15">
                             <div
                               className="w-full bg-[#2E7D32] transition-all duration-700"
                               style={{
@@ -262,8 +272,8 @@ export default function OrderCard({ order }: { order: Order }) {
                       <p className={[
                         'text-sm font-medium leading-snug mt-1 pb-5',
                         isCompleted || isCurrent
-                          ? 'text-[#0D3B2A] font-semibold'
-                          : 'text-[#9CA3AF]',
+                          ? 'font-semibold text-[#0D3B2A] dark:text-white'
+                          : 'text-[#9CA3AF] dark:text-[#7F8A82]',
                       ].join(' ')}>
                         {step.label}
                       </p>
@@ -276,15 +286,15 @@ export default function OrderCard({ order }: { order: Order }) {
 
           {/* Cancelled banner */}
           {isCancelled && (
-            <div className="pt-5 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
-              <span className="text-xl">❌</span>
+            <div className="flex items-center gap-3 border border-red-200 bg-red-50 px-4 py-3 pt-5">
+              <span className="grid size-8 place-items-center bg-red-100 text-red-700"><CloseIcon /></span>
               <span className="text-sm text-red-700 font-medium">This order was cancelled.</span>
             </div>
           )}
 
           {/* ── Order items ── */}
           <div>
-            <p className="text-xs font-semibold text-[#5B3E31] uppercase tracking-wider mb-3">Items</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#5B3E31] dark:text-[#C7CEC8]">Items</p>
             <ul className="space-y-3">
               {order.items.map((item) => {
                 if (!item.product) return null
@@ -292,7 +302,7 @@ export default function OrderCard({ order }: { order: Order }) {
                 const subtotal = (parseFloat(item.unit_price) * item.quantity).toFixed(2)
                 return (
                   <li key={item.id} className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#F5F0E6] shrink-0">
+                    <div className="relative size-10 shrink-0 overflow-hidden bg-[#F5F0E6] dark:bg-white/[.06]">
                       <Image
                         src={imageSrc}
                         alt={item.product.name}
@@ -302,14 +312,14 @@ export default function OrderCard({ order }: { order: Order }) {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#0D3B2A] truncate">
+                      <p className="truncate text-sm font-medium text-[#0D3B2A] dark:text-white">
                         {item.product.name}
                       </p>
-                      <p className="text-xs text-[#5B3E31]">
+                      <p className="text-xs text-[#5B3E31] dark:text-[#AAB4AB]">
                         {item.quantity} × GH₵ {parseFloat(item.unit_price).toFixed(2)}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-[#2E7D32] shrink-0">
+                    <span className="shrink-0 text-sm font-semibold text-[#2E7D32] dark:text-[#F4C430]">
                       GH₵ {subtotal}
                     </span>
                   </li>
@@ -319,32 +329,34 @@ export default function OrderCard({ order }: { order: Order }) {
           </div>
 
           {/* ── Total ── */}
-          <div className="flex items-center justify-between py-3 border-t border-[#E6D8BD]">
-            <span className="text-sm text-[#5B3E31]">
+          <div className="flex items-center justify-between border-t border-[#E6D8BD] py-3 dark:border-white/15">
+            <span className="text-sm text-[#5B3E31] dark:text-[#C7CEC8]">
               {order.discount_amount && parseFloat(order.discount_amount) > 0
                 ? 'Total (after discount)'
                 : 'Total'}
             </span>
-            <span className="font-bold text-[#2E7D32]">
+            <span className="font-bold text-[#2E7D32] dark:text-[#F4C430]">
               GH₵ {parseFloat(order.total_amount).toFixed(2)}
             </span>
           </div>
 
           {/* ── Delivery address ── */}
           {order.delivery_address && (
-            <div className="flex gap-2 text-sm text-[#5B3E31]">
+            <div className="flex gap-2 text-sm text-[#5B3E31] dark:text-[#C7CEC8]">
               <PinIcon />
               <span>{order.delivery_address}</span>
             </div>
           )}
 
           {/* ── Download Receipt ── */}
-          <div className="mt-4 flex flex-col items-end gap-1">
+          <div className="mt-4 flex flex-col gap-3 border-t border-[#D9D0C0] pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/15">
+            {isSubscription ? <Link href="/subscriptions/manage" className="text-sm font-bold text-[#2E7D32] underline decoration-[#2E7D32]/30 underline-offset-4 outline-none hover:decoration-[#2E7D32] focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:text-[#F4C430]">Manage weekly deliveries</Link> : <span />}
+            <div className="flex flex-col items-start gap-1 sm:items-end">
             <button
               type="button"
               onClick={handleDownloadReceipt}
               disabled={receiptState === 'loading'}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0D3B2A] text-[#F4C430] rounded-xl font-semibold text-sm hover:bg-[#1a5c40] transition-colors disabled:opacity-60"
+              className="inline-flex items-center gap-2 bg-[#0D3B2A] px-4 py-2.5 text-sm font-semibold text-white outline-none transition-colors hover:bg-[#1a5c40] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2"
@@ -358,10 +370,11 @@ export default function OrderCard({ order }: { order: Order }) {
             {receiptState === 'error' && (
               <span className="text-xs text-red-600">Could not download receipt. Please try again.</span>
             )}
+            </div>
           </div>
 
         </div>
       </div>
-    </div>
+    </article>
   )
 }

@@ -62,12 +62,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const localItems = itemsRef.current
 
         // Push any local items that are missing from the DB cart
-        for (const localItem of localItems) {
+        const missingItems = localItems.filter((localItem) => {
           const inDb = dbCart.items.find(i => i.product.id === localItem.product.id)
-          if (!inDb) {
-            await api.cart.addItem(localItem.product.id, localItem.quantity)
-          }
-        }
+          return !inDb
+        })
+
+        await Promise.all(
+          missingItems.map((localItem) =>
+            api.cart.addItem(localItem.product.id, localItem.quantity)
+          )
+        )
 
         // Re-fetch to get the merged state and use DB as source of truth
         const finalCart = await api.cart.get()

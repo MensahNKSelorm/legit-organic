@@ -24,7 +24,7 @@ interface AuthContextType {
   b2bProfile: B2BProfile | null
   isSalesRep: boolean
   salesRepProfile: SalesRepProfile | null
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, returnTo?: string) => Promise<void>
   register: (
     email: string,
     password: string,
@@ -33,7 +33,7 @@ interface AuthContextType {
     referralCode?: string,
     turnstileToken?: string | null
   ) => Promise<void>
-  googleLogin: (token: string) => Promise<void>
+  googleLogin: (token: string, returnTo?: string) => Promise<void>
   logout: () => void
   updateUser: (data: Partial<User>) => void
   refreshB2B: () => Promise<void>
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshB2B, refreshSalesRep])
 
   const login = useCallback(
-    async (email: string, password: string) => {
+    async (email: string, password: string, returnTo?: string) => {
       const { access, refresh } = await api.auth.login(email, password)
       localStorage.setItem('access_token', access)
       localStorage.setItem('refresh_token', refresh)
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData)
       refreshB2B()
       refreshSalesRep()
-      router.push('/profile')
+      router.push(returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/profile')
     },
     [router, refreshB2B, refreshSalesRep]
   )
@@ -155,14 +155,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const googleLogin = useCallback(
-    async (token: string) => {
+    async (token: string, returnTo?: string) => {
       const data = await api.auth.googleAuth(token)
       localStorage.setItem('access_token', data.access)
       localStorage.setItem('refresh_token', data.refresh)
       setUser(data.user)
       refreshB2B()
       refreshSalesRep()
-      router.push('/profile')
+      router.push(returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/profile')
     },
     [router, refreshB2B, refreshSalesRep]
   )

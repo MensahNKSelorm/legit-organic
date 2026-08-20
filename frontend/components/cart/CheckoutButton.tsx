@@ -60,7 +60,7 @@ Please send me the MoMo payment details. Thank you!`
   return `https://wa.me/233539569260?text=${encodeURIComponent(message)}`
 }
 
-export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPromo }: CheckoutButtonProps) {
+export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButtonProps) {
   const { user } = useAuth()
   const { items, total, clearCart } = useCart()
   const [showAddressModal, setShowAddressModal] = useState(false)
@@ -317,21 +317,21 @@ export default function CheckoutButton({ onClose: _onClose, promoCode, appliedPr
   return (
     <>
       {checkoutError && (
-        <div role="alert" className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div role="alert" className="mb-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200">
           {checkoutError} Your order is safe—use the button below to retry.
         </div>
       )}
       <button
         onClick={handleSeevCashOrder}
         disabled={items.length === 0 || isLoading}
-        className="mb-3 w-full rounded-xl bg-[#0D3B2A] py-3 font-semibold text-white transition-colors hover:bg-[#174F3A] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mb-3 w-full bg-[#0D3B2A] py-3.5 font-semibold text-white transition-colors hover:bg-[#174F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
       >
         {isLoading && checkoutMode === 'seevcash' ? 'Opening secure checkout…' : 'Pay securely with SeevCash'}
       </button>
       <button
         onClick={handleWhatsAppOrder}
         disabled={items.length === 0 || isLoading}
-        className="w-full bg-[#25D366] text-white font-semibold py-3 rounded-xl hover:bg-[#1ebe5d] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="flex w-full items-center justify-center gap-2 border border-[#198A45] bg-transparent py-3 font-semibold text-[#146C38] transition-colors hover:bg-[#198A45] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198A45] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#68D391] dark:text-[#8FE3AC] dark:hover:bg-[#68D391] dark:hover:text-[#0D3B2A]"
       >
         {isLoading ? (
           'Processing…'
