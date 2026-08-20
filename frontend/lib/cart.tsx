@@ -37,13 +37,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const itemsRef = useRef<CartItem[]>(items)
   useEffect(() => { itemsRef.current = items }, [items])
 
-  // Load from localStorage on mount
+  // Load after hydration so the server and first client render stay identical.
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setItems(JSON.parse(stored))
+      const parsed = stored ? JSON.parse(stored) as CartItem[] : null
+      Promise.resolve().then(() => {
+        if (parsed) setItems(parsed)
+      })
     } catch {
-      // ignore corrupt data
+      // Ignore corrupt local cart data.
     }
   }, [])
 

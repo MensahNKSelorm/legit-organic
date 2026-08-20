@@ -1,12 +1,26 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ValidationError
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
 
 import hashlib
 import secrets
 from datetime import timedelta
+
+
+class PrivateB2BStorage(FileSystemStorage):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault(
+            'location',
+            getattr(settings, 'PRIVATE_B2B_ROOT', settings.BASE_DIR / 'private_media' / 'b2b'),
+        )
+        kwargs.setdefault('base_url', None)
+        super().__init__(*args, **kwargs)
+
+
+private_b2b_storage = PrivateB2BStorage()
 
 
 class UserManager(BaseUserManager):
@@ -218,9 +232,30 @@ class B2BProfile(models.Model):
         ('other', 'Other'),
     ]
     STATUS_CHOICES = [
-        ('pending', 'Pending Review'),
+        ('pending', 'Submitted'),
+        ('under_review', 'Under review'),
+        ('changes_requested', 'More information required'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
+        ('suspended', 'Suspended'),
+    ]
+    LEGAL_STRUCTURE_CHOICES = [
+        ('business_name', 'Business name / sole proprietor'),
+        ('partnership', 'Partnership'),
+        ('limited_shares', 'Company limited by shares'),
+        ('limited_guarantee', 'Company limited by guarantee / NGO'),
+        ('public_institution', 'Public institution / MDA / MMDA'),
+        ('cooperative', 'Cooperative'),
+        ('foreign_mission', 'Foreign mission / external organisation'),
+        ('other', 'Other'),
+    ]
+    DOCUMENT_TYPE_CHOICES = [
+        ('orc_certificate', 'ORC registration or incorporation certificate'),
+        ('introductory_letter', 'Official introductory or authorisation letter'),
+    ]
+    ORDER_FREQUENCY_CHOICES = [
+        ('weekly', 'Weekly'), ('fortnightly', 'Every two weeks'),
+        ('monthly', 'Monthly'), ('ad_hoc', 'As needed'),
     ]
 
     user = models.OneToOneField(
@@ -231,12 +266,44 @@ class B2BProfile(models.Model):
         blank=True,
     )
     company_name = models.CharField(max_length=200)
+    trading_name = models.CharField(max_length=200, blank=True)
+    legal_structure = models.CharField(max_length=40, choices=LEGAL_STRUCTURE_CHOICES, default='business_name')
     business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES)
+    sector = models.CharField(max_length=120, blank=True)
+    year_started = models.PositiveSmallIntegerField(null=True, blank=True)
+    website = models.URLField(blank=True)
     contact_person = models.CharField(max_length=150)
     business_phone = models.CharField(max_length=20)
     business_email = models.EmailField()
     business_address = models.TextField()
     business_registration = models.CharField(max_length=100, blank=True)
+    organization_tin = models.CharField(max_length=50, blank=True)
+    verification_document_type = models.CharField(max_length=30, choices=DOCUMENT_TYPE_CHOICES, blank=True)
+    verification_document = models.FileField(storage=private_b2b_storage, upload_to='%Y/%m/', blank=True)
+    registration_exemption_reason = models.TextField(blank=True)
+    contact_job_title = models.CharField(max_length=120, blank=True)
+    alternative_phone = models.CharField(max_length=20, blank=True)
+    delivery_region = models.CharField(max_length=100, blank=True)
+    delivery_city = models.CharField(max_length=100, blank=True)
+    delivery_district = models.CharField(max_length=120, blank=True)
+    delivery_locality = models.CharField(max_length=150, blank=True)
+    delivery_street = models.CharField(max_length=200, blank=True)
+    ghana_post_gps = models.CharField(max_length=20, blank=True)
+    delivery_landmark = models.CharField(max_length=200, blank=True)
+    delivery_directions = models.TextField(blank=True)
+    receiving_contact_name = models.CharField(max_length=150, blank=True)
+    receiving_contact_phone = models.CharField(max_length=20, blank=True)
+    receiving_hours = models.CharField(max_length=200, blank=True)
+    access_restrictions = models.TextField(blank=True)
+    produce_categories = models.JSONField(default=list, blank=True)
+    order_frequency = models.CharField(max_length=20, choices=ORDER_FREQUENCY_CHOICES, blank=True)
+    preferred_start_date = models.DateField(null=True, blank=True)
+    purchase_order_required = models.BooleanField(default=False)
+    invoice_requirements = models.CharField(max_length=250, blank=True)
+    procurement_notes = models.TextField(blank=True)
+    applicant_authorized = models.BooleanField(default=False)
+    information_confirmed = models.BooleanField(default=False)
+    privacy_acknowledged = models.BooleanField(default=False)
     estimated_monthly_order = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     price_list = models.ForeignKey(
@@ -248,6 +315,10 @@ class B2BProfile(models.Model):
     )
     rejection_reason = models.TextField(blank=True)
     notes = models.TextField(blank=True)
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='assigned_b2b_reviews', limit_choices_to={'is_staff': True},
+    )
     approved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -260,6 +331,23 @@ class B2BProfile(models.Model):
     def __str__(self):
         identifier = self.user.email if self.user else self.business_email
         return f'{self.company_name} ({identifier})'
+
+
+class B2BReviewEvent(models.Model):
+    profile = models.ForeignKey(B2BProfile, on_delete=models.PROTECT, related_name='review_events')
+    from_status = models.CharField(max_length=30, blank=True)
+    to_status = models.CharField(max_length=30)
+    note = models.TextField()
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='b2b_review_events'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.profile.company_name} · {self.to_status}'
 
 
 class WishlistItem(models.Model):

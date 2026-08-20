@@ -72,11 +72,16 @@ class Command(BaseCommand):
         # Users - view only (no passwords, no deletion)
         ops_perms += list(get_perms('users', 'user', ['view']))
         ops_perms += list(get_perms('users', 'customer', ['view']))
+        ops_perms += list(get_perms('users', 'b2bprofile', ['change', 'view']))
+        ops_perms += list(get_perms('users', 'b2breviewevent', ['view']))
 
         # Products - view only
         ops_perms += list(get_perms('products', 'product', ['view']))
         ops_perms += list(get_perms('products', 'category', ['view']))
-        for model in ['subscription', 'subscriptionweek', 'deliveryzone', 'wholesalequote']:
+        for model in [
+            'subscription', 'subscriptionweek', 'deliveryzone', 'wholesalequote',
+            'subscriptionpricenotice',
+        ]:
             ops_perms += list(get_perms('subscriptions', model, ['change', 'view']))
 
         operations.permissions.set(ops_perms)
@@ -97,7 +102,10 @@ class Command(BaseCommand):
         # Users - view only (for order context)
         finance_perms += list(get_perms('users', 'user', ['view']))
         finance_perms += list(get_perms('users', 'customer', ['view']))
-        for model in ['subscription', 'subscriptionweek', 'wholesalequote']:
+        for model in [
+            'subscription', 'subscriptionweek', 'wholesalequote',
+            'subscriptionplanpricechange', 'subscriptionpricenotice',
+        ]:
             finance_perms += list(get_perms('subscriptions', model, ['view']))
 
         finance.permissions.set(finance_perms)
@@ -149,10 +157,13 @@ class Command(BaseCommand):
             'recipes': ['recipe', 'recipeingredient', 'recipestep', 'recipepairing'],
             'orders': ['order', 'orderitem', 'promocode'],
             'sales': ['salesrep', 'referredcustomer'],
-            'users': ['b2bprofile', 'businesspricelist', 'businessprice'],
+            'users': [
+                'b2bprofile', 'b2breviewevent', 'businesspricelist', 'businessprice',
+            ],
             'subscriptions': [
                 'deliveryzone', 'subscriptionplan', 'subscriptionplanitem',
                 'subscription', 'subscriptionitem', 'subscriptionweek',
+                'subscriptionplanpricechange', 'subscriptionpricenotice',
                 'wholesalequote', 'wholesalequoteitem',
             ],
         }

@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
 from .models import User, WishlistItem, B2BProfile, BusinessPriceList
@@ -241,6 +243,24 @@ class B2BApplyView(generics.CreateAPIView):
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f'b2b_application notification failed: {e}', exc_info=True)
+
+
+class B2BDocumentView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request, pk):
+        profile = get_object_or_404(B2BProfile, pk=pk)
+        if not profile.verification_document:
+            raise Http404
+        try:
+            handle = profile.verification_document.open('rb')
+        except FileNotFoundError as exc:
+            raise Http404 from exc
+        filename = profile.verification_document.name.rsplit('/', 1)[-1]
+        response = FileResponse(handle, as_attachment=True, filename=filename)
+        response['Cache-Control'] = 'private, no-store'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 class B2BSetupPasswordView(APIView):

@@ -1,10 +1,13 @@
 from django.contrib import admin
+from django.utils import timezone
 from unfold.admin import ModelAdmin, TabularInline
 
 from .models import (
     DeliveryZone, Subscription, SubscriptionItem, SubscriptionPlan,
-    SubscriptionPlanItem, SubscriptionWeek, WholesaleQuote, WholesaleQuoteItem,
+    SubscriptionPlanItem, SubscriptionPlanPriceChange, SubscriptionPriceNotice,
+    SubscriptionWeek, WholesaleQuote, WholesaleQuoteItem,
 )
+from .services import apply_price_change, deliver_price_notice, prepare_price_change
 
 
 class SubscriptionPlanItemInline(TabularInline):
@@ -20,10 +23,128 @@ class SubscriptionPlanAdmin(ModelAdmin):
         'household_size', 'is_active', 'is_featured',
     ]
     list_filter = ['audience', 'plan_type', 'is_active', 'is_featured']
-    list_editable = ['weekly_price', 'is_active', 'is_featured']
+    list_editable = ['is_active', 'is_featured']
     search_fields = ['name', 'short_description']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [SubscriptionPlanItemInline]
+
+    def get_readonly_fields(self, request, obj=None):
+        return ['weekly_price'] if obj else []
+
+
+@admin.register(SubscriptionPlanPriceChange)
+class SubscriptionPlanPriceChangeAdmin(ModelAdmin):
+    list_display = [
+        'plan', 'old_price', 'new_price', 'effective_at', 'status',
+        'notice_progress', 'created_by',
+    ]
+    list_filter = ['status', 'effective_at', 'plan']
+    search_fields = ['plan__name', 'reason']
+    readonly_fields = [
+        'old_price', 'created_by', 'recipients_prepared_at', 'applied_at',
+        'created_at', 'updated_at',
+    ]
+    actions = ['retry_failed_notices', 'apply_due_changes', 'cancel_changes']
+
+    def get_readonly_fields(self, request, obj=None):
+        base = [
+            'old_price', 'created_by', 'recipients_prepared_at', 'applied_at',
+            'created_at', 'updated_at',
+        ]
+        if obj and obj.status != 'draft':
+            return base + ['plan', 'new_price', 'effective_at', 'status', 'reason']
+        return base
+
+    def has_delete_permission(self, request, obj=None):
+        return bool(obj and obj.status == 'draft')
+
+    @admin.display(description='Notices')
+    def notice_progress(self, obj):
+        total = obj.notices.count()
+        sent = obj.notices.filter(status__in=['sent', 'applied']).count()
+        failed = obj.notices.filter(status='failed').count()
+        return f'{sent}/{total} sent' + (f' · {failed} failed' if failed else '')
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        previous_status = None
+        if change:
+            previous_status = SubscriptionPlanPriceChange.objects.filter(pk=obj.pk).values_list(
+                'status', flat=True
+            ).first()
+        if obj.status == 'scheduled' and previous_status != 'scheduled':
+            obj.old_price = obj.plan.weekly_price
+        super().save_model(request, obj, form, change)
+        if obj.status == 'scheduled' and previous_status != 'scheduled':
+            prepare_price_change(obj.pk)
+            for notice_id in obj.notices.values_list('pk', flat=True):
+                deliver_price_notice(notice_id)
+            from security.audit import record_event
+            record_event(
+                action='subscription.price_change_scheduled', request=request, target=obj,
+                before={'weekly_price': str(obj.old_price)},
+                after={'weekly_price': str(obj.new_price), 'effective_at': obj.effective_at.isoformat()},
+                reason=obj.reason,
+            )
+
+    @admin.action(description='Retry failed or pending customer notices')
+    def retry_failed_notices(self, request, queryset):
+        sent = failed = 0
+        for change in queryset.filter(status='scheduled'):
+            prepare_price_change(change.pk)
+            for notice_id in change.notices.filter(status__in=['pending', 'failed']).values_list('pk', flat=True):
+                notice = deliver_price_notice(notice_id)
+                sent += notice.status == 'sent'
+                failed += notice.status == 'failed'
+        self.message_user(request, f'{sent} notice(s) sent; {failed} still require attention.')
+
+    @admin.action(description='Apply selected changes that have reached their effective date')
+    def apply_due_changes(self, request, queryset):
+        applied = 0
+        for change in queryset.filter(status='scheduled', effective_at__lte=timezone.now()):
+            apply_price_change(change.pk)
+            applied += 1
+        self.message_user(request, f'{applied} price change(s) applied. Unnotified customers kept their old price.')
+
+    @admin.action(description='Cancel selected scheduled changes')
+    def cancel_changes(self, request, queryset):
+        for change in queryset.filter(status='scheduled'):
+            change.status = 'cancelled'
+            change.save(update_fields=['status', 'updated_at'])
+            change.notices.filter(status__in=['pending', 'sent', 'failed']).update(status='cancelled')
+            from security.audit import record_event
+            record_event(
+                action='subscription.price_change_cancelled', request=request, target=change,
+                before={'status': 'scheduled'}, after={'status': 'cancelled'},
+                reason='Cancelled from the administration workspace.',
+            )
+
+
+@admin.register(SubscriptionPriceNotice)
+class SubscriptionPriceNoticeAdmin(ModelAdmin):
+    list_display = [
+        'recipient_email', 'subscription', 'price_change', 'status',
+        'attempts', 'sent_at', 'updated_at',
+    ]
+    list_filter = ['status', 'price_change__plan']
+    search_fields = ['recipient_email', 'subscription__name', 'subscription__user__email']
+    readonly_fields = [
+        'price_change', 'subscription', 'recipient_email', 'status', 'delivery_id',
+        'attempts', 'last_error', 'sent_at', 'applied_at', 'created_at', 'updated_at',
+    ]
+    actions = ['retry_delivery']
+
+    @admin.action(description='Retry selected failed or pending notices')
+    def retry_delivery(self, request, queryset):
+        for notice_id in queryset.filter(status__in=['pending', 'failed']).values_list('pk', flat=True):
+            deliver_price_notice(notice_id)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(DeliveryZone)

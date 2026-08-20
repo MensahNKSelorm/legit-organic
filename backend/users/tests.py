@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -31,10 +32,31 @@ def b2b_payload(email='trade@example.com'):
     return {
         'company_name': 'Market Kitchen',
         'business_type': 'restaurant',
+        'legal_structure': 'limited_shares',
+        'sector': 'Hospitality',
+        'organization_tin': 'C0001234567',
+        'business_registration': 'CS123456789',
+        'verification_document_type': 'orc_certificate',
+        'verification_document': SimpleUploadedFile(
+            'certificate.pdf', b'%PDF-1.4\nvalid test document',
+            content_type='application/pdf',
+        ),
         'contact_person': 'Ama Mensah',
+        'contact_job_title': 'Procurement Manager',
         'business_phone': '+233200000000',
         'business_email': email,
-        'business_address': 'Accra',
+        'delivery_region': 'Greater Accra',
+        'delivery_city': 'Accra',
+        'delivery_locality': 'Osu',
+        'ghana_post_gps': 'GA-123-4567',
+        'receiving_contact_name': 'Kojo Asare',
+        'receiving_contact_phone': '0200000000',
+        'receiving_hours': 'Monday to Friday, 8:00–16:00',
+        'produce_categories': '["Fresh vegetables", "Fresh fruit"]',
+        'order_frequency': 'weekly',
+        'applicant_authorized': 'true',
+        'information_confirmed': 'true',
+        'privacy_acknowledged': 'true',
     }
 
 
@@ -100,7 +122,7 @@ class B2BApplicationBotProtectionTests(TestCase):
 
     @override_settings(TURNSTILE_ENABLED=True, TURNSTILE_SECRET_KEY='secret')
     def test_missing_turnstile_token_cannot_create_application(self):
-        resp = self.client.post(B2B_APPLY_URL, b2b_payload(), format='json')
+        resp = self.client.post(B2B_APPLY_URL, b2b_payload(), format='multipart')
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(B2BProfile.objects.exists())
 
@@ -109,7 +131,7 @@ class B2BApplicationBotProtectionTests(TestCase):
     def test_failed_turnstile_cannot_create_application(self, mock_post):
         mock_post.return_value.json.return_value = {'success': False}
         payload = {**b2b_payload(), 'turnstile_token': 'fake-token'}
-        resp = self.client.post(B2B_APPLY_URL, payload, format='json')
+        resp = self.client.post(B2B_APPLY_URL, payload, format='multipart')
         self.assertEqual(resp.status_code, 400)
         self.assertFalse(B2BProfile.objects.exists())
 
@@ -118,9 +140,46 @@ class B2BApplicationBotProtectionTests(TestCase):
     def test_valid_turnstile_preserves_real_application_flow(self, mock_post):
         mock_post.return_value.json.return_value = {'success': True}
         payload = {**b2b_payload(), 'turnstile_token': 'valid-token'}
-        resp = self.client.post(B2B_APPLY_URL, payload, format='json')
+        resp = self.client.post(B2B_APPLY_URL, payload, format='multipart')
         self.assertEqual(resp.status_code, 201, resp.data)
         self.assertTrue(B2BProfile.objects.filter(business_email='trade@example.com').exists())
+
+
+@override_settings(TURNSTILE_ENABLED=False)
+class B2BApplicationValidationTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_registered_business_requires_orc_number(self):
+        payload = b2b_payload()
+        payload['business_registration'] = ''
+        response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('business_registration', response.data)
+
+    def test_public_institution_can_use_official_letter(self):
+        payload = b2b_payload('school@example.com')
+        payload.update({
+            'legal_structure': 'public_institution',
+            'business_registration': '',
+            'verification_document_type': 'introductory_letter',
+            'registration_exemption_reason': 'Public school established by the Government of Ghana.',
+        })
+        response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
+        self.assertEqual(response.status_code, 201, response.data)
+
+    def test_document_content_is_checked(self):
+        payload = b2b_payload()
+        payload['verification_document'] = SimpleUploadedFile(
+            'certificate.pdf', b'not really a pdf', content_type='application/pdf'
+        )
+        response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('verification_document', response.data)
+
+    def test_document_download_requires_staff(self):
+        response = self.client.get('/api/users/b2b/999/document/')
+        self.assertIn(response.status_code, (401, 403))
 
 
 class LoginGatingTests(TestCase):

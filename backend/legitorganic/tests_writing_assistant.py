@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.core.cache import cache
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from products.models import Product
@@ -9,6 +9,7 @@ from users.models import User
 from .writing_assistant import SYSTEM_PROMPT, _prompt
 
 
+@override_settings(STAFF_2FA_MODE='enroll', STAFF_OWNER_2FA_REQUIRED=False)
 class WritingAssistantTests(TestCase):
     def setUp(self):
         cache.clear()

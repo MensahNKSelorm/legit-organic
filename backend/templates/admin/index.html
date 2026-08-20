@@ -41,7 +41,7 @@
   .lo-action { min-height:8.5rem; padding:1.2rem; border-right:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); display:flex; flex-direction:column; justify-content:space-between; color:var(--ink); text-decoration:none; transition:.18s ease; }
   .lo-action:hover { background:var(--gold); color:var(--forest); }
   .lo-action .material-symbols-outlined { font-size:1.6rem; }
-  .lo-attention { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
+  .lo-attention { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
   .lo-attention a { padding:1.2rem 1rem; border-right:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); color:var(--ink); text-decoration:none; }
   .lo-attention a:last-child { border-right:0; }
   .lo-attention strong { display:block; font-family:"Boska",serif; font-size:2.7rem; line-height:1; }
@@ -117,6 +117,11 @@
       <a href="/admin/orders/order/?status__exact=whatsapp_pending"><strong>{{ attention.awaiting_payment }}</strong><span>Awaiting payment</span></a>
       <a href="/admin/orders/order/?status__exact=processing"><strong>{{ attention.processing }}</strong><span>Orders processing</span></a>
       <a href="/admin/users/b2bprofile/?status__exact=pending"><strong>{{ attention.b2b_pending }}</strong><span>B2B applications</span></a>
+      <a href="/admin/subscriptions/subscriptionweek/?status__exact=payment_due"><strong>{{ attention.renewals_due }}</strong><span>Renewal payments due</span></a>
+      <a href="/admin/subscriptions/subscriptionpricenotice/?status__exact=failed"><strong>{{ attention.failed_price_notices }}</strong><span>Price notices failed</span></a>
+      <a href="/admin/subscriptions/subscriptionplanpricechange/?status__exact=scheduled"><strong>{{ attention.scheduled_price_changes }}</strong><span>Scheduled prices</span></a>
+      <a href="/admin/recipes/recipe/?status__exact=needs_review"><strong>{{ attention.recipes_for_review }}</strong><span>Recipes to review</span></a>
+      <a href="/admin/recipes/recipe/"><strong>{{ attention.unresolved_ingredients }}</strong><span>Recipes with unresolved nutrition</span></a>
       <a href="/admin/products/product/?is_available__exact=0"><strong>{{ attention.unavailable_products }}</strong><span>Unavailable products</span></a>
       <a href="/admin/blog/blogpost/?is_published__exact=0"><strong>{{ attention.draft_posts }}</strong><span>Draft stories</span></a>
     </div>

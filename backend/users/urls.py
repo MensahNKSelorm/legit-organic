@@ -4,7 +4,7 @@ from .views import (
     ResendVerificationView, GoogleAuthView,
     WishlistView, WishlistItemDeleteView,
     B2BApplyView, B2BStatusView, B2BPriceListView,
-    B2BSetupPasswordView,
+    B2BSetupPasswordView, B2BDocumentView,
 )
 
 urlpatterns = [
@@ -16,6 +16,7 @@ urlpatterns = [
     path('wishlist/', WishlistView.as_view(), name='wishlist'),
     path('wishlist/<int:pk>/', WishlistItemDeleteView.as_view(), name='wishlist-delete'),
     path('b2b/apply/', B2BApplyView.as_view(), name='b2b-apply'),
+    path('b2b/<int:pk>/document/', B2BDocumentView.as_view(), name='b2b-document'),
     path('b2b/status/', B2BStatusView.as_view(), name='b2b-status'),
     path('b2b/prices/', B2BPriceListView.as_view(), name='b2b-prices'),
     path('b2b/setup-password/', B2BSetupPasswordView.as_view(), name='b2b-setup-password'),

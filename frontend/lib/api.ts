@@ -42,6 +42,12 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
   return res.json()
 }
 
+async function fetchFormAPI<T>(endpoint: string, body: FormData): Promise<T> {
+  const res = await fetch(`${API_BASE}${endpoint}`, { method: 'POST', body })
+  if (!res.ok) await parseError(res)
+  return res.json()
+}
+
 // ---------------------------------------------------------------------------
 // Authenticated fetcher — client-only, with auto token-refresh on 401
 // ---------------------------------------------------------------------------
@@ -272,20 +278,7 @@ export const api = {
     clear: () => fetchWithAuth<{ id: number; items: [] }>('/api/orders/cart/clear/', { method: 'POST' }),
   },
   b2b: {
-    apply: (data: {
-      company_name: string
-      business_type: string
-      contact_person: string
-      business_phone: string
-      business_email: string
-      business_address: string
-      estimated_monthly_order?: string
-      business_registration?: string
-      turnstile_token?: string
-    }) => fetchAPI<B2BProfile>('/api/users/b2b/apply/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    apply: (data: FormData) => fetchFormAPI<B2BProfile>('/api/users/b2b/apply/', data),
     status: () => fetchWithAuth<B2BProfile | { status: null }>('/api/users/b2b/status/'),
     prices: () => fetchWithAuth<{ price_list: BusinessPriceList | null }>('/api/users/b2b/prices/'),
     setupPassword: (uid: string, token: string, password: string) =>

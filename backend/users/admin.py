@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib import messages
 from django.utils import timezone
@@ -6,7 +7,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from unfold.admin import ModelAdmin, StackedInline
 from .models import (
-    User, Customer, Staff, B2BProfile, BusinessPrice, BusinessPriceList,
+    User, Customer, Staff, B2BProfile, B2BReviewEvent, BusinessPrice, BusinessPriceList,
     StaffInvitation,
 )
 from .forms import (
@@ -425,28 +426,73 @@ class BusinessPriceListAdmin(ModelAdmin):
     inlines = [BusinessPriceInline]
 
 
+class B2BReviewAdminForm(forms.ModelForm):
+    review_decision_note = forms.CharField(
+        label='Review decision note', required=False, widget=forms.Textarea(attrs={'rows': 3}),
+        help_text='Required when the review status changes. This becomes part of the audit history.',
+    )
+
+    class Meta:
+        model = B2BProfile
+        fields = '__all__'
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.instance.pk:
+            previous = B2BProfile.objects.filter(pk=self.instance.pk).values_list('status', flat=True).first()
+            if previous != cleaned.get('status') and not cleaned.get('review_decision_note', '').strip():
+                self.add_error('review_decision_note', 'Add a concise reason for this status change.')
+        return cleaned
+
+
 @admin.register(B2BProfile)
 class B2BProfileAdmin(ModelAdmin):
+    form = B2BReviewAdminForm
     list_display = [
         'company_name', 'get_email', 'business_type', 'status',
-        'price_list', 'created_at',
+        'assigned_to', 'price_list', 'created_at',
     ]
-    list_filter = ['status', 'business_type', 'price_list']
+    list_filter = ['status', 'business_type', 'assigned_to', 'price_list']
     search_fields = ['company_name', 'business_email', 'contact_person', 'business_phone']
     ordering = ['-created_at']
-    readonly_fields = ['user', 'created_at', 'updated_at', 'approved_at']
+    readonly_fields = ['user', 'verification_document_download', 'created_at', 'updated_at', 'approved_at']
 
     fieldsets = (
-        ('Business Info', {
+        ('Organisation', {
             'fields': (
-                'user', 'company_name', 'business_type',
-                'contact_person', 'business_phone', 'business_email',
-                'business_address', 'business_registration',
-                'estimated_monthly_order',
+                'user', 'company_name', 'trading_name', 'legal_structure',
+                'business_type', 'sector', 'year_started', 'website',
             ),
         }),
+        ('Verification', {'fields': (
+            'organization_tin', 'business_registration',
+            'verification_document_type', 'verification_document_download',
+            'registration_exemption_reason',
+        )}),
+        ('Authorised Contact', {'fields': (
+            'contact_person', 'contact_job_title', 'business_phone',
+            'alternative_phone', 'business_email',
+        )}),
+        ('Delivery', {'fields': (
+            'business_address', 'delivery_region', 'delivery_city',
+            'delivery_district', 'delivery_locality', 'delivery_street',
+            'ghana_post_gps', 'delivery_landmark', 'delivery_directions',
+            'receiving_contact_name', 'receiving_contact_phone',
+            'receiving_hours', 'access_restrictions',
+        )}),
+        ('Supply Requirements', {'fields': (
+            'produce_categories', 'order_frequency', 'estimated_monthly_order',
+            'preferred_start_date', 'purchase_order_required',
+            'invoice_requirements', 'procurement_notes',
+        )}),
+        ('Declarations', {'fields': (
+            'applicant_authorized', 'information_confirmed', 'privacy_acknowledged',
+        )}),
         ('Review', {
-            'fields': ('status', 'price_list', 'rejection_reason', 'notes'),
+            'fields': (
+                'assigned_to', 'status', 'price_list', 'review_decision_note',
+                'rejection_reason', 'notes',
+            ),
         }),
         ('Timestamps', {
             'fields': ('approved_at', 'created_at', 'updated_at'),
@@ -457,6 +503,13 @@ class B2BProfileAdmin(ModelAdmin):
     @admin.display(description='Email')
     def get_email(self, obj):
         return obj.user.email if obj.user else obj.business_email
+
+    @admin.display(description='Supporting document')
+    def verification_document_download(self, obj):
+        if not obj.pk or not obj.verification_document:
+            return 'Not supplied'
+        url = reverse('b2b-document', args=[obj.pk])
+        return format_html('<a href="{}">Download private document</a>', url)
 
     def save_model(self, request, obj, form, change):
         previous_status = None
@@ -510,7 +563,23 @@ class B2BProfileAdmin(ModelAdmin):
         if not change:
             return
 
-        from .emails import send_b2b_approval_email, send_b2b_rejection_email
+        if previous_status != obj.status:
+            decision_note = form.cleaned_data.get('review_decision_note', '').strip()
+            B2BReviewEvent.objects.create(
+                profile=obj, from_status=previous_status or '', to_status=obj.status,
+                note=decision_note, reviewer=request.user,
+            )
+            from security.audit import record_event
+            record_event(
+                action='b2b.review_status_changed', request=request, target=obj,
+                before={'status': previous_status}, after={'status': obj.status},
+                reason=decision_note,
+            )
+
+        from .emails import (
+            send_b2b_approval_email, send_b2b_rejection_email,
+            send_b2b_review_update_email,
+        )
         if obj.status == 'approved' and previous_status != 'approved':
             try:
                 send_b2b_approval_email(obj, uid, token)
@@ -521,3 +590,27 @@ class B2BProfileAdmin(ModelAdmin):
                 send_b2b_rejection_email(obj)
             except Exception:
                 pass
+        elif obj.status in {'changes_requested', 'suspended'} and previous_status != obj.status:
+            try:
+                send_b2b_review_update_email(
+                    obj, obj.status, form.cleaned_data.get('review_decision_note', '')
+                )
+            except Exception:
+                pass
+
+
+@admin.register(B2BReviewEvent)
+class B2BReviewEventAdmin(ModelAdmin):
+    list_display = ['profile', 'from_status', 'to_status', 'reviewer', 'created_at']
+    list_filter = ['to_status', 'reviewer', 'created_at']
+    search_fields = ['profile__company_name', 'profile__business_email', 'note']
+    readonly_fields = ['profile', 'from_status', 'to_status', 'note', 'reviewer', 'created_at']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

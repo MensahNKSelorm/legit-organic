@@ -20,70 +20,16 @@ export const metadata: Metadata = {
 
 type Props = { searchParams: Promise<{ q?: string }> };
 
-const demoCatalogue = [
-  {
-    title: "Fufu",
-    note: "Pounded cassava and plantain with a smooth, elastic finish.",
-    time: "50 minutes",
-    image: "/images/hero/4.webp",
-  },
-  {
-    title: "Light soup",
-    note: "A clear, peppery tomato soup made for pairing with a swallow.",
-    time: "1 hour",
-    image: "/images/hero/8.webp",
-  },
-  {
-    title: "Groundnut soup",
-    note: "Groundnut paste simmered with tomato, aromatics and your chosen protein.",
-    time: "1 hour 15 minutes",
-    image: "/images/hero/6.webp",
-  },
-  {
-    title: "Palm nut soup",
-    note: "A deeply flavoured soup built from palm fruit concentrate and spices.",
-    time: "1 hour 30 minutes",
-    image: "/images/hero/7.webp",
-  },
-  {
-    title: "Ebunebunu soup",
-    note: "A green soup of cocoyam leaves, herbs and warming pepper.",
-    time: "55 minutes",
-    image: "/images/hero/3.webp",
-  },
-  {
-    title: "Kontomire stew",
-    note: "Cocoyam leaves cooked down with egusi, tomato and aromatics.",
-    time: "50 minutes",
-    image: "/images/hero/9.webp",
-  },
-  {
-    title: "Plain rice",
-    note: "Separate, tender grains ready for stew, soup or sauce.",
-    time: "30 minutes",
-    image: "/images/products/p1.webp",
-  },
-  {
-    title: "Garden egg stew",
-    note: "Slow-cooked garden eggs, tomato and smoked fish.",
-    time: "45 minutes",
-    image: "/images/products/p2.webp",
-  },
-];
-
 export default async function RecipesPage({ searchParams }: Props) {
   const { q: rawQuery } = await searchParams;
   const query = rawQuery?.trim().slice(0, 200) || "";
-  const allRecipes: Recipe[] = await fetch(`${INTERNAL_API}/api/recipes/default/`, {
+  const allRecipes: Recipe[] = await fetch(`${INTERNAL_API}/api/recipes/`, {
     headers: { "Content-Type": "application/json" },
     next: { revalidate: 0 },
   })
     .then((r) => (r.ok ? r.json() : []))
     .catch(() => []);
-  const catalogueTitles = [
-    ...allRecipes.map((recipe) => recipe.title),
-    ...demoCatalogue.map((recipe) => recipe.title),
-  ];
+  const catalogueTitles = allRecipes.map((recipe) => recipe.title);
   const parsedQuery = parseRecipeQuery(query, catalogueTitles);
   if (parsedQuery.length > 1)
     redirect(`/recipes/combined?q=${encodeURIComponent(parsedQuery.join(" + "))}`);
@@ -95,18 +41,7 @@ export default async function RecipesPage({ searchParams }: Props) {
         )
       )
     : allRecipes;
-  const queryTerms = searchTerm ? [normaliseRecipeText(searchTerm)] : [];
-  const realTitles = new Set(recipes.map((recipe) => recipe.title.toLowerCase()));
-  const previewRecipes = demoCatalogue.filter(
-    (recipe) =>
-      !realTitles.has(recipe.title.toLowerCase()) &&
-      (!queryTerms.length ||
-        queryTerms.some((term) => `${recipe.title} ${recipe.note}`.toLowerCase().includes(term)))
-  );
-  const suggestions = [
-    ...allRecipes.map((recipe) => ({ title: recipe.title })),
-    ...demoCatalogue.map((recipe) => ({ title: recipe.title })),
-  ].filter(
+  const suggestions = allRecipes.map((recipe) => ({ title: recipe.title })).filter(
     (recipe, index, all) =>
       all.findIndex((item) => item.title.toLowerCase() === recipe.title.toLowerCase()) === index
   );
@@ -145,7 +80,7 @@ export default async function RecipesPage({ searchParams }: Props) {
       {/* ── Recipes grid ─────────────────────────────────────── */}
       <div className="page-container py-12 lg:py-20">
         <RecipeSearch recipes={suggestions} initialQuery={query} />
-        {recipes.length > 0 || previewRecipes.length > 0 ? (
+        {recipes.length > 0 ? (
           <>
             <div className="editorial-rule mb-10 flex items-end justify-between border-b pb-5">
               <div>
@@ -174,37 +109,6 @@ export default async function RecipesPage({ searchParams }: Props) {
             <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
               {recipes.map((recipe) => (
                 <RecipeCard key={`real-${recipe.id}`} recipe={recipe} />
-              ))}
-              {previewRecipes.map((recipe, index) => (
-                <Link
-                  href={`/recipes/combined?q=${encodeURIComponent(recipe.title)}`}
-                  key={recipe.title}
-                  className="group editorial-rule block border-b pb-6"
-                  aria-label={`Open ${recipe.title} recipe`}
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={recipe.image}
-                      alt=""
-                      fill
-                      priority={index === 0}
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                      sizes="(max-width:1024px) 100vw, 40vw"
-                    />
-                  </div>
-                  <p className="mt-5 text-xs font-bold text-[#2E7D32] dark:text-[#9FC5A4]">
-                    {recipe.time}
-                  </p>
-                  <h3 className="display-organic mt-2 text-3xl text-[#0D3B2A] dark:text-white">
-                    {recipe.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">
-                    {recipe.note}
-                  </p>
-                  <span className="mt-5 inline-block border-b border-current pb-1 text-sm font-bold text-[#0D3B2A] dark:text-[#F4C430]">
-                    Open recipe ↗
-                  </span>
-                </Link>
               ))}
             </div>
           </>

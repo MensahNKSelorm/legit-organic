@@ -78,21 +78,24 @@ export default function ProfilePage() {
   // Sync form with user from context
   useEffect(() => {
     if (user) {
-      setFirstName(user.first_name)
-      setLastName(user.last_name)
-      setPhone(user.phone_number ?? '')
-      setStreetAddress(user.street_address ?? '')
-      setHouseNumber(user.house_number ?? '')
-      setCity(user.city ?? '')
-      setDeliveryRegion(user.delivery_region ?? '')
+      Promise.resolve().then(() => {
+        setFirstName(user.first_name)
+        setLastName(user.last_name)
+        setPhone(user.phone_number ?? '')
+        setStreetAddress(user.street_address ?? '')
+        setHouseNumber(user.house_number ?? '')
+        setCity(user.city ?? '')
+        setDeliveryRegion(user.delivery_region ?? '')
+      })
     }
   }, [user])
 
   // Lazy-load recipes
   useEffect(() => {
     if (activeTab === 'recipes' && !recipesLoaded) {
-      setRecipesLoading(true)
-      api.recipes.myRecipes.list()
+      Promise.resolve()
+        .then(() => setRecipesLoading(true))
+        .then(() => api.recipes.myRecipes.list())
         .then((data) => { setMyRecipes(data); setRecipesLoaded(true) })
         .catch((e) => setRecipesError(e instanceof Error ? e.message : 'Failed to load recipes'))
         .finally(() => setRecipesLoading(false))
@@ -102,8 +105,9 @@ export default function ProfilePage() {
   // Lazy-load orders
   useEffect(() => {
     if (activeTab === 'orders' && !ordersLoaded) {
-      setOrdersLoading(true)
-      api.orders.myOrders()
+      Promise.resolve()
+        .then(() => setOrdersLoading(true))
+        .then(() => api.orders.myOrders())
         .then((data) => { setOrders(data); setOrdersLoaded(true) })
         .catch((e) => setOrdersError(e instanceof Error ? e.message : 'Failed to load orders'))
         .finally(() => setOrdersLoading(false))

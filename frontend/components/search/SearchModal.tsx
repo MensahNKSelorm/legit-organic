@@ -94,9 +94,11 @@ export default function SearchModal({ isOpen, onClose }: Props) {
       setTimeout(() => inputRef.current?.focus(), 50)
       document.body.style.overflow = 'hidden'
     } else {
-      setQuery('')
-      setSearchResult(null)
-      setIsLoading(false)
+      Promise.resolve().then(() => {
+        setQuery('')
+        setSearchResult(null)
+        setIsLoading(false)
+      })
       document.body.style.overflow = ''
     }
     return () => { document.body.style.overflow = '' }
@@ -113,11 +115,13 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   // Debounced search (300ms)
   useEffect(() => {
     if (!query.trim()) {
-      setSearchResult(null)
-      setIsLoading(false)
+      Promise.resolve().then(() => {
+        setSearchResult(null)
+        setIsLoading(false)
+      })
       return
     }
-    setIsLoading(true)
+    Promise.resolve().then(() => setIsLoading(true))
     const timer = setTimeout(async () => {
       try {
         const data = await api.products.search(query.trim())

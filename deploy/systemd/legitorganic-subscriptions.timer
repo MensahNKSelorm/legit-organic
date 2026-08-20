@@ -1,0 +1,11 @@
+[Unit]
+Description=Process Legit Organic subscriptions every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=legitorganic-subscriptions.service
+
+[Install]
+WantedBy=timers.target

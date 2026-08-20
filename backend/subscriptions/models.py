@@ -1,8 +1,11 @@
 from decimal import Decimal
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 
 
@@ -86,6 +89,93 @@ class SubscriptionPlanItem(models.Model):
 
     def __str__(self):
         return f'{self.plan}: {self.product} × {self.quantity}'
+
+
+class SubscriptionPlanPriceChange(models.Model):
+    STATUSES = [
+        ('draft', 'Draft'), ('scheduled', 'Scheduled'),
+        ('applied', 'Applied'), ('cancelled', 'Cancelled'),
+    ]
+
+    plan = models.ForeignKey(
+        SubscriptionPlan, on_delete=models.PROTECT, related_name='price_changes'
+    )
+    old_price = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+    new_price = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    effective_at = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUSES, default='draft')
+    reason = models.CharField(max_length=300)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name='created_subscription_price_changes', editable=False,
+    )
+    applied_at = models.DateTimeField(null=True, blank=True, editable=False)
+    recipients_prepared_at = models.DateTimeField(null=True, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-effective_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['plan'], condition=models.Q(status='scheduled'),
+                name='one_scheduled_price_change_per_plan',
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.new_price == self.plan.weekly_price and not self.pk:
+            raise ValidationError({'new_price': 'Enter a price different from the current price.'})
+        minimum = timezone.now() + timedelta(days=14)
+        if self.status == 'scheduled' and self.effective_at < minimum:
+            raise ValidationError({'effective_at': 'Existing customers require at least 14 days notice.'})
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.old_price = self.plan.weekly_price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.plan} · GH₵{self.old_price} → GH₵{self.new_price}'
+
+
+class SubscriptionPriceNotice(models.Model):
+    STATUSES = [
+        ('pending', 'Pending'), ('sent', 'Sent'), ('failed', 'Failed'),
+        ('applied', 'Applied'), ('cancelled', 'Cancelled'),
+    ]
+
+    price_change = models.ForeignKey(
+        SubscriptionPlanPriceChange, on_delete=models.PROTECT, related_name='notices'
+    )
+    subscription = models.ForeignKey(
+        'Subscription', on_delete=models.PROTECT, related_name='price_notices'
+    )
+    recipient_email = models.EmailField()
+    status = models.CharField(max_length=20, choices=STATUSES, default='pending')
+    delivery_id = models.CharField(max_length=160, blank=True, editable=False)
+    attempts = models.PositiveSmallIntegerField(default=0, editable=False)
+    last_error = models.CharField(max_length=500, blank=True, editable=False)
+    sent_at = models.DateTimeField(null=True, blank=True, editable=False)
+    applied_at = models.DateTimeField(null=True, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['price_change', 'subscription'],
+                name='one_notice_per_price_change_subscription',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.subscription} · {self.get_status_display()}'
 
 
 class Subscription(models.Model):

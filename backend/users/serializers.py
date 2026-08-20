@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 from django.db import transaction
@@ -176,6 +177,7 @@ class BusinessPriceListSerializer(serializers.ModelSerializer):
 
 
 class B2BProfileSerializer(serializers.ModelSerializer):
+    verification_document = serializers.FileField(write_only=True, required=False)
     price_list = BusinessPriceListSerializer(read_only=True)
     business_type_display = serializers.CharField(
         source='get_business_type_display', read_only=True
@@ -190,10 +192,113 @@ class B2BProfileSerializer(serializers.ModelSerializer):
             'id', 'company_name', 'business_type', 'business_type_display',
             'contact_person', 'business_phone', 'business_email',
             'business_address', 'business_registration',
+            'trading_name', 'legal_structure', 'sector', 'year_started', 'website',
+            'organization_tin', 'verification_document_type',
+            'verification_document', 'registration_exemption_reason',
+            'contact_job_title', 'alternative_phone',
+            'delivery_region', 'delivery_city', 'delivery_district',
+            'delivery_locality', 'delivery_street', 'ghana_post_gps',
+            'delivery_landmark', 'delivery_directions',
+            'receiving_contact_name', 'receiving_contact_phone',
+            'receiving_hours', 'access_restrictions', 'produce_categories',
+            'order_frequency', 'preferred_start_date', 'purchase_order_required',
+            'invoice_requirements', 'procurement_notes', 'applicant_authorized',
+            'information_confirmed', 'privacy_acknowledged',
             'estimated_monthly_order', 'status', 'status_display',
             'price_list', 'rejection_reason', 'approved_at', 'created_at',
         ]
         read_only_fields = [
-            'id', 'status', 'status_display', 'price_list', 'rejection_reason',
-            'approved_at', 'created_at',
+            'id', 'business_address', 'status', 'status_display', 'price_list',
+            'rejection_reason', 'approved_at', 'created_at',
         ]
+
+    def validate_verification_document(self, value):
+        if value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError('The document must be 5 MB or smaller.')
+        header = value.read(8)
+        value.seek(0)
+        valid = (
+            header.startswith(b'%PDF-') or
+            header.startswith(b'\xff\xd8\xff') or
+            header.startswith(b'\x89PNG\r\n\x1a\n')
+        )
+        if not valid:
+            raise serializers.ValidationError('Upload a PDF, JPG or PNG document.')
+        return value
+
+    def validate_produce_categories(self, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise serializers.ValidationError('Select valid produce categories.') from exc
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            raise serializers.ValidationError('Select valid produce categories.')
+        cleaned = list(dict.fromkeys(item.strip() for item in value if item.strip()))
+        if not cleaned:
+            raise serializers.ValidationError('Select at least one produce category.')
+        return cleaned
+
+    def validate(self, attrs):
+        registered = {'business_name', 'partnership', 'limited_shares', 'limited_guarantee'}
+        exempt = {'public_institution', 'cooperative', 'foreign_mission', 'other'}
+        structure = attrs.get('legal_structure', '')
+
+        required = {
+            'company_name': 'Enter the registered organisation name.',
+            'organization_tin': 'Enter the organisation TIN.',
+            'contact_person': 'Enter the authorised contact name.',
+            'contact_job_title': 'Enter the contact person’s role.',
+            'business_phone': 'Enter a primary business phone.',
+            'business_email': 'Enter a work email address.',
+            'delivery_region': 'Select the delivery region.',
+            'delivery_city': 'Enter the city or town.',
+            'delivery_locality': 'Enter the locality or neighbourhood.',
+            'receiving_contact_name': 'Enter the receiving contact.',
+            'receiving_contact_phone': 'Enter the receiving contact phone.',
+            'receiving_hours': 'Enter the normal receiving hours.',
+            'order_frequency': 'Select an expected ordering frequency.',
+        }
+        errors = {field: message for field, message in required.items() if not attrs.get(field)}
+        if not attrs.get('produce_categories'):
+            errors['produce_categories'] = 'Select at least one produce category.'
+        if not attrs.get('ghana_post_gps') and not (
+            attrs.get('delivery_landmark') and attrs.get('delivery_directions')
+        ):
+            errors['ghana_post_gps'] = 'Add a GhanaPost GPS address, or provide both a landmark and directions.'
+        if attrs.get('ghana_post_gps') and not re.fullmatch(
+            r'[A-Za-z]{2}-\d{3,4}-\d{4}', attrs['ghana_post_gps'].strip()
+        ):
+            errors['ghana_post_gps'] = 'Use a GhanaPost GPS format such as GA-123-4567.'
+
+        if structure in registered:
+            if not attrs.get('business_registration'):
+                errors['business_registration'] = 'Enter the ORC registration number.'
+            if attrs.get('verification_document_type') != 'orc_certificate':
+                errors['verification_document_type'] = 'Select the ORC certificate option.'
+        elif structure in exempt:
+            if not attrs.get('registration_exemption_reason'):
+                errors['registration_exemption_reason'] = 'Explain the organisation’s registration basis.'
+            if attrs.get('verification_document_type') != 'introductory_letter':
+                errors['verification_document_type'] = 'Select the official letter option.'
+        else:
+            errors['legal_structure'] = 'Select a recognised legal structure.'
+
+        if not self.instance and not attrs.get('verification_document'):
+            errors['verification_document'] = 'Upload the supporting document.'
+        for field, message in (
+            ('applicant_authorized', 'Confirm that you are authorised to apply.'),
+            ('information_confirmed', 'Confirm that the information is accurate.'),
+            ('privacy_acknowledged', 'Confirm that you have read the privacy notice.'),
+        ):
+            if attrs.get(field) is not True:
+                errors[field] = message
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        attrs['business_address'] = ', '.join(filter(None, [
+            attrs.get('delivery_street'), attrs.get('delivery_locality'),
+            attrs.get('delivery_city'), attrs.get('delivery_region'),
+            attrs.get('ghana_post_gps'),
+        ]))
+        return attrs

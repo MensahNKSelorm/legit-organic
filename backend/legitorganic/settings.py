@@ -285,6 +285,18 @@ UNFOLD = {
                         "permission": admin_permission("subscriptions.view_subscriptionplan"),
                     },
                     {
+                        "title": "Scheduled pricing",
+                        "icon": "calendar_clock",
+                        "link": "/admin/subscriptions/subscriptionplanpricechange/",
+                        "permission": admin_permission("subscriptions.view_subscriptionplanpricechange"),
+                    },
+                    {
+                        "title": "Price notices",
+                        "icon": "mark_email_read",
+                        "link": "/admin/subscriptions/subscriptionpricenotice/",
+                        "permission": admin_permission("subscriptions.view_subscriptionpricenotice"),
+                    },
+                    {
                         "title": "Subscribers",
                         "icon": "event_repeat",
                         "link": "/admin/subscriptions/subscription/",
@@ -355,6 +367,12 @@ UNFOLD = {
                         "icon": "business",
                         "link": "/admin/users/b2bprofile/",
                         "permission": admin_permission("users.view_b2bprofile"),
+                    },
+                    {
+                        "title": "B2B Review History",
+                        "icon": "history",
+                        "link": "/admin/users/b2breviewevent/",
+                        "permission": admin_permission("users.view_b2breviewevent"),
                     },
                     {
                         "title": "Business Prices",
@@ -632,6 +650,12 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+PRIVATE_B2B_ROOT = Path(
+    os.environ.get('PRIVATE_B2B_ROOT', BASE_DIR / 'private_media' / 'b2b')
+)
+
+# USDA FoodData Central is queried server-side. Never expose this key to the browser.
+USDA_FDC_API_KEY = os.getenv('USDA_FDC_API_KEY', '')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

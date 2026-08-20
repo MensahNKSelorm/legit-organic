@@ -21,6 +21,8 @@ def dashboard_callback(request, context):
     from users.models import User, B2BProfile
     from blog.models import BlogPost
     from recipes.models import Recipe
+    from recipes.models import RecipeIngredient
+    from subscriptions.models import SubscriptionPlanPriceChange, SubscriptionPriceNotice, SubscriptionWeek
 
     all_orders  = Order.objects.all()
     paid_orders = all_orders.exclude(status__in=['whatsapp_pending', 'cancelled'])
@@ -210,6 +212,14 @@ def dashboard_callback(request, context):
         'b2b_pending': B2BProfile.objects.filter(status='pending').count(),
         'unavailable_products': Product.objects.filter(is_available=False).count(),
         'draft_posts': BlogPost.objects.filter(is_published=False).count(),
+        'renewals_due': SubscriptionWeek.objects.filter(status='payment_due').count(),
+        'expired_renewals': SubscriptionWeek.objects.filter(status='expired').count(),
+        'failed_price_notices': SubscriptionPriceNotice.objects.filter(status='failed').count(),
+        'scheduled_price_changes': SubscriptionPlanPriceChange.objects.filter(status='scheduled').count(),
+        'recipes_for_review': Recipe.objects.filter(status='needs_review').count(),
+        'unresolved_ingredients': RecipeIngredient.objects.filter(
+            nutrition_profile__isnull=True
+        ).values('recipe_id').distinct().count(),
     }
     quick_actions = []
     if request.user.has_perm('orders.view_order'):
@@ -222,6 +232,10 @@ def dashboard_callback(request, context):
         quick_actions.append({'label': 'Write story', 'href': '/admin/blog/blogpost/add/', 'icon': 'edit_note'})
     if request.user.has_perm('orders.add_promocode'):
         quick_actions.append({'label': 'Create promo', 'href': '/admin/orders/promocode/add/', 'icon': 'sell'})
+    if request.user.has_perm('subscriptions.add_subscriptionplanpricechange'):
+        quick_actions.append({'label': 'Schedule plan price', 'href': '/admin/subscriptions/subscriptionplanpricechange/add/', 'icon': 'calendar_clock'})
+    if request.user.has_perm('users.view_b2bprofile'):
+        quick_actions.append({'label': 'Review B2B applications', 'href': '/admin/users/b2bprofile/?status__exact=pending', 'icon': 'domain_verification'})
 
     # ── Populate context ─────────────────────────────────────────────────────
     context.update({

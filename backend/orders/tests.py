@@ -426,6 +426,7 @@ class OwnerOrderReportTests(TestCase):
         retry_send.assert_called_once()
 
 
+@override_settings(STAFF_2FA_MODE='enroll', STAFF_OWNER_2FA_REQUIRED=False)
 class OrderExportAdminTests(TestCase):
     def setUp(self):
         self.staff = User.objects.create_superuser(

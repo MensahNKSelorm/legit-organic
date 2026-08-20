@@ -32,7 +32,9 @@ export default function ManageSubscriptionsPage() {
       .finally(() => setLoading(false));
   }, [user]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    Promise.resolve().then(load);
+  }, [load]);
 
   async function act(row: FoodSubscription, action: "pause" | "resume" | "cancel" | "skip") {
     if (action === "cancel" && !window.confirm("Cancel this weekly delivery?")) return;

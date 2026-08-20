@@ -2,11 +2,12 @@
 
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@/lib/api'
 
 function SetupPasswordContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const uid = searchParams.get('uid') || ''
   const token = searchParams.get('token') || ''
 
@@ -68,7 +69,7 @@ function SetupPasswordContent() {
       // Store tokens and do a full reload so auth context re-initialises
       localStorage.setItem('access_token', result.access)
       localStorage.setItem('refresh_token', result.refresh)
-      window.location.href = '/b2b/dashboard'
+      router.push('/b2b/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setSubmitting(false)

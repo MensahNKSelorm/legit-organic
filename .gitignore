@@ -16,11 +16,20 @@ db.sqlite3
 venv/
 env/
 .env
+# Licensed/reference nutrition workbook: local review only; never commit.
+WAFCT_2019.xlsx
 
 # Media uploads (optional)
 media/
+private_media/
 !frontend/app/api/media/
 !frontend/app/api/media/**
+
+# Local source photography is retained outside Git; optimized WebP assets are committed.
+frontend/public/images/photography/*.jpg
+
+# Local design-review runtime output.
+frontend/.hallmark/
 
 # Byte-compiled / cache
 *.egg-info/

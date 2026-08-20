@@ -63,15 +63,17 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
   // Pre-fill from existing user data
   useEffect(() => {
     if (user && isOpen) {
-      setHouseNumber(user.house_number ?? '')
-      setStreetAddress(user.street_address ?? '')
-      setCity(user.city ?? '')
-      setDeliveryRegion(user.delivery_region ?? '')
-      setPhoneNumber(user.phone_number ?? '')
-      setLatitude(null)
-      setLongitude(null)
-      setErrors({})
-      setApiError('')
+      Promise.resolve().then(() => {
+        setHouseNumber(user.house_number ?? '')
+        setStreetAddress(user.street_address ?? '')
+        setCity(user.city ?? '')
+        setDeliveryRegion(user.delivery_region ?? '')
+        setPhoneNumber(user.phone_number ?? '')
+        setLatitude(null)
+        setLongitude(null)
+        setErrors({})
+        setApiError('')
+      })
     }
   }, [user, isOpen])
 

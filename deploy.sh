@@ -26,6 +26,15 @@ install -m 0644 ../deploy/systemd/legitorganic-order-reports.timer \
 systemctl daemon-reload
 systemctl enable --now legitorganic-order-reports.timer
 
+# Generate customer-approved renewal orders, close expired payment windows,
+# deliver scheduled price notices, and apply only safely notified changes.
+install -m 0644 ../deploy/systemd/legitorganic-subscriptions.service \
+    /etc/systemd/system/legitorganic-subscriptions.service
+install -m 0644 ../deploy/systemd/legitorganic-subscriptions.timer \
+    /etc/systemd/system/legitorganic-subscriptions.timer
+systemctl daemon-reload
+systemctl enable --now legitorganic-subscriptions.timer
+
 # Frontend
 cd ../frontend
 npm install

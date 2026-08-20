@@ -1,6 +1,9 @@
 from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
-from .models import Recipe, RecipeIngredient, RecipeStep, RecipePairing, UserRecipe, UserRecipeIngredient
+from .models import (
+    Recipe, RecipeIngredient, RecipeNutrition, RecipeStep, RecipePairing,
+    UserRecipe, UserRecipeIngredient,
+)
 
 
 class MinimalProductSerializer(serializers.Serializer):
@@ -9,37 +12,98 @@ class MinimalProductSerializer(serializers.Serializer):
     slug = serializers.CharField()
     price = serializers.CharField()
     unit = serializers.CharField()
+    image = serializers.ImageField(allow_null=True)
+    is_available = serializers.BooleanField()
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     product = MinimalProductSerializer(read_only=True)
+    matched_products = serializers.SerializerMethodField()
 
     class Meta:
         model = RecipeIngredient
-        fields = ['id', 'product', 'name', 'quantity', 'unit', 'notes']
+        fields = [
+            'id', 'product', 'matched_products', 'name', 'raw_text', 'quantity',
+            'quantity_max', 'unit', 'normalized_unit', 'preparation', 'optional', 'notes',
+        ]
+
+    def get_matched_products(self, obj):
+        matches = obj.product_matches.filter(
+            product__is_available=True, manually_verified=True,
+        ).select_related('product')[:3]
+        return MinimalProductSerializer([match.product for match in matches], many=True, context=self.context).data
 
 
 class RecipeStepSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeStep
-        fields = ['id', 'step_number', 'instruction', 'image']
+        fields = ['id', 'step_number', 'section', 'instruction', 'image']
 
 
 class RecipeListSerializer(serializers.ModelSerializer):
+    total_time = serializers.SerializerMethodField()
+
+    def get_total_time(self, obj):
+        return obj.prep_time + obj.cook_time
+
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'slug', 'description', 'cover_image',
+        fields = ['id', 'title', 'local_name', 'slug', 'description', 'cover_image',
                   'prep_time', 'cook_time', 'servings', 'difficulty',
-                  'is_default', 'is_published', 'nutritional_score', 'video_url', 'created_at']
+                  'total_time', 'cuisine', 'country', 'region', 'recipe_category',
+                  'meal_type', 'keywords', 'is_default', 'nutritional_score',
+                  'video_url', 'published_at', 'created_at']
         read_only_fields = ['id', 'slug', 'created_at']
 
 
 class RecipeDetailSerializer(RecipeListSerializer):
     ingredients = RecipeIngredientSerializer(many=True, read_only=True)
     steps = RecipeStepSerializer(many=True, read_only=True)
+    nutrition = serializers.SerializerMethodField()
+    nutrition_attribution = serializers.SerializerMethodField()
+    source_attribution = serializers.SerializerMethodField()
+
+    def get_nutrition(self, obj):
+        try:
+            nutrition = obj.nutrition
+        except RecipeNutrition.DoesNotExist:
+            return None
+        return RecipeNutritionSerializer(nutrition).data
+
+    def get_nutrition_attribution(self, obj):
+        if not hasattr(obj, 'nutrition'):
+            return None
+        return {
+            'name': 'Estimated by LegitOrganic from verified food-composition data',
+            'url': 'https://fdc.nal.usda.gov/',
+        }
+
+    def get_source_attribution(self, obj):
+        if not obj.source_name and not obj.source_url:
+            return None
+        return {
+            'name': obj.source_name,
+            'url': obj.source_url,
+            'author': obj.source_author,
+            'license': obj.source_license,
+        }
 
     class Meta(RecipeListSerializer.Meta):
-        fields = RecipeListSerializer.Meta.fields + ['ingredients', 'steps', 'updated_at']
+        fields = RecipeListSerializer.Meta.fields + [
+            'ingredients', 'steps', 'nutrition', 'nutrition_attribution',
+            'source_attribution', 'updated_at',
+        ]
+
+
+class RecipeNutritionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeNutrition
+        fields = [
+            'source', 'is_complete', 'calculation_warnings', 'calories',
+            'protein_g', 'carbohydrate_g', 'fat_g',
+            'saturated_fat_g', 'fibre_g', 'sugar_g', 'sodium_mg',
+            'cholesterol_mg', 'calculated_at',
+        ]
 
 
 class RecipePairingSerializer(serializers.ModelSerializer):

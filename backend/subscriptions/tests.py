@@ -10,7 +10,11 @@ from rest_framework.test import APITestCase
 from products.models import Product
 from users.models import B2BProfile, User
 
-from .models import DeliveryZone, Subscription, SubscriptionWeek
+from .models import (
+    DeliveryZone, Subscription, SubscriptionPlan, SubscriptionPlanPriceChange,
+    SubscriptionPriceNotice, SubscriptionWeek,
+)
+from .services import apply_price_change, deliver_price_notice, prepare_price_change
 
 
 class SubscriptionAPITests(APITestCase):
@@ -158,3 +162,65 @@ class SubscriptionAPITests(APITestCase):
         self.assertEqual(response.status_code, 402)
         week.refresh_from_db()
         self.assertEqual(week.status, 'payment_due')
+
+
+class SubscriptionPriceChangeTests(APITestCase):
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            email='operations@legitorganic.com', password='x', is_staff=True,
+        )
+        self.customer = User.objects.create_user(
+            email='weekly@example.com', password='x', email_verified=True,
+        )
+        self.plan = SubscriptionPlan.objects.create(
+            name='Family Week', weekly_price=Decimal('100.00')
+        )
+        self.zone = DeliveryZone.objects.create(
+            name='Price Test Zone', delivery_weekday=3, delivery_fee=Decimal('10.00')
+        )
+        self.subscription = Subscription.objects.create(
+            user=self.customer, plan=self.plan, delivery_zone=self.zone,
+            delivery_address='Accra', contact_phone='0244000000',
+            payment_method='mobile_money', status='active',
+            weekly_subtotal=Decimal('100.00'), weekly_delivery_fee=Decimal('10.00'),
+        )
+        self.change = SubscriptionPlanPriceChange.objects.create(
+            plan=self.plan, new_price=Decimal('120.00'),
+            effective_at=timezone.now() + timedelta(days=15), status='scheduled',
+            reason='Seasonal sourcing costs have changed.', created_by=self.staff,
+        )
+
+    def test_notice_ledger_is_created_once(self):
+        prepare_price_change(self.change.pk)
+        prepare_price_change(self.change.pk)
+        notice = SubscriptionPriceNotice.objects.get(price_change=self.change)
+        self.assertEqual(notice.recipient_email, self.customer.email)
+        self.assertEqual(self.change.notices.count(), 1)
+
+    @patch('subscriptions.emails.send_price_change_notice', side_effect=RuntimeError('mail down'))
+    def test_failed_notice_blocks_customer_price_change(self, _mock_send):
+        prepare_price_change(self.change.pk)
+        notice = self.change.notices.get()
+        deliver_price_notice(notice.pk)
+        self.change.effective_at = timezone.now() - timedelta(minutes=1)
+        self.change.save(update_fields=['effective_at'])
+        apply_price_change(self.change.pk)
+        self.subscription.refresh_from_db()
+        notice.refresh_from_db()
+        self.assertEqual(self.subscription.weekly_subtotal, Decimal('100.00'))
+        self.assertEqual(notice.status, 'failed')
+
+    @patch('subscriptions.emails.send_price_change_notice', return_value='email_123')
+    def test_successful_notice_allows_price_change(self, _mock_send):
+        prepare_price_change(self.change.pk)
+        notice = self.change.notices.get()
+        deliver_price_notice(notice.pk)
+        self.change.effective_at = timezone.now() - timedelta(minutes=1)
+        self.change.save(update_fields=['effective_at'])
+        apply_price_change(self.change.pk)
+        self.subscription.refresh_from_db()
+        self.plan.refresh_from_db()
+        notice.refresh_from_db()
+        self.assertEqual(self.subscription.weekly_subtotal, Decimal('120.00'))
+        self.assertEqual(self.plan.weekly_price, Decimal('120.00'))
+        self.assertEqual(notice.status, 'applied')

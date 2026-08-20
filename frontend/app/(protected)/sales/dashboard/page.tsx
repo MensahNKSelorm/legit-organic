@@ -192,7 +192,7 @@ export default function SalesRepDashboardPage() {
 
   useEffect(() => {
     if (isSalesRep && activeTab === 'customers' && !customersLoaded) {
-      loadCustomers()
+      Promise.resolve().then(loadCustomers)
     }
   }, [isSalesRep, activeTab, customersLoaded, loadCustomers])
 
@@ -218,7 +218,7 @@ export default function SalesRepDashboardPage() {
 
   useEffect(() => {
     if (isSalesRep && activeTab === 'commissions' && !commissionsLoaded) {
-      loadCommissions()
+      Promise.resolve().then(loadCommissions)
     }
   }, [isSalesRep, activeTab, commissionsLoaded, loadCommissions])
 

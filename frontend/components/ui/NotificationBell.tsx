@@ -49,7 +49,7 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
 
   // Fetch on mount, then poll every 60s (no websockets yet)
   useEffect(() => {
-    fetchNotifications()
+    Promise.resolve().then(fetchNotifications)
     const interval = setInterval(fetchNotifications, 60000)
     return () => clearInterval(interval)
   }, [fetchNotifications])
@@ -86,7 +86,7 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
       // own route tree, so it can neither reach a different origin nor resolve
       // a path Next has no matching page for. A full page navigation to the
       // absolute backend URL is required instead.
-      window.location.href = `${API_BASE}${n.link}`
+      window.open(`${API_BASE}${n.link}`, '_self')
     }
   }, [])
 

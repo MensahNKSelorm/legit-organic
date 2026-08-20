@@ -13,13 +13,13 @@ export default function PrivacyPolicyPage() {
       <div id="top" className="bg-[#0D3B2A] pb-14 pt-36 text-white md:pb-20">
         <div className="page-container grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
           <div><p className="editorial-label text-[#F4C430]">Your information</p><h1 className="display-organic mt-4 text-6xl md:text-8xl">Privacy policy.</h1></div>
-          <p className="border-l border-white/25 pl-5 text-sm text-[#B8D4BD]">Effective June 2026<br />Written for customers in Ghana</p>
+          <p className="border-l border-white/25 pl-5 text-sm text-[#B8D4BD]">Effective August 2026<br />Written for customers in Ghana</p>
         </div>
       </div>
 
       {/* ── Content ──────────────────────────────────────────────── */}
       <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
-        <div className="legal-document mx-auto max-w-5xl px-6 py-16 md:py-20">
+        <div className="legal-document mx-auto max-w-5xl px-6 py-12 md:py-16">
 
           {/* 1. Introduction */}
           <section>
@@ -51,12 +51,16 @@ export default function PrivacyPolicyPage() {
               <li><strong>Delivery information:</strong> delivery address</li>
               <li><strong>Order information:</strong> products ordered, quantities, order history</li>
               <li>
-                <strong>Payment information:</strong> we do not store card details — payments are
-                processed securely by Paystack
+                <strong>Payment information:</strong> payment references and transaction status.
+                Payment credentials are handled by SeevCash and are not stored by us
               </li>
               <li><strong>Usage data:</strong> pages visited, time spent, device type</li>
               <li>
                 <strong>Communications:</strong> messages sent to us via contact form or email
+              </li>
+              <li>
+                <strong>Business applications:</strong> organisation details, TIN, registration
+                information, delivery information, and supporting verification documents
               </li>
             </ul>
           </section>
@@ -78,6 +82,7 @@ export default function PrivacyPolicyPage() {
               <li>To improve our website and services</li>
               <li>To respond to your enquiries</li>
               <li>To comply with legal obligations</li>
+              <li>To verify and manage business supply applications</li>
             </ul>
           </section>
 
@@ -92,7 +97,7 @@ export default function PrivacyPolicyPage() {
               We do not sell your personal data. We share data only with:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-[#333333] dark:text-gray-300 mb-4">
-              <li><strong>Paystack</strong> — payment processing</li>
+              <li><strong>SeevCash</strong> — payment processing and payment-status confirmation</li>
               <li><strong>Delivery partners</strong> — name and address only, for delivery</li>
               <li><strong>Legal authorities</strong> — if required by Ghanaian law</li>
             </ul>
@@ -123,7 +128,9 @@ export default function PrivacyPolicyPage() {
             </h2>
             <p className="text-[#333333] dark:text-gray-300 leading-relaxed mb-4">
               Your data is stored securely. Passwords are hashed and never stored in plain text.
-              Payment data is handled entirely by Paystack and never touches our servers.
+              Payment credentials are handled by SeevCash and are not stored on our servers.
+              Business verification documents are kept in private storage and are available only
+              to authorised reviewers.
             </p>
           </section>
 
@@ -204,10 +211,10 @@ export default function PrivacyPolicyPage() {
           </section>
 
           {/* Back to top */}
-          <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
+          <div className="mt-10 border-t border-gray-200 pt-6 text-center dark:border-gray-700">
             <a
               href="#top"
-              className="inline-flex items-center gap-2 text-[#2E7D32] dark:text-[#81C784] font-semibold hover:underline mt-12"
+              className="inline-flex items-center gap-2 font-semibold text-[#2E7D32] hover:underline dark:text-[#81C784]"
             >
               ↑ Back to top
             </a>

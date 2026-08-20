@@ -114,7 +114,7 @@ export default function Navbar() {
 
     const saved = localStorage.getItem("theme");
     const isDark = saved === "dark";
-    setDarkMode(isDark);
+    Promise.resolve().then(() => setDarkMode(isDark));
     document.documentElement.classList.toggle("dark", isDark);
 
     return () => window.removeEventListener("scroll", onScroll);

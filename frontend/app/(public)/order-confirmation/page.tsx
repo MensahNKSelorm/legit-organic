@@ -15,8 +15,10 @@ function OrderConfirmationContent() {
 
   useEffect(() => {
     if (!ref) {
-      setError('No order reference found.')
-      setLoading(false)
+      Promise.resolve().then(() => {
+        setError('No order reference found.')
+        setLoading(false)
+      })
       return
     }
     api.orders.detail(ref)

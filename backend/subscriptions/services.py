@@ -3,7 +3,9 @@ from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.db import transaction
 
-from .models import SubscriptionWeek
+from .models import (
+    SubscriptionPlanPriceChange, SubscriptionPriceNotice, SubscriptionWeek,
+)
 
 
 def schedule_next_week(subscription, after_date=None):
@@ -91,3 +93,92 @@ def finalize_paid_week(week_id, payment_data):
         'status', 'payment_error', 'paid_at', 'order', 'updated_at'
     ])
     return week
+
+
+@transaction.atomic
+def prepare_price_change(change_id):
+    """Create the fixed recipient ledger before any notices are sent."""
+    change = SubscriptionPlanPriceChange.objects.select_for_update().select_related('plan').get(
+        pk=change_id
+    )
+    if change.status != 'scheduled' or change.recipients_prepared_at:
+        return change
+    subscriptions = change.plan.subscriptions.filter(
+        status__in=['draft', 'active', 'paused']
+    ).select_related('user')
+    SubscriptionPriceNotice.objects.bulk_create([
+        SubscriptionPriceNotice(
+            price_change=change,
+            subscription=subscription,
+            recipient_email=subscription.user.email,
+        )
+        for subscription in subscriptions
+    ], ignore_conflicts=True)
+    change.recipients_prepared_at = timezone.now()
+    change.save(update_fields=['recipients_prepared_at', 'updated_at'])
+    return change
+
+
+def deliver_price_notice(notice_id):
+    from .emails import send_price_change_notice
+
+    notice = SubscriptionPriceNotice.objects.select_related(
+        'price_change__plan', 'subscription__user'
+    ).get(pk=notice_id)
+    if notice.status in {'sent', 'applied', 'cancelled'}:
+        return notice
+    notice.attempts += 1
+    try:
+        notice.delivery_id = send_price_change_notice(notice)
+        notice.status = 'sent'
+        notice.sent_at = timezone.now()
+        notice.last_error = ''
+    except Exception as exc:
+        notice.status = 'failed'
+        notice.last_error = str(exc)[:500]
+    notice.save(update_fields=[
+        'attempts', 'delivery_id', 'status', 'sent_at', 'last_error', 'updated_at',
+    ])
+    return notice
+
+
+@transaction.atomic
+def apply_price_change(change_id):
+    """Apply only to subscribers with a successfully recorded notice."""
+    change = SubscriptionPlanPriceChange.objects.select_for_update().select_related('plan').get(
+        pk=change_id
+    )
+    if change.status != 'scheduled' or change.effective_at > timezone.now():
+        return change
+
+    now = timezone.now()
+    eligible = change.notices.select_for_update().filter(
+        status='sent', subscription__status__in=['draft', 'active', 'paused']
+    )
+    eligible_count = eligible.count()
+    for notice in eligible.select_related('subscription'):
+        subscription = notice.subscription
+        subscription.weekly_subtotal = change.new_price
+        subscription.save(update_fields=['weekly_subtotal', 'updated_at'])
+        notice.status = 'applied'
+        notice.applied_at = now
+        notice.save(update_fields=['status', 'applied_at', 'updated_at'])
+
+    change.plan.weekly_price = change.new_price
+    change.plan.save(update_fields=['weekly_price', 'updated_at'])
+    change.status = 'applied'
+    change.applied_at = now
+    change.save(update_fields=['status', 'applied_at', 'updated_at'])
+    from security.audit import record_event
+    record_event(
+        action='subscription.price_change_applied',
+        target=change,
+        before={'weekly_price': str(change.old_price)},
+        after={
+            'weekly_price': str(change.new_price),
+            'notified_subscribers': eligible_count,
+            'blocked_notices': change.notices.filter(status='failed').count(),
+        },
+        reason=change.reason,
+    )
+    return change

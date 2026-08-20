@@ -45,7 +45,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [user])
 
   useEffect(() => {
-    loadWishlist()
+    Promise.resolve().then(loadWishlist)
   }, [loadWishlist])
 
   const addItem = async (productId: number) => {

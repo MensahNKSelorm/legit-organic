@@ -667,6 +667,42 @@ def send_b2b_rejection_email(profile):
     })
 
 
+def send_b2b_review_update_email(profile, status, note):
+    copy = {
+        'changes_requested': (
+            'We need a little more information',
+            'Please review the note below and reply to this email with the requested information.',
+        ),
+        'suspended': (
+            'Your business account has been suspended',
+            'Ordering access is temporarily unavailable. Contact our team if you need clarification.',
+        ),
+    }
+    if status not in copy:
+        return None
+    heading, message = copy[status]
+    return resend.Emails.send({
+        'from': f'Legit Organic <{settings.DEFAULT_FROM_EMAIL}>',
+        'to': [profile.business_email],
+        'subject': f'{heading} — Legit Organic',
+        'html': f'''
+        <!doctype html><html><body style="margin:0;background:#f4efe4;font-family:Arial,sans-serif;color:#173c2a">
+          <div style="max-width:600px;margin:auto;padding:36px 18px">
+            <div style="background:#173c2a;color:white;padding:30px;border-top:6px solid #f4c430">
+              <p style="margin:0 0 10px;color:#f4c430;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase">Business account</p>
+              <h1 style="margin:0;font-size:30px">{escape(heading)}.</h1>
+            </div>
+            <div style="background:white;padding:30px">
+              <p>Dear {escape(profile.contact_person)},</p>
+              <p style="line-height:1.65">{escape(message)}</p>
+              <div style="margin:22px 0;padding:18px;background:#f7f2e8;border-left:4px solid #f4c430;line-height:1.6">{escape(note)}</div>
+              <p style="font-size:13px;color:#66756c">Reference: {escape(profile.company_name)}</p>
+            </div>
+          </div>
+        </body></html>''',
+    })
+
+
 def send_verification_email(user, token):
     verification_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
     resend.Emails.send({

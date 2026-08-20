@@ -4,11 +4,11 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import type { RecipeWithPairings } from '@/types'
 import RecipeDetailActions from '@/components/recipes/RecipeDetailActions'
 import { getMediaUrl } from '@/lib/media'
 import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
 import AddDishSearch from '@/components/recipes/AddDishSearch'
+import RecipeShopIngredients from '@/components/recipes/RecipeShopIngredients'
 
 
 type Props = { params: Promise<{ slug: string }> }
@@ -70,16 +70,11 @@ function getEmbedUrl(url: string): string {
 export default async function RecipeDetailPage({ params }: Props) {
   const { slug } = await params
   const recipe = await api.recipes.detail(slug).catch(() => notFound())
-  const [catalogue, products] = await Promise.all([
-    api.recipes.default().catch(() => []),
-    api.products.list().catch(() => []),
-  ])
+  const catalogue = await api.recipes.default().catch(() => [])
   const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, color: '#6b7280' }
   const coverSrc = getMediaUrl(recipe.cover_image)
-  const normaliseName = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
   const editableIngredients: EditableMealIngredient[] = recipe.ingredients.map((ingredient, index) => {
-    const matchedProduct = ingredient.product || products.find(product => normaliseName(product.name) === normaliseName(ingredient.name))
-      || products.find(product => normaliseName(product.name).includes(normaliseName(ingredient.name)) || normaliseName(ingredient.name).includes(normaliseName(product.name)))
+    const matchedProduct = ingredient.product || ingredient.matched_products[0] || null
     return {
       key: `${recipe.slug}-${index}`,
       group: recipe.title,
@@ -133,8 +128,14 @@ export default async function RecipeDetailPage({ params }: Props) {
           <h1 className="font-display text-3xl lg:text-5xl font-bold text-mist-white mb-5 leading-tight max-w-3xl">
             {recipe.title}
           </h1>
+          {recipe.local_name && recipe.local_name.toLowerCase() !== recipe.title.toLowerCase() && (
+            <p className="-mt-2 mb-5 text-lg text-[#F4C430]">{recipe.local_name}</p>
+          )}
           <AddDishSearch currentTitles={[recipe.title]} catalogue={catalogue.map(item => item.title)} />
           <div className="flex flex-wrap items-center gap-4 text-light-leaf text-sm mb-8">
+            {(recipe.region || recipe.cuisine) && (
+              <><span>{[recipe.region, recipe.cuisine].filter(Boolean).join(' · ')}</span><span className="opacity-40">·</span></>
+            )}
             {recipe.prep_time > 0 && (
               <span>{formatTime(recipe.prep_time)} prep</span>
             )}
@@ -150,6 +151,14 @@ export default async function RecipeDetailPage({ params }: Props) {
           <RecipeDetailActions recipe={recipe} />
         </div>
       </div>
+
+      {recipe.description && (
+        <div className="bg-[#F1E8D5] dark:bg-[#223027]">
+          <div className="page-container mx-auto max-w-4xl px-6 py-7 lg:px-8">
+            <div className="prose prose-lg prose-green max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: recipe.description }} />
+          </div>
+        </div>
+      )}
 
       {/* ── Pairings ───────────────────────────────────────────── */}
       {recipe.pairings.length > 0 && (
@@ -250,6 +259,37 @@ export default async function RecipeDetailPage({ params }: Props) {
                 <CombinedRecipeEditor key={recipe.slug} title={recipe.title} baseRecipeIds={[recipe.id]} initialIngredients={editableIngredients} returnTo={`/recipes/${recipe.slug}`} />
               </section>
 
+            {recipe.ingredients.length > 0 && (
+              <RecipeShopIngredients ingredients={recipe.ingredients} />
+            )}
+
+            {recipe.nutrition && (
+              <section className="bg-[#F1E8D5] p-6 dark:bg-[#223027]">
+                <p className="text-xs font-bold uppercase tracking-[.18em] text-[#2E7D32] dark:text-[#9FC5A4]">Nutrition estimate</p>
+                <h2 className="display-organic mt-2 text-3xl text-[#0D3B2A] dark:text-white">Per serving</h2>
+                <dl className="mt-5 grid grid-cols-2 gap-x-7 gap-y-4 sm:grid-cols-4">
+                  {[
+                    ['Energy', recipe.nutrition.calories, 'kcal'],
+                    ['Protein', recipe.nutrition.protein_g, 'g'],
+                    ['Carbohydrate', recipe.nutrition.carbohydrate_g, 'g'],
+                    ['Fat', recipe.nutrition.fat_g, 'g'],
+                    ['Fibre', recipe.nutrition.fibre_g, 'g'],
+                    ['Sugar', recipe.nutrition.sugar_g, 'g'],
+                    ['Sodium', recipe.nutrition.sodium_mg, 'mg'],
+                  ].map(([label, value, unit]) => value !== null && (
+                    <div key={label as string} className="border-t border-[#0D3B2A]/20 pt-3 dark:border-white/15">
+                      <dt className="text-xs text-[#5B3E31] dark:text-[#B8D4BD]">{label}</dt>
+                      <dd className="mt-1 text-lg font-bold text-[#0D3B2A] dark:text-white">{Math.round(Number(value))} {unit}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-5 text-xs leading-5 text-[#5B3E31] dark:text-[#B8D4BD]">
+                  Estimated from verified food-composition data. Values vary with ingredients and preparation.
+                  {!recipe.nutrition.is_complete ? ' Some ingredients could not be calculated reliably.' : ''}
+                </p>
+              </section>
+            )}
+
             {/* Steps */}
             {recipe.steps.length > 0 && (
               <section>
@@ -262,10 +302,10 @@ export default async function RecipeDetailPage({ params }: Props) {
                       <span className="shrink-0 w-9 h-9 rounded-full bg-[#F4C430] text-[#0D3B2A] font-bold text-sm flex items-center justify-center">
                         {step.step_number}
                       </span>
-                      <div
-                        className="prose prose-green max-w-none dark:prose-invert pt-1.5"
-                        dangerouslySetInnerHTML={{ __html: step.instruction }}
-                      />
+                      <div className="pt-1.5">
+                        {step.section && <p className="mb-1 text-xs font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:text-[#9FC5A4]">{step.section}</p>}
+                        <div className="prose prose-green max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: step.instruction }} />
+                      </div>
                     </li>
                   ))}
                 </ol>
@@ -275,6 +315,18 @@ export default async function RecipeDetailPage({ params }: Props) {
             {recipe.ingredients.length === 0 && recipe.steps.length === 0 && (
               <p className="text-charcoal/50 dark:text-[#9ca3af] italic">
                 Full recipe details are being prepared. Check back soon.
+              </p>
+            )}
+
+            {recipe.source_attribution && (
+              <p className="border-t border-[#0D3B2A]/15 pt-5 text-xs leading-5 text-[#5B3E31] dark:border-white/15 dark:text-[#B8D4BD]">
+                Source: {recipe.source_attribution.url ? (
+                  <a href={recipe.source_attribution.url} rel="noopener noreferrer" className="underline underline-offset-2">
+                    {recipe.source_attribution.name || recipe.source_attribution.url}
+                  </a>
+                ) : recipe.source_attribution.name}
+                {recipe.source_attribution.author ? ` · ${recipe.source_attribution.author}` : ''}
+                {recipe.source_attribution.license ? ` · ${recipe.source_attribution.license}` : ''}
               </p>
             )}
           </div>

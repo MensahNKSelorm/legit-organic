@@ -75,17 +75,19 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPhoneNumber("");
-      setHouseNumber("");
-      setStreetAddress("");
-      setCity("");
-      setDeliveryRegion("");
-      setLatitude(null);
-      setLongitude(null);
-      setErrors({});
+      Promise.resolve().then(() => {
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPhoneNumber("");
+        setHouseNumber("");
+        setStreetAddress("");
+        setCity("");
+        setDeliveryRegion("");
+        setLatitude(null);
+        setLongitude(null);
+        setErrors({});
+      });
     }
   }, [isOpen]);
 

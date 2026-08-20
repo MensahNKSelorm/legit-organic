@@ -11,7 +11,11 @@ from .forms import StaffInvitationAdminForm
 from .models import StaffInvitation, User
 
 
-@override_settings(DASHBOARD_URL='https://dashboard.example.com')
+@override_settings(
+    DASHBOARD_URL='https://dashboard.example.com',
+    STAFF_2FA_MODE='enroll',
+    STAFF_OWNER_2FA_REQUIRED=False,
+)
 class StaffInvitationTests(TestCase):
     password = 'StrongField!2026'
 

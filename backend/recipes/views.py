@@ -113,14 +113,33 @@ class RecipeCombinationNoteView(views.APIView):
 
 
 class RecipeListView(generics.ListAPIView):
-    queryset = Recipe.objects.filter(is_published=True)
     serializer_class = RecipeListSerializer
     permission_classes = []
+
+    def get_queryset(self):
+        queryset = Recipe.objects.filter(is_published=True).order_by('-published_at', '-created_at')
+        search = self.request.query_params.get('search', '').strip()[:200]
+        cuisine = self.request.query_params.get('cuisine', '').strip()[:100]
+        region = self.request.query_params.get('region', '').strip()[:100]
+        meal_type = self.request.query_params.get('meal_type', '').strip()[:100]
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | Q(local_name__icontains=search)
+                | Q(description__icontains=search) | Q(ingredients__name__icontains=search)
+            ).distinct()
+        if cuisine:
+            queryset = queryset.filter(cuisine__iexact=cuisine)
+        if region:
+            queryset = queryset.filter(region__iexact=region)
+        if meal_type:
+            queryset = queryset.filter(meal_type__iexact=meal_type)
+        return queryset
 
 
 class RecipeDetailView(generics.RetrieveAPIView):
     queryset = Recipe.objects.filter(is_published=True).prefetch_related(
-        'ingredients__product', 'steps', 'pairings__suggested_recipe'
+        'ingredients__product', 'ingredients__product_matches__product',
+        'steps', 'pairings__suggested_recipe'
     )
     serializer_class = RecipeDetailWithPairingsSerializer
     permission_classes = []

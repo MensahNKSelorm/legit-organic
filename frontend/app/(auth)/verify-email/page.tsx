@@ -42,7 +42,7 @@ function VerifyEmailContent() {
   useEffect(() => {
     const token = searchParams.get('token')
     if (!token) {
-      setState('error-no-token')
+      Promise.resolve().then(() => setState('error-no-token'))
       return
     }
 

@@ -77,20 +77,45 @@ export interface IngredientProduct {
   slug: string
   price: string
   unit: string
+  image: string | null
+  is_available: boolean
 }
 
 export interface RecipeIngredient {
   id: number
   product: IngredientProduct | null
+  matched_products: IngredientProduct[]
   name: string
+  raw_text: string
   quantity: string
+  quantity_max: string | null
   unit: string
+  normalized_unit: string
+  preparation: string
+  optional: boolean
   notes: string
+}
+
+export interface RecipeNutrition {
+  source: string
+  is_complete: boolean
+  calculation_warnings: string[]
+  calories: string | null
+  protein_g: string | null
+  carbohydrate_g: string | null
+  fat_g: string | null
+  saturated_fat_g: string | null
+  fibre_g: string | null
+  sugar_g: string | null
+  sodium_mg: string | null
+  cholesterol_mg: string | null
+  calculated_at: string
 }
 
 export interface RecipeStep {
   id: number
   step_number: number
+  section: string
   instruction: string
   image: string | null
 }
@@ -98,17 +123,26 @@ export interface RecipeStep {
 export interface Recipe {
   id: number
   title: string
+  local_name?: string
   slug: string
   description: string
   cover_image: string | null
   prep_time: number
   cook_time: number
+  total_time?: number
   servings: number
+  cuisine?: string
+  country?: string
+  region?: string
+  recipe_category?: string
+  meal_type?: string
+  keywords?: string[]
   difficulty: string
   is_default: boolean
   nutritional_score?: number
   video_url?: string
   created_at: string
+  published_at?: string | null
   ingredients?: RecipeIngredient[]
   steps?: RecipeStep[]
   updated_at?: string
@@ -125,6 +159,9 @@ export interface RecipeWithPairings extends Recipe {
   ingredients: RecipeIngredient[]
   steps: RecipeStep[]
   pairings: RecipePairing[]
+  nutrition: RecipeNutrition | null
+  nutrition_attribution: { name: string; url: string } | null
+  source_attribution: { name: string; url: string; author: string; license: string } | null
 }
 
 export interface UserRecipeIngredient {
@@ -262,7 +299,7 @@ export interface B2BProfile {
   business_email: string
   business_address: string
   estimated_monthly_order: string | null
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'under_review' | 'changes_requested' | 'approved' | 'rejected' | 'suspended'
   status_display: string
   price_list: BusinessPriceList | null
   rejection_reason: string

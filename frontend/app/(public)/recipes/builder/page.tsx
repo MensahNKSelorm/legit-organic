@@ -172,7 +172,6 @@ function BuilderContent() {
     }
 
     load()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, baseSlug, addSlug, editId])
 
   // ---------------------------------------------------------------------------

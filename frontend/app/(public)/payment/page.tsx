@@ -14,8 +14,10 @@ function PaymentResult() {
 
   useEffect(() => {
     if (!reference && !orderReference) {
-      setFailed(true);
-      setMessage("Payment reference is missing.");
+      Promise.resolve().then(() => {
+        setFailed(true);
+        setMessage("Payment reference is missing.");
+      });
       return;
     }
     api.orders
