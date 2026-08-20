@@ -1,4 +1,4 @@
-@import url("https://api.fontshare.com/v2/css?f[]=boska@400,500,600&f[]=cabinet-grotesk@400,500,700,800&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800&display=swap");
 
 /* Legit Organic control-room shell */
 html,
@@ -7,6 +7,18 @@ body,
 #main {
   background: #111827 !important;
   color: #f8f4e9 !important;
+  font-family: "Cabinet Grotesk", Arial, sans-serif !important;
+}
+
+#main h1,
+#main h2,
+#main h3,
+#main h4,
+#main button,
+#main input,
+#main select,
+#main textarea {
+  font-family: "Cabinet Grotesk", Arial, sans-serif !important;
 }
 
 #main > .bg-white,
@@ -221,7 +233,7 @@ input.bg-primary-600:hover {
   padding: 1.35rem 1.5rem;
   background: var(--lo-form-forest);
   color: var(--lo-form-gold);
-  font-family: "Boska", serif;
+  font-family: "Cabinet Grotesk", Arial, sans-serif;
   font-size: clamp(2rem, 4vw, 3.6rem);
   font-weight: 500;
   line-height: .95;
@@ -323,7 +335,7 @@ input.bg-primary-600:hover {
 .lo-writing-assistant > div + div { border-left: 1px solid rgba(255,255,255,.13); }
 .lo-writing-assistant__identity { display: flex; gap: .75rem; align-items: flex-start; background: #0d3b2a; }
 .lo-writing-assistant__identity .material-symbols-outlined { color: #f4c430; }
-.lo-writing-assistant__identity p { margin: 0 0 .25rem; color: #fff; font-family: "Boska", serif; font-size: 1.55rem; line-height: 1; }
+.lo-writing-assistant__identity p { margin: 0 0 .25rem; color: #fff; font-family: "Cabinet Grotesk", Arial, sans-serif; font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
 .lo-writing-assistant__identity span:last-child { color: rgba(255,255,255,.62); font-size: .78rem; }
 .lo-writing-assistant__work { display: grid; grid-template-columns: 1fr auto; gap: .5rem .75rem; align-content: start; }
 .lo-writing-assistant__work label { color: #f4c430; font-size: .66rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
@@ -342,7 +354,7 @@ input.bg-primary-600:hover {
 .lo-writing-assistant__result-head button { padding: .5rem .7rem; font-size: .75rem; }
 .lo-writing-assistant [data-writing-preview] { max-height: 15rem; overflow: auto; color: rgba(255,255,255,.84); font-size: .86rem; line-height: 1.55; }
 .lo-writing-assistant [data-writing-preview] h2,
-.lo-writing-assistant [data-writing-preview] h3 { margin: .8rem 0 .35rem; color: #fff; font-family: "Boska", serif; font-size: 1.25rem; }
+.lo-writing-assistant [data-writing-preview] h3 { margin: .8rem 0 .35rem; color: #fff; font-family: "Cabinet Grotesk", Arial, sans-serif; font-size: 1.2rem; font-weight: 700; }
 .lo-writing-assistant [data-writing-preview] ul,
 .lo-writing-assistant [data-writing-preview] ol { margin: .45rem 0 0 1.1rem; list-style: revert; }
 .lo-writing-assistant [data-writing-status] { margin: .75rem 0 0; color: rgba(255,255,255,.52); font-size: .75rem; }

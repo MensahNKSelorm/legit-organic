@@ -60,7 +60,12 @@ class BlogTopic(models.Model):
         max_length=200,
         help_text='Subject + web-search query, e.g. "Soil health for smallholder farms in Ghana"',
     )
-    category = models.CharField(max_length=100, default='Agriculture')
+    category = models.ForeignKey(
+        BlogCategory,
+        on_delete=models.PROTECT,
+        related_name='topics',
+        help_text='Journal section this subject belongs to.',
+    )
     is_active = models.BooleanField(default=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

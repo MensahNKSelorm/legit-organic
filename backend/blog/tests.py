@@ -3,7 +3,7 @@ from unittest import mock
 from django.core.management import call_command
 from django.test import TestCase
 
-from blog.models import BlogPost, BlogTopic
+from blog.models import BlogCategory, BlogPost, BlogTopic
 
 CMD = 'blog.management.commands.generate_weekly_blog'
 
@@ -62,9 +62,26 @@ class WeeklyBlogCommandTests(TestCase):
 
     def test_inactive_topics_are_not_used(self):
         from blog.management.commands.generate_weekly_blog import _pick_topic
-        BlogTopic.objects.create(topic='Only active one', category='Agriculture', is_active=True)
-        BlogTopic.objects.create(topic='Deactivated topic', category='Agriculture', is_active=False)
+        category = BlogCategory.objects.get(name='Farming & Sustainability')
+        BlogTopic.objects.create(topic='Only active one', category=category, is_active=True)
+        BlogTopic.objects.create(topic='Deactivated topic', category=category, is_active=False)
         self.assertEqual(_pick_topic().topic, 'Only active one')
+
+    def test_pick_topic_rotates_sections_before_repeating(self):
+        from blog.management.commands.generate_weekly_blog import _pick_topic, _seed_topics_if_empty
+        from django.utils import timezone
+
+        _seed_topics_if_empty()
+        sections = []
+        for _ in range(3):
+            topic = _pick_topic()
+            sections.append(topic.category.name)
+            topic.last_used_at = timezone.now()
+            topic.save(update_fields=['last_used_at'])
+
+        self.assertEqual(set(sections), {
+            'Farming & Sustainability', 'Nutrition & Health', 'Recipes & Cooking',
+        })
 
 
 class GenerationTests(TestCase):

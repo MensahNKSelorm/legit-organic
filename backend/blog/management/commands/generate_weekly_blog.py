@@ -1,8 +1,8 @@
 """Weekly auto-blog: research a rotating topic with Tavily, generate a grounded
 draft, and save it UNPUBLISHED for staff review.
 
-Topics live in the BlogTopic model (editable in the admin at any time). On the
-first run, if none exist, a default set is seeded.
+Topics live in the BlogTopic model (editable in the admin at any time). Missing
+defaults are added without reactivating or overwriting staff-managed topics.
 
 Usage:
     python manage.py generate_weekly_blog            # normal weekly run
@@ -15,6 +15,7 @@ model invent facts. Drafts are always is_published=False.
 """
 import logging
 import os
+import random
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
@@ -27,27 +28,30 @@ from blog.generation import generate_post
 
 logger = logging.getLogger(__name__)
 
-# Seeded into BlogTopic only when the table is empty. After that, manage topics
-# in the admin — this list is not consulted again.
+# Ensures each standard Journal section has a useful starting pool. Existing
+# topics and staff activation choices are never overwritten.
 DEFAULT_TOPICS = [
-    ('Sustainable farming practices for smallholder farmers in Ghana', 'Agriculture'),
-    ('The health benefits of eating seasonal vegetables', 'Health & Nutrition'),
-    ('Reducing post-harvest food loss on small farms', 'Agriculture'),
-    ('Soil health and organic matter for better yields', 'Agriculture'),
-    ('Building a balanced diet with local Ghanaian foods', 'Health & Nutrition'),
-    ('Climate change and food production in West Africa', 'Agriculture'),
-    ('Food safety and safe handling at home', 'Health & Nutrition'),
-    ('The role of beans and legumes in healthy eating', 'Health & Nutrition'),
-    ('Water use and irrigation for smallholder farms', 'Agriculture'),
-    ('Composting and natural fertiliser for home gardens', 'Agriculture'),
+    ('Sustainable farming practices for smallholder farmers in Ghana', 'Farming & Sustainability'),
+    ('Reducing post-harvest food loss on small farms', 'Farming & Sustainability'),
+    ('Soil health and organic matter for better yields', 'Farming & Sustainability'),
+    ('Climate change and food production in West Africa', 'Farming & Sustainability'),
+    ('Water use and irrigation for smallholder farms', 'Farming & Sustainability'),
+    ('The health benefits of eating seasonal vegetables', 'Nutrition & Health'),
+    ('Building a balanced diet with local Ghanaian foods', 'Nutrition & Health'),
+    ('Food safety and safe handling at home', 'Nutrition & Health'),
+    ('The role of beans and legumes in healthy eating', 'Nutrition & Health'),
+    ('How to build flavour with Ghanaian herbs and spices', 'Recipes & Cooking'),
+    ('Practical ways to cook more with seasonal produce', 'Recipes & Cooking'),
+    ('Batch cooking Ghanaian staples for a busy week', 'Recipes & Cooking'),
+    ('Reducing food waste through everyday kitchen planning', 'Recipes & Cooking'),
 ]
 
 
 def _seed_topics_if_empty():
-    if not BlogTopic.objects.exists():
-        BlogTopic.objects.bulk_create(
-            [BlogTopic(topic=t, category=c) for t, c in DEFAULT_TOPICS]
-        )
+    """Ensure the editorial pool covers every standard Journal section."""
+    for topic, category_name in DEFAULT_TOPICS:
+        category, _ = BlogCategory.objects.get_or_create(name=category_name)
+        BlogTopic.objects.get_or_create(topic=topic, defaults={'category': category})
 
 
 def _recent_titles(limit=8):
@@ -63,19 +67,45 @@ def _key(topic):
 
 
 def _pick_topic():
-    """Least-recently-used active topic, skipping any whose distinctive keyword
-    is in a recent post title. Returns a BlogTopic or None."""
-    active = list(BlogTopic.objects.filter(is_active=True))
+    """Choose a varied section first, then a varied topic within that section."""
+    active = list(BlogTopic.objects.filter(is_active=True).select_related('category'))
     if not active:
         return None
-    never = [t for t in active if t.last_used_at is None]
-    used = sorted((t for t in active if t.last_used_at), key=lambda t: t.last_used_at)
-    ordered = never + used
     recent = _recent_titles()
-    for t in ordered:
-        if not any(_key(t.topic) in title for title in recent):
-            return t
-    return ordered[0]
+    eligible = [
+        topic for topic in active
+        if not any(_key(topic.topic) in title for title in recent)
+    ] or active
+
+    by_category = {}
+    for topic in eligible:
+        by_category.setdefault(topic.category_id, []).append(topic)
+
+    # A section is considered recently used when any topic in it was used.
+    # Never-used sections sort first; random choice prevents a fixed seed order.
+    section_last_used = {
+        category_id: max(
+            (topic.last_used_at for topic in topics if topic.last_used_at),
+            default=None,
+        )
+        for category_id, topics in by_category.items()
+    }
+    oldest_section_use = min(
+        section_last_used.values(),
+        key=lambda value: (value is not None, value or timezone.now()),
+    )
+    section_candidates = [
+        category_id for category_id, last_used in section_last_used.items()
+        if last_used == oldest_section_use
+    ]
+    chosen_section = random.choice(section_candidates)
+    section_topics = by_category[chosen_section]
+    oldest_topic_use = min(
+        (topic.last_used_at for topic in section_topics),
+        key=lambda value: (value is not None, value or timezone.now()),
+    )
+    topic_candidates = [topic for topic in section_topics if topic.last_used_at == oldest_topic_use]
+    return random.choice(topic_candidates)
 
 
 def _author():
@@ -97,19 +127,21 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true', help='Do everything except save the post.')
         parser.add_argument('--topic', type=str, default=None, help='Override the topic (not saved to the pool).')
+        parser.add_argument('--category', type=str, default=None, help='Journal section for an overridden topic.')
         parser.add_argument('--no-notify', action='store_true', help='Do not notify admins.')
 
     def handle(self, *args, **opts):
         if opts['topic']:
-            topic_obj, topic, category_name = None, opts['topic'], 'Agriculture'
+            topic_obj, topic = None, opts['topic']
+            category_name = opts['category'] or 'Farming & Sustainability'
         else:
             _seed_topics_if_empty()
             topic_obj = _pick_topic()
             if topic_obj is None:
                 self.stdout.write(self.style.WARNING('No active topics — nothing to do.'))
                 return
-            topic, category_name = topic_obj.topic, topic_obj.category
-        self.stdout.write(f'Topic: {topic}')
+            topic, category_name = topic_obj.topic, topic_obj.category.name
+        self.stdout.write(f'Section: {category_name}\nTopic: {topic}')
 
         sources, enough = gather_research(topic)
         self.stdout.write(f'Research: {len(sources)} sources (enough={enough})')

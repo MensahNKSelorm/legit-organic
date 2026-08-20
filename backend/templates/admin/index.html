@@ -4,10 +4,10 @@
 {% block extrahead %}
 {{ block.super }}
 <link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=boska@400,500,600&f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800&display=swap" rel="stylesheet">
 <style>
   .lo-dashboard { --forest:#0d3b2a; --leaf:#82c68a; --gold:#f4c430; --paper:#171b18; --ink:#f8f4e9; --muted:#aebcaf; margin:0 -1rem; padding:1.25rem 2.25rem 3rem; background:#111827; color:var(--ink); font-family:"Cabinet Grotesk",sans-serif; color-scheme:dark; }
-  .lo-display { font-family:"Boska",serif; font-weight:500; }
+  .lo-display { font-family:"Cabinet Grotesk",Arial,sans-serif; font-weight:700; letter-spacing:-.035em; }
   .lo-hero { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(18rem,.55fr); min-height:19rem; background:var(--forest); color:white; }
   .lo-hero-main { padding:2.25rem; display:flex; flex-direction:column; justify-content:space-between; }
   .lo-hero h1 { max-width:50rem; font-size:clamp(3rem,5vw,5.7rem); line-height:.88; letter-spacing:-.035em; }
@@ -26,7 +26,7 @@
   .lo-snapshot-item { min-width:0; padding:1.25rem; border-right:1px solid rgba(255,255,255,.16); }
   .lo-snapshot-item:last-child { border-right:0; }
   .lo-snapshot-item span { display:block; color:rgba(255,255,255,.62); font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
-  .lo-snapshot-item strong { display:block; margin-top:.45rem; color:var(--gold); font-family:"Boska",serif; font-size:clamp(1.5rem,2.4vw,2.35rem); font-weight:500; line-height:1; white-space:nowrap; }
+  .lo-snapshot-item strong { display:block; margin-top:.45rem; color:var(--gold); font-family:"Cabinet Grotesk",Arial,sans-serif; font-size:clamp(1.5rem,2.4vw,2.35rem); font-weight:700; line-height:1; white-space:nowrap; }
   .lo-chart { min-width:0; border:1px solid color-mix(in srgb,var(--ink) 20%,transparent); padding:1.25rem; }
   .lo-chart-featured { background:var(--forest); border-color:var(--forest); color:white; }
   .lo-chart-featured .lo-chart-head span { color:rgba(255,255,255,.58); }
@@ -44,7 +44,7 @@
   .lo-attention { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
   .lo-attention a { padding:1.2rem 1rem; border-right:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); color:var(--ink); text-decoration:none; }
   .lo-attention a:last-child { border-right:0; }
-  .lo-attention strong { display:block; font-family:"Boska",serif; font-size:2.7rem; line-height:1; }
+  .lo-attention strong { display:block; font-family:"Cabinet Grotesk",Arial,sans-serif; font-size:2.55rem; font-weight:700; line-height:1; }
   .lo-attention span { display:block; margin-top:.55rem; color:var(--muted); font-size:.75rem; }
   .lo-main-grid { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(18rem,.65fr); gap:2rem; }
   .lo-orders { width:100%; border-collapse:collapse; }
@@ -56,7 +56,7 @@
   .lo-metric { display:flex; align-items:end; justify-content:space-between; gap:1rem; padding:1.1rem 0; border-bottom:1px solid rgba(255,255,255,.17); }
   .lo-metric:last-child { border-bottom:0; }
   .lo-metric span { color:rgba(255,255,255,.62); font-size:.76rem; }
-  .lo-metric strong { font-family:"Boska",serif; color:var(--gold); font-size:1.9rem; font-weight:500; }
+  .lo-metric strong { font-family:"Cabinet Grotesk",Arial,sans-serif; color:var(--gold); font-size:1.85rem; font-weight:700; }
   .lo-link { color:var(--gold); border-bottom:1px solid currentColor; font-size:.75rem; font-weight:800; text-decoration:none; }
   @media(max-width:1000px){ .lo-analytics-secondary{grid-template-columns:1fr 1fr}.lo-analytics-secondary .lo-chart:last-child{grid-column:1/-1}.lo-snapshot{grid-template-columns:repeat(3,1fr)}.lo-snapshot-item{border-bottom:1px solid rgba(255,255,255,.16)} }
   @media(max-width:900px){ .lo-hero,.lo-main-grid,.lo-analytics{grid-template-columns:1fr}.lo-attention{grid-template-columns:repeat(2,1fr)}.lo-attention a:last-child{grid-column:span 2}.lo-owner-card{min-height:11rem}.lo-dashboard{padding:.75rem} }
