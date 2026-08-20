@@ -29,21 +29,43 @@ systemctl enable --now legitorganic-order-reports.timer
 # Frontend
 cd ../frontend
 npm install
-npm run build
+rm -rf -- .next-build
+NEXT_DIST_DIR=.next-build npm run build
 
 # Runtime-owned paths must remain writable after root performs a deployment.
 if id -u legitorganic >/dev/null 2>&1; then
     install -d -o legitorganic -g legitorganic ../backend/media
     touch ../backend/django_errors.log
-    chown -R legitorganic:legitorganic ../backend/media ../backend/django_errors.log .next
+    chown -R legitorganic:legitorganic ../backend/media ../backend/django_errors.log .next-build
 fi
 
-# Restart services
+# Restart the backend, then atomically replace the frontend build while the
+# frontend process is stopped. Visitors can no longer receive HTML from one
+# build and CSS chunks from another during deployment.
 systemctl restart legitorganic
 if systemctl cat legitorganic-frontend.service >/dev/null 2>&1; then
-    systemctl restart legitorganic-frontend
+    systemctl stop legitorganic-frontend
+    rm -rf -- .next-previous
+    if [ -d .next ]; then mv .next .next-previous; fi
+    mv .next-build .next
+    if ! systemctl start legitorganic-frontend; then
+        rm -rf -- .next
+        if [ -d .next-previous ]; then mv .next-previous .next; fi
+        systemctl start legitorganic-frontend
+        exit 1
+    fi
 else
-    pm2 restart legitorganic-frontend
+    pm2 stop legitorganic-frontend
+    rm -rf -- .next-previous
+    if [ -d .next ]; then mv .next .next-previous; fi
+    mv .next-build .next
+    if ! pm2 restart legitorganic-frontend; then
+        rm -rf -- .next
+        if [ -d .next-previous ]; then mv .next-previous .next; fi
+        pm2 restart legitorganic-frontend
+        exit 1
+    fi
 fi
+rm -rf -- .next-previous
 
 echo "✅ Deployment complete!"

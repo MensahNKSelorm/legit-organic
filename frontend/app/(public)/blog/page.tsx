@@ -18,7 +18,8 @@ export const metadata: Metadata = {
     "Field notes, kitchen stories and practical reporting on food, farming and everyday life in Ghana.",
 };
 
-function formatDate(iso: string) {
+function formatDate(iso?: string | null) {
+  if (!iso) return "Latest edition";
   return new Date(iso).toLocaleDateString("en-GH", {
     year: "numeric",
     month: "long",

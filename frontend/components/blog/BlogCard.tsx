@@ -3,7 +3,8 @@ import Image from "next/image";
 import type { BlogPost } from "@/types";
 import { getMediaUrl } from "@/lib/media";
 
-function formatDate(iso: string) {
+function formatDate(iso?: string | null) {
+  if (!iso) return "Latest edition";
   return new Date(iso).toLocaleDateString("en-GH", {
     year: "numeric",
     month: "long",
