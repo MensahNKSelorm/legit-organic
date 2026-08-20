@@ -37,7 +37,10 @@ const HERO_PRODUCE = [
 const WEEKLY_RHYTHM = [
   ["Basket", "Pick a prepared basket or build the week around your household."],
   ["Renewal order", "Before each cycle, a new order shows what is coming and what is due."],
-  ["Your approval", "Open that order and approve a fresh SeevCash checkout. Nothing is charged automatically."],
+  [
+    "Your approval",
+    "Open that order and approve a fresh secure checkout. Nothing is charged automatically.",
+  ],
   ["Delivery", "Once payment is confirmed, the order moves into preparation and delivery."],
 ] as const;
 
@@ -208,8 +211,7 @@ export default function SubscriptionsPage() {
                   Payment
                 </p>
                 <p className="mt-3 max-w-xs text-lg leading-6 font-semibold">
-                  A new renewal order is created each week. You choose when to pay it securely with
-                  SeevCash.
+                  A new renewal order is created each week. You choose when to pay it securely.
                 </p>
               </div>
               <svg
@@ -252,7 +254,7 @@ export default function SubscriptionsPage() {
                 </g>
               </svg>
             </div>
-            <div className="weekly-info-panel flex items-end justify-between gap-6 bg-[#FFFDF8] p-8 md:p-10 dark:bg-[#202620]">
+            <div className="weekly-info-panel weekly-calendar-panel flex items-end justify-between gap-6 bg-[#FFFDF8] p-8 md:p-10 dark:bg-[#202620]">
               <div className="relative z-10">
                 <p className="text-xs font-bold tracking-[.16em] text-[#53705A] uppercase dark:text-[#A4B8A8]">
                   Your week
@@ -264,37 +266,121 @@ export default function SubscriptionsPage() {
                 </p>
               </div>
               <svg
-                className="weekly-info-mark h-20 w-24 shrink-0 text-[#173C2A] dark:text-[#D7E5D9]"
-                viewBox="0 0 96 80"
+                className="weekly-info-mark h-24 w-28 shrink-0 text-[#173C2A] dark:text-[#D7E5D9]"
+                viewBox="0 0 112 96"
                 fill="none"
                 aria-hidden
               >
                 <path
-                  d="M14 15h67v58H14zM14 31h67M28 8v15M67 8v15"
+                  d="M12 17h88v70H12zM12 34h88M29 10v14M83 10v14"
                   stroke="currentColor"
-                  strokeWidth="1.5"
+                  strokeWidth="2"
                 />
-                <path d="M31 45v15M39 45v15" stroke="#2E7D32" strokeWidth="4" />
-                <path d="M57 47h12M63 41v12" stroke="#F4C430" strokeWidth="3" />
+                <path d="M27 48h58M27 64h58" stroke="currentColor" strokeOpacity=".22" />
+                <g
+                  fill="currentColor"
+                  fontFamily="Arial, sans-serif"
+                  fontSize="7"
+                  textAnchor="middle"
+                >
+                  <text x="31" y="45">
+                    15
+                  </text>
+                  <text x="50" y="45">
+                    16
+                  </text>
+                  <text x="69" y="45">
+                    17
+                  </text>
+                  <text x="88" y="45">
+                    18
+                  </text>
+                  <text x="31" y="61">
+                    19
+                  </text>
+                  <text x="50" y="61">
+                    20
+                  </text>
+                  <text x="69" y="61">
+                    21
+                  </text>
+                  <text x="88" y="61">
+                    22
+                  </text>
+                  <text x="31" y="77">
+                    23
+                  </text>
+                  <text x="50" y="77">
+                    24
+                  </text>
+                  <text x="69" y="77">
+                    25
+                  </text>
+                  <text x="88" y="77">
+                    26
+                  </text>
+                </g>
+                <path
+                  className="weekly-calendar-brush"
+                  d="M20 58c-1-8 4-14 12-14 9 0 14 6 12 14-1 8-8 13-16 11-7-1-10-6-8-12"
+                  stroke="#F4C430"
+                  strokeWidth="3.8"
+                  strokeLinecap="round"
+                />
+                <path
+                  className="weekly-calendar-brush weekly-calendar-brush--echo"
+                  d="M22 53c2-7 9-10 15-7 7 3 9 10 5 16"
+                  stroke="#F4C430"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-[#173C2A]/20 bg-[#FFFDF8] dark:border-white/15 dark:bg-[#202620]" aria-labelledby="weekly-rhythm-title">
+      <section
+        className="border-y border-[#173C2A]/20 bg-[#FFFDF8] dark:border-white/15 dark:bg-[#202620]"
+        aria-labelledby="weekly-rhythm-title"
+      >
         <div className="page-container py-20 md:py-28">
           <div className="grid gap-12 lg:grid-cols-[.68fr_1.32fr] lg:gap-20">
             <div>
-              <h2 id="weekly-rhythm-title" className="max-w-lg font-sans text-4xl font-semibold leading-[.95] tracking-[-.045em] md:text-6xl">Your basket follows your rhythm</h2>
-              <p className="mt-6 max-w-sm leading-7 text-[#675E52] dark:text-[#BBC8BD]">This is a repeating delivery plan, not an automatic charge. Every renewal remains yours to approve.</p>
+              <h2
+                id="weekly-rhythm-title"
+                className="max-w-lg font-sans text-4xl leading-[.95] font-semibold tracking-[-.045em] md:text-6xl"
+              >
+                Your basket follows your rhythm
+              </h2>
+              <p className="mt-6 max-w-sm leading-7 text-[#675E52] dark:text-[#BBC8BD]">
+                This is a repeating delivery plan, not an automatic charge. Every renewal remains
+                yours to approve.
+              </p>
             </div>
             <ol className="weekly-flow relative grid border-y border-[#173C2A]/25 md:grid-cols-4 dark:border-white/20">
-              {WEEKLY_RHYTHM.map(([title, body]) => (
-                <li key={title} className="weekly-flow-stage relative border-b border-[#173C2A]/20 py-8 last:border-b-0 md:border-r md:border-b-0 md:px-6 md:first:pl-0 md:last:border-r-0 dark:border-white/15">
-                  <span className="weekly-flow-marker mb-8 block h-3 w-3 bg-[#2E7D32] dark:bg-[#F4C430]" aria-hidden />
-                  <h3 className="text-lg font-semibold">{title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#675E52] dark:text-[#BBC8BD]">{body}</p>
+              {WEEKLY_RHYTHM.map(([title, body], index) => (
+                <li
+                  key={title}
+                  className="weekly-flow-stage relative overflow-hidden border-b border-[#173C2A]/20 py-8 last:border-b-0 md:border-r md:border-b-0 md:px-6 md:last:border-r-0 dark:border-white/15"
+                >
+                  <span
+                    className="weekly-flow-marker mb-8 block h-3 w-3 bg-[#2E7D32] dark:bg-[#9FC5A4]"
+                    aria-hidden
+                  />
+                  <span
+                    className="weekly-flow-number"
+                    data-number={String(index + 1).padStart(2, "0")}
+                    aria-hidden
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div className="weekly-flow-copy relative z-[1]">
+                    <h3 className="text-lg font-semibold">{title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-[#675E52] dark:text-[#BBC8BD]">
+                      {body}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ol>
@@ -306,11 +392,23 @@ export default function SubscriptionsPage() {
         <div className="page-container grid items-end gap-10 py-16 md:grid-cols-[1fr_auto] md:py-20">
           <div>
             <p className="text-sm font-bold">Ready when your week is</p>
-            <h2 className="display-organic mt-5 max-w-4xl text-5xl leading-[.9] md:text-7xl">Choose a basket now, change the rhythm later</h2>
+            <h2 className="display-organic mt-5 max-w-4xl text-5xl leading-[.9] md:text-7xl">
+              Choose a basket now, change the rhythm later
+            </h2>
           </div>
           <div className="flex flex-wrap gap-4">
-            <Link href="/subscriptions/start?plan=custom" className="bg-[#173C2A] px-7 py-4 font-bold text-white transition-colors hover:bg-white hover:text-[#173C2A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#173C2A]">Build your week</Link>
-            <Link href="/subscriptions/manage" className="border border-[#173C2A] px-7 py-4 font-bold transition-colors hover:bg-[#173C2A] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#173C2A]">Manage deliveries</Link>
+            <Link
+              href="/subscriptions/start?plan=custom"
+              className="bg-[#173C2A] px-7 py-4 font-bold text-white transition-colors hover:bg-white hover:text-[#173C2A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#173C2A]"
+            >
+              Build your week
+            </Link>
+            <Link
+              href="/subscriptions/manage"
+              className="border border-[#173C2A] px-7 py-4 font-bold transition-colors hover:bg-[#173C2A] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#173C2A]"
+            >
+              Manage deliveries
+            </Link>
           </div>
         </div>
       </section>
@@ -324,19 +422,36 @@ export default function SubscriptionsPage() {
         .weekly-sequence-main:hover .weekly-crate { transform: translate(-8px, -8px) rotate(-2deg); }
         .weekly-info-mark { transition: transform 500ms cubic-bezier(.2,.75,.25,1); }
         .weekly-info-panel:hover .weekly-info-mark { transform: translateY(-5px); }
+        .weekly-calendar-brush { opacity: 0; stroke-dasharray: 80; stroke-dashoffset: 80; transform: rotate(-7deg); transform-origin: 31px 58px; transition: opacity 140ms ease, stroke-dashoffset 560ms cubic-bezier(.2,.75,.25,1); }
+        .weekly-calendar-brush--echo { opacity: 0; transition-delay: 100ms; }
+        .weekly-calendar-panel:hover .weekly-calendar-brush { opacity: .92; stroke-dashoffset: 0; }
+        .weekly-calendar-panel:hover .weekly-calendar-brush--echo { opacity: .42; }
         .weekly-flow::before { content: ''; position: absolute; top: 2.34rem; right: 0; left: 0; height: 1px; background: color-mix(in srgb, #173C2A 32%, transparent); }
         .weekly-flow-marker { position: relative; z-index: 1; box-shadow: 0 0 0 .55rem #FFFDF8; }
+        .weekly-flow-number { position: absolute; z-index: 0; top: 4rem; left: -.15rem; color: rgb(244 196 48 / 12%); font-family: "Sentient", Georgia, serif; font-size: clamp(8rem, 10vw, 11rem); font-weight: 600; line-height: .72; letter-spacing: -.1em; pointer-events: none; }
+        .weekly-flow-number::before, .weekly-flow-number::after { position: absolute; inset: 0; content: attr(data-number); color: transparent; -webkit-text-stroke: 1px rgb(244 196 48 / 9%); }
+        .weekly-flow-number::before { transform: translate(.55rem, -.6rem); }
+        .weekly-flow-number::after { transform: translate(1.05rem, -1.15rem); opacity: .58; }
+        .weekly-flow-copy { position: relative; z-index: 1; }
+        .dark .weekly-flow::before { background: rgb(159 197 164 / 52%); }
         .dark .weekly-flow-marker { box-shadow: 0 0 0 .55rem #202620; }
+        .dark .weekly-flow-number { color: rgb(244 196 48 / 11%); }
+        .dark .weekly-flow-number::before, .dark .weekly-flow-number::after { -webkit-text-stroke-color: rgb(244 196 48 / 8%); }
         @keyframes subscription-reveal { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes subscription-travel { from { transform: translateX(-7rem); } to { transform: translateX(100vw); } }
         @media (prefers-reduced-motion: reduce) {
           .subscription-kicker, .subscription-title, .subscription-intro, .subscription-track span { animation: none; }
           .weekly-crate, .weekly-info-mark { transition: none; }
+          .weekly-calendar-brush { opacity: .92; stroke-dashoffset: 0; transition: none; }
+          .weekly-calendar-brush--echo { opacity: .42; }
         }
         @media (max-width: 767px) {
           .weekly-flow::before { top: 0; bottom: 0; left: .35rem; width: 1px; height: auto; }
-          .weekly-flow-stage { padding-left: 2rem; }
+          .dark .weekly-flow::before { background: rgb(159 197 164 / 52%); }
+          .weekly-flow-stage { min-height: 10rem; padding-left: 7.5rem; }
           .weekly-flow-marker { position: absolute; top: 2.25rem; left: 0; }
+          .weekly-flow-number { top: 2.9rem; left: 1.45rem; font-size: 7rem; }
+          .weekly-flow-copy { padding-top: 0; }
         }
       `}</style>
     </main>

@@ -46,10 +46,8 @@ export default function BlogTeaser({ posts }: BlogTeaserProps) {
     >
       <div className="page-container">
         <div className="border-y border-[#0d3b2a]/30 py-3 text-[10px] font-bold tracking-[.2em] uppercase dark:border-white/20">
-          <div className="flex flex-wrap justify-between gap-3">
-            <span>Field notes</span>
+          <div className="flex justify-center">
             <span>Grow · Cook · Eat well</span>
-            <span>Ghana</span>
           </div>
         </div>
 

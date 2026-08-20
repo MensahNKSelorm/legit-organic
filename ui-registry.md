@@ -366,6 +366,19 @@ Last updated: 2026-08-08
 - The B2B closing band asks “Fresh stock?” and answers “On schedule.”, ending at a clearly labelled business receiving bay—not a domestic kitchen. Several small, differently stocked baskets travel left-to-right on staggered cycles. Define `transform` at every opacity keyframe and keep horizontal velocity constant; an omitted position lets the browser interpolate toward the SVG's base position and can stack two baskets together. Moving directional arrows anchor the route, and baskets fade before resetting so they never jump visibly backwards.
 - Public business-application forms place the existing Turnstile challenge in a ruled verification row immediately before errors and submission. Keep the primary action disabled until a token exists, and replace hard widget failures with one concise Retry control.
 
+### Legit Organic Times
+
+Files: `frontend/app/(public)/blog/page.tsx`, `frontend/app/(public)/blog/[slug]/page.tsx`, `frontend/components/blog/BlogCard.tsx`, `frontend/components/blog/BlogCategoryFilter.tsx`, `frontend/components/blog/ArticleShare.tsx`
+Last updated: 2026-08-20
+
+- Legit Organic Times is a contemporary Ghanaian broadsheet, not a grid of lifestyle cards. Use a strong nameplate, double rules, asymmetric story hierarchy and flat editorial columns.
+- Paper character comes from lightweight CSS gradients and theme tokens. Do not use watermarked, distressed-stock textures or fake torn edges.
+- Story hierarchy is communicated through scale, column span, rules and whitespace. Avoid rounded cards, pill categories, avatar bylines, gradients and decorative badges.
+- Headlines use the editorial serif; metadata, navigation and functional labels use the established grotesk. Article bodies keep a comfortable measure and may use a restrained opening drop cap.
+- The article sheet may feel tactile, but remains crisp and readable in both themes. Use subtle grain, folio details and captions rather than ornamental vintage effects.
+- Category filters behave like newspaper desk links with underlines. Related stories remain a ruled list, not another card carousel.
+- Journal routes share the light-paper navigation treatment on every nested article path, not only on `/blog`.
+
 ### Homepage Market-to-Kitchen Journey
 
 Files: `frontend/components/home/HeroSection.tsx`, `frontend/components/home/HomeJourney.tsx`, `frontend/components/home/FeaturedProducts.tsx`, `frontend/components/home/RecipesTeaser.tsx`

@@ -139,7 +139,7 @@ export default function Navbar() {
   };
 
   const lightTopRoutes =
-    pathname === "/blog" ||
+    pathname.startsWith("/blog") ||
     pathname === "/profile" ||
     pathname.startsWith("/subscriptions") ||
     pathname.startsWith("/b2b");

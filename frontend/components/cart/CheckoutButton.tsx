@@ -1,28 +1,28 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAuth } from '@/lib/auth'
-import { useCart } from '@/lib/cart'
-import { api } from '@/lib/api'
-import type { PromoCode } from '@/types'
-import AddressModal, { type AddressData } from './AddressModal'
-import GuestOrderModal, { type GuestData } from './GuestOrderModal'
+import { useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { useCart } from "@/lib/cart";
+import { api } from "@/lib/api";
+import type { PromoCode } from "@/types";
+import AddressModal, { type AddressData } from "./AddressModal";
+import GuestOrderModal, { type GuestData } from "./GuestOrderModal";
 
 interface CheckoutButtonProps {
-  onClose: () => void
-  promoCode?: string
-  appliedPromo?: PromoCode | null
+  onClose: () => void;
+  promoCode?: string;
+  appliedPromo?: PromoCode | null;
 }
 
 function buildDeliveryAddress(data: {
-  house_number?: string
-  street_address?: string
-  city?: string
-  delivery_region?: string
+  house_number?: string;
+  street_address?: string;
+  city?: string;
+  delivery_region?: string;
 }): string {
   return [data.house_number, data.street_address, data.city, data.delivery_region]
     .filter(Boolean)
-    .join(', ')
+    .join(", ");
 }
 
 function buildWhatsAppUrl(
@@ -35,11 +35,12 @@ function buildWhatsAppUrl(
   latitude?: number,
   longitude?: number
 ): string {
-  const referenceLine = reference ? `\n*Order Reference:* ${reference}` : ''
+  const referenceLine = reference ? `\n*Order Reference:* ${reference}` : "";
 
-  const mapsLink = latitude && longitude
-    ? `https://maps.google.com/?q=${latitude},${longitude}`
-    : `https://maps.google.com/?q=${encodeURIComponent(deliveryAddress)}`
+  const mapsLink =
+    latitude && longitude
+      ? `https://maps.google.com/?q=${latitude},${longitude}`
+      : `https://maps.google.com/?q=${encodeURIComponent(deliveryAddress)}`;
 
   const message = `Hello Legit Organic! 🌿
 
@@ -52,46 +53,46 @@ ${itemsList}${discountLine}
 
 *Total:* GH₵${finalTotal.toFixed(2)}
 
-*Delivery Address:* ${deliveryAddress || 'To be confirmed'}
+*Delivery Address:* ${deliveryAddress || "To be confirmed"}
 *📍 Map Location:* ${mapsLink}
 
-Please send me the MoMo payment details. Thank you!`
+Please send me the MoMo payment details. Thank you!`;
 
-  return `https://wa.me/233539569260?text=${encodeURIComponent(message)}`
+  return `https://wa.me/233539569260?text=${encodeURIComponent(message)}`;
 }
 
 export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButtonProps) {
-  const { user } = useAuth()
-  const { items, total, clearCart } = useCart()
-  const [showAddressModal, setShowAddressModal] = useState(false)
-  const [showGuestModal, setShowGuestModal] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [checkoutMode, setCheckoutMode] = useState<'seevcash' | 'whatsapp'>('seevcash')
-  const [checkoutError, setCheckoutError] = useState('')
-  const [pendingSeevOrder, setPendingSeevOrder] = useState<string | null>(null)
+  const { user } = useAuth();
+  const { items, total, clearCart } = useCart();
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState<"seevcash" | "whatsapp">("seevcash");
+  const [checkoutError, setCheckoutError] = useState("");
+  const [pendingSeevOrder, setPendingSeevOrder] = useState<string | null>(null);
 
   const showCheckoutError = (error: unknown) => {
     setCheckoutError(
       error instanceof Error
         ? error.message
-        : 'We could not open SeevCash checkout. Please try again.'
-    )
-  }
+        : "We could not open secure checkout. Please try again."
+    );
+  };
 
   const openExistingSeevCheckout = async (reference: string, guest: boolean) => {
-    setCheckoutError('')
-    setIsLoading(true)
+    setCheckoutError("");
+    setIsLoading(true);
     try {
       const checkout = guest
         ? await api.orders.initializeGuestPayment(reference)
-        : await api.orders.initializePayment(reference)
-      window.location.assign(checkout.checkout_url)
+        : await api.orders.initializePayment(reference);
+      window.location.assign(checkout.checkout_url);
     } catch (error) {
-      showCheckoutError(error)
+      showCheckoutError(error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const buildOrderLines = () => {
     const itemsList = items
@@ -99,17 +100,17 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
         (item) =>
           `• ${item.product.name} x${item.quantity} — GH₵${(parseFloat(item.product.price) * item.quantity).toFixed(2)}`
       )
-      .join('\n')
+      .join("\n");
 
     const discountLine =
       promoCode && appliedPromo
         ? `\nDiscount (${promoCode}): -GH₵${appliedPromo.discount_amount.toFixed(2)}`
-        : ''
+        : "";
 
-    const finalTotal = appliedPromo ? appliedPromo.final_amount : total
+    const finalTotal = appliedPromo ? appliedPromo.final_amount : total;
 
-    return { itemsList, discountLine, finalTotal }
-  }
+    return { itemsList, discountLine, finalTotal };
+  };
 
   const openWhatsApp = async (
     deliveryAddress: string,
@@ -117,10 +118,10 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
     latitude?: number,
     longitude?: number
   ) => {
-    const { itemsList, discountLine, finalTotal } = buildOrderLines()
-    const customerLine = `*Customer:* ${user!.first_name} ${user!.last_name}\n*Email:* ${user!.email}`
+    const { itemsList, discountLine, finalTotal } = buildOrderLines();
+    const customerLine = `*Customer:* ${user!.first_name} ${user!.last_name}\n*Email:* ${user!.email}`;
 
-    let reference: string | undefined
+    let reference: string | undefined;
     try {
       const order = await api.orders.create({
         items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
@@ -131,57 +132,66 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
         city: details.city,
         delivery_region: details.delivery_region,
         promo_code: promoCode || undefined,
-        order_source: 'whatsapp',
-      })
-      reference = order.reference
+        order_source: "whatsapp",
+      });
+      reference = order.reference;
     } catch {
       // Don't block the WhatsApp order if DB recording fails
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
 
-    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference, latitude, longitude)
-    const link = document.createElement('a')
-    link.href = waUrl
-    link.target = '_blank'
-    link.rel = 'noopener noreferrer'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    clearCart()
-  }
+    const waUrl = buildWhatsAppUrl(
+      customerLine,
+      itemsList,
+      discountLine,
+      finalTotal,
+      deliveryAddress,
+      reference,
+      latitude,
+      longitude
+    );
+    const link = document.createElement("a");
+    link.href = waUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    clearCart();
+  };
 
   const handleWhatsAppOrder = async () => {
-    setCheckoutMode('whatsapp')
+    setCheckoutMode("whatsapp");
     if (!user) {
-      setShowGuestModal(true)
-      return
+      setShowGuestModal(true);
+      return;
     }
 
     const hasDeliveryDetails =
-      user.phone_number && user.street_address && user.city && user.delivery_region
+      user.phone_number && user.street_address && user.city && user.delivery_region;
     if (!hasDeliveryDetails) {
-      setShowAddressModal(true)
-      return
+      setShowAddressModal(true);
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     await openWhatsApp(buildDeliveryAddress(user), {
-      phone_number: user.phone_number || '',
-      house_number: user.house_number || '',
-      street_address: user.street_address || '',
-      city: user.city || '',
-      delivery_region: user.delivery_region || '',
-    })
-  }
+      phone_number: user.phone_number || "",
+      house_number: user.house_number || "",
+      street_address: user.street_address || "",
+      city: user.city || "",
+      delivery_region: user.delivery_region || "",
+    });
+  };
 
   const startSeevCashOrder = async (deliveryAddress: string, details: AddressData) => {
     if (pendingSeevOrder) {
-      await openExistingSeevCheckout(pendingSeevOrder, false)
-      return
+      await openExistingSeevCheckout(pendingSeevOrder, false);
+      return;
     }
-    setCheckoutError('')
-    setIsLoading(true)
+    setCheckoutError("");
+    setIsLoading(true);
     try {
       const order = await api.orders.create({
         items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
@@ -192,67 +202,69 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
         city: details.city,
         delivery_region: details.delivery_region,
         promo_code: promoCode || undefined,
-        order_source: 'seevcash',
-      })
-      setPendingSeevOrder(order.reference)
-      const checkout = await api.orders.initializePayment(order.reference)
-      window.location.assign(checkout.checkout_url)
+        order_source: "seevcash",
+      });
+      setPendingSeevOrder(order.reference);
+      const checkout = await api.orders.initializePayment(order.reference);
+      window.location.assign(checkout.checkout_url);
     } catch (error) {
-      showCheckoutError(error)
+      showCheckoutError(error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSeevCashOrder = async () => {
-    setCheckoutMode('seevcash')
-    setCheckoutError('')
+    setCheckoutMode("seevcash");
+    setCheckoutError("");
     if (pendingSeevOrder) {
-      await openExistingSeevCheckout(pendingSeevOrder, !user)
-      return
+      await openExistingSeevCheckout(pendingSeevOrder, !user);
+      return;
     }
     if (!user) {
-      setShowGuestModal(true)
-      return
+      setShowGuestModal(true);
+      return;
     }
     const hasDeliveryDetails =
-      user.phone_number && user.street_address && user.city && user.delivery_region
+      user.phone_number && user.street_address && user.city && user.delivery_region;
     if (!hasDeliveryDetails) {
-      setShowAddressModal(true)
-      return
+      setShowAddressModal(true);
+      return;
     }
     await startSeevCashOrder(buildDeliveryAddress(user), {
-      phone_number: user.phone_number || '',
-      house_number: user.house_number || '',
-      street_address: user.street_address || '',
-      city: user.city || '',
-      delivery_region: user.delivery_region || '',
-    })
-  }
+      phone_number: user.phone_number || "",
+      house_number: user.house_number || "",
+      street_address: user.street_address || "",
+      city: user.city || "",
+      delivery_region: user.delivery_region || "",
+    });
+  };
 
   const handleAddressSaved = async (addressData: AddressData) => {
-    setShowAddressModal(false)
-    if (checkoutMode === 'seevcash') {
-      await startSeevCashOrder(buildDeliveryAddress(addressData), addressData)
-      return
+    setShowAddressModal(false);
+    if (checkoutMode === "seevcash") {
+      await startSeevCashOrder(buildDeliveryAddress(addressData), addressData);
+      return;
     }
-    setIsLoading(true)
+    setIsLoading(true);
     await openWhatsApp(
-      buildDeliveryAddress(addressData), addressData,
-      addressData.latitude, addressData.longitude
-    )
-  }
+      buildDeliveryAddress(addressData),
+      addressData,
+      addressData.latitude,
+      addressData.longitude
+    );
+  };
 
   const handleGuestSubmit = async (guestData: GuestData) => {
-    setShowGuestModal(false)
-    setIsLoading(true)
+    setShowGuestModal(false);
+    setIsLoading(true);
 
-    const deliveryAddress = buildDeliveryAddress(guestData)
-    const { itemsList, discountLine, finalTotal } = buildOrderLines()
-    const customerLine = `*Customer:* ${guestData.first_name} ${guestData.last_name}\n*Phone:* ${guestData.phone_number}`
+    const deliveryAddress = buildDeliveryAddress(guestData);
+    const { itemsList, discountLine, finalTotal } = buildOrderLines();
+    const customerLine = `*Customer:* ${guestData.first_name} ${guestData.last_name}\n*Phone:* ${guestData.phone_number}`;
 
-    if (checkoutMode === 'seevcash') {
-      setCheckoutError('')
+    if (checkoutMode === "seevcash") {
+      setCheckoutError("");
       try {
         const order = await api.orders.createGuest({
           items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
@@ -265,22 +277,22 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
           city: guestData.city,
           delivery_region: guestData.delivery_region,
           guest_email: guestData.email,
-          order_source: 'seevcash',
+          order_source: "seevcash",
           promo_code: promoCode || undefined,
-        })
-        setPendingSeevOrder(order.reference)
-        const checkout = await api.orders.initializeGuestPayment(order.reference)
-        window.location.assign(checkout.checkout_url)
-        return
+        });
+        setPendingSeevOrder(order.reference);
+        const checkout = await api.orders.initializeGuestPayment(order.reference);
+        window.location.assign(checkout.checkout_url);
+        return;
       } catch (error) {
-        showCheckoutError(error)
+        showCheckoutError(error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-      return
+      return;
     }
 
-    let reference: string | undefined
+    let reference: string | undefined;
     try {
       const order = await api.orders.createGuest({
         items: items.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
@@ -293,51 +305,65 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
         city: guestData.city,
         delivery_region: guestData.delivery_region,
         guest_email: guestData.email,
-        order_source: 'whatsapp',
+        order_source: "whatsapp",
         promo_code: promoCode || undefined,
-      })
-      reference = order.reference
+      });
+      reference = order.reference;
     } catch {
       // Don't block the WhatsApp order if DB recording fails
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
 
-    const waUrl = buildWhatsAppUrl(customerLine, itemsList, discountLine, finalTotal, deliveryAddress, reference, guestData.latitude, guestData.longitude)
-    const link = document.createElement('a')
-    link.href = waUrl
-    link.target = '_blank'
-    link.rel = 'noopener noreferrer'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    clearCart()
-  }
+    const waUrl = buildWhatsAppUrl(
+      customerLine,
+      itemsList,
+      discountLine,
+      finalTotal,
+      deliveryAddress,
+      reference,
+      guestData.latitude,
+      guestData.longitude
+    );
+    const link = document.createElement("a");
+    link.href = waUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    clearCart();
+  };
 
   return (
     <>
       {checkoutError && (
-        <div role="alert" className="mb-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200">
+        <div
+          role="alert"
+          className="mb-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200"
+        >
           {checkoutError} Your order is safe—use the button below to retry.
         </div>
       )}
       <button
         onClick={handleSeevCashOrder}
         disabled={items.length === 0 || isLoading}
-        className="mb-3 w-full bg-[#0D3B2A] py-3.5 font-semibold text-white transition-colors hover:bg-[#174F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
+        className="mb-3 w-full bg-[#0D3B2A] py-3.5 font-semibold text-white transition-colors hover:bg-[#174F3A] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
       >
-        {isLoading && checkoutMode === 'seevcash' ? 'Opening secure checkout…' : 'Pay securely with SeevCash'}
+        {isLoading && checkoutMode === "seevcash"
+          ? "Opening secure checkout…"
+          : "Pay securely with SeevCash"}
       </button>
       <button
         onClick={handleWhatsAppOrder}
         disabled={items.length === 0 || isLoading}
-        className="flex w-full items-center justify-center gap-2 border border-[#198A45] bg-transparent py-3 font-semibold text-[#146C38] transition-colors hover:bg-[#198A45] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#198A45] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#68D391] dark:text-[#8FE3AC] dark:hover:bg-[#68D391] dark:hover:text-[#0D3B2A]"
+        className="flex w-full items-center justify-center gap-2 border border-[#198A45] bg-transparent py-3 font-semibold text-[#146C38] transition-colors hover:bg-[#198A45] hover:text-white focus-visible:ring-2 focus-visible:ring-[#198A45] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#68D391] dark:text-[#8FE3AC] dark:hover:bg-[#68D391] dark:hover:text-[#0D3B2A]"
       >
         {isLoading ? (
-          'Processing…'
+          "Processing…"
         ) : (
           <>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
             </svg>
             Order via WhatsApp
@@ -357,5 +383,5 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
         onSubmit={handleGuestSubmit}
       />
     </>
-  )
+  );
 }
