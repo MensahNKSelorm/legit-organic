@@ -578,13 +578,22 @@ export default function ProfilePage() {
               <div>
                 <div className="mb-8 border-b editorial-rule pb-7"><p className="text-xs font-bold text-[#2E7D32] dark:text-[#F4C430]">From basket to doorstep</p><h2 className="display-organic mt-2 text-5xl text-[#0D3B2A] dark:text-white md:text-6xl">Order history</h2></div>
 
-                {ordersError && (
-                  <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    {ordersError}
+                {ordersError ? (
+                  <div className="border-b editorial-rule py-12 text-left">
+                    <p className="display-organic text-4xl text-[#0D3B2A] dark:text-white">We couldn’t load your deliveries.</p>
+                    <p className="mt-3 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">Your orders are safe. Try loading them again.</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOrdersError(null)
+                        setOrdersLoaded(false)
+                      }}
+                      className="mt-6 border-b border-current pb-1 text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]"
+                    >
+                      Retry order history ↗
+                    </button>
                   </div>
-                )}
-
-                {ordersLoading ? (
+                ) : ordersLoading ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-3">
                     <span className="inline-block w-8 h-8 border-2 border-leaf-green border-t-transparent rounded-full animate-spin" />
                     <span className="text-sm text-charcoal/40">Loading your orders…</span>
