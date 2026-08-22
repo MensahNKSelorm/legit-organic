@@ -1,7 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { BlogPost } from "@/types";
-import { getMediaUrl } from "@/lib/media";
 
 interface BlogTeaserProps {
   posts: BlogPost[];
@@ -77,33 +75,22 @@ export default function BlogTeaser({ posts }: BlogTeaserProps) {
             </div>
 
             {journalPosts.length ? (
-              <div className="mt-10 grid gap-8 md:grid-cols-2">
+              <div className="mt-10 grid border-t border-[#0d3b2a]/25 md:grid-cols-2 dark:border-white/20">
                 {journalPosts.slice(0, 2).map((post, index) => {
-                  const image = getMediaUrl(post.cover_image, `/images/hero/${index ? 9 : 6}.webp`);
                   return (
                     <Link
                       key={post.id}
                       href={usingDemo ? "/blog" : `/blog/${post.slug}`}
-                      className="group block"
+                      className={`group block py-8 md:py-10 ${index === 0 ? "md:border-r md:pr-10" : "border-t md:border-t-0 md:pl-10"} border-[#0d3b2a]/25 dark:border-white/20`}
                     >
-                      <article>
-                        <div
-                          className={`relative overflow-hidden bg-[#d1c19f] ${index ? "aspect-[4/3] md:mt-16" : "aspect-[4/3]"}`}
-                        >
-                          <Image
-                            src={image}
-                            alt={post.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 40vw"
-                            className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
-                          />
-                        </div>
-                        <p className="mt-5 text-[10px] font-bold tracking-[.16em] text-[#246629] uppercase dark:text-[#9fc5a4]">
+                      <article className="flex min-h-56 flex-col justify-between">
+                        <p className="text-[10px] font-bold tracking-[.16em] text-[#246629] uppercase dark:text-[#9fc5a4]">
                           {post.category?.name || "Journal"} · {post.author_name}
                         </p>
-                        <h3 className="display-organic mt-3 text-3xl leading-[1.02]">
+                        <h3 className="display-organic mt-8 max-w-xl text-3xl leading-[1.02] transition-colors group-hover:text-[#246629] md:text-4xl dark:group-hover:text-[#f4c430]">
                           {post.title}
                         </h3>
+                        <span className="mt-8 text-sm font-bold">Read story →</span>
                       </article>
                     </Link>
                   );

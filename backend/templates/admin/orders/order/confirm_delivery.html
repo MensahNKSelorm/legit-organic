@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 
 {% block content %}
-<main style="max-width:680px;margin:24px auto;padding:0 16px;">
+<div style="max-width:680px;margin:24px auto;padding:0 16px;">
   <section style="background:#102d22;color:#f8f4e9;border-top:6px solid #f4c430;padding:28px;box-shadow:8px 8px 0 rgba(244,196,48,.35);">
     <p style="margin:0 0 8px;color:#f4c430;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;">Delivery verification</p>
     <h1 style="margin:0;color:#fff;font-size:30px;">Confirm handover</h1>
@@ -24,5 +24,5 @@
       <a href="{% url 'admin:orders_order_change' order.pk %}" style="display:inline-flex;min-height:46px;align-items:center;padding:0 18px;color:inherit;">Return to order</a>
     </div>
   </form>
-</main>
+</div>
 {% endblock %}

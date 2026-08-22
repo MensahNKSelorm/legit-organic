@@ -14,7 +14,7 @@ from .promo_models import PromoCode
 from .forms import OrderAdminForm
 
 
-@admin.action(description='📊 Export selected orders to Excel')
+@admin.action(description='Export selected orders to Excel')
 def export_to_excel(modeladmin, request, queryset):
     from .exports import generate_orders_excel
     orders = queryset.filter(is_test=False).select_related(

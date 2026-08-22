@@ -177,7 +177,7 @@ UNFOLD = {
     "SITE_SYMBOL": "eco",
     "DASHBOARD_CALLBACK": "legitorganic.dashboard.dashboard_callback",
     "STYLES": [
-        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260820-2',
+        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260822-1',
     ],
     "SCRIPTS": [
         lambda request: static("admin/js/legitorganic-admin.js"),
@@ -233,13 +233,13 @@ UNFOLD = {
                         "permission": admin_permission("products.view_badge"),
                     },
                     {
-                        "title": "Blog Posts",
+                        "title": "Journal Posts",
                         "icon": "article",
                         "link": "/admin/blog/blogpost/",
                         "permission": admin_permission("blog.view_blogpost"),
                     },
                     {
-                        "title": "Blog Categories",
+                        "title": "Journal Categories",
                         "icon": "folder",
                         "link": "/admin/blog/blogcategory/",
                         "permission": admin_permission("blog.view_blogcategory"),
@@ -431,7 +431,7 @@ UNFOLD = {
                         "target": "_blank",
                     },
                     {
-                        "title": "View Blog",
+                        "title": "View Journal",
                         "icon": "article",
                         "link": "https://legitorganic.com/blog",
                         "target": "_blank",
