@@ -4,8 +4,8 @@ export const revalidate = 0;
 import type { Metadata } from "next";
 import Image from "next/image";
 import type { Product, Category } from "@/types";
-import ProductCard from "@/components/products/ProductCard";
 import CategoryFilter from "@/components/products/CategoryFilter";
+import MarketGrid from "@/components/products/MarketGrid";
 import { pageMetadata } from "@/lib/seo";
 
 const INTERNAL_API =
@@ -220,20 +220,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
             Nothing is available in this part of the market right now.
           </p>
         ) : (
-          <div className="mt-12 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-7 sm:gap-y-14 lg:grid-cols-3">
-            {products.map((product, index) => (
-              <div
-                key={product.id}
-                className={`h-full ${index === 0 && !activeCategory ? "sm:col-span-2 lg:col-span-2" : ""}`}
-              >
-                <ProductCard
-                  product={product}
-                  featured={index === 0 && !activeCategory}
-                  preview={usingDemo}
-                />
-              </div>
-            ))}
-          </div>
+          <MarketGrid
+            products={products}
+            preview={usingDemo}
+            featureFirst={!activeCategory}
+          />
         )}
       </section>
     </div>

@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 const developmentApiSources = process.env.NODE_ENV === 'production'
   ? ''
   : ' http://localhost:8000 http://127.0.0.1:8000';
+const developmentScriptSources = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -10,7 +11,7 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://challenges.cloudflare.com",
+  `script-src 'self' 'unsafe-inline'${developmentScriptSources} https://accounts.google.com https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
   "font-src 'self' data: https://cdn.fontshare.com",
   "img-src 'self' data: blob: https://api.legitorganic.com",

@@ -31,7 +31,11 @@ export default function ProductCard({ product, featured = false, preview = false
   return (
     <article className={`group flex h-full min-h-[430px] flex-col overflow-hidden border-b border-[#0D3B2A]/20 bg-transparent dark:border-white/15 sm:min-h-[500px] ${featured ? 'md:grid md:grid-cols-[1.15fr_.85fr]' : ''}`}>
       {/* Image */}
-      <div className={`relative h-44 overflow-hidden bg-beige dark:bg-[#273029] sm:h-64 ${featured ? 'md:h-auto' : ''}`}>
+      <Link
+        href={`/products/${product.slug}`}
+        aria-label={`${preview ? 'Preview' : 'View'} ${product.name}`}
+        className={`relative block h-44 overflow-hidden bg-beige focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-inset dark:bg-[#273029] sm:h-64 ${featured ? 'md:h-auto' : ''}`}
+      >
         <Image
           src={imageSrc}
           alt={product.name}
@@ -44,12 +48,14 @@ export default function ProductCard({ product, featured = false, preview = false
             {product.badge?.name}
           </span>
         )}
-      </div>
+      </Link>
 
       {/* Content */}
       <div className={`flex flex-1 flex-col p-3 sm:p-6 ${featured ? 'md:justify-center md:p-10' : ''}`}>
         <h3 className={`product-name-sans w-full break-words font-bold leading-tight text-forest-green dark:text-[#faf7f0] ${featured ? 'mb-2 line-clamp-2 min-h-[2.5rem] text-base sm:min-h-[3.5rem] sm:text-2xl md:min-h-0 md:text-5xl' : 'mb-2 line-clamp-2 min-h-[2.5rem] text-base sm:min-h-[3.5rem] sm:text-2xl'}`}>
-          {product.name}
+          <Link href={`/products/${product.slug}`} className="transition-colors hover:text-[#2E7D32] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:hover:text-[#F4C430]">
+            {product.name}
+          </Link>
         </h3>
 
         <div className={`mb-2 flex min-h-[2.25rem] items-start sm:mb-3 ${featured ? 'md:min-h-[28px]' : 'sm:min-h-[44px]'}`}>
@@ -75,7 +81,7 @@ export default function ProductCard({ product, featured = false, preview = false
             <button
               onClick={() => addItem(product)}
               className={[
-                'flex items-center justify-center gap-1 whitespace-nowrap px-2 py-2 text-[10px] font-semibold transition-colors sm:px-3 sm:text-xs',
+                'flex min-h-11 items-center justify-center gap-1 whitespace-nowrap px-2 py-2 text-[10px] font-semibold transition-colors sm:px-3 sm:text-xs',
                 inCart
                   ? 'bg-[#2E7D32] text-white cursor-default'
                   : 'bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C]',
@@ -86,7 +92,7 @@ export default function ProductCard({ product, featured = false, preview = false
             </button>
             <Link
               href={`/products/${product.slug}`}
-              className="flex items-center justify-center gap-1 whitespace-nowrap border border-[#0D3B2A]/20 px-2 py-2 text-[10px] font-semibold text-[#0D3B2A] transition-colors hover:bg-[#E6D8BD] dark:border-white/20 dark:text-[#faf7f0] dark:hover:bg-white/10 sm:px-3 sm:text-xs"
+              className="flex min-h-11 items-center justify-center gap-1 whitespace-nowrap border border-[#0D3B2A]/20 px-2 py-2 text-[10px] font-semibold text-[#0D3B2A] transition-colors hover:bg-[#E6D8BD] dark:border-white/20 dark:text-[#faf7f0] dark:hover:bg-white/10 sm:px-3 sm:text-xs"
             >
               <span>{preview ? 'Preview' : 'View'}</span>
               <span aria-hidden="true" className="leading-none">→</span>

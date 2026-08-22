@@ -232,6 +232,21 @@ export default async function ProductDetailPage({ params }: Props) {
               )}
             </div>
 
+            <ul className="mt-5 grid gap-2 text-sm text-[#5B3E31] dark:text-[#D5E7D8] sm:grid-cols-3" aria-label="Order reassurance">
+              {[
+                'Secure hosted checkout',
+                'Delivery details confirmed before payment',
+                'Updates by email and SMS',
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2 border border-[#0D3B2A]/15 px-3 py-3 dark:border-white/15">
+                  <svg aria-hidden="true" viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-[#2E7D32] dark:fill-[#F4C430]">
+                    <path d="M7.8 14.2 3.9 10.3l1.4-1.4 2.5 2.5 6.9-6.9 1.4 1.4-8.3 8.3Z" />
+                  </svg>
+                  <span className="leading-5">{item}</span>
+                </li>
+              ))}
+            </ul>
+
             <div className="mt-10 grid grid-cols-3 border-y border-[#0D3B2A]/20 py-5 dark:border-white/15">
               {[
                 [product.category?.name, "Category"],
