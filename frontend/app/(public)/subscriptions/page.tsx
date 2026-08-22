@@ -2,12 +2,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import SubscriptionPlans from "@/components/subscriptions/SubscriptionPlans";
 import ManageDeliveriesLink from "@/components/subscriptions/ManageDeliveriesLink";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Plan the Week | Flexible Weekly Food Delivery",
   description:
     "Choose a weekly food basket or build your own, with the freedom to skip, pause or cancel upcoming deliveries.",
-};
+  path: "/subscriptions",
+});
 
 const HERO_PRODUCE = [
   [43, 72, 3, -12, 1.08],

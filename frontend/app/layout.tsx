@@ -9,6 +9,7 @@ import VerificationBanner from '@/components/ui/VerificationBanner'
 import WhatsAppButton from '@/components/ui/WhatsAppButton'
 import { ReferralCapture } from '@/components/ReferralCapture'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
+import JsonLd from '@/components/seo/JsonLd'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://legitorganic.com'),
@@ -95,6 +96,43 @@ export default function RootLayout({
         <meta name="theme-color" content="#0D3B2A" />
       </head>
       <body className="antialiased">
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Organization',
+                '@id': 'https://legitorganic.com/#organization',
+                name: 'Legit Organic Limited',
+                alternateName: 'Legit Organic',
+                url: 'https://legitorganic.com/',
+                logo: 'https://legitorganic.com/images/email-logo.png',
+                email: 'hello@legitorganic.com',
+                telephone: '+233539569260',
+                address: {
+                  '@type': 'PostalAddress',
+                  streetAddress: '13 New Aplaku',
+                  addressLocality: 'Accra',
+                  addressCountry: 'GH',
+                },
+                sameAs: [
+                  'https://x.com/legitorganicltd',
+                  'https://instagram.com/legitorganic_ltd',
+                  'https://facebook.com/legitorganic9',
+                  'https://tiktok.com/@legit.organic.ltd',
+                ],
+              },
+              {
+                '@type': 'WebSite',
+                '@id': 'https://legitorganic.com/#website',
+                url: 'https://legitorganic.com/',
+                name: 'Legit Organic',
+                publisher: { '@id': 'https://legitorganic.com/#organization' },
+                inLanguage: 'en-GH',
+              },
+            ],
+          }}
+        />
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>

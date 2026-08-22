@@ -11,12 +11,14 @@ const INTERNAL_API =
 import BlogCard from "@/components/blog/BlogCard";
 import BlogCategoryFilter from "@/components/blog/BlogCategoryFilter";
 import { getMediaUrl } from "@/lib/media";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Legit Organic Times | Food, Farms & Kitchens",
   description:
     "Field notes, kitchen stories and practical reporting on food, farming and everyday life in Ghana.",
-};
+  path: "/blog",
+});
 
 function formatDate(iso?: string | null) {
   if (!iso) return "Latest edition";

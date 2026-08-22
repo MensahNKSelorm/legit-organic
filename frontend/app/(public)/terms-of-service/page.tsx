@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Terms and Conditions',
   description: 'The terms governing the use of Legit Organic Limited’s website, ordering and delivery services.',
-}
+  path: '/terms-of-service',
+})
 
 const sections = [
   { title: 'Acceptance of these terms', body: [

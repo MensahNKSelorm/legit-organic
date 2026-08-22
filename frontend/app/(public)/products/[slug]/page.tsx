@@ -10,6 +10,9 @@ import ProductCard from "@/components/products/ProductCard";
 import ProductTabs from "@/components/products/ProductTabs";
 import AddToCartButton, { WishlistButton } from "@/components/products/AddToCartButton";
 import ProductImageGallery from "@/components/products/ProductImageGallery";
+import JsonLd from "@/components/seo/JsonLd";
+import { getMediaUrl } from "@/lib/media";
+import { absoluteUrl, DEFAULT_SOCIAL_IMAGE, plainText } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -100,12 +103,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (demo) return { title: `${demo.name} | Product Preview` };
   try {
     const product = await api.products.detail(slug);
+    const description = plainText(product.description);
+    const image = getMediaUrl(product.image, DEFAULT_SOCIAL_IMAGE);
     return {
       title: `${product.name} | ${product.category?.name || "Fresh Produce"}`,
-      description: product.description?.replace(/<[^>]*>/g, "").slice(0, 160),
+      description,
+      alternates: { canonical: `/products/${product.slug}` },
+      openGraph: {
+        type: "website",
+        url: `/products/${product.slug}`,
+        title: product.name,
+        description,
+        images: [{ url: image, alt: product.name }],
+      },
+      twitter: { card: "summary_large_image", title: product.name, description, images: [image] },
     };
   } catch {
-    return { title: "Product | Legit Organic" };
+    return { title: "Product" };
   }
 }
 
@@ -113,6 +127,8 @@ export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
   const demo = previewProduct(slug);
   const product: ProductDetail = demo || (await api.products.detail(slug).catch(() => notFound()));
+  const productUrl = `https://legitorganic.com/products/${product.slug}`;
+  const productImage = absoluteUrl(getMediaUrl(product.image, DEFAULT_SOCIAL_IMAGE));
 
   let related: Product[] = [];
   if (demo) {
@@ -130,6 +146,39 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FEFCF7]">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          '@id': `${productUrl}#product`,
+          name: product.name,
+          description: plainText(product.description, 500) || undefined,
+          image: productImage ? [productImage] : undefined,
+          category: product.category?.name,
+          countryOfOrigin: product.region ? { '@type': 'Country', name: product.region.country || 'Ghana' } : undefined,
+          brand: { '@type': 'Brand', name: 'Legit Organic' },
+          offers: {
+            '@type': 'Offer',
+            url: productUrl,
+            priceCurrency: 'GHS',
+            price: product.price,
+            availability: product.is_available
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            seller: { '@id': 'https://legitorganic.com/#organization' },
+          },
+        }}
+      />
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Market', item: 'https://legitorganic.com/products' },
+            { '@type': 'ListItem', position: 2, name: product.name, item: productUrl },
+          ],
+        }}
+      />
       <div className="bg-[#0D3B2A] pt-[76px] text-white">
         <div className="page-container flex flex-wrap items-center gap-2 py-5 text-xs text-[#B8D4BD]">
           <Link href="/products" className="hover:text-white">

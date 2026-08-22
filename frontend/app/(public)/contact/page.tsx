@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import ContactForm from './ContactForm'
 import EditorialPageHeader from '@/components/ui/EditorialPageHeader'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Contact Us',
   description:
     'Contact the Legit Organic team about orders, farmer partnerships or press enquiries.',
-}
+  path: '/contact',
+})
 
 function LocationIcon() {
   return (

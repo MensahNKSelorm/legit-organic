@@ -9,6 +9,8 @@ import { getMediaUrl } from '@/lib/media'
 import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
 import AddDishSearch from '@/components/recipes/AddDishSearch'
 import RecipeShopIngredients from '@/components/recipes/RecipeShopIngredients'
+import JsonLd from '@/components/seo/JsonLd'
+import { absoluteUrl, DEFAULT_SOCIAL_IMAGE, plainText } from '@/lib/seo'
 
 
 type Props = { params: Promise<{ slug: string }> }
@@ -24,6 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: recipe.title,
       description,
+      alternates: { canonical: `/recipes/${recipe.slug}` },
       keywords: [
         recipe.title,
         `${recipe.title} recipe`,
@@ -36,8 +39,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title: recipe.title,
         description,
-        images: recipe.cover_image ? [{ url: recipe.cover_image }] : [],
+        url: `/recipes/${recipe.slug}`,
+        images: [{ url: getMediaUrl(recipe.cover_image, DEFAULT_SOCIAL_IMAGE), alt: recipe.title }],
         type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: recipe.title,
+        description,
+        images: [getMediaUrl(recipe.cover_image, DEFAULT_SOCIAL_IMAGE)],
       },
     }
   } catch {
@@ -58,6 +68,10 @@ function formatTime(minutes: number): string {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
+function duration(minutes: number): string | undefined {
+  return minutes > 0 ? `PT${minutes}M` : undefined
+}
+
 function getEmbedUrl(url: string): string {
   const watchMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/)
   if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`
@@ -73,6 +87,8 @@ export default async function RecipeDetailPage({ params }: Props) {
   const catalogue = await api.recipes.default().catch(() => [])
   const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, color: '#6b7280' }
   const coverSrc = getMediaUrl(recipe.cover_image)
+  const recipeUrl = `https://legitorganic.com/recipes/${recipe.slug}`
+  const recipeImage = absoluteUrl(getMediaUrl(recipe.cover_image, DEFAULT_SOCIAL_IMAGE))
   const editableIngredients: EditableMealIngredient[] = recipe.ingredients.map((ingredient, index) => {
     const matchedProduct = ingredient.product || ingredient.matched_products[0] || null
     return {
@@ -90,6 +106,52 @@ export default async function RecipeDetailPage({ params }: Props) {
 
   return (
     <div className="story-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'Recipe',
+          '@id': `${recipeUrl}#recipe`,
+          name: recipe.title,
+          alternateName: recipe.local_name || undefined,
+          description: plainText(recipe.description, 500),
+          image: recipeImage ? [recipeImage] : undefined,
+          prepTime: duration(recipe.prep_time),
+          cookTime: duration(recipe.cook_time),
+          totalTime: duration(recipe.total_time || recipe.prep_time + recipe.cook_time),
+          recipeYield: recipe.servings ? `${recipe.servings} servings` : undefined,
+          recipeCategory: recipe.recipe_category || recipe.meal_type || undefined,
+          recipeCuisine: recipe.cuisine || recipe.country || 'Ghanaian',
+          keywords: recipe.keywords?.join(', ') || undefined,
+          recipeIngredient: recipe.ingredients.length
+            ? recipe.ingredients.map(ingredient =>
+                ingredient.raw_text || [ingredient.quantity, ingredient.unit, ingredient.name].filter(Boolean).join(' ')
+              )
+            : undefined,
+          recipeInstructions: recipe.steps.length
+            ? recipe.steps.map(step => ({
+                '@type': 'HowToStep',
+                position: step.step_number,
+                name: step.section || `Step ${step.step_number}`,
+                text: plainText(step.instruction, 1000),
+              }))
+            : undefined,
+          author: { '@id': 'https://legitorganic.com/#organization' },
+          datePublished: recipe.published_at || recipe.created_at,
+          dateModified: recipe.updated_at || recipe.published_at || recipe.created_at,
+          mainEntityOfPage: recipeUrl,
+          inLanguage: 'en-GH',
+        }}
+      />
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Recipes', item: 'https://legitorganic.com/recipes' },
+            { '@type': 'ListItem', position: 2, name: recipe.title, item: recipeUrl },
+          ],
+        }}
+      />
 
       {/* ── Breadcrumb ─────────────────────────────────────────── */}
       <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '1rem' }}>

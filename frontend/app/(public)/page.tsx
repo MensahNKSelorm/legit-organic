@@ -8,6 +8,14 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import WhyUs from "@/components/home/WhyUs";
 import RecipesTeaser from "@/components/home/RecipesTeaser";
 import BlogTeaser from "@/components/home/BlogTeaser";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "Fresh Organic Food in Ghana",
+  description:
+    "Fresh Ghanaian produce with clearer information about where it comes from, how it is handled and when it is available.",
+  path: "/",
+});
 
 const INTERNAL_API =
   process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";

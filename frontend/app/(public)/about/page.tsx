@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Why Legit Organic Exists',
   description: 'Why Legit Organic is building a clearer route between Ghanaian farms and the people they feed.',
-}
+  path: '/about',
+})
 
 const principles = [
   { number: '01', title: 'Start with the soil', body: 'Healthy harvests begin below the surface. Growing practices should protect the land expected to feed the next season too.' },

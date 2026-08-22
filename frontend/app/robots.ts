@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/profile', '/my-recipes', '/order-confirmation'],
+        disallow: ['/api/'],
       },
     ],
     sitemap: 'https://legitorganic.com/sitemap.xml',

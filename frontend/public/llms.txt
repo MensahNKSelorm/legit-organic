@@ -1,0 +1,20 @@
+# Legit Organic
+
+Legit Organic is a Ghanaian food marketplace connecting customers and organisations with produce sourced from Ghanaian growers.
+
+## Main sections
+
+- Market: https://legitorganic.com/products
+- Plan the week: https://legitorganic.com/subscriptions
+- Recipes: https://legitorganic.com/recipes
+- Legit Organic Times: https://legitorganic.com/blog
+- Business food supply: https://legitorganic.com/b2b
+- About Legit Organic: https://legitorganic.com/about
+- Contact: https://legitorganic.com/contact
+
+## Policies
+
+- Privacy policy: https://legitorganic.com/privacy-policy
+- Terms and conditions: https://legitorganic.com/terms-of-service
+
+Product availability and prices can change. Use the current product page as the source of truth.

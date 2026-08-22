@@ -1,12 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Food Supply for Restaurants, Schools and Businesses",
   description:
     "Order dependable Ghanaian produce for restaurants, schools, hotels, caterers, retailers and institutions.",
-};
+  path: "/b2b",
+});
 
 const INSTITUTIONS = [
   {

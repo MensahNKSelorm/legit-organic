@@ -6,15 +6,17 @@ import Image from "next/image";
 import type { Product, Category } from "@/types";
 import ProductCard from "@/components/products/ProductCard";
 import CategoryFilter from "@/components/products/CategoryFilter";
+import { pageMetadata } from "@/lib/seo";
 
 const INTERNAL_API =
   process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Market | Fresh Food from Ghanaian Farmers",
   description:
     "Browse fresh food sourced from Ghanaian farmers, with origin and availability made clear.",
-};
+  path: "/products",
+});
 
 const DEMO_CATEGORIES: Category[] = [
   { id: -1, name: "Grains", slug: "grains", description: "", image: null },

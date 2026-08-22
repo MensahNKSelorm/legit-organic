@@ -12,11 +12,13 @@ const INTERNAL_API =
 import RecipeCard from "@/components/recipes/RecipeCard";
 import RecipeSearch from "@/components/recipes/RecipeSearch";
 import { normaliseRecipeText, parseRecipeQuery } from "@/lib/recipe-query";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Recipes | Ghanaian Food and Organic Ingredients",
   description: "Ghanaian recipes, seasonal ideas and practical ways to cook with what is fresh.",
-};
+  path: "/recipes",
+});
 
 type Props = { searchParams: Promise<{ q?: string }> };
 
