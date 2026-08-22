@@ -88,10 +88,14 @@ class StaffSetupPasswordForm(SetPasswordForm):
 
 
 class StaffAccessAdminForm(forms.ModelForm):
+    email = forms.EmailField(
+        label='Staff login email',
+        help_text='Must use the @legitorganic.com company domain.',
+    )
     access_change_reason = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={'rows': 3}),
-        help_text='Required when changing roles or activating/deactivating staff.',
+        help_text='Required when changing a login email, role, or account status.',
     )
     owner_password = forms.CharField(
         required=False,
@@ -116,11 +120,22 @@ class StaffAccessAdminForm(forms.ModelForm):
         if not self.instance.pk:
             return cleaned
         old = User.objects.get(pk=self.instance.pk)
+        email = (cleaned.get('email') or '').strip().lower()
+        cleaned['email'] = email
+        self.instance.email = email
+        if email and not email.endswith('@legitorganic.com'):
+            self.add_error('email', 'Staff login addresses must end in @legitorganic.com.')
+        if email and User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            self.add_error('email', 'Another account already uses this email address.')
         old_groups = set(old.groups.values_list('pk', flat=True))
         new_groups = set(
             cleaned.get('groups', old.groups.none()).values_list('pk', flat=True)
         )
-        access_changed = old.is_active != cleaned.get('is_active') or old_groups != new_groups
+        access_changed = (
+            old.email.lower() != email
+            or old.is_active != cleaned.get('is_active')
+            or old_groups != new_groups
+        )
         if not access_changed:
             return cleaned
 

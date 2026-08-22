@@ -170,7 +170,7 @@ class StaffAdmin(ModelAdmin):
         'security_controls', 'last_login', 'date_joined',
     ]
     readonly_fields = [
-        'email', 'first_name', 'last_name', 'staff_role',
+        'first_name', 'last_name', 'staff_role',
         'security_controls', 'last_login', 'date_joined',
     ]
 
@@ -222,6 +222,7 @@ class StaffAdmin(ModelAdmin):
     def save_model(self, request, obj, form, change):
         if change:
             old = User.objects.get(pk=obj.pk)
+            obj._security_old_email = old.email
             obj._security_old_active = old.is_active
             obj._security_old_groups = set(old.groups.values_list('name', flat=True))
         super().save_model(request, obj, form, change)
@@ -231,10 +232,12 @@ class StaffAdmin(ModelAdmin):
         if not change:
             return
         obj = form.instance
+        old_email = getattr(obj, '_security_old_email', obj.email)
         old_groups = getattr(obj, '_security_old_groups', set())
         new_groups = set(obj.groups.values_list('name', flat=True))
+        email_changed = old_email.lower() != obj.email.lower()
         active_changed = getattr(obj, '_security_old_active', obj.is_active) != obj.is_active
-        if old_groups != new_groups or active_changed:
+        if old_groups != new_groups or active_changed or email_changed:
             from security.audit import record_event, revoke_user_sessions
             from security.models import AuditEvent, StaffSecurityProfile
             profile, _ = StaffSecurityProfile.objects.get_or_create(user=obj)
@@ -245,10 +248,15 @@ class StaffAdmin(ModelAdmin):
                 action='staff.access_changed', request=request, target=obj,
                 severity=AuditEvent.Severity.CRITICAL,
                 before={
+                    'email': old_email,
                     'roles': sorted(old_groups),
                     'is_active': getattr(obj, '_security_old_active', obj.is_active),
                 },
-                after={'roles': sorted(new_groups), 'is_active': obj.is_active},
+                after={
+                    'email': obj.email,
+                    'roles': sorted(new_groups),
+                    'is_active': obj.is_active,
+                },
                 reason=form.cleaned_data.get('access_change_reason', ''),
                 metadata={
                     'sessions_revoked': revoked,

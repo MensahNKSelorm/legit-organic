@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group
+from django.contrib.sessions.models import Session
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
@@ -78,6 +79,7 @@ class StaffAccessAdminSecurityTests(TestCase):
         with patch('security.auth.verify_staff_code', return_value=(True, False)):
             url = reverse('admin:users_staff_change', args=[self.staff.pk])
             denied = self.client.post(url, {
+                'email': self.staff.email,
                 'is_active': 'on', 'groups': [self.product_manager.pk],
                 'access_change_reason': '', 'owner_password': 'wrong',
                 'owner_otp_token': '000000', '_save': 'Save',
@@ -88,6 +90,7 @@ class StaffAccessAdminSecurityTests(TestCase):
             )
 
             allowed = self.client.post(url, {
+                'email': self.staff.email,
                 'is_active': 'on', 'groups': [self.product_manager.pk],
                 'access_change_reason': 'Moved to catalogue operations',
                 'owner_password': 'OwnerPass123!', 'owner_otp_token': '123456',
@@ -103,3 +106,61 @@ class StaffAccessAdminSecurityTests(TestCase):
         self.assertEqual(event.reason, 'Moved to catalogue operations')
         self.assertEqual(event.before['roles'], ['Operations'])
         self.assertEqual(event.after['roles'], ['Product Manager'])
+
+    def test_owner_can_change_staff_login_to_unique_company_email(self):
+        staff_client = self.client_class()
+        staff_client.force_login(self.staff)
+        staff_session_key = staff_client.session.session_key
+        self.assertTrue(Session.objects.filter(session_key=staff_session_key).exists())
+
+        with patch('security.auth.verify_staff_code', return_value=(True, False)):
+            response = self.client.post(
+                reverse('admin:users_staff_change', args=[self.staff.pk]),
+                {
+                    'email': 'New.Staff@legitorganic.com',
+                    'is_active': 'on',
+                    'groups': [self.operations.pk],
+                    'access_change_reason': 'Moved staff access to a company identity',
+                    'owner_password': 'OwnerPass123!',
+                    'owner_otp_token': '123456',
+                    '_save': 'Save',
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.staff.refresh_from_db()
+        self.assertEqual(self.staff.email, 'new.staff@legitorganic.com')
+        self.assertTrue(self.staff.check_password('StaffPass123!'))
+        self.assertEqual(
+            set(self.staff.groups.values_list('name', flat=True)), {'Operations'}
+        )
+        self.assertFalse(Session.objects.filter(session_key=staff_session_key).exists())
+        event = AuditEvent.objects.get(action='staff.access_changed')
+        self.assertEqual(event.before['email'], 'staff@legitorganic.com')
+        self.assertEqual(event.after['email'], 'new.staff@legitorganic.com')
+
+    def test_staff_login_email_rejects_personal_and_duplicate_addresses(self):
+        User.objects.create_user(
+            email='existing@legitorganic.com', password='ExistingPass123!'
+        )
+        url = reverse('admin:users_staff_change', args=[self.staff.pk])
+        common = {
+            'is_active': 'on',
+            'groups': [self.operations.pk],
+            'access_change_reason': 'Moving staff identity',
+            'owner_password': 'OwnerPass123!',
+            'owner_otp_token': '123456',
+            '_save': 'Save',
+        }
+        with patch('security.auth.verify_staff_code', return_value=(True, False)):
+            personal = self.client.post(url, {**common, 'email': 'staff@gmail.com'})
+            duplicate = self.client.post(
+                url, {**common, 'email': 'EXISTING@legitorganic.com'}
+            )
+
+        self.assertEqual(personal.status_code, 200)
+        self.assertContains(personal, 'must end in @legitorganic.com')
+        self.assertEqual(duplicate.status_code, 200)
+        self.assertContains(duplicate, 'already uses this email address')
+        self.staff.refresh_from_db()
+        self.assertEqual(self.staff.email, 'staff@legitorganic.com')
