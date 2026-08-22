@@ -60,8 +60,7 @@ export default async function RecipesPage({ searchParams }: Props) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent" />
           <p className="absolute bottom-7 left-6 max-w-sm text-sm leading-6 text-white/85 md:bottom-10 md:left-10">
-            Keep the recipes that worked. Change the ones that did not. Cook them again until they
-            feel like yours.
+            Keep what worked, adjust what did not and make each recipe your own.
           </p>
         </div>
         <div className="flex items-center bg-[#F4C430] px-6 py-14 text-[#0D3B2A] md:px-12 lg:px-16">
@@ -71,7 +70,7 @@ export default async function RecipesPage({ searchParams }: Props) {
               A kitchen built from what grows here
             </h1>
             <p className="mt-8 max-w-lg text-lg leading-8 text-[#274C3D]">
-              Ghanaian recipes, seasonal ideas and useful ways to make more of what is fresh.
+              Ghanaian recipes that help you cook with what is fresh.
             </p>
           </div>
         </div>
@@ -134,8 +133,7 @@ export default async function RecipesPage({ searchParams }: Props) {
                 The first recipes are being tested.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">
-                Until they are ready, turn the ingredients already in your kitchen into a practical
-                starting point.
+                Until they are ready, build a recipe from the ingredients you already have.
               </p>
             </div>
             <Link

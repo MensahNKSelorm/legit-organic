@@ -18,8 +18,8 @@ const stops = [
   {
     href: "/subscriptions",
     place: "Weekly",
-    verb: "Keep it moving.",
-    body: "Buy once, or prepare the next basket before the week gets busy.",
+    verb: "Stay stocked.",
+    body: "Buy once or prepare the next basket before the week gets busy.",
     action: "Plan the week",
   },
 ];
@@ -39,7 +39,7 @@ export default function HomeJourney() {
             A better week begins at the market.
           </h2>
           <p className="max-w-md text-base leading-7 font-medium md:justify-self-end md:text-lg">
-            Fresh food becomes useful when deciding, shopping and cooking feel like one thing.
+            Fresh food is easier to use when shopping and cooking fit into your week.
           </p>
         </div>
 

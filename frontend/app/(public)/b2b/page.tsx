@@ -302,8 +302,8 @@ export default function B2BPage() {
         <div className="page-container institutions-head">
           <h2 id="institutions-title">Built for people feeding people.</h2>
           <p>
-            From a single kitchen to a daily dining programme, the buying rhythm changes. The supply
-            should adapt with it.
+            A small kitchen and a daily dining programme buy differently. Supply should match the
+            way each team works.
           </p>
         </div>
         <InstitutionRail />
@@ -314,8 +314,8 @@ export default function B2BPage() {
           <header className="workflow-head">
             <h2 id="workflow-title">From order to repeat delivery</h2>
             <p className="workflow-intro">
-              Start with the catalogue, step outside it when the order needs a quote, then turn the
-              reliable parts into a repeat delivery.
+              Use the catalogue for regular orders. Request a quote when your needs change, then
+              save the order for future deliveries.
             </p>
           </header>
           <ol className="workflow-list">
@@ -368,8 +368,8 @@ export default function B2BPage() {
           </div>
           <div className="close-action">
             <p>
-              Share where you work, what you buy and how often. We&apos;ll use it to review the
-              right business setup for you.
+              Tell us about your organisation and usual order. We&apos;ll review the right trade setup
+              for you.
             </p>
             <Link href="/b2b/apply" className="b2b-button b2b-button-dark">
               Start your application <ArrowIcon />

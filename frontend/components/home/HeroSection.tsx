@@ -69,7 +69,7 @@ export default function HeroSection() {
           </h1>
           <div className="reveal-up-delay mt-7 grid gap-7 md:grid-cols-[minmax(0,31rem)_auto] md:items-end md:gap-10">
             <p className="max-w-xl text-lg leading-8 text-[#D5E7D8] md:text-xl">
-              Shop what is in season, turn it into meals, and restock on your rhythm.
+              Shop the season and plan a basket that fits your week.
             </p>
             <div className="flex flex-wrap items-center gap-5">
               <Link

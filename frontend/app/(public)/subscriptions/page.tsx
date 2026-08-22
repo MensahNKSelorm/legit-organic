@@ -35,13 +35,13 @@ const HERO_PRODUCE = [
 ] as const;
 
 const WEEKLY_RHYTHM = [
-  ["Basket", "Pick a prepared basket or build the week around your household."],
-  ["Renewal order", "Before each cycle, a new order shows what is coming and what is due."],
+  ["Basket", "Choose a prepared basket or build one for your household."],
+  ["Renewal order", "Before each delivery, a new order shows what is coming and what is due."],
   [
     "Your approval",
-    "Open that order and approve a fresh secure checkout. Nothing is charged automatically.",
+    "Open the order and pay when you are ready. We never charge you automatically.",
   ],
-  ["Delivery", "Once payment is confirmed, the order moves into preparation and delivery."],
+  ["Delivery", "Once payment is confirmed, we prepare and deliver your order."],
 ] as const;
 
 export default function SubscriptionsPage() {
@@ -211,7 +211,7 @@ export default function SubscriptionsPage() {
                   Payment
                 </p>
                 <p className="mt-3 max-w-xs text-lg leading-6 font-semibold">
-                  A new renewal order is created each week. You choose when to pay it securely.
+                  We create a new order each week. You choose when to pay.
                 </p>
               </div>
               <svg
@@ -354,8 +354,7 @@ export default function SubscriptionsPage() {
                 Your basket follows your rhythm
               </h2>
               <p className="mt-6 max-w-sm leading-7 text-[#675E52] dark:text-[#BBC8BD]">
-                This is a repeating delivery plan, not an automatic charge. Every renewal remains
-                yours to approve.
+                Your deliveries repeat, but payments do not. You approve every weekly order.
               </p>
             </div>
             <ol className="weekly-flow relative grid border-y border-[#173C2A]/25 md:grid-cols-4 dark:border-white/20">

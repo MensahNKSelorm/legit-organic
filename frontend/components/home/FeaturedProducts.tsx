@@ -104,7 +104,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
           </h2>
           <div className="pb-2">
             <p className="max-w-lg text-lg leading-8 text-[#5b3e31] dark:text-[#b8d4bd]">
-              A short edit of what is in season, grown nearby and ready for your kitchen.
+              A quick look at what is in season and ready for your kitchen.
             </p>
             <Link
               href="/products"
@@ -117,7 +117,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
 
         {!featured ? (
           <p className="mt-14 border-y border-[#0d3b2a]/20 py-16 text-[#0d3b2a]/65 dark:border-white/15 dark:text-[#b8d4bd]">
-            The next harvest is being prepared.
+            Fresh stock will be listed here soon.
           </p>
         ) : (
           <div className="mt-10 grid gap-6 lg:grid-cols-[1.16fr_.84fr] lg:gap-0">

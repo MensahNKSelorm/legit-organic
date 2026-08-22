@@ -12,7 +12,7 @@ const DEMO_POSTS: BlogPost[] = [
     id: -1,
     title: "What Freshness Really Looks Like",
     slug: "preview-freshness",
-    excerpt: "A practical look at harvest timing, handling and the journey from farm to kitchen.",
+    excerpt: "How harvest timing and careful handling affect what reaches your kitchen.",
     cover_image: "/images/hero/6.webp",
     author_name: "Legit Organic",
     category: { id: -1, name: "From the Field", slug: "field" },
@@ -65,7 +65,7 @@ export default function BlogTeaser({ posts }: BlogTeaserProps) {
               </p>
               <div>
                 <p className="leading-7 text-[#5b3e31] dark:text-[#b8d4bd]">
-                  What is growing, how to use it, and why it matters.
+                  Read about what is growing and what to cook with it.
                 </p>
                 <Link
                   href="/blog"
@@ -112,11 +112,10 @@ export default function BlogTeaser({ posts }: BlogTeaserProps) {
             ) : (
               <div className="mt-10 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
                 <p className="display-organic max-w-2xl text-4xl leading-tight">
-                  The first edition is taking root.
+                  The first edition is on the way.
                 </p>
                 <p className="max-w-sm leading-7 text-[#5b3e31] dark:text-[#b8d4bd]">
-                  New stories from Ghana&apos;s farms and kitchens will appear here as they are
-                  published.
+                  We&apos;ll add stories from Ghana&apos;s farms and kitchens as they are published.
                 </p>
               </div>
             )}

@@ -176,8 +176,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               <span className="font-normal text-[#F4C430]">fresh harvest</span>
             </h1>
             <p className="mt-8 max-w-xl text-lg leading-8 text-[#B8D4BD]">
-              Choose from what is fresh, traceable and ready to make its way from Ghanaian farms to
-              your kitchen.
+              Shop fresh food from Ghanaian farms, with clear information about where it came from.
             </p>
           </div>
         </div>

@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 const promises = [
-  ["Know where it grew.", "Region and handling stay with the food."],
-  ["Buy with the season.", "What is good now gets the spotlight."],
-  ["Keep farms closer.", "A shorter route keeps more value near the people who grow."],
+  ["Know where it grew.", "See where your food came from and how it was handled."],
+  ["Buy with the season.", "Find produce while it is fresh and in season."],
+  ["Keep farms closer.", "Shorter supply routes keep more value with growers."],
 ];
 
 export default function WhyUs() {
@@ -26,7 +26,7 @@ export default function WhyUs() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <p className="absolute bottom-7 left-7 max-w-sm border-l border-[#f4c430] pl-5 text-sm leading-6 text-white/85 md:bottom-10 md:left-10">
-              Good food carries a place, a season and the work of the people behind it.
+              Every harvest reflects where it grew and the people who cared for it.
             </p>
           </div>
 

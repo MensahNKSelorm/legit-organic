@@ -62,14 +62,14 @@ export default async function BlogPage({ searchParams }: Props) {
             desk: "Field notes",
             image: "/images/hero/3.webp",
             excerpt:
-              "A closer look at harvest timing, handling and the short journey between a farm and a household.",
+              "How harvest timing and careful handling affect what reaches your home.",
           },
           {
             title: "The case for eating with Ghana’s seasons",
             desk: "Kitchen notes",
             image: "/images/hero/7.webp",
             excerpt:
-              "Seasonal eating is less about rules and more about noticing what is abundant, good and fairly priced.",
+              "Seasonal eating starts with noticing what is abundant, good and fairly priced.",
           },
           {
             title: "Meet the hands behind the harvest",
@@ -210,8 +210,7 @@ export default async function BlogPage({ searchParams }: Props) {
                 : "The first journal edition is being prepared."}
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">
-              Stories will appear here once they have been reported, edited and are ready to be
-              useful.
+              We&apos;ll publish each story after it has been reported and edited.
             </p>
             {category && (
               <Link

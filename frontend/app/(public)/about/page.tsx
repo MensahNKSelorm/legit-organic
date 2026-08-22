@@ -26,13 +26,13 @@ export default function AboutPage() {
       <section className="grid min-h-[88svh] border-b border-white/15 bg-[#0D3B2A] pt-[76px] text-white lg:grid-cols-[1.15fr_.85fr]">
         <div className="page-container flex items-end py-14 lg:mr-0 lg:pr-16 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] lg:py-20">
           <div className="max-w-4xl">
-            <p className="max-w-lg text-lg leading-8 text-[#B8D4BD]">Legit Organic started with one practical frustration: food should not arrive without a story someone can verify.</p>
-            <h1 className="display-organic mt-12 text-[clamp(4.6rem,9vw,9.5rem)] leading-[.78] tracking-[-.055em]">Less distance.<br /><span className="font-normal text-[#F4C430]">More knowing.</span></h1>
+            <p className="max-w-lg text-lg leading-8 text-[#B8D4BD]">Legit Organic began with a simple frustration: shoppers often know too little about where their food comes from.</p>
+            <h1 className="display-organic mt-12 text-[clamp(4.6rem,9vw,9.5rem)] leading-[.78] tracking-[-.055em]">Know your food <span className="font-normal text-[#F4C430]">better.</span></h1>
           </div>
         </div>
         <figure className="relative min-h-[45vh] overflow-hidden lg:min-h-0">
           <Image src="/images/hero/8.webp" alt="Fresh produce from Ghanaian farms" fill priority sizes="(max-width: 1024px) 100vw, 43vw" className="object-cover transition-transform duration-700 hover:scale-[1.02]" />
-          <figcaption className="absolute right-0 bottom-0 max-w-xs bg-[#F4C430] p-5 text-sm leading-6 text-[#0D3B2A]">The aim is not to make food sound complicated. It is to make choosing it feel less uncertain.</figcaption>
+          <figcaption className="absolute right-0 bottom-0 max-w-xs bg-[#F4C430] p-5 text-sm leading-6 text-[#0D3B2A]">Clear information makes food easier to choose.</figcaption>
         </figure>
       </section>
 
@@ -52,7 +52,7 @@ export default function AboutPage() {
       <section className="border-y border-[#0D3B2A]/20 bg-[#EFE7D7] dark:border-white/15 dark:bg-[#202620]" aria-labelledby="principles-title">
         <div className="page-container grid gap-12 py-20 md:py-28 lg:grid-cols-[.72fr_1.28fr] lg:gap-24">
           <div>
-            <h2 id="principles-title" className="display-organic max-w-lg text-5xl leading-[.9] md:text-7xl">The things growth should not erase.</h2>
+            <h2 id="principles-title" className="display-organic max-w-lg text-5xl leading-[.9] md:text-7xl">What we want to keep as we grow.</h2>
           </div>
           <div className="border-t border-[#0D3B2A]/25 dark:border-white/20">
             {principles.map((item) => (
@@ -68,7 +68,7 @@ export default function AboutPage() {
       <section className="page-container py-20 md:py-28" aria-labelledby="route-title">
         <div className="flex flex-col justify-between gap-6 border-b border-[#0D3B2A]/25 pb-8 md:flex-row md:items-end dark:border-white/20">
           <h2 id="route-title" className="display-organic text-5xl leading-none md:text-7xl">How the work moves.</h2>
-          <p className="max-w-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">A short chain is useful only when each part is understandable.</p>
+          <p className="max-w-sm leading-7 text-[#5B3E31] dark:text-[#B8D4BD]">We keep each step clear, from sourcing to delivery.</p>
         </div>
         <ol className="grid border-b border-[#0D3B2A]/25 md:grid-cols-4 dark:border-white/20">
           {route.map(([title, body], index) => (
@@ -83,7 +83,7 @@ export default function AboutPage() {
 
       <section className="bg-[#F4C430] text-[#0D3B2A]">
         <div className="page-container grid items-end gap-10 py-16 md:grid-cols-[1fr_auto] md:py-20">
-          <h2 className="display-organic max-w-4xl text-5xl leading-[.9] md:text-7xl">See what is available. Plan the week ahead.</h2>
+          <h2 className="display-organic max-w-4xl text-5xl leading-[.9] md:text-7xl">Shop today or plan next week&apos;s basket.</h2>
           <div className="flex flex-wrap gap-4">
             <Link href="/products" className="bg-[#0D3B2A] px-7 py-4 font-bold text-white transition-colors hover:bg-white hover:text-[#0D3B2A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0D3B2A]">Visit the market</Link>
             <Link href="/subscriptions" className="border border-[#0D3B2A] px-7 py-4 font-bold transition-colors hover:bg-[#0D3B2A] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0D3B2A]">Plan the week</Link>
