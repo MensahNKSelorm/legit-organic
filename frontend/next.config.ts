@@ -1,5 +1,9 @@
 import type { NextConfig } from 'next';
 
+const developmentApiSources = process.env.NODE_ENV === 'production'
+  ? ''
+  : ' http://localhost:8000 http://127.0.0.1:8000';
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -10,7 +14,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
   "font-src 'self' data: https://cdn.fontshare.com",
   "img-src 'self' data: blob: https://api.legitorganic.com",
-  "connect-src 'self' https://api.legitorganic.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://challenges.cloudflare.com http://localhost:8000 http://127.0.0.1:8000",
+  `connect-src 'self' https://api.legitorganic.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://challenges.cloudflare.com${developmentApiSources}`,
   "frame-src https://accounts.google.com https://challenges.cloudflare.com https://www.google.com https://www.youtube.com https://youtube.com",
 ].join('; ');
 
