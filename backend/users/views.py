@@ -5,10 +5,13 @@ from django.conf import settings
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authentication import SessionAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 logger = logging.getLogger(__name__)
 from .models import User, WishlistItem, B2BProfile, BusinessPriceList
@@ -22,6 +25,8 @@ from .emails import (
 )
 from .google_auth import verify_google_token
 from .turnstile import verify_turnstile
+from .tokens import set_refresh_cookie
+from security.api import StaffSessionMFARequired
 
 
 def link_guest_orders(user):
@@ -128,16 +133,18 @@ class VerifyEmailView(APIView):
 
         # Issue tokens so the freshly-verified user is logged in immediately.
         refresh = RefreshToken.for_user(user)
-        return Response({
+        response = Response({
             'message': 'Email verified successfully.',
             'access': str(refresh.access_token),
-            'refresh': str(refresh),
             'user': UserSerializer(user).data,
         }, status=status.HTTP_200_OK)
+        set_refresh_cookie(response, str(refresh))
+        return response
 
 
 class GoogleAuthView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'google_auth'
 
     def post(self, request):
         token = request.data.get('token')
@@ -166,7 +173,11 @@ class GoogleAuthView(APIView):
                 'is_active': True,
             },
         )
-        print(f'Google login: {email}, created={created}')
+        if user.is_staff:
+            return Response(
+                {'error': 'Staff accounts must sign in through the secure staff portal.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if not created:
             user.first_name = user.first_name or google_data['first_name']
@@ -183,11 +194,12 @@ class GoogleAuthView(APIView):
                 pass
 
         refresh = RefreshToken.for_user(user)
-        return Response({
+        response = Response({
             'access': str(refresh.access_token),
-            'refresh': str(refresh),
             'user': UserSerializer(user).data,
         })
+        set_refresh_cookie(response, str(refresh))
+        return response
 
 
 class WishlistView(generics.ListCreateAPIView):
@@ -246,7 +258,8 @@ class B2BApplyView(generics.CreateAPIView):
 
 
 class B2BDocumentView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [StaffSessionMFARequired]
 
     def get(self, request, pk):
         profile = get_object_or_404(B2BProfile, pk=pk)
@@ -265,6 +278,7 @@ class B2BDocumentView(APIView):
 
 class B2BSetupPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'password_setup'
 
     def post(self, request):
         uid = request.data.get('uid')
@@ -288,18 +302,27 @@ class B2BSetupPasswordView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            try:
+                validate_password(password, user=user)
+            except DjangoValidationError as exc:
+                return Response(
+                    {'password': list(exc.messages)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             user.set_password(password)
             user.save()
 
             from rest_framework_simplejwt.tokens import RefreshToken as JWTRefreshToken
             from .serializers import UserSerializer as US
             refresh = JWTRefreshToken.for_user(user)
-            return Response({
+            response = Response({
                 'message': 'Password set successfully!',
                 'access': str(refresh.access_token),
-                'refresh': str(refresh),
                 'user': US(user).data,
             })
+            set_refresh_cookie(response, str(refresh))
+            return response
 
         except (User.DoesNotExist, Exception):
             return Response(

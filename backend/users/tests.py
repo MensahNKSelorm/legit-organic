@@ -5,6 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import B2BProfile, User
 
@@ -204,12 +205,73 @@ class LoginGatingTests(TestCase):
         resp = self.client.post(TOKEN_URL, {'email': 'v@example.com', 'password': STRONG}, format='json')
         self.assertEqual(resp.status_code, 200)
         self.assertIn('access', resp.data)
+        self.assertNotIn('refresh', resp.data)
+        self.assertIn('refresh_token', resp.cookies)
+        self.assertTrue(resp.cookies['refresh_token']['httponly'])
 
-    def test_staff_can_obtain_token_even_if_unverified(self):
+    def test_refresh_cookie_rotates_without_exposing_refresh_token(self):
+        self._make('rotate@example.com', verified=True)
+        login = self.client.post(
+            TOKEN_URL,
+            {'email': 'rotate@example.com', 'password': STRONG},
+            format='json',
+        )
+        original = login.cookies['refresh_token'].value
+        self.client.cookies['refresh_token'] = original
+
+        response = self.client.post('/api/auth/token/refresh/', {}, format='json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.data)
+        self.assertNotIn('refresh', response.data)
+        self.assertIn('refresh_token', response.cookies)
+        self.assertNotEqual(original, response.cookies['refresh_token'].value)
+
+    def test_logout_revokes_cookie_and_clears_it(self):
+        self._make('logout@example.com', verified=True)
+        login = self.client.post(
+            TOKEN_URL,
+            {'email': 'logout@example.com', 'password': STRONG},
+            format='json',
+        )
+        self.client.cookies['refresh_token'] = login.cookies['refresh_token'].value
+
+        response = self.client.post('/api/auth/logout/', {}, format='json')
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.cookies['refresh_token']['max-age'], 0)
+
+    def test_cookie_auth_actions_reject_untrusted_origins(self):
+        self._make('origin@example.com', verified=True)
+        login = self.client.post(
+            TOKEN_URL,
+            {'email': 'origin@example.com', 'password': STRONG},
+            format='json',
+        )
+        self.client.cookies['refresh_token'] = login.cookies['refresh_token'].value
+
+        response = self.client.post(
+            '/api/auth/token/refresh/', {}, format='json',
+            HTTP_ORIGIN='https://attacker.example',
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_existing_staff_jwt_is_rejected_by_customer_api(self):
+        staff = self._make('existing-staff@example.com', verified=True, staff=True)
+        access = str(RefreshToken.for_user(staff).access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+
+        response = self.client.get('/api/users/me/')
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn('staff portal', str(response.data).lower())
+
+    def test_staff_must_use_secure_staff_portal(self):
         self._make('s@example.com', verified=False, staff=True)
         resp = self.client.post(TOKEN_URL, {'email': 's@example.com', 'password': STRONG}, format='json')
-        self.assertEqual(resp.status_code, 200)
-        self.assertIn('access', resp.data)
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('staff portal', str(resp.data).lower())
 
 
 class VerifyEmailTests(TestCase):

@@ -16,6 +16,7 @@ db.sqlite3
 venv/
 env/
 .env
+backend/.env.py
 # Licensed/reference nutrition workbook: local review only; never commit.
 WAFCT_2019.xlsx
 

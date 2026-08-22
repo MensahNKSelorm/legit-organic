@@ -84,7 +84,10 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
     setIsLoading(true);
     try {
       const checkout = guest
-        ? await api.orders.initializeGuestPayment(reference)
+        ? await api.orders.initializeGuestPayment(
+            reference,
+            sessionStorage.getItem(`guest_order_${reference}`) || "",
+          )
         : await api.orders.initializePayment(reference);
       window.location.assign(checkout.checkout_url);
     } catch (error) {
@@ -281,7 +284,11 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
           promo_code: promoCode || undefined,
         });
         setPendingSeevOrder(order.reference);
-        const checkout = await api.orders.initializeGuestPayment(order.reference);
+        sessionStorage.setItem(`guest_order_${order.reference}`, order.guest_access_token);
+        const checkout = await api.orders.initializeGuestPayment(
+          order.reference,
+          order.guest_access_token,
+        );
         window.location.assign(checkout.checkout_url);
         return;
       } catch (error) {

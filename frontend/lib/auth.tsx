@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useRouter } from 'next/navigation'
-import { api } from '@/lib/api'
+import { api, setAccessToken } from '@/lib/api'
 import type { User, B2BProfile, SalesRepProfile } from '@/types'
 
 // ---------------------------------------------------------------------------
@@ -81,32 +81,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // On mount: restore session from localStorage
+  // On mount: restore the short-lived access token from the HttpOnly refresh cookie.
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) {
-      Promise.resolve().then(() => setIsLoading(false))
-      return
-    }
-    api.users
-      .me()
+    api.auth.refresh()
+      .then(({ access }) => {
+        setAccessToken(access)
+        return api.users.me()
+      })
       .then((u) => {
         setUser(u)
         refreshB2B()
         refreshSalesRep()
       })
-      .catch(() => {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-      })
+      .catch(() => setAccessToken(null))
       .finally(() => setIsLoading(false))
   }, [refreshB2B, refreshSalesRep])
 
   const login = useCallback(
     async (email: string, password: string, returnTo?: string) => {
-      const { access, refresh } = await api.auth.login(email, password)
-      localStorage.setItem('access_token', access)
-      localStorage.setItem('refresh_token', refresh)
+      const { access } = await api.auth.login(email, password)
+      setAccessToken(access)
       const userData = await api.users.me()
       setUser(userData)
       refreshB2B()
@@ -142,8 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const logout = useCallback(() => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+    void api.auth.logout().catch(() => undefined)
+    setAccessToken(null)
     setUser(null)
     setB2bProfile(null)
     setSalesRepProfile(null)
@@ -157,8 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const googleLogin = useCallback(
     async (token: string, returnTo?: string) => {
       const data = await api.auth.googleAuth(token)
-      localStorage.setItem('access_token', data.access)
-      localStorage.setItem('refresh_token', data.refresh)
+      setAccessToken(data.access)
       setUser(data.user)
       refreshB2B()
       refreshSalesRep()
@@ -178,8 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeEmailVerification = useCallback(
     async (token: string) => {
       const data = await api.auth.verifyEmail(token)
-      localStorage.setItem('access_token', data.access)
-      localStorage.setItem('refresh_token', data.refresh)
+      setAccessToken(data.access)
       setUser(data.user)
       refreshB2B()
       refreshSalesRep()

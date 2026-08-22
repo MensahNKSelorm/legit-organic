@@ -43,8 +43,8 @@ class ProductionSecuritySettingsTests(SimpleTestCase):
         self.assertIs(s['SESSION_COOKIE_SECURE'], True)
         self.assertIs(s['CSRF_COOKIE_SECURE'], True)
         self.assertIs(s['SECURE_SSL_REDIRECT'], True)
-        self.assertEqual(s['SECURE_HSTS_SECONDS'], 300)
-        self.assertIs(s['SECURE_HSTS_INCLUDE_SUBDOMAINS'], False)
+        self.assertEqual(s['SECURE_HSTS_SECONDS'], 31536000)
+        self.assertIs(s['SECURE_HSTS_INCLUDE_SUBDOMAINS'], True)
         self.assertIs(s['SECURE_HSTS_PRELOAD'], False)
 
 

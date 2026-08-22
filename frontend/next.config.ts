@@ -1,6 +1,30 @@
 import type { NextConfig } from 'next';
 
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://challenges.cloudflare.com",
+  "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
+  "font-src 'self' data: https://cdn.fontshare.com",
+  "img-src 'self' data: blob: https://api.legitorganic.com",
+  "connect-src 'self' https://api.legitorganic.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://challenges.cloudflare.com http://localhost:8000 http://127.0.0.1:8000",
+  "frame-src https://accounts.google.com https://challenges.cloudflare.com https://www.google.com https://www.youtube.com https://youtube.com",
+].join('; ');
+
+const securityHeaders = [
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+];
+
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   // Production deploys build into a staging directory, then swap it into place.
   // This prevents the running server from serving HTML and CSS from different builds.
   distDir: process.env.NEXT_DIST_DIR || '.next',
@@ -28,6 +52,10 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
       {
         source: '/profile/:path*',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],

@@ -134,7 +134,9 @@ class CreateOrderSerializer(serializers.Serializer):
     guest_name = serializers.CharField(required=False, allow_blank=True, default='')
     guest_phone = serializers.CharField(required=False, allow_blank=True, default='')
     guest_email = serializers.CharField(required=False, allow_blank=True, default='')
-    order_source = serializers.CharField(required=False, default='whatsapp')
+    order_source = serializers.ChoiceField(
+        choices=('seevcash', 'whatsapp'), required=False, default='whatsapp',
+    )
     phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
     house_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
     street_address = serializers.CharField(required=False, allow_blank=True, write_only=True)
@@ -229,7 +231,11 @@ class CreateOrderSerializer(serializers.Serializer):
                     'city', 'delivery_region',
                 ])
             product_ids = [item['product_id'] for item in items_data]
-            products = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+            products = {
+                p.id: p for p in Product.objects.filter(
+                    id__in=product_ids, is_available=True,
+                )
+            }
             missing = [pid for pid in product_ids if pid not in products]
             if missing:
                 raise serializers.ValidationError(

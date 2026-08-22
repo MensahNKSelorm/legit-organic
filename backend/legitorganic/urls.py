@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
-from rest_framework_simplejwt.views import TokenRefreshView
-from users.tokens import VerifiedTokenObtainPairView
+from users.tokens import VerifiedTokenObtainPairView, ThrottledTokenRefreshView, LogoutView
 from users.staff_views import staff_setup
 from legitorganic.writing_assistant import writing_assistant
 from django.conf.urls.static import static
@@ -29,7 +28,8 @@ urlpatterns = [
 
     # JWT auth
     path('api/auth/token/', VerifiedTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/token/refresh/', ThrottledTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/logout/', LogoutView.as_view(), name='logout'),
 
     # Domain apps
     path('api/users/', include('users.urls')),

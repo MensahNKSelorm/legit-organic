@@ -13,6 +13,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authentication import SessionAuthentication
 from .models import Cart, CartItem, Order, OrderStatusEvent, SeevCashWebhookEvent
 from .promo_models import PromoCode
 from .serializers import (
@@ -21,6 +22,8 @@ from .serializers import (
 )
 from products.models import Product
 from legitorganic.seevcash import SeevCashError, create_checkout, verify_checkout
+from .access import issue_guest_order_token, valid_guest_order_token
+from security.api import StaffSessionMFARequired
 
 
 class CartView(APIView):
@@ -87,9 +90,15 @@ class CreateOrderView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         try:
             order = serializer.save()
-        except Exception as e:
-            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+        except Exception:
+            return Response(
+                {'detail': 'We could not create the order. Please check the details and try again.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        data = OrderSerializer(order).data
+        if order.user_id is None:
+            data['guest_access_token'] = issue_guest_order_token(order)
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 def _customer_name(order):
@@ -98,12 +107,19 @@ def _customer_name(order):
     return order.guest_name
 
 
+def _can_access_payment_order(request, order):
+    if order.user_id:
+        return request.user.is_authenticated and order.user_id == request.user.id
+    return valid_guest_order_token(order, request.data.get('guest_access_token', ''))
+
+
 class InitializePaymentView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'payment_initialize'
 
     def post(self, request, reference):
         order = get_object_or_404(Order.objects.prefetch_related('items__product'), reference=reference)
-        if order.user_id and (not request.user.is_authenticated or order.user_id != request.user.id):
+        if not _can_access_payment_order(request, order):
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
         if order.payment_status == 'success':
             return Response({'detail': 'This order is already paid.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -148,6 +164,7 @@ class InitializePaymentView(APIView):
 
 class VerifyPaymentView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'payment_verify'
 
     def post(self, request):
         session_reference = request.data.get('reference')
@@ -156,7 +173,7 @@ class VerifyPaymentView(APIView):
             return Response({'detail': 'Reference is required.'}, status=status.HTTP_400_BAD_REQUEST)
         filters = {'checkout_reference': session_reference} if session_reference else {'reference': order_reference}
         order = get_object_or_404(Order, **filters)
-        if order.user_id and (not request.user.is_authenticated or order.user_id != request.user.id):
+        if not _can_access_payment_order(request, order):
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         # Idempotency: an already-verified order returns its current state and is not
@@ -279,6 +296,7 @@ def _webhook_order_reference(payload):
 class SeevCashWebhookView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_scope = 'payment_webhook'
 
     def post(self, request):
         secret = settings.SEEVCASH_WEBHOOK_SECRET
@@ -312,6 +330,10 @@ class SeevCashWebhookView(APIView):
             event_id=event_id,
             defaults={'event_type': event_type, 'payload_hash': payload_hash},
         )
+        if not created and (
+            event.payload_hash != payload_hash or event.event_type != event_type
+        ):
+            return Response({'detail': 'Webhook event identity conflict.'}, status=409)
         if not created and event.status in ('processed', 'ignored'):
             return Response({'received': True})
 
@@ -343,6 +365,9 @@ class SeevCashWebhookView(APIView):
                     (order.final_amount * 100).to_integral_value(rounding=ROUND_HALF_UP)
                 )
                 payload_amount = _webhook_value(payload, {'finalamount', 'amount'})
+                payload_currency = _webhook_value(payload, {'currency'})
+                if payload_amount is None or not payload_currency:
+                    raise ValueError('Payment evidence is incomplete.')
                 try:
                     webhook_amount = Decimal(str(payload_amount))
                     if webhook_amount == order.final_amount:
@@ -351,9 +376,8 @@ class SeevCashWebhookView(APIView):
                         payload_amount = expected_minor
                     else:
                         payload_amount = int(webhook_amount)
-                except (TypeError, ValueError, ArithmeticError):
-                    payload_amount = expected_minor
-                payload_currency = _webhook_value(payload, {'currency'})
+                except (TypeError, ValueError, ArithmeticError) as exc:
+                    raise ValueError('Payment amount is invalid.') from exc
                 transaction_id = _webhook_value(
                     payload, {'transactionid', 'paymentid', 'id'}
                 )
@@ -363,7 +387,7 @@ class SeevCashWebhookView(APIView):
                 pdata = {
                     'status': 'success',
                     'reference': reference,
-                    'currency': str(payload_currency or settings.SEEVCASH_CURRENCY),
+                    'currency': str(payload_currency),
                     'amount': payload_amount,
                     'final_amount': payload_amount,
                     'id': str(transaction_id or event_id),
@@ -449,15 +473,10 @@ class OrderDetailView(generics.RetrieveAPIView):
 
 
 class ExportOrdersView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [StaffSessionMFARequired]
 
     def get(self, request):
-        if not request.user.is_staff:
-            return Response(
-                {'error': 'Staff access required'},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         date_from     = request.query_params.get('date_from')
         date_to       = request.query_params.get('date_to')
         status_filter = request.query_params.get('status')

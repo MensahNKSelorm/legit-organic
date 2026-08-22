@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
+from security.html import SafeHTMLRepresentationMixin
 from .models import (
     Recipe, RecipeIngredient, RecipeNutrition, RecipeStep, RecipePairing,
     UserRecipe, UserRecipeIngredient,
@@ -34,13 +35,15 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         return MinimalProductSerializer([match.product for match in matches], many=True, context=self.context).data
 
 
-class RecipeStepSerializer(serializers.ModelSerializer):
+class RecipeStepSerializer(SafeHTMLRepresentationMixin, serializers.ModelSerializer):
+    html_fields = ('instruction',)
     class Meta:
         model = RecipeStep
         fields = ['id', 'step_number', 'section', 'instruction', 'image']
 
 
-class RecipeListSerializer(serializers.ModelSerializer):
+class RecipeListSerializer(SafeHTMLRepresentationMixin, serializers.ModelSerializer):
+    html_fields = ('description',)
     total_time = serializers.SerializerMethodField()
 
     def get_total_time(self, obj):

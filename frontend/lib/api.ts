@@ -15,10 +15,13 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:800
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('access_token')
+let accessToken: string | null = null
+
+export function setAccessToken(token: string | null) {
+  accessToken = token
 }
+
+function getAccessToken(): string | null { return accessToken }
 
 /** Parse DRF error responses into a readable message. */
 async function parseError(res: Response): Promise<never> {
@@ -35,15 +38,19 @@ async function parseError(res: Response): Promise<never> {
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   })
   if (!res.ok) await parseError(res)
+  if (res.status === 204) return null as T
   return res.json()
 }
 
 async function fetchFormAPI<T>(endpoint: string, body: FormData): Promise<T> {
-  const res = await fetch(`${API_BASE}${endpoint}`, { method: 'POST', body })
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'POST', body, credentials: 'include',
+  })
   if (!res.ok) await parseError(res)
   return res.json()
 }
@@ -61,30 +68,31 @@ async function fetchWithAuth<T>(endpoint: string, options?: RequestInit): Promis
 
   let res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
+    credentials: 'include',
     cache: 'no-store',
     headers: buildHeaders(getAccessToken()),
   })
 
   // Attempt token refresh on 401
   if (res.status === 401 && typeof window !== 'undefined') {
-    const refreshToken = localStorage.getItem('refresh_token')
-    if (refreshToken) {
+    {
       const refreshRes = await fetch(`${API_BASE}/api/auth/token/refresh/`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh: refreshToken }),
+        body: JSON.stringify({}),
       })
       if (refreshRes.ok) {
         const { access } = await refreshRes.json() as { access: string }
-        localStorage.setItem('access_token', access)
+        setAccessToken(access)
         res = await fetch(`${API_BASE}${endpoint}`, {
           ...options,
+          credentials: 'include',
           cache: 'no-store',
           headers: buildHeaders(access),
         })
       } else {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
+        setAccessToken(null)
         throw new Error('Session expired. Please log in again.')
       }
     }
@@ -104,26 +112,26 @@ async function fetchBlobWithAuth(endpoint: string): Promise<Blob> {
   const withToken = (token: string | null) =>
     fetch(`${API_BASE}${endpoint}`, {
       cache: 'no-store',
+      credentials: 'include',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
 
   let res = await withToken(getAccessToken())
 
   if (res.status === 401 && typeof window !== 'undefined') {
-    const refreshToken = localStorage.getItem('refresh_token')
-    if (refreshToken) {
+    {
       const refreshRes = await fetch(`${API_BASE}/api/auth/token/refresh/`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh: refreshToken }),
+        body: JSON.stringify({}),
       })
       if (refreshRes.ok) {
         const { access } = await refreshRes.json() as { access: string }
-        localStorage.setItem('access_token', access)
+        setAccessToken(access)
         res = await withToken(access)
       } else {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
+        setAccessToken(null)
         throw new Error('Session expired. Please log in again.')
       }
     }
@@ -137,11 +145,11 @@ async function fetchBlobWithAuth(endpoint: string): Promise<Blob> {
 // Types for auth endpoints
 // ---------------------------------------------------------------------------
 
-export interface LoginResponse { access: string; refresh: string }
+export interface LoginResponse { access: string }
 /** Registration no longer returns tokens — the account must verify email first. */
 export interface RegisterResponse { user: User; email_verification_required?: boolean; detail?: string }
 /** Verify-email now logs the user in and returns a session. */
-export interface VerifyEmailResponse { message: string; access: string; refresh: string; user: User }
+export interface VerifyEmailResponse { message: string; access: string; user: User }
 export interface RegisterData {
   email: string
   first_name: string
@@ -222,11 +230,12 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }),
-    refresh: (refresh: string) =>
+    refresh: () =>
       fetchAPI<{ access: string }>('/api/auth/token/refresh/', {
         method: 'POST',
-        body: JSON.stringify({ refresh }),
+        body: JSON.stringify({}),
       }),
+    logout: () => fetchAPI<null>('/api/auth/logout/', { method: 'POST' }),
     register: (data: RegisterData) =>
       fetchAPI<RegisterResponse>('/api/users/register/', {
         method: 'POST',
@@ -240,7 +249,7 @@ export const api = {
         body: JSON.stringify({ email }),
       }),
     googleAuth: (token: string) =>
-      fetchAPI<{ access: string; refresh: string; user: User }>('/api/users/google/', {
+      fetchAPI<{ access: string; user: User }>('/api/users/google/', {
         method: 'POST',
         body: JSON.stringify({ token }),
       }),
@@ -282,7 +291,7 @@ export const api = {
     status: () => fetchWithAuth<B2BProfile | { status: null }>('/api/users/b2b/status/'),
     prices: () => fetchWithAuth<{ price_list: BusinessPriceList | null }>('/api/users/b2b/prices/'),
     setupPassword: (uid: string, token: string, password: string) =>
-      fetchAPI<{ message: string; access: string; refresh: string; user: import('@/types').User }>(
+      fetchAPI<{ message: string; access: string; user: import('@/types').User }>(
         '/api/users/b2b/setup-password/',
         { method: 'POST', body: JSON.stringify({ uid, token, password }) },
       ),
@@ -373,7 +382,7 @@ export const api = {
       order_source: string
       promo_code?: string
     }) =>
-      fetchAPI<Order>('/api/orders/create/', {
+      fetchAPI<Order & { guest_access_token: string }>('/api/orders/create/', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
@@ -381,14 +390,21 @@ export const api = {
       fetchWithAuth<{ checkout_url: string; reference: string }>(
         `/api/orders/${reference}/checkout/`, { method: 'POST' },
       ),
-    initializeGuestPayment: (reference: string) =>
+    initializeGuestPayment: (reference: string, guestAccessToken: string) =>
       fetchAPI<{ checkout_url: string; reference: string }>(
-        `/api/orders/${reference}/checkout/`, { method: 'POST' },
+        `/api/orders/${reference}/checkout/`, {
+          method: 'POST',
+          body: JSON.stringify({ guest_access_token: guestAccessToken }),
+        },
       ),
-    verifyPayment: (reference?: string, orderReference?: string) =>
+    verifyPayment: (reference?: string, orderReference?: string, guestAccessToken?: string) =>
       fetchWithAuth<Order>('/api/orders/verify-payment/', {
         method: 'POST',
-        body: JSON.stringify({ reference, order_reference: orderReference }),
+        body: JSON.stringify({
+          reference,
+          order_reference: orderReference,
+          guest_access_token: guestAccessToken,
+        }),
       }),
     validatePromo: (code: string, order_amount: number) =>
       fetchWithAuth<PromoCode>('/api/orders/validate-promo/', {

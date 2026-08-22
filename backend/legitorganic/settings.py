@@ -39,8 +39,8 @@ def production_security_settings(debug):
         'SESSION_COOKIE_SECURE': True,
         'CSRF_COOKIE_SECURE': True,
         'SECURE_SSL_REDIRECT': True,
-        'SECURE_HSTS_SECONDS': 300,
-        'SECURE_HSTS_INCLUDE_SUBDOMAINS': False,
+        'SECURE_HSTS_SECONDS': 31536000,
+        'SECURE_HSTS_INCLUDE_SUBDOMAINS': True,
         'SECURE_HSTS_PRELOAD': False,
     }
 
@@ -87,6 +87,7 @@ TURNSTILE_ENABLED = os.getenv('TURNSTILE_ENABLED', 'true').lower() == 'true' and
 # Email-verification token lifetime (hours). email_verification_sent_at is enforced
 # against this in VerifyEmailView.
 EMAIL_VERIFICATION_TOKEN_HOURS = int(os.getenv('EMAIL_VERIFICATION_TOKEN_HOURS', '24'))
+GUEST_ORDER_TOKEN_MAX_AGE = int(os.getenv('GUEST_ORDER_TOKEN_MAX_AGE', '604800'))
 WIGAL_API_KEY = os.getenv('WIGAL_API_KEY', '')
 WIGAL_SENDER_ID = os.getenv('WIGAL_SENDER_ID', 'LegitGH')
 WIGAL_USERNAME = os.getenv('WIGAL_USERNAME', '')
@@ -122,6 +123,7 @@ INSTALLED_APPS = [
     # third-party
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     # unfold (must come before django.contrib.admin)
     'unfold',
@@ -544,6 +546,12 @@ CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200,http://127.0.0.1:4200"
     ).split(",")
 ]
+CORS_ALLOW_CREDENTIALS = True
+
+SIMPLE_JWT = {
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
 
 
 ROOT_URLCONF = 'legitorganic.urls'
@@ -567,7 +575,7 @@ WSGI_APPLICATION = 'legitorganic.wsgi.application'
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "users.authentication.CustomerJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
@@ -586,6 +594,13 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "register": "5/hour",
         "login": "10/min",
+        "google_auth": "10/min",
+        "token_refresh": "30/min",
+        "password_setup": "5/hour",
+        "payment_initialize": "10/min",
+        "payment_verify": "20/min",
+        "payment_webhook": "120/min",
+        "public_lookup": "30/min",
         "resend_verification": "3/hour",
         "recipe_note": "20/hour",
         "b2b_apply": "5/hour",

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from security.html import SafeHTMLRepresentationMixin
 from .models import BlogCategory, BlogPost
 
 
@@ -26,6 +27,7 @@ class BlogPostListSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'slug', 'created_at']
 
 
-class BlogPostDetailSerializer(BlogPostListSerializer):
+class BlogPostDetailSerializer(SafeHTMLRepresentationMixin, BlogPostListSerializer):
+    html_fields = ('content',)
     class Meta(BlogPostListSerializer.Meta):
         fields = BlogPostListSerializer.Meta.fields + ['content', 'updated_at']

@@ -11,6 +11,7 @@ git pull origin main
 # Backend
 cd backend
 source venv/bin/activate
+python -m pip install --upgrade pip==26.2.1
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py setup_groups
@@ -46,7 +47,7 @@ systemctl enable --now legitorganic-subscriptions.timer
 
 # Frontend
 cd ../frontend
-npm install
+npm ci
 rm -rf -- .next-build
 NEXT_DIST_DIR=.next-build npm run build
 

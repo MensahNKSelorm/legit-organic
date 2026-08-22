@@ -24,6 +24,7 @@ from .models import (
     SeevCashWebhookEvent,
 )
 from .promo_models import PromoCode
+from .access import issue_guest_order_token
 
 CREATE_URL = '/api/orders/create/'
 VERIFY_URL = '/api/orders/verify-payment/'
@@ -173,7 +174,12 @@ class SeevCashWebhookTests(TestCase):
 
     def post_event(self, event_id='evt-1', event_type='payment.succeeded', timestamp=None,
                    signature_secret='whsec_test', payload=None):
-        payload = payload or {'data': {'reference': 'SEEV-WEBHOOK'}}
+        payload = payload or {
+            'data': {
+                'reference': 'SEEV-WEBHOOK', 'amount': 5000,
+                'currency': 'GHS', 'paymentId': 'txn-webhook',
+            }
+        }
         raw = json.dumps(payload, separators=(',', ':')).encode()
         timestamp = str(timestamp if timestamp is not None else int(time.time()))
         digest = hmac.new(
@@ -237,13 +243,28 @@ class SeevCashWebhookTests(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'success')
 
-    @patch('orders.views.verify_checkout')
-    def test_same_delivery_and_retry_delivery_are_idempotent(self, mock_verify):
-        mock_verify.return_value = seevcash_ok(reference='SEEV-WEBHOOK')
+    def test_signed_success_rejects_missing_payment_evidence(self):
+        response = self.post_event(payload={'data': {'reference': 'SEEV-WEBHOOK'}})
+        self.assertEqual(response.status_code, 502)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, 'pending')
+
+    def test_duplicate_event_id_with_different_payload_is_rejected(self):
+        self.assertEqual(self.post_event(event_id='evt-conflict').status_code, 200)
+        response = self.post_event(
+            event_id='evt-conflict',
+            payload={
+                'data': {
+                    'reference': 'SEEV-WEBHOOK', 'amount': 5100,
+                    'currency': 'GHS',
+                }
+            },
+        )
+        self.assertEqual(response.status_code, 409)
+
+    def test_same_delivery_and_retry_delivery_are_idempotent(self):
         self.assertEqual(self.post_event(event_id='evt-first').status_code, 200)
-        first_verifications = mock_verify.call_count
         self.assertEqual(self.post_event(event_id='evt-first').status_code, 200)
-        self.assertEqual(mock_verify.call_count, first_verifications)
         self.assertEqual(self.post_event(event_id='evt-retry').status_code, 200)
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'success')
@@ -255,6 +276,36 @@ class SeevCashWebhookTests(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'failed')
 
+
+class GuestPaymentAccessTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.order = Order.objects.create(
+            reference='LO-GUEST-SECURE', delivery_address='Accra',
+            guest_name='Guest', guest_email='guest@example.com',
+            guest_phone='0244123456', total_amount=Decimal('50.00'),
+            payment_status='pending', status='pending', order_source='seevcash',
+            payment_provider='seevcash', checkout_reference='SEEV-GUEST',
+        )
+
+    def test_guest_reference_alone_cannot_access_payment(self):
+        response = self.client.post('/api/orders/LO-GUEST-SECURE/checkout/', {}, format='json')
+        self.assertEqual(response.status_code, 404)
+
+    @override_settings(SEEVCASH_SECRET_KEY='sandbox-key')
+    @patch('orders.views.create_checkout')
+    def test_signed_guest_token_allows_checkout(self, mock_create):
+        from legitorganic.seevcash import CheckoutSession
+        mock_create.return_value = CheckoutSession(
+            reference='SEEV-GUEST-NEW', checkout_url='https://pay.seevplus.com/test',
+            status='pending',
+        )
+        response = self.client.post(
+            '/api/orders/LO-GUEST-SECURE/checkout/',
+            {'guest_access_token': issue_guest_order_token(self.order)},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
 
 class ReceiptAuthTests(TestCase):
     def setUp(self):

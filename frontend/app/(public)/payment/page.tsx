@@ -21,7 +21,13 @@ function PaymentResult() {
       return;
     }
     api.orders
-      .verifyPayment(reference, orderReference)
+      .verifyPayment(
+        reference,
+        orderReference,
+        orderReference
+          ? sessionStorage.getItem(`guest_order_${orderReference}`) || undefined
+          : undefined,
+      )
       .then(() => setMessage("Payment confirmed. Your order is now being processed."))
       .catch((reason) => {
         setFailed(true);

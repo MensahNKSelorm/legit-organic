@@ -1,9 +1,12 @@
 """Small server-side client for the SeevCash hosted Checkout API."""
 
 from dataclasses import dataclass
+import logging
 
 import requests
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 class SeevCashError(Exception):
@@ -25,8 +28,8 @@ def _data(response):
     except ValueError as exc:
         raise SeevCashError('SeevCash returned an invalid response.') from exc
     if not response.ok or not payload.get('success') or not isinstance(payload.get('data'), dict):
-        message = payload.get('message') or payload.get('error') or 'SeevCash rejected the request.'
-        raise SeevCashError(str(message))
+        logger.warning('SeevCash request rejected with HTTP %s', response.status_code)
+        raise SeevCashError('SeevCash rejected the request. Please try again.')
     return payload['data']
 
 
@@ -72,9 +75,12 @@ def create_checkout(*, recipient, amount_minor, redirect_url, meta, idempotency_
 
 
 def verify_checkout(session_reference):
+    if not settings.SEEVCASH_SECRET_KEY:
+        raise SeevCashError('SeevCash payments are not configured.')
     try:
         response = requests.get(
             f'{settings.SEEVCASH_BASE_URL}/api/v1/developer/payments/{session_reference}',
+            headers={'Authorization': f'Bearer {settings.SEEVCASH_SECRET_KEY}'},
             timeout=settings.SEEVCASH_TIMEOUT,
         )
     except requests.RequestException as exc:

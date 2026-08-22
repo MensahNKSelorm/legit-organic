@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from security.html import SafeHTMLRepresentationMixin
 from .models import Badge, Category, Product, ProductImage, Region
 
 
@@ -36,7 +37,8 @@ class ProductImageSerializer(serializers.ModelSerializer):
         return None
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(SafeHTMLRepresentationMixin, serializers.ModelSerializer):
+    html_fields = ('description', 'storage_tips', 'nutritional_info')
     category = CategorySerializer(read_only=True)
     region = RegionSerializer(read_only=True)
     badge = BadgeSerializer(read_only=True)

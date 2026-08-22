@@ -22,6 +22,7 @@ from .serializers import (
 
 class ValidateReferralCodeView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'public_lookup'
 
     def get(self, request):
         code = request.query_params.get('code', '').strip().upper()
