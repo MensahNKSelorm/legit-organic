@@ -9,7 +9,9 @@ import type { BusinessPriceList, FoodSubscription, Order, WholesaleQuote } from 
 
 const ORDER_LABELS: Record<Order['status'], string> = {
   pending: 'Pending', whatsapp_pending: 'Awaiting payment', paid: 'Paid',
-  processing: 'Preparing', shipped: 'On the way', delivered: 'Delivered', cancelled: 'Cancelled',
+  processing: 'Preparing', ready_for_dispatch: 'Packed',
+  out_for_delivery: 'Out for delivery', shipped: 'On the way',
+  delivered: 'Delivered', cancelled: 'Cancelled',
 }
 
 export default function B2BDashboardPage() {

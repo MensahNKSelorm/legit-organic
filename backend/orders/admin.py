@@ -1,11 +1,15 @@
 from django.contrib import admin
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.dateparse import parse_date
+from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Cart, CartItem, Order, OrderItem
+from .models import (
+    Cart, CartItem, Order, OrderItem, OrderNotificationDelivery, OrderStatusEvent,
+)
 from .promo_models import PromoCode
 from .forms import OrderAdminForm
 
@@ -13,7 +17,7 @@ from .forms import OrderAdminForm
 @admin.action(description='📊 Export selected orders to Excel')
 def export_to_excel(modeladmin, request, queryset):
     from .exports import generate_orders_excel
-    orders = queryset.select_related(
+    orders = queryset.filter(is_test=False).select_related(
         'user', 'promo_code'
     ).prefetch_related('items', 'items__product')
     from security.audit import record_event
@@ -68,14 +72,90 @@ class OrderItemInline(TabularInline):
         return False
 
 
+class OrderStatusEventInline(TabularInline):
+    model = OrderStatusEvent
+    extra = 0
+    fields = ['created_at', 'from_status', 'to_status', 'actor', 'source', 'note']
+    readonly_fields = fields
+    ordering = ['-created_at']
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class OrderNotificationDeliveryInline(TabularInline):
+    model = OrderNotificationDelivery
+    extra = 0
+    fields = ['created_at', 'event', 'channel', 'status', 'attempts', 'error']
+    readonly_fields = fields
+    ordering = ['-created_at']
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+def _transition_selected(modeladmin, request, queryset, target):
+    from .services import transition_order
+    moved = 0
+    skipped = []
+    for order in queryset:
+        try:
+            _, changed = transition_order(order.pk, target, actor=request.user, source='admin_action')
+            moved += int(changed)
+        except ValidationError as exc:
+            skipped.append(f'{order.reference}: {exc.messages[0]}')
+    if moved:
+        modeladmin.message_user(request, f'{moved} order(s) updated.', messages.SUCCESS)
+    if skipped:
+        modeladmin.message_user(request, ' '.join(skipped[:5]), messages.WARNING)
+
+
+@admin.action(description='Mark selected orders ready for dispatch')
+def mark_ready_for_dispatch(modeladmin, request, queryset):
+    _transition_selected(modeladmin, request, queryset, 'ready_for_dispatch')
+
+
+@admin.action(description='Dispatch selected orders and send delivery PINs')
+def dispatch_orders(modeladmin, request, queryset):
+    _transition_selected(modeladmin, request, queryset, 'out_for_delivery')
+
+
+@admin.action(description='Retry failed customer notifications')
+def retry_customer_notifications(modeladmin, request, queryset):
+    from .notifications import retry_failed_order_notifications
+    retried = 0
+    for order in queryset:
+        events = order.notification_deliveries.filter(
+            status='failed'
+        ).values_list('event', flat=True).distinct()
+        for event in events:
+            result = retry_failed_order_notifications(order.pk, event)
+            retried += sum(value is True for value in result.values())
+    if retried:
+        modeladmin.message_user(
+            request, f'{retried} notification delivery attempt(s) succeeded.', messages.SUCCESS
+        )
+    else:
+        modeladmin.message_user(request, 'No failed notifications were retried.', messages.INFO)
+
+
 @admin.register(Order)
 class OrderAdmin(ModelAdmin):
     form = OrderAdminForm
     change_list_template = 'admin/orders/order/change_list.html'
-    actions = [export_to_excel]
-    list_display = ['reference', 'get_customer', 'status', 'payment_status',
+    actions = [
+        mark_ready_for_dispatch, dispatch_orders,
+        retry_customer_notifications, export_to_excel,
+    ]
+    list_display = ['reference', 'get_customer', 'status', 'payment_status', 'is_test',
                     'order_source', 'total_amount', 'created_at']
-    list_filter = ['status', 'payment_status', 'order_source', 'created_at']
+    list_filter = ['is_test', 'status', 'payment_status', 'order_source', 'created_at']
     search_fields = ['reference', 'user__email', 'user__first_name', 'user__last_name',
                      'guest_name', 'guest_phone', 'guest_email', 'delivery_address']
     list_editable = []
@@ -91,7 +171,9 @@ class OrderAdmin(ModelAdmin):
         'payment_report_attempts', 'delivery_report_attempts',
         'payment_report_error', 'delivery_report_error',
     ]
-    inlines = [OrderItemInline]
+    inlines = [
+        OrderItemInline, OrderStatusEventInline, OrderNotificationDeliveryInline,
+    ]
     fieldsets = (
         ('Order Info', {
             'fields': (
@@ -99,6 +181,7 @@ class OrderAdmin(ModelAdmin):
                 'guest_name', 'guest_email', 'guest_phone',
                 'total_amount', 'discount_amount', 'promo_code',
                 'delivery_address',
+                'is_test', 'test_order_reason',
                 'payment_report_sent_at', 'delivery_report_sent_at',
                 'payment_report_attempts', 'delivery_report_attempts',
                 'payment_report_error', 'delivery_report_error',
@@ -106,10 +189,16 @@ class OrderAdmin(ModelAdmin):
         }),
         ('Status', {
             'fields': (
-                'status', 'payment_status', 'payment_change_reason',
+                'status', 'status_note', 'payment_status', 'payment_change_reason',
                 'current_password', 'otp_token',
             ),
             'description': 'Fulfilment and payment authority are enforced separately.',
+        }),
+        ('Delivery verification', {
+            'fields': (
+                'delivery_confirmation_action', 'delivery_pin_expires_at',
+                'delivery_pin_attempts', 'delivery_confirmed_at',
+            ),
         }),
         ('Payment', {
             'fields': (
@@ -125,7 +214,9 @@ class OrderAdmin(ModelAdmin):
     )
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        if not request.user.is_superuser:
+            return False
+        return obj is None or obj.may_be_deleted
 
     def has_add_permission(self, request):
         return False
@@ -137,6 +228,12 @@ class OrderAdmin(ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
+        fields.extend([
+            'delivery_confirmation_action', 'delivery_pin_expires_at',
+            'delivery_pin_attempts', 'delivery_confirmed_at',
+        ])
+        if not request.user.is_superuser:
+            fields.extend(['is_test'])
         if obj and (obj.order_source in ('paystack', 'seevcash', 'subscription') or not self._can_correct_payment(request)):
             fields.extend(['payment_status'])
         return list(dict.fromkeys(fields))
@@ -168,14 +265,30 @@ class OrderAdmin(ModelAdmin):
         if old and obj.payment_status != old.payment_status and not self._can_correct_payment(request):
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied('You cannot change payment status.')
+        if old and obj.status != old.status and obj.status == 'out_for_delivery':
+            obj.issue_delivery_pin()
         super().save_model(request, obj, form, change)
         if old and obj.status != old.status:
+            OrderStatusEvent.objects.create(
+                order=obj, from_status=old.status, to_status=obj.status,
+                actor=request.user, source='admin',
+                note=(form.cleaned_data.get('status_note') or '')[:300],
+            )
             from security.audit import record_event
             from security.models import AuditEvent
             record_event(
                 action='order.status_changed', request=request, target=obj,
                 severity=AuditEvent.Severity.SENSITIVE,
                 before={'status': old.status}, after={'status': obj.status},
+            )
+        if old and obj.is_test != old.is_test:
+            from security.audit import record_event
+            from security.models import AuditEvent
+            record_event(
+                action='order.test_classification_changed', request=request, target=obj,
+                severity=AuditEvent.Severity.SENSITIVE,
+                reason=form.cleaned_data.get('test_order_reason', ''),
+                before={'is_test': old.is_test}, after={'is_test': obj.is_test},
             )
         if old and obj.payment_status != old.payment_status:
             from security.audit import record_event
@@ -200,8 +313,75 @@ class OrderAdmin(ModelAdmin):
                 self.admin_site.admin_view(self.export_all_view),
                 name='orders-export-all',
             ),
+            path(
+                '<path:object_id>/confirm-delivery/',
+                self.admin_site.admin_view(self.confirm_delivery_view),
+                name='orders-confirm-delivery',
+            ),
         ]
         return custom_urls + urls
+
+    @admin.display(description='Delivery action')
+    def delivery_confirmation_action(self, obj):
+        if not obj or obj.status != 'out_for_delivery':
+            return 'Available after the order is dispatched.'
+        url = reverse('admin:orders-confirm-delivery', args=[obj.pk])
+        return format_html(
+            '<a class="button" href="{}">Confirm delivery with PIN</a>', url
+        )
+
+    def confirm_delivery_view(self, request, object_id):
+        order = get_object_or_404(Order, pk=object_id)
+        if not self.has_change_permission(request, order):
+            raise PermissionDenied
+        if request.method == 'POST':
+            from .services import transition_order
+            try:
+                transition_order(
+                    order.pk, 'delivered', actor=request.user,
+                    source='delivery_pin', delivery_pin=request.POST.get('pin', ''),
+                    note=request.POST.get('note', ''),
+                )
+            except ValidationError as exc:
+                messages.error(request, exc.messages[0])
+            else:
+                messages.success(request, f'{order.reference} marked delivered.')
+                return redirect('admin:orders_order_change', order.pk)
+            order.refresh_from_db()
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Confirm delivery', 'order': order,
+            'opts': self.model._meta,
+        }
+        return render(request, 'admin/orders/order/confirm_delivery.html', context)
+
+    def delete_model(self, request, obj):
+        if not self.has_delete_permission(request, obj):
+            raise PermissionDenied('Only test or unsuccessful orders may be deleted.')
+        self._record_deletion(request, [obj])
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        orders = list(queryset)
+        if any(not order.may_be_deleted for order in orders):
+            raise PermissionDenied('The selection contains a successful real order.')
+        self._record_deletion(request, orders)
+        super().delete_queryset(request, queryset)
+
+    def _record_deletion(self, request, orders):
+        from security.audit import record_event
+        from security.models import AuditEvent
+        for order in orders:
+            record_event(
+                action='order.deleted', request=request, target=order,
+                severity=AuditEvent.Severity.CRITICAL,
+                reason='Test order cleanup' if order.is_test else 'Unsuccessful order cleanup',
+                metadata={
+                    'reference': order.reference, 'status': order.status,
+                    'payment_status': order.payment_status,
+                    'amount': str(order.final_amount), 'is_test': order.is_test,
+                },
+            )
 
     def export_all_view(self, request):
         from .exports import generate_orders_excel
@@ -229,7 +409,7 @@ class OrderAdmin(ModelAdmin):
             'user', 'promo_code'
         ).prefetch_related(
             'items', 'items__product'
-        ).order_by('-created_at')
+        ).filter(is_test=False).order_by('-created_at')
         if date_from:
             orders = orders.filter(created_at__date__gte=date_from)
         if date_to:

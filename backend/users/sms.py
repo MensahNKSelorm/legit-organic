@@ -43,7 +43,7 @@ def send_sms(phone_number: str, message: str) -> bool:
 
         data = response.json()
         print('Wigal SMS response:', data)
-        return response.status_code == 200
+        return response.status_code == 200 and data.get('status') == 'ACCEPTD'
 
     except Exception as e:
         print('Wigal SMS error:', e)
@@ -57,11 +57,17 @@ def send_order_status_sms(order):
     elif order.guest_phone:
         phone = order.guest_phone
     else:
-        return
+        return False
 
+    delivery_pin = getattr(order, '_delivery_pin_plaintext', '')
     STATUS_MESSAGES = {
         'paid': f'Legit Organic: Payment confirmed for order {order.reference}. We are preparing your organic produce. Thank you!',
         'processing': f'Legit Organic: Your order {order.reference} is being prepared. We will notify you when it ships.',
+        'ready_for_dispatch': f'Legit Organic: Your order {order.reference} is packed and ready for dispatch.',
+        'out_for_delivery': (
+            f'Legit Organic: Your order {order.reference} is out for delivery. '
+            f'Your delivery PIN is {delivery_pin}. Share it only after receiving your order.'
+        ),
         'shipped': f'Legit Organic: Great news! Your order {order.reference} is on its way. Expected delivery: 1-3 business days.',
         'delivered': f'Legit Organic: Your order {order.reference} has been delivered. Enjoy your fresh organic produce! Thank you for choosing us.',
         'cancelled': f'Legit Organic: Your order {order.reference} has been cancelled. Contact us at hello@legitorganic.com for assistance.',
@@ -69,6 +75,6 @@ def send_order_status_sms(order):
 
     message = STATUS_MESSAGES.get(order.status)
     if not message:
-        return
+        return False
 
-    send_sms(phone, message)
+    return send_sms(phone, message)

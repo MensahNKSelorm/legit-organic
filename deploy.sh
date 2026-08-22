@@ -26,6 +26,15 @@ install -m 0644 ../deploy/systemd/legitorganic-order-reports.timer \
 systemctl daemon-reload
 systemctl enable --now legitorganic-order-reports.timer
 
+# Persist and retry failed customer email/SMS deliveries. Dispatch retries
+# rotate the delivery PIN and resend both channels with the new valid code.
+install -m 0644 ../deploy/systemd/legitorganic-order-notifications.service \
+    /etc/systemd/system/legitorganic-order-notifications.service
+install -m 0644 ../deploy/systemd/legitorganic-order-notifications.timer \
+    /etc/systemd/system/legitorganic-order-notifications.timer
+systemctl daemon-reload
+systemctl enable --now legitorganic-order-notifications.timer
+
 # Generate customer-approved renewal orders, close expired payment windows,
 # deliver scheduled price notices, and apply only safely notified changes.
 install -m 0644 ../deploy/systemd/legitorganic-subscriptions.service \

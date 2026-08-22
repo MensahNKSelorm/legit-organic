@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         max_attempts = getattr(settings, 'ORDER_REPORT_MAX_ATTEMPTS', 10)
-        candidates = Order.objects.filter(
+        candidates = Order.objects.filter(is_test=False).filter(
             Q(
                 payment_status='success', payment_report_sent_at__isnull=True,
                 payment_report_attempts__lt=max_attempts,

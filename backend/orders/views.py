@@ -13,7 +13,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Cart, CartItem, Order, SeevCashWebhookEvent
+from .models import Cart, CartItem, Order, OrderStatusEvent, SeevCashWebhookEvent
 from .promo_models import PromoCode
 from .serializers import (
     CartSerializer, CartItemSerializer,
@@ -216,10 +216,15 @@ def _complete_verified_order(order_id, pdata):
         order = Order.objects.select_for_update().get(pk=order_id)
         if order.payment_status == 'success':
             return order, False
+        old_status = order.status
         order.provider_transaction_id = str(pdata.get('id', '') or '')
         order.payment_status = 'success'
         order.status = 'processing'
         order.save(update_fields=['payment_status', 'status', 'provider_transaction_id'])
+        OrderStatusEvent.objects.create(
+            order=order, from_status=old_status, to_status='processing',
+            source='payment_provider', note='Payment verified.',
+        )
 
     if hasattr(order, 'subscription_week'):
         from subscriptions.services import finalize_paid_week
@@ -464,7 +469,7 @@ class ExportOrdersView(APIView):
             'user', 'promo_code'
         ).prefetch_related(
             'items', 'items__product'
-        ).order_by('-created_at')
+        ).filter(is_test=False).order_by('-created_at')
 
         if date_from:
             orders = orders.filter(created_at__date__gte=date_from)

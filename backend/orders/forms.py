@@ -4,6 +4,16 @@ from .models import Order
 
 
 class OrderAdminForm(forms.ModelForm):
+    status_note = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
+        help_text='Optional internal note explaining this fulfilment change.',
+    )
+    test_order_reason = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
+        help_text='Required when marking an order as test data.',
+    )
     payment_change_reason = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={'rows': 3}),
@@ -34,6 +44,26 @@ class OrderAdminForm(forms.ModelForm):
         if not self.instance.pk:
             return cleaned
         old = Order.objects.get(pk=self.instance.pk)
+        new_status = cleaned.get('status', old.status)
+        if new_status != old.status:
+            if not old.can_transition_to(new_status):
+                self.add_error(
+                    'status',
+                    f'Order cannot move from {old.get_status_display()} to '
+                    f'{dict(Order.STATUS_CHOICES).get(new_status, new_status)}.',
+                )
+            if new_status in {'processing', 'ready_for_dispatch', 'out_for_delivery', 'delivered'} and old.payment_status != 'success':
+                self.add_error('status', 'Only a successfully paid order can enter fulfilment.')
+            if new_status == 'delivered':
+                self.add_error('status', 'Use the delivery PIN confirmation action to mark an order delivered.')
+
+        new_is_test = cleaned.get('is_test', old.is_test)
+        if new_is_test != old.is_test:
+            if self.request is None or not self.request.user.is_superuser:
+                self.add_error('is_test', 'Only the Owner can classify test orders.')
+            if new_is_test and not (cleaned.get('test_order_reason') or '').strip():
+                self.add_error('test_order_reason', 'Explain why this is test data.')
+
         new_payment = cleaned.get('payment_status', old.payment_status)
         if new_payment != old.payment_status:
             if old.order_source in ('paystack', 'seevcash', 'subscription'):

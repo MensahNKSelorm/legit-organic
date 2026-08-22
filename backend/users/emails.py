@@ -320,6 +320,26 @@ def send_order_status_email(order):
             'message': f'Your order {order.reference} is currently being processed. Our team is carefully selecting and packaging your fresh organic produce.',
             'next_step': 'We will notify you once your order is on its way.',
         },
+        'ready_for_dispatch': {
+            'subject': f'Order Packed — {order.reference}',
+            'emoji': 'U0001f4e6',
+            'title': 'Your Order is Packed',
+            'color': '#D4A800',
+            'message': f'Your order {order.reference} has been packed and is waiting for dispatch.',
+            'next_step': 'We will send your delivery PIN when the order leaves with the driver.',
+        },
+        'out_for_delivery': {
+            'subject': f'Out for Delivery — {order.reference}',
+            'emoji': 'U0001f69a',
+            'title': 'Your Order is On Its Way',
+            'color': '#315A80',
+            'message': (
+                f'Your order {order.reference} is out for delivery. Your delivery PIN is '
+                f'<strong>{escape(getattr(order, "_delivery_pin_plaintext", ""))}</strong>. '
+                'Share it with the driver only after you receive your order.'
+            ),
+            'next_step': 'Please ensure someone is available to receive the delivery.',
+        },
         'shipped': {
             'subject': f'Order On Its Way — {order.reference}',
             'emoji': '\U0001f69a',

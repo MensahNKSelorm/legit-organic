@@ -24,7 +24,7 @@ def dashboard_callback(request, context):
     from recipes.models import RecipeIngredient
     from subscriptions.models import SubscriptionPlanPriceChange, SubscriptionPriceNotice, SubscriptionWeek
 
-    all_orders  = Order.objects.all()
+    all_orders  = Order.objects.filter(is_test=False)
     paid_orders = all_orders.exclude(status__in=['whatsapp_pending', 'cancelled'])
 
     # ── Revenue KPIs ─────────────────────────────────────────────────────────

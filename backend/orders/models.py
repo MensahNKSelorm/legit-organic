@@ -1,7 +1,11 @@
 import logging
+import secrets
+from datetime import timedelta
 
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.hashers import check_password, make_password
+from django.utils import timezone
 from .promo_models import PromoCode  # noqa: F401 — registers with orders app
 
 logger = logging.getLogger(__name__)
@@ -38,7 +42,9 @@ class Order(models.Model):
         ('whatsapp_pending', 'WhatsApp Pending - Awaiting Payment'),
         ('paid', 'Paid'),
         ('processing', 'Processing'),
-        ('shipped', 'Shipped'),
+        ('ready_for_dispatch', 'Ready for dispatch'),
+        ('out_for_delivery', 'Out for delivery'),
+        ('shipped', 'Shipped (legacy)'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     ]
@@ -84,6 +90,14 @@ class Order(models.Model):
     delivery_report_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
     payment_report_error = models.CharField(max_length=500, blank=True, editable=False)
     delivery_report_error = models.CharField(max_length=500, blank=True, editable=False)
+    is_test = models.BooleanField(
+        default=False,
+        help_text='Test orders are excluded from commercial reporting and may be deleted by the Owner.',
+    )
+    delivery_pin_hash = models.CharField(max_length=128, blank=True, editable=False)
+    delivery_pin_expires_at = models.DateTimeField(null=True, blank=True, editable=False)
+    delivery_pin_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
+    delivery_confirmed_at = models.DateTimeField(null=True, blank=True, editable=False)
     order_source = models.CharField(
         max_length=20,
         choices=[
@@ -98,6 +112,41 @@ class Order(models.Model):
     @property
     def final_amount(self):
         return self.total_amount - self.discount_amount
+
+    ALLOWED_TRANSITIONS = {
+        'pending': {'processing', 'cancelled'},
+        'whatsapp_pending': {'paid', 'processing', 'cancelled'},
+        'paid': {'processing', 'cancelled'},
+        'processing': {'ready_for_dispatch', 'cancelled'},
+        'ready_for_dispatch': {'out_for_delivery', 'processing', 'cancelled'},
+        'out_for_delivery': {'delivered', 'ready_for_dispatch'},
+        # Existing orders may still carry this pre-workflow state.
+        'shipped': {'delivered', 'out_for_delivery'},
+        'delivered': set(),
+        'cancelled': set(),
+    }
+
+    def can_transition_to(self, status):
+        return status == self.status or status in self.ALLOWED_TRANSITIONS.get(self.status, set())
+
+    def issue_delivery_pin(self):
+        pin = f'{secrets.randbelow(1_000_000):06d}'
+        self.delivery_pin_hash = make_password(pin)
+        self.delivery_pin_expires_at = timezone.now() + timedelta(hours=24)
+        self.delivery_pin_attempts = 0
+        self._delivery_pin_plaintext = pin
+        return pin
+
+    def check_delivery_pin(self, pin):
+        if not self.delivery_pin_hash or not self.delivery_pin_expires_at:
+            return False
+        if timezone.now() > self.delivery_pin_expires_at or self.delivery_pin_attempts >= 5:
+            return False
+        return check_password(str(pin).strip(), self.delivery_pin_hash)
+
+    @property
+    def may_be_deleted(self):
+        return self.is_test or self.payment_status in {'pending', 'failed', 'expired'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,7 +164,7 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
         report_events = []
-        if is_update and payment_became_successful:
+        if is_update and payment_became_successful and not self.is_test:
             report_events.append('payment_success')
         if is_update and status_changed and self.status == 'delivered':
             report_events.append('delivered')
@@ -127,19 +176,11 @@ class Order(models.Model):
             )
 
         if status_changed and self.status in [
-            'paid', 'processing', 'shipped', 'delivered', 'cancelled'
+            'paid', 'processing', 'ready_for_dispatch', 'out_for_delivery',
+            'shipped', 'delivered', 'cancelled'
         ]:
-            try:
-                from users.emails import send_order_status_email
-                send_order_status_email(self)
-            except Exception:
-                pass
-
-            try:
-                from users.sms import send_order_status_sms
-                send_order_status_sms(self)
-            except Exception:
-                pass
+            from .notifications import deliver_order_status_notifications
+            deliver_order_status_notifications(self)
 
         if (
             is_update
@@ -147,6 +188,7 @@ class Order(models.Model):
             and old_status != 'processing'
             and self.status == 'processing'
             and self.payment_status == 'success'
+            and not self.is_test
             and self.user is not None
         ):
             try:
@@ -266,3 +308,50 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} × {self.quantity}"
+
+
+class OrderStatusEvent(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_events')
+    from_status = models.CharField(max_length=20, blank=True)
+    to_status = models.CharField(max_length=20)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='order_status_events',
+    )
+    source = models.CharField(max_length=30, default='admin')
+    note = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.order.reference}: {self.from_status} → {self.to_status}'
+
+
+class OrderNotificationDelivery(models.Model):
+    CHANNEL_CHOICES = [('email', 'Email'), ('sms', 'SMS')]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'), ('sent', 'Sent'), ('failed', 'Failed'),
+        ('skipped', 'Skipped'), ('superseded', 'Superseded'),
+        ('exhausted', 'Retry limit reached'),
+    ]
+
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name='notification_deliveries'
+    )
+    event = models.CharField(max_length=30)
+    channel = models.CharField(max_length=10, choices=CHANNEL_CHOICES)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+    attempts = models.PositiveSmallIntegerField(default=0)
+    error = models.CharField(max_length=500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_attempt_at = models.DateTimeField(null=True, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['status', 'channel', '-created_at'])]
+
+    def __str__(self):
+        return f'{self.order.reference} · {self.event} · {self.channel}: {self.status}'

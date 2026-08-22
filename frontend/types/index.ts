@@ -233,7 +233,7 @@ export interface OrderItem {
 export interface Order {
   id: number
   reference: string
-  status: 'pending' | 'whatsapp_pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  status: 'pending' | 'whatsapp_pending' | 'paid' | 'processing' | 'ready_for_dispatch' | 'out_for_delivery' | 'shipped' | 'delivered' | 'cancelled'
   payment_status: 'pending' | 'success' | 'failed' | 'expired'
   order_source: 'seevcash' | 'subscription' | 'paystack' | 'whatsapp'
   total_amount: string

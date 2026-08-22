@@ -11,17 +11,20 @@ const STEPS = [
   { key: 'whatsapp_pending', label: 'Order placed', icon: 'order' },
   { key: 'paid', label: 'Payment confirmed', icon: 'payment' },
   { key: 'processing', label: 'Being prepared', icon: 'prepare' },
-  { key: 'shipped', label: 'On the way', icon: 'delivery' },
+  { key: 'ready_for_dispatch', label: 'Packed', icon: 'packed' },
+  { key: 'out_for_delivery', label: 'On the way', icon: 'delivery' },
   { key: 'delivered', label: 'Delivered', icon: 'delivered' },
 ]
 
-const STEP_ORDER = ['whatsapp_pending', 'paid', 'processing', 'shipped', 'delivered']
+const STEP_ORDER = ['whatsapp_pending', 'paid', 'processing', 'ready_for_dispatch', 'out_for_delivery', 'delivered']
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   pending: { label: 'Awaiting payment', cls: 'border-[#D7A90B]/35 bg-[#FFF8DC] text-[#765B00] dark:border-[#F4C430]/35 dark:bg-[#F4C430]/10 dark:text-[#FFE681]' },
   whatsapp_pending: { label: 'Awaiting payment', cls: 'border-[#D7A90B]/35 bg-[#FFF8DC] text-[#765B00] dark:border-[#F4C430]/35 dark:bg-[#F4C430]/10 dark:text-[#FFE681]' },
   paid: { label: 'Payment confirmed', cls: 'border-[#2E7D32]/25 bg-[#EDF7EE] text-[#215D26] dark:border-[#72B77A]/30 dark:bg-[#72B77A]/10 dark:text-[#A9E1AF]' },
   processing: { label: 'Being prepared', cls: 'border-[#2E7D32]/25 bg-[#EDF7EE] text-[#215D26] dark:border-[#72B77A]/30 dark:bg-[#72B77A]/10 dark:text-[#A9E1AF]' },
+  ready_for_dispatch: { label: 'Packed', cls: 'border-[#D7A90B]/35 bg-[#FFF8DC] text-[#765B00] dark:border-[#F4C430]/35 dark:bg-[#F4C430]/10 dark:text-[#FFE681]' },
+  out_for_delivery: { label: 'Out for delivery', cls: 'border-[#315A80]/25 bg-[#EEF5FA] text-[#294B6A] dark:border-[#78A9D2]/30 dark:bg-[#78A9D2]/10 dark:text-[#B6D7F2]' },
   shipped: { label: 'On the way', cls: 'border-[#315A80]/25 bg-[#EEF5FA] text-[#294B6A] dark:border-[#78A9D2]/30 dark:bg-[#78A9D2]/10 dark:text-[#B6D7F2]' },
   delivered: { label: 'Delivered', cls: 'border-[#2E7D32]/25 bg-[#E8F5E9] text-[#215D26] dark:border-[#72B77A]/30 dark:bg-[#72B77A]/10 dark:text-[#A9E1AF]' },
   cancelled: { label: 'Cancelled', cls: 'border-red-200 bg-red-50 text-red-700 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200' },
@@ -47,6 +50,7 @@ function StatusIcon({ name }: { name: string }) {
   if (name === 'order') return <svg {...common} aria-hidden><path d="M7 3h10v4H7z"/><path d="M5 5H4v16h16V5h-1"/><path d="M8 12h8M8 16h5"/></svg>
   if (name === 'payment') return <svg {...common} aria-hidden><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg>
   if (name === 'prepare') return <svg {...common} aria-hidden><path d="M12 21V10M12 14c-4 0-7-2-7-6 4 0 7 2 7 6ZM12 11c4 0 7-2 7-6-4 0-7 2-7 6Z"/></svg>
+  if (name === 'packed') return <svg {...common} aria-hidden><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9M8 5.25l8 4.5"/></svg>
   if (name === 'delivery') return <svg {...common} aria-hidden><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
   return <svg {...common} aria-hidden><path d="m5 12 4 4L19 6"/><circle cx="12" cy="12" r="9"/></svg>
 }
@@ -103,7 +107,10 @@ export default function OrderCard({ order }: { order: Order }) {
     }
   }
 
-  const currentStep = STEP_ORDER.indexOf(order.status === 'pending' ? 'whatsapp_pending' : order.status)
+  const trackerStatus = order.status === 'pending'
+    ? 'whatsapp_pending'
+    : order.status === 'shipped' ? 'out_for_delivery' : order.status
+  const currentStep = STEP_ORDER.indexOf(trackerStatus)
   const isCancelled = order.status === 'cancelled'
   const isSubscription = order.order_source === 'subscription'
   const badge = STATUS_BADGE[order.status] ?? { label: order.status, cls: 'bg-gray-100 text-gray-700' }

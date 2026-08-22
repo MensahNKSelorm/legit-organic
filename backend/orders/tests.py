@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import Group
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -18,7 +19,10 @@ from rest_framework.test import APIClient
 
 from users.models import User
 from products.models import Product
-from .models import Order, OrderItem, SeevCashWebhookEvent
+from .models import (
+    Order, OrderItem, OrderNotificationDelivery, OrderStatusEvent,
+    SeevCashWebhookEvent,
+)
 from .promo_models import PromoCode
 
 CREATE_URL = '/api/orders/create/'
@@ -500,6 +504,14 @@ class OrderAdminSecurityTests(TestCase):
             'items-INITIAL_FORMS': '0',
             'items-MIN_NUM_FORMS': '0',
             'items-MAX_NUM_FORMS': '1000',
+            'status_events-TOTAL_FORMS': '0',
+            'status_events-INITIAL_FORMS': '0',
+            'status_events-MIN_NUM_FORMS': '0',
+            'status_events-MAX_NUM_FORMS': '1000',
+            'notification_deliveries-TOTAL_FORMS': '0',
+            'notification_deliveries-INITIAL_FORMS': '0',
+            'notification_deliveries-MIN_NUM_FORMS': '0',
+            'notification_deliveries-MAX_NUM_FORMS': '1000',
         }
 
     @patch('users.emails.resend.Emails.send')
@@ -531,7 +543,7 @@ class OrderAdminSecurityTests(TestCase):
         event = AuditEvent.objects.get(action='order.payment_corrected')
         self.assertEqual(event.reason, 'MoMo receipt matched')
 
-    def test_operations_can_change_fulfilment_but_not_payment(self):
+    def test_operations_cannot_fulfil_an_unpaid_order_or_change_payment(self):
         operator = User.objects.create_user(
             email='ops@legitorganic.com', password='StrongPass123!', first_name='Op',
             last_name='User', is_staff=True, email_verified=True,
@@ -543,7 +555,101 @@ class OrderAdminSecurityTests(TestCase):
             'status': 'processing', 'payment_status': 'success', '_save': 'Save',
             **self._inline_management(),
         })
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         self.order.refresh_from_db()
-        self.assertEqual(self.order.status, 'processing')
+        self.assertEqual(self.order.status, 'pending')
         self.assertEqual(self.order.payment_status, 'pending')
+
+
+class OrderFulfilmentWorkflowTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_superuser(
+            email='workflow-owner@example.com', password='StrongPass123!'
+        )
+        self.order = Order.objects.create(
+            reference='LO-WORKFLOW', delivery_address='Accra',
+            guest_name='Customer', guest_phone='0244000000', guest_email='c@example.com',
+            total_amount=Decimal('40.00'), status='processing',
+            payment_status='success', order_source='seevcash',
+        )
+
+    @patch('users.sms.send_order_status_sms')
+    @patch('users.emails.send_order_status_email')
+    def test_dispatch_pin_confirms_delivery_and_records_history(self, _email, _sms):
+        from .services import transition_order
+
+        transition_order(self.order.pk, 'ready_for_dispatch', actor=self.owner)
+        dispatched, changed = transition_order(
+            self.order.pk, 'out_for_delivery', actor=self.owner
+        )
+        self.assertTrue(changed)
+        pin = dispatched._delivery_pin_plaintext
+        self.assertEqual(len(pin), 6)
+        self.assertNotEqual(dispatched.delivery_pin_hash, pin)
+
+        with self.assertRaises(ValidationError):
+            transition_order(
+                self.order.pk, 'delivered', actor=self.owner, delivery_pin='000000'
+            )
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.delivery_pin_attempts, 1)
+        self.assertEqual(self.order.status, 'out_for_delivery')
+
+        delivered, changed = transition_order(
+            self.order.pk, 'delivered', actor=self.owner, delivery_pin=pin
+        )
+        self.assertTrue(changed)
+        self.assertEqual(delivered.status, 'delivered')
+        self.assertIsNotNone(delivered.delivery_confirmed_at)
+        self.assertEqual(
+            list(OrderStatusEvent.objects.filter(order=self.order).values_list('to_status', flat=True)),
+            ['delivered', 'out_for_delivery', 'ready_for_dispatch'],
+        )
+
+    def test_invalid_jump_is_rejected(self):
+        from .services import transition_order
+        with self.assertRaises(ValidationError):
+            transition_order(self.order.pk, 'delivered', actor=self.owner, delivery_pin='123456')
+
+    def test_owner_can_delete_test_but_not_successful_real_order(self):
+        from .admin import OrderAdmin
+        from django.contrib.admin.sites import AdminSite
+        from django.test import RequestFactory
+
+        admin = OrderAdmin(Order, AdminSite())
+        request = RequestFactory().get('/admin/')
+        request.user = self.owner
+        self.assertFalse(admin.has_delete_permission(request, self.order))
+        self.order.is_test = True
+        self.order.save(update_fields=['is_test'])
+        self.assertTrue(admin.has_delete_permission(request, self.order))
+
+    @patch('users.sms.send_order_status_sms', return_value=False)
+    @patch('users.emails.send_order_status_email')
+    def test_notification_failure_is_persisted_and_dispatch_retry_rotates_pin(
+        self, _email, _sms,
+    ):
+        from .notifications import retry_failed_order_notifications
+        from .services import transition_order
+
+        transition_order(self.order.pk, 'ready_for_dispatch', actor=self.owner)
+        dispatched, _ = transition_order(
+            self.order.pk, 'out_for_delivery', actor=self.owner
+        )
+        old_hash = dispatched.delivery_pin_hash
+        failed = OrderNotificationDelivery.objects.get(
+            order=self.order, event='out_for_delivery', channel='sms'
+        )
+        self.assertEqual(failed.status, 'failed')
+        self.assertIn('did not accept', failed.error)
+
+        with patch('users.sms.send_order_status_sms', return_value=True):
+            result = retry_failed_order_notifications(
+                self.order.pk, 'out_for_delivery'
+            )
+        self.assertTrue(result['email'])
+        self.assertTrue(result['sms'])
+        self.order.refresh_from_db()
+        self.assertNotEqual(self.order.delivery_pin_hash, old_hash)
+        failed.refresh_from_db()
+        self.assertEqual(failed.status, 'superseded')

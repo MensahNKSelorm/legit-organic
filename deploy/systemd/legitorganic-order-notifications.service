@@ -1,0 +1,12 @@
+[Unit]
+Description=Retry failed Legit Organic customer order notifications
+After=network-online.target legitorganic.service
+
+[Service]
+Type=oneshot
+User=legitorganic
+Group=legitorganic
+WorkingDirectory=/var/www/legitorganic/backend
+EnvironmentFile=/var/www/legitorganic/backend/.env
+ExecStart=/var/www/legitorganic/backend/venv/bin/python manage.py retry_order_notifications --limit 100
+

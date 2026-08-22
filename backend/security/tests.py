@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import RequestFactory, TestCase
-from django.test import override_settings
+from django.test import modify_settings, override_settings
 from django.urls import reverse
 from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -82,11 +82,13 @@ class StaffTwoFactorTests(TestCase):
         self.assertTrue(AuditEvent.objects.filter(action='security.2fa_enrolled').exists())
 
     @override_settings(STAFF_2FA_MODE='enforce')
+    @modify_settings(MIDDLEWARE={'append': 'security.middleware.StaffSecurityMiddleware'})
     def test_enforcement_redirects_unenrolled_staff_to_setup(self):
         response = self.client.get('/admin/')
         self.assertRedirects(response, reverse('staff-security:setup'))
 
     @override_settings(STAFF_2FA_MODE='enroll', STAFF_OWNER_2FA_REQUIRED=True)
+    @modify_settings(MIDDLEWARE={'append': 'security.middleware.StaffSecurityMiddleware'})
     def test_enrollment_phase_requires_owner_to_enroll_first(self):
         owner = User.objects.create_superuser(
             email='owner@legitorganic.com', password='OwnerPass123!',
@@ -100,6 +102,7 @@ class StaffTwoFactorTests(TestCase):
         STAFF_2FA_MODE='enroll', STAFF_IDLE_TIMEOUT_SECONDS=30,
         STAFF_ABSOLUTE_SESSION_SECONDS=3600,
     )
+    @modify_settings(MIDDLEWARE={'append': 'security.middleware.StaffSecurityMiddleware'})
     def test_idle_staff_session_expires(self):
         session = self.client.session
         session['staff_session_started_at'] = 100
