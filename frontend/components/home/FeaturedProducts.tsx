@@ -123,7 +123,7 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
           <div className="mt-10 grid gap-6 lg:grid-cols-[1.16fr_.84fr] lg:gap-0">
             <Link
               href={usingDemo ? "/products" : `/products/${featured.slug}`}
-              className="group relative min-h-[580px] overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F4C430] md:min-h-[720px]"
+              className="group relative min-h-[430px] overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F4C430] sm:min-h-[580px] md:min-h-[720px]"
             >
               <Image
                 src={productImage(featured, 0)}
@@ -133,15 +133,15 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                 className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 bg-black/85 p-7 text-white md:p-10">
+              <div className="absolute inset-x-0 bottom-0 bg-black/85 p-5 text-white sm:p-7 md:p-10">
                 <p className="w-fit bg-black px-2 py-1 text-[10px] font-bold tracking-[.18em] text-[#f4c430] uppercase">
                   {featured.region?.name} · {featured.category?.name}
                 </p>
-                <div className="mt-4 flex items-end justify-between gap-6">
-                  <h3 className="product-name-sans max-w-xl bg-black px-2 py-1 text-5xl leading-[.9] font-bold md:text-7xl">
+                <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+                  <h3 className="product-name-sans max-w-xl bg-black px-2 py-1 text-3xl leading-[.95] font-bold sm:text-5xl md:text-7xl">
                     {featured.name}
                   </h3>
-                  <div className="shrink-0 bg-[#f4c430] px-5 py-4 text-right text-[#0d3b2a]">
+                  <div className="shrink-0 bg-[#f4c430] px-4 py-3 text-left text-[#0d3b2a] sm:px-5 sm:py-4 sm:text-right">
                     <strong className="block text-xl">GH₵ {featured.price}</strong>
                     <span className="text-xs">{featured.unit}</span>
                   </div>

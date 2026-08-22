@@ -99,6 +99,7 @@ export default function Navbar() {
     pathname === "/signup" ||
     pathname === "/check-email" ||
     pathname === "/verify-email";
+  const isMarketPage = pathname.startsWith("/products");
 
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -255,32 +256,33 @@ export default function Navbar() {
                 {darkMode ? <SunIcon /> : <MoonIcon />}
               </button>
 
-              {/* Search */}
-              <button
-                onClick={() => setSearchOpen(true)}
-                aria-label="Search products"
-                className={[
-                  "flex h-10 w-10 shrink-0 items-center justify-center border-l transition-[background-color]",
-                  transparent ? "border-white/35" : "border-[#0D3B2A]/20 dark:border-white/25",
-                  toggleColor,
-                ].join(" ")}
-                style={{ color: transparent ? "#ffffff" : undefined }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  width="18"
-                  height="18"
-                  aria-hidden
+              {!isMarketPage && (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Search products"
+                  className={[
+                    "flex h-10 w-10 shrink-0 items-center justify-center border-l transition-[background-color]",
+                    transparent ? "border-white/35" : "border-[#0D3B2A]/20 dark:border-white/25",
+                    toggleColor,
+                  ].join(" ")}
+                  style={{ color: transparent ? "#ffffff" : undefined }}
                 >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.35-4.35" />
-                </svg>
-              </button>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    width="18"
+                    height="18"
+                    aria-hidden
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
+                </button>
+              )}
             </div>
 
             {/* Cart icon */}
@@ -405,30 +407,32 @@ export default function Navbar() {
 
           {/* Mobile right: search + cart + hamburger */}
           <div className="ml-auto flex shrink-0 items-center gap-1 md:hidden">
-            <button
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search products"
-              className={[
-                "flex h-9 w-9 shrink-0 items-center justify-center transition-[background-color]",
-                toggleColor,
-              ].join(" ")}
-              style={{ color: transparent ? "#ffffff" : undefined }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                width="18"
-                height="18"
-                aria-hidden
+            {!isMarketPage && (
+              <button
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search products"
+                className={[
+                  "flex h-9 w-9 shrink-0 items-center justify-center transition-[background-color]",
+                  toggleColor,
+                ].join(" ")}
+                style={{ color: transparent ? "#ffffff" : undefined }}
               >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-            </button>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="18"
+                  height="18"
+                  aria-hidden
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              </button>
+            )}
             <CartIcon isTransparent={transparent} />
             {isAuthenticated && user?.is_staff && <NotificationBell isTransparent={transparent} />}
             <button
@@ -493,32 +497,33 @@ export default function Navbar() {
               </button>
             </li>
 
-            {/* Search */}
-            <li>
-              <button
-                onClick={() => {
-                  setSearchOpen(true);
-                  setMenuOpen(false);
-                }}
-                className="hover:bg-beige flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  width="18"
-                  height="18"
-                  aria-hidden
+            {!isMarketPage && (
+              <li>
+                <button
+                  onClick={() => {
+                    setSearchOpen(true);
+                    setMenuOpen(false);
+                  }}
+                  className="hover:bg-beige flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
                 >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.35-4.35" />
-                </svg>
-                Search products
-              </button>
-            </li>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    width="18"
+                    height="18"
+                    aria-hidden
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
+                  Search products
+                </button>
+              </li>
+            )}
 
             {/* Auth section */}
             {isAuthenticated && user ? (
