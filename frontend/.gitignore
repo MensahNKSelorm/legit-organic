@@ -5,6 +5,10 @@
 /.next/
 /out/
 
+# Playwright local reports and traces
+/playwright-report/
+/test-results/
+
 # Env
 .env
 .env.local

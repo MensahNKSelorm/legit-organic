@@ -201,10 +201,11 @@ export default function SignupPage() {
             {/* Name row */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-charcoal/80 mb-1.5">
+                <label htmlFor="signup-first-name" className="block text-sm font-semibold text-charcoal/80 mb-1.5">
                   First Name
                 </label>
                 <input
+                  id="signup-first-name"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -217,10 +218,11 @@ export default function SignupPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-charcoal/80 mb-1.5">
+                <label htmlFor="signup-last-name" className="block text-sm font-semibold text-charcoal/80 mb-1.5">
                   Last Name
                 </label>
                 <input
+                  id="signup-last-name"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -236,10 +238,11 @@ export default function SignupPage() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-charcoal/80 mb-1.5">
+              <label htmlFor="signup-email" className="block text-sm font-semibold text-charcoal/80 mb-1.5">
                 Email Address
               </label>
               <input
+                id="signup-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -254,11 +257,12 @@ export default function SignupPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-semibold text-charcoal/80 mb-1.5">
+              <label htmlFor="signup-password" className="block text-sm font-semibold text-charcoal/80 mb-1.5">
                 Password
               </label>
               <div className="relative">
                 <input
+                  id="signup-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -282,11 +286,12 @@ export default function SignupPage() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-semibold text-charcoal/80 mb-1.5">
+              <label htmlFor="signup-confirm-password" className="block text-sm font-semibold text-charcoal/80 mb-1.5">
                 Confirm Password
               </label>
               <div className="relative">
                 <input
+                  id="signup-confirm-password"
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

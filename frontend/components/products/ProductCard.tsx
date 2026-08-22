@@ -80,6 +80,7 @@ export default function ProductCard({ product, featured = false, preview = false
           <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2">
             <button
               onClick={() => addItem(product)}
+              aria-label={inCart ? `${product.name} is in cart` : `Add ${product.name} to cart`}
               className={[
                 'flex min-h-11 items-center justify-center gap-1 whitespace-nowrap px-2 py-2 text-[10px] font-semibold transition-colors sm:px-3 sm:text-xs',
                 inCart
