@@ -61,16 +61,16 @@ def send_order_status_sms(order):
 
     delivery_pin = getattr(order, '_delivery_pin_plaintext', '')
     STATUS_MESSAGES = {
-        'paid': f'Legit Organic: Payment confirmed for order {order.reference}. We are preparing your organic produce. Thank you!',
-        'processing': f'Legit Organic: Your order {order.reference} is being prepared. We will notify you when it ships.',
-        'ready_for_dispatch': f'Legit Organic: Your order {order.reference} is packed and ready for dispatch.',
+        'paid': f'Legit Organic: Payment received for {order.reference}. We will notify you as your order progresses.',
+        'processing': f'Legit Organic: We are preparing order {order.reference}. You will hear from us when it is ready for dispatch.',
+        'ready_for_dispatch': f'Legit Organic: Order {order.reference} is packed and ready for dispatch. Your delivery details will follow.',
         'out_for_delivery': (
-            f'Legit Organic: Your order {order.reference} is out for delivery. '
-            f'Your delivery PIN is {delivery_pin}. Share it only after receiving your order.'
+            f'Legit Organic: Order {order.reference} is out for delivery. '
+            f'Delivery PIN: {delivery_pin}. Give this PIN to the driver only after receiving your order.'
         ),
-        'shipped': f'Legit Organic: Great news! Your order {order.reference} is on its way. Expected delivery: 1-3 business days.',
-        'delivered': f'Legit Organic: Your order {order.reference} has been delivered. Enjoy your fresh organic produce! Thank you for choosing us.',
-        'cancelled': f'Legit Organic: Your order {order.reference} has been cancelled. Contact us at hello@legitorganic.com for assistance.',
+        'shipped': f'Legit Organic: Order {order.reference} has been dispatched. Please ensure someone is available to receive it.',
+        'delivered': f'Legit Organic: Delivery completed for order {order.reference}. Thank you for choosing us.',
+        'cancelled': f'Legit Organic: Order {order.reference} has been cancelled. For assistance, email hello@legitorganic.com.',
     }
 
     message = STATUS_MESSAGES.get(order.status)

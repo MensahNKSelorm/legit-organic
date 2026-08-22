@@ -97,11 +97,11 @@ function previewProduct(slug: string): ProductDetail | null {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const demo = previewProduct(slug);
-  if (demo) return { title: `${demo.name} — Product Preview` };
+  if (demo) return { title: `${demo.name} | Product Preview` };
   try {
     const product = await api.products.detail(slug);
     return {
-      title: `${product.name} — ${product.category?.name || "Fresh Produce"}`,
+      title: `${product.name} | ${product.category?.name || "Fresh Produce"}`,
       description: product.description?.replace(/<[^>]*>/g, "").slice(0, 160),
     };
   } catch {

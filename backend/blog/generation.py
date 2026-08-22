@@ -2,7 +2,7 @@
 
 Reuses the environment config (GROQ_API_KEY / GROQ_MODEL) and HTML sanitiser of
 legitorganic.writing_assistant. The model is instructed to write ONLY from the
-supplied research snippets — no invented statistics, medical claims, or quotes.
+supplied research snippets. It must not invent statistics, medical claims or quotes.
 """
 import json
 import logging
@@ -50,7 +50,7 @@ def build_prompt(topic, sources):
         "with an h2/h3 subheading and a few developed paragraphs, plus an engaging opening and a "
         "real ending. Use every relevant source and explore each angle thoroughly so the post "
         "reaches the target length honestly. Never pad, repeat, or invent facts to hit the count "
-        "— if the research genuinely cannot support the length, write a shorter complete post."
+        "If the research cannot support that length, write a shorter complete post."
     )
 
 
@@ -122,7 +122,7 @@ def _sources_html(sources):
 
 def generate_post(topic, sources):
     """Return a validated, sanitised draft dict:
-    {title, excerpt, tags, content} — content is sanitised HTML with a
+    {title, excerpt, tags, content}. The content is sanitised HTML with a
     'Further reading' source list appended for fact-checking."""
     draft = call_groq(build_prompt(topic, sources))
     if not isinstance(draft, dict):

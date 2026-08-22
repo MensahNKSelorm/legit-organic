@@ -11,7 +11,7 @@ const INTERNAL_API =
   process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export const metadata: Metadata = {
-  title: "Products — Fresh Food from Ghanaian Farmers",
+  title: "Market | Fresh Food from Ghanaian Farmers",
   description:
     "Browse fresh food sourced from Ghanaian farmers, with origin and availability made clear.",
 };

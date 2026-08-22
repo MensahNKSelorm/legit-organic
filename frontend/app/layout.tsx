@@ -13,7 +13,7 @@ import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistratio
 export const metadata: Metadata = {
   metadataBase: new URL('https://legitorganic.com'),
   title: {
-    default: 'Legit Organic — Fresh Organic Food in Ghana',
+    default: 'Legit Organic | Fresh Organic Food in Ghana',
     template: '%s | Legit Organic',
   },
   description: "Fresh Ghanaian produce with clearer information about where it comes from, how it is handled and when it is available.",
@@ -37,20 +37,20 @@ export const metadata: Metadata = {
     locale: 'en_GH',
     url: 'https://legitorganic.com',
     siteName: 'Legit Organic',
-    title: 'Legit Organic — Fresh Organic Food in Ghana',
+    title: 'Legit Organic | Fresh Organic Food in Ghana',
     description: 'Fresh Ghanaian produce, seasonal availability and practical food stories.',
     images: [
       {
         url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Legit Organic — Fresh Organic Food in Ghana',
+        alt: 'Legit Organic, fresh organic food in Ghana',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Legit Organic — Fresh Organic Food in Ghana',
+    title: 'Legit Organic | Fresh Organic Food in Ghana',
     description: 'Fresh Ghanaian produce, seasonal availability and practical food stories.',
     images: ['/images/og-image.jpg'],
     creator: '@legitorganicltd',

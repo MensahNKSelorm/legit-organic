@@ -308,7 +308,7 @@ function BuilderContent() {
       return
     }
     const itemsList = linked
-      .map((i) => `• ${i.name}${i.quantity ? ` — ${i.quantity} ${i.unit}` : ''}`)
+      .map((i) => `• ${i.name}${i.quantity ? `: ${i.quantity} ${i.unit}` : ''}`)
       .join('\n')
     const message = `Hello Legit Organic! 🌿\n\nI'd like to order ingredients for a recipe:\n\n${itemsList}\n\nPlease send me the total and MoMo payment details. Thank you!`
     const a = document.createElement('a')

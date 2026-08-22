@@ -46,7 +46,7 @@ export function ConnectionStatus() {
         boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
       }}
     >
-      {isOnline ? 'Back online' : "No internet connection — form submissions unavailable"}
+      {isOnline ? 'Back online' : "No internet connection. Forms are unavailable for now."}
     </div>
   )
 }

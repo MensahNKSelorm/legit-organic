@@ -98,7 +98,7 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
     const itemsList = items
       .map(
         (item) =>
-          `• ${item.product.name} x${item.quantity} — GH₵${(parseFloat(item.product.price) * item.quantity).toFixed(2)}`
+          `• ${item.product.name} x${item.quantity}: GH₵${(parseFloat(item.product.price) * item.quantity).toFixed(2)}`
       )
       .join("\n");
 
@@ -342,7 +342,7 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
           role="alert"
           className="mb-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200"
         >
-          {checkoutError} Your order is safe—use the button below to retry.
+          {checkoutError} Your order is safe. Use the button below to try again.
         </div>
       )}
       <button

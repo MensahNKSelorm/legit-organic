@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const principles = [
   { number: '01', title: 'Start with the soil', body: 'Healthy harvests begin below the surface. Growing practices should protect the land expected to feed the next season too.' },
   { number: '02', title: 'Keep farmers visible', body: 'Good food depends on growers having a fair route to market and being recognised for the value they create.' },
-  { number: '03', title: 'Make information useful', body: 'Origin, availability and handling should help someone choose—not disappear into language nobody can use.' },
+  { number: '03', title: 'Make information useful', body: 'Origin, availability and handling should help someone choose. The details should be easy to understand.' },
 ] as const
 
 const route = [
@@ -83,7 +83,7 @@ export default function AboutPage() {
 
       <section className="bg-[#F4C430] text-[#0D3B2A]">
         <div className="page-container grid items-end gap-10 py-16 md:grid-cols-[1fr_auto] md:py-20">
-          <h2 className="display-organic max-w-4xl text-5xl leading-[.9] md:text-7xl">See what is available—or plan the week ahead.</h2>
+          <h2 className="display-organic max-w-4xl text-5xl leading-[.9] md:text-7xl">See what is available. Plan the week ahead.</h2>
           <div className="flex flex-wrap gap-4">
             <Link href="/products" className="bg-[#0D3B2A] px-7 py-4 font-bold text-white transition-colors hover:bg-white hover:text-[#0D3B2A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0D3B2A]">Visit the market</Link>
             <Link href="/subscriptions" className="border border-[#0D3B2A] px-7 py-4 font-bold transition-colors hover:bg-[#0D3B2A] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0D3B2A]">Plan the week</Link>

@@ -182,7 +182,7 @@ export default function Navbar() {
           <Link
             href="/"
             className="flex min-w-0 shrink-0 items-center md:min-w-[160px]"
-            aria-label="Legit Organic — Home"
+            aria-label="Legit Organic home"
           >
             <Image
               src={

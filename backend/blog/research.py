@@ -6,7 +6,7 @@ Groq writes from supplied facts rather than inventing them. Tavily is topical
 
 Config is read from the environment (populated by settings.load_dotenv): set
 TAVILY_API_KEY to enable search. With no key, research returns nothing and the
-weekly job simply skips — it never fabricates.
+weekly job skips the topic instead of fabricating information.
 """
 import logging
 import os

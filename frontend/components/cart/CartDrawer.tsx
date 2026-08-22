@@ -252,7 +252,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             {appliedPromo && (
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-xs text-[#2E7D32] dark:text-[#81C784] font-medium">
-                  {appliedPromo.code} — {appliedPromo.message}
+                  {appliedPromo.code}: {appliedPromo.message}
                 </span>
                 <button
                   onClick={handleRemovePromo}

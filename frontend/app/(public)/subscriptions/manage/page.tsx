@@ -142,7 +142,7 @@ export default function ManageSubscriptionsPage() {
                             "en-GH",
                             { day: "numeric", month: "short" }
                           )
-                        : "—"}
+                        : "Not set"}
                     </p>
                   </div>
                   <div>

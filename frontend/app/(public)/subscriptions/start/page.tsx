@@ -274,7 +274,7 @@ function StartSubscriptionContent() {
       setSubmitError(
         reason instanceof Error
           ? reason.message
-          : "We couldn’t open secure payment. Your basket is safe—try again."
+          : "We couldn’t open secure payment. Your basket is safe. Please try again."
       );
     } finally {
       setSaving(false);
@@ -306,7 +306,7 @@ function StartSubscriptionContent() {
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-[#625B51] dark:text-[#B8C0B9]">
             Pick the food that suits your week, confirm where it should go, then approve the first
-            delivery through secure checkout. Future weeks always wait for you to pay—nothing is
+            delivery through secure checkout. Future weeks wait for you to approve payment. Nothing is
             charged automatically.
           </p>
         </header>
@@ -683,7 +683,7 @@ function StartSubscriptionContent() {
                         {showMap ? "Close map" : "Find this address on a map"}
                       </button>
                       <p className="mt-2 text-xs text-[#756D61] dark:text-[#AAB4AB]">
-                        Optional—search, drop a pin or use your current location.
+                        Optional. Search, drop a pin or use your current location.
                       </p>
                       {showMap && (
                         <div className="mt-5">

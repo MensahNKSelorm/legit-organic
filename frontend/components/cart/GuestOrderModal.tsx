@@ -157,7 +157,7 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
             <div>
               <h2 className="font-display text-lg font-bold text-[#0D3B2A]">Quick Order Details</h2>
               <p className="mt-0.5 text-xs text-[#5B3E31]">
-                No account needed — enter your delivery and payment details
+                No account needed. Enter your delivery and payment details.
               </p>
             </div>
             <button

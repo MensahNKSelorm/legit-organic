@@ -12,7 +12,7 @@ export default function ContactForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const subjectLine = encodeURIComponent(`[Website] ${subject} — ${name}`)
+    const subjectLine = encodeURIComponent(`[Website] ${subject} | ${name}`)
     const body = encodeURIComponent(
       `Name: ${name}\nEmail: ${email}\nPhone: ${phone || 'Not provided'}\n\nMessage:\n${message}`
     )

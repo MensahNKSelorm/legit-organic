@@ -97,9 +97,9 @@ export default function PrivacyPolicyPage() {
               We do not sell your personal data. We share data only with:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-[#333333] dark:text-gray-300 mb-4">
-              <li><strong>SeevCash</strong> — payment processing and payment-status confirmation</li>
-              <li><strong>Delivery partners</strong> — name and address only, for delivery</li>
-              <li><strong>Legal authorities</strong> — if required by Ghanaian law</li>
+              <li><strong>SeevCash:</strong> payment processing and payment-status confirmation</li>
+              <li><strong>Delivery partners:</strong> name and address only, for delivery</li>
+              <li><strong>Legal authorities:</strong> if required by Ghanaian law</li>
             </ul>
             <p className="text-[#333333] dark:text-gray-300 leading-relaxed mb-4">
               We do not share your data with advertisers or third-party marketers.

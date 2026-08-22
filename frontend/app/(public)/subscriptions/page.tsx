@@ -4,7 +4,7 @@ import SubscriptionPlans from "@/components/subscriptions/SubscriptionPlans";
 import ManageDeliveriesLink from "@/components/subscriptions/ManageDeliveriesLink";
 
 export const metadata: Metadata = {
-  title: "Plan the Week — Flexible Weekly Food Delivery",
+  title: "Plan the Week | Flexible Weekly Food Delivery",
   description:
     "Choose a weekly food basket or build your own, with the freedom to skip, pause or cancel upcoming deliveries.",
 };

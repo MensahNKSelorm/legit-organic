@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Photo Credits — Legit Organic",
+  title: "Photo Credits | Legit Organic",
   description: "Photography credits and licensing information for Legit Organic.",
 };
 
@@ -64,7 +64,7 @@ export default function PhotoCreditsPage() {
 
         <article className="grid gap-8 border-b border-[#0D3B2A]/20 py-10 md:grid-cols-[minmax(0,.7fr)_minmax(0,1.3fr)] md:items-start dark:border-white/20">
           <p className="text-xs font-bold tracking-[.14em] text-[#2E7D32] uppercase dark:text-[#F4C430]">
-            B2B — Schools
+            B2B: Schools
           </p>
           <div>
             <h2 className="display-organic text-3xl md:text-4xl">classroom</h2>

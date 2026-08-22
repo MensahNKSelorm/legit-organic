@@ -79,7 +79,7 @@ export default function CombinedRecipeEditor({ title, baseRecipeIds, initialIngr
         name: recipeName.trim() || title,
         description: `A personal version of ${title}.`,
         base_recipe_ids: baseRecipeIds,
-        ingredients: ingredients.map((ingredient, order) => ({ name: ingredient.name, product_id: ingredient.productId, quantity: ingredient.quantity || '1', unit: ingredient.unit, notes: `${ingredient.group}${ingredient.notes ? ` — ${ingredient.notes}` : ''}`, order })),
+        ingredients: ingredients.map((ingredient, order) => ({ name: ingredient.name, product_id: ingredient.productId, quantity: ingredient.quantity || '1', unit: ingredient.unit, notes: `${ingredient.group}${ingredient.notes ? `: ${ingredient.notes}` : ''}`, order })),
       })
       setSaved(true); setDirty(false)
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not save this recipe.') }

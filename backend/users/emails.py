@@ -2,6 +2,8 @@ import resend
 from django.conf import settings
 from django.utils.html import escape
 
+EMAIL_LOGO_URL = 'https://legitorganic.com/images/email-logo.png'
+
 
 def send_owner_order_report(order, event):
     """Send a concise internal report when payment succeeds or delivery completes."""
@@ -77,7 +79,7 @@ def send_welcome_email(user):
 
             <div style="text-align:center;margin-bottom:32px;">
               <img
-                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                src="{EMAIL_LOGO_URL}"
                 alt="Legit Organic"
                 style="height:50px;width:auto;"
               />
@@ -86,11 +88,11 @@ def send_welcome_email(user):
             <div style="background: white; border-radius: 12px;
                         padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
               <h2 style="color: #0D3B2A; font-size: 24px; margin-top: 0;">
-                Welcome, {user.first_name}! 🌿
+                Welcome, {escape(user.first_name or 'there')}
               </h2>
               <p style="color: #333333; line-height: 1.6;">
                 Thank you for joining Legit Organic. You're now part of a
-                community that believes in clean, honest food — straight from
+                community that believes in clean, honest food, supplied by
                 verified Ghanaian farmers to your table.
               </p>
               <p style="color: #333333; line-height: 1.6;">
@@ -173,7 +175,7 @@ def send_order_confirmation_email(user, order):
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
         "to": [user.email],
-        "subject": f"Order Confirmed — {order.reference}",
+        "subject": f"Order confirmed: {order.reference}",
         "html": f"""
         <!DOCTYPE html>
         <html>
@@ -183,7 +185,7 @@ def send_order_confirmation_email(user, order):
 
             <div style="text-align:center;margin-bottom:32px;">
               <img
-                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                src="{EMAIL_LOGO_URL}"
                 alt="Legit Organic"
                 style="height:50px;width:auto;"
               />
@@ -192,17 +194,14 @@ def send_order_confirmation_email(user, order):
             <div style="background: white; border-radius: 12px;
                         padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
 
-              <div style="text-align: center; margin-bottom: 24px;">
-                <div style="width: 60px; height: 60px; background: #F0FFF4;
-                            border-radius: 50%; display: inline-flex;
-                            align-items: center; justify-content: center;
-                            font-size: 28px; margin-bottom: 12px;">
-                  ✅
-                </div>
+              <div style="text-align:left;margin-bottom:28px;border-left:5px solid #F4C430;padding-left:18px;">
+                <p style="margin:0 0 8px;color:#2E7D32;font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;">
+                  Order received
+                </p>
                 <h2 style="color: #0D3B2A; font-size: 24px; margin: 0;">
-                  Order Confirmed!
+                  Your order is confirmed
                 </h2>
-                <p style="color: #666; margin: 8px 0 0;">
+                <p style="color:#68766E;margin:8px 0 0;font-size:13px;">
                   Reference: <strong>{order.reference}</strong>
                 </p>
               </div>
@@ -305,32 +304,32 @@ def send_order_status_email(order):
 
     STATUS_CONFIG = {
         'paid': {
-            'subject': f'Payment Confirmed — {order.reference}',
-            'emoji': '✅',
+            'subject': f'Payment confirmed: {order.reference}',
+            'label': 'Payment received',
             'title': 'Payment Confirmed!',
             'color': '#2196F3',
             'message': f'Great news! We have received your payment for order {order.reference}. We are now preparing your organic produce for delivery.',
             'next_step': 'Your order is being carefully prepared by our team.',
         },
         'processing': {
-            'subject': f'Order Being Prepared — {order.reference}',
-            'emoji': '\U0001f33f',
+            'subject': f'We are preparing order {order.reference}',
+            'label': 'In preparation',
             'title': 'Your Order is Being Prepared',
             'color': '#FF9800',
             'message': f'Your order {order.reference} is currently being processed. Our team is carefully selecting and packaging your fresh organic produce.',
             'next_step': 'We will notify you once your order is on its way.',
         },
         'ready_for_dispatch': {
-            'subject': f'Order Packed — {order.reference}',
-            'emoji': 'U0001f4e6',
+            'subject': f'Order packed: {order.reference}',
+            'label': 'Packed',
             'title': 'Your Order is Packed',
             'color': '#D4A800',
             'message': f'Your order {order.reference} has been packed and is waiting for dispatch.',
             'next_step': 'We will send your delivery PIN when the order leaves with the driver.',
         },
         'out_for_delivery': {
-            'subject': f'Out for Delivery — {order.reference}',
-            'emoji': 'U0001f69a',
+            'subject': f'Out for delivery: {order.reference}',
+            'label': 'With your driver',
             'title': 'Your Order is On Its Way',
             'color': '#315A80',
             'message': (
@@ -341,24 +340,24 @@ def send_order_status_email(order):
             'next_step': 'Please ensure someone is available to receive the delivery.',
         },
         'shipped': {
-            'subject': f'Order On Its Way — {order.reference}',
-            'emoji': '\U0001f69a',
+            'subject': f'Order {order.reference} is on its way',
+            'label': 'Dispatched',
             'title': 'Your Order is On Its Way!',
             'color': '#9C27B0',
             'message': f'Your order {order.reference} has been dispatched and is on its way to you. Please ensure someone is available to receive the delivery.',
             'next_step': 'Expected delivery within 1–3 business days.',
         },
         'delivered': {
-            'subject': f'Order Delivered — {order.reference}',
-            'emoji': '\U0001f389',
+            'subject': f'Order delivered: {order.reference}',
+            'label': 'Completed',
             'title': 'Order Delivered!',
             'color': '#2E7D32',
             'message': f'Your order {order.reference} has been successfully delivered. We hope you enjoy your fresh organic produce from Legit Organic!',
             'next_step': 'Thank you for choosing Legit Organic. We look forward to serving you again!',
         },
         'cancelled': {
-            'subject': f'Order Cancelled — {order.reference}',
-            'emoji': '❌',
+            'subject': f'Order cancelled: {order.reference}',
+            'label': 'Cancelled',
             'title': 'Order Cancelled',
             'color': '#F44336',
             'message': f'Your order {order.reference} has been cancelled. If you did not request this cancellation or have any questions, please contact us immediately.',
@@ -402,7 +401,7 @@ def send_order_status_email(order):
 
             <div style="text-align:center;margin-bottom:32px;">
               <img
-                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                src="{EMAIL_LOGO_URL}"
                 alt="Legit Organic"
                 style="height:50px;width:auto;"
               />
@@ -411,14 +410,14 @@ def send_order_status_email(order):
             <div style="background:white;border-radius:12px;
                         padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 
-              <div style="text-align:center;margin-bottom:24px;">
-                <div style="font-size:48px;margin-bottom:12px;">
-                  {config['emoji']}
-                </div>
-                <h2 style="color:{config['color']};font-size:24px;margin:0;">
+              <div style="text-align:left;margin-bottom:28px;border-left:5px solid {config['color']};padding-left:18px;">
+                <p style="margin:0 0 8px;color:{config['color']};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;">
+                  {config['label']}
+                </p>
+                <h2 style="color:#0D3B2A;font-size:26px;line-height:1.2;margin:0;">
                   {config['title']}
                 </h2>
-                <p style="color:#666;margin:8px 0 0;font-size:14px;">
+                <p style="color:#68766E;margin:8px 0 0;font-size:13px;">
                   Order: <strong style="color:#0D3B2A;">{order.reference}</strong>
                 </p>
               </div>
@@ -471,7 +470,7 @@ def send_order_status_email(order):
               <div style="margin-top:16px;padding:16px;background:#FAF7F0;
                           border-radius:8px;">
                 <p style="margin:0;color:#0D3B2A;font-size:13px;">
-                  <strong>\U0001f4cd Delivery Address:</strong><br/>
+                  <strong>Delivery address</strong><br/>
                   {order.delivery_address}
                 </p>
               </div>
@@ -546,7 +545,7 @@ def send_b2b_approval_email(profile, uid=None, token=None):
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
         "to": [profile.business_email],
-        "subject": f"Welcome to Legit Organic B2B — {profile.company_name}!",
+        "subject": f"Welcome to Legit Organic B2B, {profile.company_name}",
         "html": f"""
         <!DOCTYPE html>
         <html>
@@ -555,7 +554,7 @@ def send_b2b_approval_email(profile, uid=None, token=None):
           <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
 
             <div style="text-align:center;margin-bottom:32px;">
-              <img src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+              <img src="{EMAIL_LOGO_URL}"
                    alt="Legit Organic" style="height:50px;width:auto;" />
             </div>
 
@@ -633,7 +632,7 @@ def send_b2b_rejection_email(profile):
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
         "to": [profile.business_email],
-        "subject": "B2B Application Update — Legit Organic",
+        "subject": "An update on your Legit Organic B2B application",
         "html": f"""
         <!DOCTYPE html>
         <html>
@@ -642,7 +641,7 @@ def send_b2b_rejection_email(profile):
           <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
 
             <div style="text-align:center;margin-bottom:32px;">
-              <img src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+              <img src="{EMAIL_LOGO_URL}"
                    alt="Legit Organic" style="height:50px;width:auto;" />
             </div>
 
@@ -704,7 +703,7 @@ def send_b2b_review_update_email(profile, status, note):
     return resend.Emails.send({
         'from': f'Legit Organic <{settings.DEFAULT_FROM_EMAIL}>',
         'to': [profile.business_email],
-        'subject': f'{heading} — Legit Organic',
+        'subject': f'{heading} | Legit Organic',
         'html': f'''
         <!doctype html><html><body style="margin:0;background:#f4efe4;font-family:Arial,sans-serif;color:#173c2a">
           <div style="max-width:600px;margin:auto;padding:36px 18px">
@@ -738,7 +737,7 @@ def send_verification_email(user, token):
 
             <div style="text-align:center;margin-bottom:32px;">
               <img
-                src="https://api.legitorganic.com/static/images/logo-lightmode.svg"
+                src="{EMAIL_LOGO_URL}"
                 alt="Legit Organic"
                 style="height:50px;width:auto;"
               />

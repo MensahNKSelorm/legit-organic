@@ -14,7 +14,7 @@ import RecipeSearch from "@/components/recipes/RecipeSearch";
 import { normaliseRecipeText, parseRecipeQuery } from "@/lib/recipe-query";
 
 export const metadata: Metadata = {
-  title: "Recipes — Traditional Ghanaian Cuisine with Organic Ingredients",
+  title: "Recipes | Ghanaian Food and Organic Ingredients",
   description: "Ghanaian recipes, seasonal ideas and practical ways to cook with what is fresh.",
 };
 

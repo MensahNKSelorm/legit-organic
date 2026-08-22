@@ -5,7 +5,7 @@ import EditorialPageHeader from '@/components/ui/EditorialPageHeader'
 export const metadata: Metadata = {
   title: 'Contact Us',
   description:
-    'Get in touch with the Legit Organic team — for consumer queries, farmer partnerships, or press enquiries.',
+    'Contact the Legit Organic team about orders, farmer partnerships or press enquiries.',
 }
 
 function LocationIcon() {
@@ -93,7 +93,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
-      <EditorialPageHeader index="Contact" title={<>Let&apos;s talk <em className="font-normal text-[#F4C430]">properly.</em></>} description="Orders, farmer partnerships, press questions or a simple hello—choose the route that suits the conversation." />
+      <EditorialPageHeader index="Contact" title={<>Let&apos;s talk <em className="font-normal text-[#F4C430]">properly.</em></>} description="Orders, farmer partnerships, press questions or a simple hello. Choose the right contact below." />
 
       {/* Main content */}
       <section className="page-container py-14 lg:py-20">

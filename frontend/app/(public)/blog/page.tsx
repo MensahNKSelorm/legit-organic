@@ -13,7 +13,7 @@ import BlogCategoryFilter from "@/components/blog/BlogCategoryFilter";
 import { getMediaUrl } from "@/lib/media";
 
 export const metadata: Metadata = {
-  title: "Legit Organic Times — Food, Farms & Kitchens",
+  title: "Legit Organic Times | Food, Farms & Kitchens",
   description:
     "Field notes, kitchen stories and practical reporting on food, farming and everyday life in Ghana.",
 };

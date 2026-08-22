@@ -5,7 +5,7 @@ const stops = [
     href: "/products",
     place: "Market",
     verb: "Choose fresh.",
-    body: "Shop the current harvest—not an endless warehouse.",
+    body: "Shop what is in season and available now.",
     action: "Open the market",
   },
   {

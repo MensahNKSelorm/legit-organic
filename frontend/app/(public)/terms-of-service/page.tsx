@@ -54,7 +54,7 @@ const sections = [
     'We may remove prohibited content or restrict the responsible account.',
   ]},
   { title: 'Intellectual property', body: [
-    'Platform content—including our text, photographs, logos, icons, software and original recipe content—belongs to Legit Organic Limited or its licensors and is protected by applicable law.',
+    'Platform content includes our text, photographs, logos, icons, software and original recipe content. It belongs to Legit Organic Limited or its licensors and is protected by applicable law.',
     'You may use platform content for personal, non-commercial purposes only. Reproduction, distribution, commercial use or unauthorised use of our branding requires prior written permission.',
   ]},
   { title: 'Privacy and confidentiality', body: [

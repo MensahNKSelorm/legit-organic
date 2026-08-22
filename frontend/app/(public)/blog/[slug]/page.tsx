@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const post = await api.blog.detail(slug);
     const description =
       post.excerpt ||
-      `Read about ${post.title} on the Legit Organic blog — health, food safety, and nutrition in Ghana.`;
+      `Read ${post.title} in the Legit Organic Journal. Find practical reporting on food, farming and cooking in Ghana.`;
 
     return {
       title: post.title,
