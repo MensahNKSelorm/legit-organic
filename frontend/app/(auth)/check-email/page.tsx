@@ -29,7 +29,7 @@ function CheckEmailContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF7F0] pt-[76px] text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FAF7F0]">
+    <div className="min-h-screen bg-[#FAF7F0] pt-[76px] text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FAF7F0]">
       <div className="grid min-h-[calc(100vh-76px)] lg:grid-cols-[1.08fr_.92fr]">
         <section className="relative flex min-h-[54vh] flex-col justify-between overflow-hidden px-6 py-12 md:px-12 md:py-16 lg:px-[8vw] lg:py-20">
           <div className="absolute -right-16 top-24 h-72 w-72 rotate-12 border border-[#0D3B2A]/10 dark:border-white/10" aria-hidden />
@@ -64,7 +64,7 @@ function CheckEmailContent() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   )
 }
 

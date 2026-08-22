@@ -102,12 +102,12 @@ export default function Footer() {
           {/* Link columns */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <h3
+              <h2
                 className="font-display text-ghana-gold mb-5 font-semibold tracking-widest uppercase"
                 style={{ fontSize: "0.75rem" }}
               >
                 {category}
-              </h3>
+              </h2>
               <ul
                 style={{
                   listStyle: "none",

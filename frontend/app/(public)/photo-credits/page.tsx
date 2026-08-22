@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PhotoCreditsPage() {
   return (
-    <main className="min-h-screen bg-[#FAF7F0] pt-32 pb-24 text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FEFCF7]">
+    <div className="min-h-screen bg-[#FAF7F0] pt-32 pb-24 text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FEFCF7]">
       <div className="page-container">
         <header className="max-w-4xl border-b border-[#0D3B2A]/20 pb-12 dark:border-white/20">
           <p className="text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">
@@ -100,6 +100,6 @@ export default function PhotoCreditsPage() {
           </div>
         </article>
       </div>
-    </main>
+    </div>
   );
 }

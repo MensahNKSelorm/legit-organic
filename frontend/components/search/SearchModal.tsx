@@ -81,6 +81,8 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   const [categories, setCategories] = useState<Category[]>([])
   const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   // Load the live catalogue suggestions once on mount.
   useEffect(() => {
@@ -91,6 +93,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   // Autofocus + body scroll lock
   useEffect(() => {
     if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement
       setTimeout(() => inputRef.current?.focus(), 50)
       document.body.style.overflow = 'hidden'
     } else {
@@ -101,13 +104,22 @@ export default function SearchModal({ isOpen, onClose }: Props) {
       })
       document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
+    return () => { document.body.style.overflow = ''; previousFocusRef.current?.focus() }
   }, [isOpen])
 
   // Escape key
   useEffect(() => {
     if (!isOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return }
+      if (e.key !== 'Tab' || !dialogRef.current) return
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
@@ -143,13 +155,17 @@ export default function SearchModal({ isOpen, onClose }: Props) {
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="search-dialog-title"
         className="relative z-10 mx-auto min-h-[72vh] w-full max-w-[1440px] bg-[#FAF7F0] shadow-[0_24px_80px_rgba(0,0,0,.28)] dark:bg-[#171B18] md:mt-5 md:w-[calc(100%-2.5rem)]"
         onClick={e => e.stopPropagation()}
       >
         <div className="grid min-h-[72vh] md:grid-cols-[12rem_1fr] lg:grid-cols-[15rem_1fr]">
           <aside className="border-b border-[#0D3B2A]/20 bg-[#0D3B2A] px-6 pb-6 pt-6 text-white md:border-b-0 md:border-r md:border-white/15 md:px-7 md:py-9">
             <div className="flex items-start justify-between md:block">
-              <p className="display-organic text-3xl text-[#F4C430]">Browse.</p>
+              <h2 id="search-dialog-title" className="display-organic text-3xl text-[#F4C430]">Browse.</h2>
               <button onClick={onClose} aria-label="Close search" className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/30 text-white transition-colors hover:border-[#F4C430] hover:text-[#F4C430] md:hidden">×</button>
             </div>
             {!query.trim() && categories.length > 0 && (
@@ -177,6 +193,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
             <input
               ref={inputRef}
               type="text"
+              aria-label="Search products"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search the market"

@@ -11,7 +11,7 @@ import type { DeliveryZone, Product, SubscriptionPlan } from "@/types";
 const LocationPicker = dynamic(() => import("@/components/ui/LocationPicker"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-64 items-center justify-center border border-[#C9BEAA] bg-[#F8F3E9] text-sm text-[#756D61] dark:border-white/15 dark:bg-[#202620] dark:text-[#AAB4AB]">
+    <div className="flex h-64 items-center justify-center border border-[#C9BEAA] bg-[#F8F3E9] text-sm text-[#6B6257] dark:border-white/15 dark:bg-[#202620] dark:text-[#AAB4AB]">
       Opening the map…
     </div>
   ),
@@ -46,7 +46,7 @@ const DRAFT_KEY = "legitorganic-weekly-basket";
 const PENDING_SUBSCRIPTION_KEY = "legitorganic-pending-subscription";
 const HAS_MAPS = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
 const inputClass =
-  "mt-2 w-full border border-[#C9BEAA] bg-[#FFFDF8] px-4 py-3 text-[#173C2A] outline-none transition-colors placeholder:text-[#8C8478] focus-visible:border-[#2E7D32] focus-visible:ring-2 focus-visible:ring-[#2E7D32]/25 dark:border-white/15 dark:bg-[#202620] dark:text-white dark:placeholder:text-[#849087]";
+  "mt-2 w-full border border-[#C9BEAA] bg-[#FFFDF8] px-4 py-3 text-[#173C2A] outline-none transition-colors placeholder:text-[#8C8478] focus-visible:border-[#246629] focus-visible:ring-2 focus-visible:ring-[#246629]/25 dark:border-white/15 dark:bg-[#202620] dark:text-white dark:placeholder:text-[#849087]";
 
 function money(value: number | string) {
   return `GH₵${Number(value || 0).toFixed(2)}`;
@@ -66,6 +66,8 @@ function StartSubscriptionContent() {
   const requestedPlan = params.get("plan") || "custom";
   const audience = params.get("audience") === "business" ? "business" : "household";
   const profileLoaded = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const stageHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const [stage, setStage] = useState<Stage>("basket");
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -211,6 +213,11 @@ function StartSubscriptionContent() {
     if (!cleanedPhone) next.phone = "Enter the number we should call for delivery.";
     else if (!PHONE_RE.test(cleanedPhone)) next.phone = "Use a Ghana number such as 0244123456.";
     setFieldErrors(next);
+    if (Object.keys(next).length) {
+      requestAnimationFrame(() =>
+        formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      );
+    }
     return Object.keys(next).length === 0;
   }
 
@@ -219,6 +226,7 @@ function StartSubscriptionContent() {
     if (nextStage === "delivery" && !validateBasket()) return;
     if (nextStage === "review" && (!validateBasket() || !validateDelivery())) return;
     setStage(nextStage);
+    requestAnimationFrame(() => stageHeadingRef.current?.focus());
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -288,14 +296,14 @@ function StartSubscriptionContent() {
     else void continueToPayment();
   }
 
-  if (authLoading) return <main className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />;
+  if (authLoading) return <div className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />;
 
   return (
-    <main className="min-h-screen bg-[#F4EFE4] pt-28 pb-24 text-[#173C2A] md:pt-36 dark:bg-[#171B18] dark:text-white">
+    <div className="min-h-screen bg-[#F4EFE4] pt-28 pb-24 text-[#173C2A] md:pt-36 dark:bg-[#171B18] dark:text-white">
       <div className="page-container">
         <Link
           href={audience === "business" ? "/b2b/dashboard" : "/subscriptions"}
-          className="inline-flex min-h-11 items-center text-sm font-bold text-[#2E7D32] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[#2E7D32] dark:text-[#F4C430]"
+          className="inline-flex min-h-11 items-center text-sm font-bold text-[#246629] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[#246629] dark:text-[#F4C430]"
         >
           ← {audience === "business" ? "Business portal" : "Plan the week"}
         </Link>
@@ -324,7 +332,7 @@ function StartSubscriptionContent() {
                 disabled={Boolean(pendingSubscriptionId && item.id !== "review")}
                 onClick={() => moveTo(item.id)}
                 aria-current={active ? "step" : undefined}
-                className={`min-h-20 border-b-4 px-1 py-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 ${active ? "border-[#2E7D32] text-[#173C2A] dark:border-[#F4C430] dark:text-white" : "border-transparent text-[#756D61] hover:text-[#173C2A] dark:text-[#8F9B91] dark:hover:text-white"}`}
+                className={`min-h-20 border-b-4 px-1 py-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 ${active ? "border-[#246629] text-[#173C2A] dark:border-[#F4C430] dark:text-white" : "border-transparent text-[#6B6257] hover:text-[#173C2A] dark:text-[#8F9B91] dark:hover:text-white"}`}
               >
                 <span className="block font-semibold">{item.label}</span>
                 <span className="mt-1 block text-xs">{item.hint}</span>
@@ -343,13 +351,14 @@ function StartSubscriptionContent() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-5 min-h-11 border border-[#173C2A] px-5 font-semibold outline-none hover:bg-[#173C2A] hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E7D32] dark:border-white"
+              className="mt-5 min-h-11 border border-[#173C2A] px-5 font-semibold outline-none hover:bg-[#173C2A] hover:text-white focus-visible:ring-2 focus-visible:ring-[#246629] dark:border-white"
             >
               Try again
             </button>
           </section>
         ) : (
           <form
+            ref={formRef}
             onSubmit={handleFormSubmit}
             noValidate
             className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] xl:gap-16"
@@ -359,7 +368,7 @@ function StartSubscriptionContent() {
                 <section aria-labelledby="basket-heading">
                   <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                      <h2 id="basket-heading" className="text-2xl font-semibold md:text-3xl">
+                      <h2 ref={stageHeadingRef} tabIndex={-1} id="basket-heading" className="text-2xl font-semibold md:text-3xl">
                         Choose the shape of your week
                       </h2>
                       <p className="mt-2 text-sm text-[#625B51] dark:text-[#B8C0B9]">
@@ -368,7 +377,7 @@ function StartSubscriptionContent() {
                     </div>
                     <Link
                       href="/products"
-                      className="min-h-11 py-3 text-sm font-bold text-[#2E7D32] underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:outline-none dark:text-[#F4C430]"
+                      className="min-h-11 py-3 text-sm font-bold text-[#246629] underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:outline-none dark:text-[#F4C430]"
                     >
                       Browse full Market ↗
                     </Link>
@@ -403,7 +412,7 @@ function StartSubscriptionContent() {
                             )}
                           </span>
                           <span
-                            className={`mt-2 block text-sm leading-5 ${selected ? "text-white/75" : "text-[#756D61] dark:text-[#AAB4AB]"}`}
+                            className={`mt-2 block text-sm leading-5 ${selected ? "text-white/75" : "text-[#6B6257] dark:text-[#AAB4AB]"}`}
                           >
                             {plan.short_description || "A ready-made weekly basket."}
                           </span>
@@ -421,7 +430,7 @@ function StartSubscriptionContent() {
                     <div className="mt-10">
                       <div className="flex items-baseline justify-between gap-4 border-b border-[#C9BEAA] pb-3 dark:border-white/15">
                         <h3 className="text-lg font-semibold">Pick from Market</h3>
-                        <span className="text-xs text-[#756D61] dark:text-[#AAB4AB]">
+                        <span className="text-xs text-[#6B6257] dark:text-[#AAB4AB]">
                           {chosenProducts.length} selected
                         </span>
                       </div>
@@ -449,11 +458,11 @@ function StartSubscriptionContent() {
                                 <div className="min-w-0 pl-2">
                                   <Link
                                     href={`/products/${product.slug}`}
-                                    className="font-semibold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:outline-none"
+                                    className="font-semibold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:outline-none"
                                   >
                                     {product.name} ↗
                                   </Link>
-                                  <p className="mt-1 text-xs text-[#756D61] dark:text-[#AAB4AB]">
+                                  <p className="mt-1 text-xs text-[#6B6257] dark:text-[#AAB4AB]">
                                     {product.category?.name || "Market produce"} ·{" "}
                                     {money(product.price)} / {product.unit}
                                   </p>
@@ -467,7 +476,7 @@ function StartSubscriptionContent() {
                                     aria-label={`Remove one ${product.name}`}
                                     disabled={!quantity}
                                     onClick={() => changeQuantity(product.id, -1)}
-                                    className="min-h-11 min-w-11 text-xl outline-none hover:bg-[#EEE5D5] focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/10"
+                                    className="min-h-11 min-w-11 text-xl outline-none hover:bg-[#EEE5D5] focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/10"
                                   >
                                     −
                                   </button>
@@ -481,7 +490,7 @@ function StartSubscriptionContent() {
                                     type="button"
                                     aria-label={`Add one ${product.name}`}
                                     onClick={() => changeQuantity(product.id, 1)}
-                                    className="min-h-11 min-w-11 text-xl outline-none hover:bg-[#EEE5D5] focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-inset dark:hover:bg-white/10"
+                                    className="min-h-11 min-w-11 text-xl outline-none hover:bg-[#EEE5D5] focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:ring-inset dark:hover:bg-white/10"
                                   >
                                     +
                                   </button>
@@ -493,7 +502,7 @@ function StartSubscriptionContent() {
                       ) : (
                         <div className="border-b border-[#C9BEAA] py-8 dark:border-white/15">
                           <p className="font-semibold">Market is being stocked.</p>
-                          <p className="mt-1 text-sm text-[#756D61] dark:text-[#AAB4AB]">
+                          <p className="mt-1 text-sm text-[#6B6257] dark:text-[#AAB4AB]">
                             No products are available for a custom basket yet.
                           </p>
                         </div>
@@ -512,7 +521,7 @@ function StartSubscriptionContent() {
                           <li key={item.id} className="flex justify-between gap-3 text-sm">
                             <Link
                               href={`/products/${item.product.slug}`}
-                              className="underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:outline-none"
+                              className="underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:outline-none"
                             >
                               {item.product.name}
                             </Link>
@@ -535,7 +544,7 @@ function StartSubscriptionContent() {
 
               {stage === "delivery" && (
                 <section aria-labelledby="delivery-heading">
-                  <h2 id="delivery-heading" className="text-2xl font-semibold md:text-3xl">
+                  <h2 ref={stageHeadingRef} tabIndex={-1} id="delivery-heading" className="text-2xl font-semibold md:text-3xl">
                     Where should the basket meet you?
                   </h2>
                   <p className="mt-2 text-sm text-[#625B51] dark:text-[#B8C0B9]">
@@ -556,6 +565,7 @@ function StartSubscriptionContent() {
                         }}
                         className={inputClass}
                         aria-invalid={Boolean(fieldErrors.zone)}
+                        aria-describedby={fieldErrors.zone ? "delivery-zone-error" : undefined}
                       >
                         <option value="">Choose an area…</option>
                         {zones.map((zone) => (
@@ -565,7 +575,7 @@ function StartSubscriptionContent() {
                         ))}
                       </select>
                       {fieldErrors.zone && (
-                        <p className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p id="delivery-zone-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
                           {fieldErrors.zone}
                         </p>
                       )}
@@ -585,9 +595,10 @@ function StartSubscriptionContent() {
                         placeholder="024 412 3456"
                         className={inputClass}
                         aria-invalid={Boolean(fieldErrors.phone)}
+                        aria-describedby={fieldErrors.phone ? "delivery-phone-error" : undefined}
                       />
                       {fieldErrors.phone && (
-                        <p className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p id="delivery-phone-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
                           {fieldErrors.phone}
                         </p>
                       )}
@@ -595,7 +606,7 @@ function StartSubscriptionContent() {
                     <label>
                       <span className="text-sm font-semibold">
                         House or apartment{" "}
-                        <span className="font-normal text-[#756D61]">(optional)</span>
+                        <span className="font-normal text-[#6B6257]">(optional)</span>
                       </span>
                       <input
                         name="house_number"
@@ -623,9 +634,10 @@ function StartSubscriptionContent() {
                         placeholder="12 Independence Avenue, near…"
                         className={inputClass}
                         aria-invalid={Boolean(fieldErrors.street)}
+                        aria-describedby={fieldErrors.street ? "delivery-street-error" : undefined}
                       />
                       {fieldErrors.street && (
-                        <p className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p id="delivery-street-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
                           {fieldErrors.street}
                         </p>
                       )}
@@ -643,9 +655,10 @@ function StartSubscriptionContent() {
                         placeholder="Accra"
                         className={inputClass}
                         aria-invalid={Boolean(fieldErrors.city)}
+                        aria-describedby={fieldErrors.city ? "delivery-city-error" : undefined}
                       />
                       {fieldErrors.city && (
-                        <p className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p id="delivery-city-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
                           {fieldErrors.city}
                         </p>
                       )}
@@ -663,9 +676,10 @@ function StartSubscriptionContent() {
                         placeholder="Greater Accra"
                         className={inputClass}
                         aria-invalid={Boolean(fieldErrors.region)}
+                        aria-describedby={fieldErrors.region ? "delivery-region-error" : undefined}
                       />
                       {fieldErrors.region && (
-                        <p className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p id="delivery-region-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
                           {fieldErrors.region}
                         </p>
                       )}
@@ -678,11 +692,11 @@ function StartSubscriptionContent() {
                         type="button"
                         aria-expanded={showMap}
                         onClick={() => setShowMap((open) => !open)}
-                        className="min-h-11 border border-[#173C2A] px-5 text-sm font-bold outline-none hover:bg-[#173C2A] hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E7D32] dark:border-white"
+                        className="min-h-11 border border-[#173C2A] px-5 text-sm font-bold outline-none hover:bg-[#173C2A] hover:text-white focus-visible:ring-2 focus-visible:ring-[#246629] dark:border-white"
                       >
                         {showMap ? "Close map" : "Find this address on a map"}
                       </button>
-                      <p className="mt-2 text-xs text-[#756D61] dark:text-[#AAB4AB]">
+                      <p className="mt-2 text-xs text-[#6B6257] dark:text-[#AAB4AB]">
                         Optional. Search, drop a pin or use your current location.
                       </p>
                       {showMap && (
@@ -714,7 +728,7 @@ function StartSubscriptionContent() {
                     <button
                       type="button"
                       onClick={() => moveTo("basket")}
-                      className="min-h-12 border border-[#173C2A] px-6 font-bold outline-none hover:bg-[#173C2A] hover:text-white focus-visible:ring-2 focus-visible:ring-[#2E7D32] sm:w-1/3 dark:border-white"
+                      className="min-h-12 border border-[#173C2A] px-6 font-bold outline-none hover:bg-[#173C2A] hover:text-white focus-visible:ring-2 focus-visible:ring-[#246629] sm:w-1/3 dark:border-white"
                     >
                       Back to basket
                     </button>
@@ -730,7 +744,7 @@ function StartSubscriptionContent() {
 
               {stage === "review" && (
                 <section aria-labelledby="review-heading">
-                  <h2 id="review-heading" className="text-2xl font-semibold md:text-3xl">
+                  <h2 ref={stageHeadingRef} tabIndex={-1} id="review-heading" className="text-2xl font-semibold md:text-3xl">
                     Ready for your first week
                   </h2>
                   <p className="mt-2 text-sm text-[#625B51] dark:text-[#B8C0B9]">
@@ -740,7 +754,7 @@ function StartSubscriptionContent() {
 
                   <div className="mt-8 divide-y divide-[#D8CEBC] border-y border-[#C9BEAA] dark:divide-white/10 dark:border-white/15">
                     <div className="grid gap-3 py-6 sm:grid-cols-[10rem_1fr_auto]">
-                      <span className="text-sm font-semibold text-[#756D61] dark:text-[#AAB4AB]">
+                      <span className="text-sm font-semibold text-[#6B6257] dark:text-[#AAB4AB]">
                         Basket
                       </span>
                       <div>
@@ -753,14 +767,14 @@ function StartSubscriptionContent() {
                         <button
                           type="button"
                           onClick={() => moveTo("basket")}
-                          className="min-h-11 text-left text-sm font-bold text-[#2E7D32] underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:outline-none dark:text-[#F4C430]"
+                          className="min-h-11 text-left text-sm font-bold text-[#246629] underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:outline-none dark:text-[#F4C430]"
                         >
                           Edit
                         </button>
                       )}
                     </div>
                     <div className="grid gap-3 py-6 sm:grid-cols-[10rem_1fr_auto]">
-                      <span className="text-sm font-semibold text-[#756D61] dark:text-[#AAB4AB]">
+                      <span className="text-sm font-semibold text-[#6B6257] dark:text-[#AAB4AB]">
                         Delivery
                       </span>
                       <div>
@@ -778,14 +792,14 @@ function StartSubscriptionContent() {
                         <button
                           type="button"
                           onClick={() => moveTo("delivery")}
-                          className="min-h-11 text-left text-sm font-bold text-[#2E7D32] underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:outline-none dark:text-[#F4C430]"
+                          className="min-h-11 text-left text-sm font-bold text-[#246629] underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#246629] focus-visible:outline-none dark:text-[#F4C430]"
                         >
                           Edit
                         </button>
                       )}
                     </div>
                     <div className="grid gap-3 py-6 sm:grid-cols-[10rem_1fr]">
-                      <span className="text-sm font-semibold text-[#756D61] dark:text-[#AAB4AB]">
+                      <span className="text-sm font-semibold text-[#6B6257] dark:text-[#AAB4AB]">
                         Payment rhythm
                       </span>
                       <div>
@@ -813,7 +827,7 @@ function StartSubscriptionContent() {
                         {submitError}
                       </p>
                       {pendingSubscriptionId && (
-                        <p className="mt-2 text-xs text-[#756D61] dark:text-[#AAB4AB]">
+                        <p className="mt-2 text-xs text-[#6B6257] dark:text-[#AAB4AB]">
                           Your registration was saved. Retrying will not create another
                           subscription.
                         </p>
@@ -833,7 +847,7 @@ function StartSubscriptionContent() {
                           ? "Retry secure payment"
                           : `Continue to secure payment · ${money(weeklyTotal)}`}
                   </button>
-                  <p className="mt-3 text-center text-xs text-[#756D61] dark:text-[#AAB4AB]">
+                  <p className="mt-3 text-center text-xs text-[#6B6257] dark:text-[#AAB4AB]">
                     You approve this payment now; future deliveries are never charged automatically.
                   </p>
                 </section>
@@ -846,7 +860,7 @@ function StartSubscriptionContent() {
             >
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-lg font-semibold">This week</h2>
-                <span className="text-xs text-[#756D61] dark:text-[#AAB4AB]">
+                <span className="text-xs text-[#6B6257] dark:text-[#AAB4AB]">
                   {basketItems.length} items
                 </span>
               </div>
@@ -859,18 +873,18 @@ function StartSubscriptionContent() {
                     </div>
                   ))
                 ) : (
-                  <p className="py-5 text-sm text-[#756D61] dark:text-[#AAB4AB]">
+                  <p className="py-5 text-sm text-[#6B6257] dark:text-[#AAB4AB]">
                     Your basket is waiting for its first item.
                   </p>
                 )}
               </div>
               <dl className="mt-5 space-y-3 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#756D61] dark:text-[#AAB4AB]">Basket</dt>
+                  <dt className="text-[#6B6257] dark:text-[#AAB4AB]">Basket</dt>
                   <dd>{money(subtotal)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#756D61] dark:text-[#AAB4AB]">Delivery</dt>
+                  <dt className="text-[#6B6257] dark:text-[#AAB4AB]">Delivery</dt>
                   <dd>{selectedZone ? money(deliveryFee) : "Choose area"}</dd>
                 </div>
                 <div className="flex justify-between gap-4 border-t border-[#C9BEAA] pt-4 text-lg font-semibold dark:border-white/15">
@@ -888,13 +902,13 @@ function StartSubscriptionContent() {
           </form>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 
 export default function StartSubscriptionPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />}>
       <StartSubscriptionContent />
     </Suspense>
   );

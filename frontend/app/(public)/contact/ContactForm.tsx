@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function ContactForm() {
   const [name, setName] = useState('')
@@ -9,6 +9,11 @@ export default function ContactForm() {
   const [subject, setSubject] = useState('General Inquiry')
   const [message, setMessage] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const confirmationRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (submitted) confirmationRef.current?.focus()
+  }, [submitted])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +42,7 @@ export default function ContactForm() {
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3 className="display-organic mb-2 text-4xl text-[#0D3B2A] dark:text-white">Your email app is open.</h3>
+        <h2 ref={confirmationRef} className="display-organic mb-2 text-4xl text-[#0D3B2A] dark:text-white" tabIndex={-1}>Your email app is open.</h2>
         <p className="max-w-md text-sm leading-relaxed text-[#5B3E31] dark:text-[#B8D4BD]">
           Finish sending the prepared message there. We&apos;ll reply as soon as someone on the team is available.
         </p>
@@ -62,8 +67,10 @@ export default function ContactForm() {
       <p className="editorial-label mb-7 text-[#2E7D32] dark:text-[#9FC5A4]">Write to the team</p>
       <form onSubmit={handleSubmit} className="grid gap-x-8 gap-y-6 md:grid-cols-2">
         <div className="md:col-span-2">
-          <label className={labelClass}>Full Name</label>
+          <label htmlFor="contact-name" className={labelClass}>Full Name</label>
           <input
+            id="contact-name"
+            autoComplete="name"
             type="text"
             required
             value={name}
@@ -74,8 +81,10 @@ export default function ContactForm() {
         </div>
 
         <div>
-          <label className={labelClass}>Email Address</label>
+          <label htmlFor="contact-email" className={labelClass}>Email Address</label>
           <input
+            id="contact-email"
+            autoComplete="email"
             type="email"
             required
             value={email}
@@ -86,11 +95,13 @@ export default function ContactForm() {
         </div>
 
         <div>
-          <label className={labelClass}>
+          <label htmlFor="contact-phone" className={labelClass}>
             Phone Number{' '}
             <span className="normal-case font-normal text-[#0D3B2A]/40 dark:text-gray-500">(optional)</span>
           </label>
           <input
+            id="contact-phone"
+            autoComplete="tel"
             type="tel"
             value={phone}
             onChange={e => setPhone(e.target.value)}
@@ -100,9 +111,10 @@ export default function ContactForm() {
         </div>
 
         <div>
-          <label className={labelClass}>Subject</label>
+          <label htmlFor="contact-subject" className={labelClass}>Subject</label>
           <div className="relative">
             <select
+              id="contact-subject"
               value={subject}
               onChange={e => setSubject(e.target.value)}
               className={`${inputClass} cursor-pointer appearance-none`}
@@ -123,8 +135,9 @@ export default function ContactForm() {
         </div>
 
         <div className="md:col-span-2">
-          <label className={labelClass}>Message</label>
+          <label htmlFor="contact-message" className={labelClass}>Message</label>
           <textarea
+            id="contact-message"
             required
             rows={5}
             value={message}

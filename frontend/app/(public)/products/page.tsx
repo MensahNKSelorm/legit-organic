@@ -199,10 +199,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </div>
       </section>
 
-      <main id="market-grid" className="page-container scroll-mt-24 py-16 md:py-24">
+      <section id="market-grid" className="page-container scroll-mt-24 py-16 md:py-24" aria-labelledby="market-grid-title">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <h2 className="display-organic text-5xl md:text-7xl">Browse the stalls</h2>
+            <h2 id="market-grid-title" className="display-organic text-5xl md:text-7xl">Browse the stalls</h2>
             <p className="mt-4 text-[#5B3E31] dark:text-[#B8D4BD]">
               Filter by what you are shopping for, or take a look at everything.
             </p>
@@ -233,7 +233,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
             ))}
           </div>
         )}
-      </main>
+      </section>
     </div>
   );
 }

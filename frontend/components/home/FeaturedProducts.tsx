@@ -132,13 +132,13 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                 sizes="(max-width: 1024px) 100vw, 58vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-7 text-white md:p-10">
-                <p className="text-[10px] font-bold tracking-[.18em] text-[#f4c430] uppercase">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 bg-black/85 p-7 text-white md:p-10">
+                <p className="w-fit bg-black px-2 py-1 text-[10px] font-bold tracking-[.18em] text-[#f4c430] uppercase">
                   {featured.region?.name} · {featured.category?.name}
                 </p>
                 <div className="mt-4 flex items-end justify-between gap-6">
-                  <h3 className="product-name-sans max-w-xl text-5xl leading-[.9] font-bold md:text-7xl">
+                  <h3 className="product-name-sans max-w-xl bg-black px-2 py-1 text-5xl leading-[.9] font-bold md:text-7xl">
                     {featured.name}
                   </h3>
                   <div className="shrink-0 bg-[#f4c430] px-5 py-4 text-right text-[#0d3b2a]">

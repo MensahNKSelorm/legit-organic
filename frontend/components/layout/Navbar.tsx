@@ -106,6 +106,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -119,6 +120,17 @@ export default function Navbar() {
 
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      mobileMenuButtonRef.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [menuOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -420,7 +432,10 @@ export default function Navbar() {
             <CartIcon isTransparent={transparent} />
             {isAuthenticated && user?.is_staff && <NotificationBell isTransparent={transparent} />}
             <button
-              aria-label="Toggle navigation menu"
+              ref={mobileMenuButtonRef}
+              aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-navigation"
               className="flex shrink-0 flex-col justify-center gap-[5px] rounded-lg p-2"
               onClick={() => setMenuOpen((o) => !o)}
             >
@@ -445,13 +460,16 @@ export default function Navbar() {
 
         {/* Mobile drawer */}
         <div
+          id="mobile-navigation"
+          aria-hidden={!menuOpen}
+          inert={!menuOpen}
           className={[
             "overflow-hidden transition-all duration-300 ease-in-out md:hidden",
             "bg-mist-white border-sand border-t dark:border-[#333] dark:bg-[#111827]",
             menuOpen ? "max-h-[80vh] overflow-y-auto opacity-100" : "max-h-0 opacity-0",
           ].join(" ")}
         >
-          <ul className="flex flex-col gap-1 px-6 py-5 pb-6" style={{ listStyle: "none" }}>
+          {menuOpen && <ul className="flex flex-col gap-1 px-6 py-5 pb-6" style={{ listStyle: "none" }}>
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
@@ -596,7 +614,7 @@ export default function Navbar() {
                 </Link>
               </li>
             )}
-          </ul>
+          </ul>}
         </div>
       </header>
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />

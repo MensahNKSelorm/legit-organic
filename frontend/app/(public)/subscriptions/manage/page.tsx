@@ -62,10 +62,10 @@ export default function ManageSubscriptionsPage() {
     }
   }
 
-  if (isLoading) return <main className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />;
+  if (isLoading) return <div className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />;
   if (!user)
     return (
-      <main className="min-h-screen bg-[#F4EFE4] px-6 pt-40 text-center dark:bg-[#171B18]">
+      <div className="min-h-screen bg-[#F4EFE4] px-6 pt-40 text-center dark:bg-[#171B18]">
         <h1 className="display-organic text-5xl dark:text-white">Your weekly deliveries</h1>
         <Link
           href="/login?next=/subscriptions/manage"
@@ -73,11 +73,11 @@ export default function ManageSubscriptionsPage() {
         >
           Log in
         </Link>
-      </main>
+      </div>
     );
 
   return (
-    <main className="min-h-screen bg-[#F4EFE4] pt-28 pb-24 text-[#173C2A] md:pt-36 dark:bg-[#171B18] dark:text-white">
+    <div className="min-h-screen bg-[#F4EFE4] pt-28 pb-24 text-[#173C2A] md:pt-36 dark:bg-[#171B18] dark:text-white">
       <div className="page-container">
         <div className="flex flex-col justify-between gap-7 border-b border-[#C9BEAA] pb-10 md:flex-row md:items-end dark:border-white/15">
           <div>
@@ -206,6 +206,6 @@ export default function ManageSubscriptionsPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

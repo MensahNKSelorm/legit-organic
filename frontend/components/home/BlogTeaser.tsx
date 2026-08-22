@@ -98,7 +98,7 @@ export default function BlogTeaser({ posts }: BlogTeaserProps) {
                             className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
                           />
                         </div>
-                        <p className="mt-5 text-[10px] font-bold tracking-[.16em] text-[#2e7d32] uppercase dark:text-[#9fc5a4]">
+                        <p className="mt-5 text-[10px] font-bold tracking-[.16em] text-[#246629] uppercase dark:text-[#9fc5a4]">
                           {post.category?.name || "Journal"} · {post.author_name}
                         </p>
                         <h3 className="display-organic mt-3 text-3xl leading-[1.02]">

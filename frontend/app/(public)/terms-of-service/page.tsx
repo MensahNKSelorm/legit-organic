@@ -86,7 +86,7 @@ export default function TermsOfServicePage() {
         <p className="border-l border-white/25 pl-5 text-sm text-[#B8D4BD]">Effective August 2026<br />Governed by Ghanaian law</p>
       </div>
     </header>
-    <main className="min-h-screen bg-[#FAF7F0] dark:bg-[#111827]">
+    <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#111827]">
       <div className="terms-document mx-auto max-w-4xl px-6 py-12 md:py-16">
         <p className="max-w-2xl text-lg leading-8 text-[#4B453D] dark:text-gray-300">These terms cover accounts, purchases, deliveries, weekly orders and use of Legit Organic’s digital services.</p>
         {sections.map((section,index) => <section key={section.title} className="mt-10 border-t border-[#D8D0C1] pt-9 dark:border-white/15">
@@ -102,6 +102,6 @@ export default function TermsOfServicePage() {
         <section className="mt-12 border-t-2 border-[#0D3B2A] pt-8 dark:border-white"><h2 className="text-2xl font-semibold text-[#0D3B2A] dark:text-white">Questions about these terms?</h2><p className="mt-3 text-[#3F3A34] dark:text-gray-300">Contact <a href="mailto:legal@legitorganic.com" className="font-semibold text-[#2E7D32] underline underline-offset-4 dark:text-[#F4C430]">legal@legitorganic.com</a>.</p></section>
         <div className="mt-10 border-t border-[#D8D0C1] pt-6 text-center dark:border-white/15"><a href="#top" className="font-semibold text-[#2E7D32] hover:underline dark:text-[#F4C430]">↑ Back to top</a></div>
       </div>
-    </main>
+    </div>
   </>
 }

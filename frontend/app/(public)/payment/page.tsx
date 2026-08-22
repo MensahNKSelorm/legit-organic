@@ -48,10 +48,10 @@ function PaymentResult() {
 
 export default function PaymentPage() {
   return (
-    <main className="grid min-h-screen place-items-center bg-[#F4EFE4] px-6 text-[#173C2A] dark:bg-[#171B18] dark:text-white">
+    <div className="grid min-h-screen place-items-center bg-[#F4EFE4] px-6 text-[#173C2A] dark:bg-[#171B18] dark:text-white">
       <Suspense fallback={<p>Confirming payment…</p>}>
         <PaymentResult />
       </Suspense>
-    </main>
+    </div>
   );
 }

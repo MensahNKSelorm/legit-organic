@@ -288,7 +288,7 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
   const isCombination = recipes.length > 1;
 
   return (
-    <main className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-white">
+    <div className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-white">
       <header className="grid min-h-[62vh] bg-[#0D3B2A] pt-[76px] lg:grid-cols-[.9fr_1.1fr]">
         <div
           className="grid min-h-[42vh] overflow-hidden"
@@ -442,6 +442,6 @@ export default async function CombinedRecipePage({ searchParams }: Props) {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

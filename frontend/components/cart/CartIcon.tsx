@@ -17,6 +17,8 @@ export default function CartIcon({ isTransparent }: CartIconProps) {
       <button
         onClick={() => setDrawerOpen(true)}
         aria-label={`Open cart${itemCount > 0 ? `, ${itemCount} items` : ''}`}
+        aria-expanded={drawerOpen}
+        aria-controls="shopping-cart-drawer"
         className={[
           'group relative flex h-10 w-10 items-center justify-center border transition-colors',
           isTransparent

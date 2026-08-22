@@ -102,7 +102,7 @@ export default async function BlogPage({ searchParams }: Props) {
         </div>
       </header>
 
-      <main className="page-container journal-front__body">
+      <div className="page-container journal-front__body">
         {/* ── Category filter ──────────────────────────────────── */}
         {categories.length > 0 && (
           <div className="journal-desk-row">
@@ -222,7 +222,7 @@ export default async function BlogPage({ searchParams }: Props) {
             )}
           </div>
         ) : null}
-      </main>
+      </div>
     </div>
   );
 }

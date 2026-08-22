@@ -69,11 +69,11 @@ export default function B2BDashboardPage() {
     }
   }
 
-  if (isLoading || !b2bProfile) return <main className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />
+  if (isLoading || !b2bProfile) return <div className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />
 
   if (b2bProfile.status !== 'approved') {
     return (
-      <main className="min-h-screen bg-[#F4EFE4] pb-24 pt-32 text-[#173C2A] dark:bg-[#171B18] dark:text-white">
+      <div className="min-h-screen bg-[#F4EFE4] pb-24 pt-32 text-[#173C2A] dark:bg-[#171B18] dark:text-white">
         <div className="page-container max-w-3xl">
           <p className="text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">Business account</p>
           <h1 className="display-organic mt-3 text-5xl leading-[.92] md:text-7xl">{b2bProfile.status_display}</h1>
@@ -82,12 +82,12 @@ export default function B2BDashboardPage() {
           </p>
           <Link href="/contact" className="mt-8 inline-block bg-[#173C2A] px-5 py-3 text-sm font-bold text-white dark:bg-[#F4C430] dark:text-[#173C2A]">Contact the team</Link>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-[#F4EFE4] pb-24 pt-28 text-[#173C2A] dark:bg-[#171B18] dark:text-white md:pt-36">
+    <div className="min-h-screen bg-[#F4EFE4] pb-24 pt-28 text-[#173C2A] dark:bg-[#171B18] dark:text-white md:pt-36">
       <div className="page-container">
         <header className="grid gap-10 border-b border-[#C9BEAA] pb-10 lg:grid-cols-[1fr_auto] lg:items-end dark:border-white/15">
           <div><p className="text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">Business portal</p><h1 className="display-organic mt-3 text-5xl leading-[.9] md:text-7xl">{b2bProfile.company_name}</h1><p className="mt-4 text-sm text-[#675E52] dark:text-[#AFC0B2]">Approved · {b2bProfile.business_type_display}</p></div>
@@ -145,6 +145,6 @@ export default function B2BDashboardPage() {
           ) : <div className="py-8"><p className="font-semibold">No completed purchasing history.</p><Link href="/products" className="mt-2 inline-block text-sm font-bold underline">Browse the Market</Link></div>}
         </section>
       </div>
-    </main>
+    </div>
   )
 }

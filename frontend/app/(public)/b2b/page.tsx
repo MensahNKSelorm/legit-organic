@@ -276,7 +276,7 @@ function StepArtifact({ index }: { index: number }) {
 
 export default function B2BPage() {
   return (
-    <main className="b2b-page">
+    <div className="b2b-page">
       <section className="b2b-hero-shell">
         <div className="b2b-hero page-container">
           <div className="b2b-hero-copy">
@@ -400,6 +400,6 @@ export default function B2BPage() {
         @keyframes pack-tomato{0%,5%{opacity:1;transform:translate(0,0) scale(1)}27%{opacity:1;transform:translate(164px,35px) scale(.86)}36%,76%{opacity:0;transform:translate(164px,48px) scale(.7)}80%{opacity:0;transform:translate(0,0) scale(1)}86%,100%{opacity:1;transform:translate(0,0) scale(1)}}@keyframes pack-leaf{0%,11%{opacity:1;transform:translate(0,0) rotate(0)}33%{opacity:1;transform:translate(171px,13px) rotate(12deg)}42%,76%{opacity:0;transform:translate(171px,26px) rotate(12deg) scale(.7)}80%{opacity:0;transform:translate(0,0) rotate(0)}86%,100%{opacity:1;transform:translate(0,0) rotate(0)}}@keyframes pack-carrot{0%,17%{opacity:1;transform:translate(0,0) rotate(0)}39%{opacity:1;transform:translate(164px,-14px) rotate(-8deg)}48%,76%{opacity:0;transform:translate(164px,-1px) rotate(-8deg) scale(.7)}80%{opacity:0;transform:translate(0,0) rotate(0)}86%,100%{opacity:1;transform:translate(0,0) rotate(0)}}@keyframes load-box{0%,12%{opacity:1;transform:translate(0,0) scale(1)}30%{opacity:1;transform:translate(88px,-2px) scale(.62)}38%,78%{opacity:0;transform:translate(88px,-2px) scale(.62)}84%{opacity:0;transform:translate(0,0) scale(1)}90%,100%{opacity:1;transform:translate(0,0) scale(1)}}@keyframes show-loaded-box{0%,25%{opacity:0}34%,48%{opacity:1}56%,100%{opacity:0}}@keyframes repeat-delivery{0%,8%{opacity:.12;transform:translateX(0)}20%,42%{opacity:1;transform:translateX(0)}58%,78%{opacity:0;transform:translateX(82px)}84%,100%{opacity:.12;transform:translateX(0)}}@keyframes fade-stock-cycle{0%,12%{opacity:1}32%,82%{opacity:.12}90%,100%{opacity:1}}
         @keyframes pack-eggplant{0%,10%{opacity:1;transform:translate(0,0) rotate(0)}32%{opacity:1;transform:translate(165px,10px) rotate(14deg)}42%,76%{opacity:0;transform:translate(165px,24px) rotate(14deg) scale(.72)}80%{opacity:0;transform:translate(0,0)}87%,100%{opacity:1;transform:translate(0,0)}}@keyframes pack-pepper{0%,16%{opacity:1;transform:translate(0,0) rotate(0)}38%{opacity:1;transform:translate(165px,-15px) rotate(-10deg)}48%,76%{opacity:0;transform:translate(165px,-2px) rotate(-10deg) scale(.72)}80%{opacity:0;transform:translate(0,0)}87%,100%{opacity:1;transform:translate(0,0)}}
       `}</style>
-    </main>
+    </div>
   );
 }

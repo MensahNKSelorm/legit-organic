@@ -196,7 +196,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="page-container py-12 md:py-16">
+      <div className="page-container py-12 md:py-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[15rem_1fr] lg:gap-20">
 
           {/* Sidebar */}
@@ -616,7 +616,7 @@ export default function ProfilePage() {
 
           </div>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

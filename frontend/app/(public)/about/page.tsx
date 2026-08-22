@@ -22,7 +22,7 @@ const route = [
 
 export default function AboutPage() {
   return (
-    <main className="bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FEFCF7]">
+    <div className="bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FEFCF7]">
       <section className="grid min-h-[88svh] border-b border-white/15 bg-[#0D3B2A] pt-[76px] text-white lg:grid-cols-[1.15fr_.85fr]">
         <div className="page-container flex items-end py-14 lg:mr-0 lg:pr-16 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] lg:py-20">
           <div className="max-w-4xl">
@@ -90,6 +90,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

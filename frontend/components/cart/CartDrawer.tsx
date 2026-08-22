@@ -24,6 +24,8 @@ const PLACEHOLDERS = [
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { items, total, itemCount, updateQuantity, removeItem } = useCart()
   const drawerRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null)
@@ -37,12 +39,22 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
   }, [open])
 
   useEffect(() => {
+    if (!open) return
+    previousFocusRef.current = document.activeElement as HTMLElement
+    closeButtonRef.current?.focus()
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') { onClose(); return }
+      if (e.key !== 'Tab' || !drawerRef.current) return
+      const focusable = Array.from(drawerRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
     }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+    return () => { document.removeEventListener('keydown', onKey); previousFocusRef.current?.focus() }
+  }, [open, onClose])
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return
@@ -64,6 +76,8 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
     setPromoError('')
   }
 
+  if (!open) return null
+
   return (
     <>
       {/* Backdrop — full screen, z-40 */}
@@ -78,6 +92,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
       {/* Drawer panel — fixed, full viewport height, flex column */}
       <div
+        id="shopping-cart-drawer"
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
@@ -107,6 +122,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close cart"
             className="w-11 h-11 flex items-center justify-center border border-[#0D3B2A]/20 hover:bg-[#0D3B2A] hover:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-[#0D3B2A] transition-colors text-[#0D3B2A] dark:text-[#faf7f0]"
@@ -193,7 +209,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         <div className="flex items-center gap-1 border border-[#E6D8BD] dark:border-white/20 overflow-hidden">
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                            aria-label="Decrease quantity"
+                            aria-label={`Decrease ${item.product.name} quantity`}
                             className="w-9 h-9 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
                           >
                             −
@@ -203,7 +219,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            aria-label="Increase quantity"
+                            aria-label={`Increase ${item.product.name} quantity`}
                             className="w-9 h-9 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
                           >
                             +
@@ -227,6 +243,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           <div className="shrink-0 px-6 py-4 border-t border-[#E6D8BD] dark:border-white/15 md:px-8">
             <div className="flex gap-2">
               <input
+                aria-label="Promo code"
+                aria-invalid={Boolean(promoError)}
+                aria-describedby={promoError ? 'promo-code-error' : undefined}
                 type="text"
                 value={promoCode}
                 onChange={(e) => {
@@ -247,7 +266,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               </button>
             </div>
             {promoError && (
-              <p className="mt-2 text-xs text-red-500">{promoError}</p>
+              <p id="promo-code-error" role="alert" className="mt-2 text-xs text-red-500">{promoError}</p>
             )}
             {appliedPromo && (
               <div className="mt-2 flex items-center justify-between">

@@ -46,7 +46,7 @@ const WEEKLY_RHYTHM = [
 
 export default function SubscriptionsPage() {
   return (
-    <main className="min-h-screen bg-[#F4EFE4] text-[#173C2A] dark:bg-[#171B18] dark:text-white">
+    <div className="min-h-screen bg-[#F4EFE4] text-[#173C2A] dark:bg-[#171B18] dark:text-white">
       <section className="subscription-hero page-container relative grid min-h-[38rem] gap-12 overflow-hidden pt-32 pb-16 lg:grid-cols-[1.25fr_.75fr] lg:items-end lg:pt-40 lg:pb-24">
         <div className="subscription-hero-copy">
           <p className="subscription-kicker text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">
@@ -453,6 +453,6 @@ export default function SubscriptionsPage() {
           .weekly-flow-copy { padding-top: 0; }
         }
       `}</style>
-    </main>
+    </div>
   );
 }

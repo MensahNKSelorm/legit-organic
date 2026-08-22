@@ -95,6 +95,11 @@
     text-decoration: none;
   }
 
+  :where(a, button, input, select, textarea, summary):focus-visible {
+    outline: 3px solid #f4c430;
+    outline-offset: 3px;
+  }
+
   html.dark body {
     background-color: #1a1a1a;
     color: #faf7f0;
@@ -108,6 +113,24 @@
   html.dark h6 {
     color: #faf7f0;
   }
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1000;
+  padding: 0.75rem 1rem;
+  background: #f4c430;
+  color: #0d3b2a;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  font-weight: 700;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 /* Product names are functional catalogue labels, not editorial headings. */

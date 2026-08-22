@@ -143,7 +143,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            <div role="alert" className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
               {error}
               {needsVerification && (
                 <Link
@@ -159,17 +159,17 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-charcoal/80 mb-1.5">
+              <label htmlFor="login-email" className="block text-sm font-semibold text-charcoal/80 mb-1.5">
                 Email Address
               </label>
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
                 required
-                tabIndex={1}
                 className={inputClass}
               />
             </div>
@@ -177,10 +177,9 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-semibold text-charcoal/80">Password</label>
+                <label htmlFor="login-password" className="block text-sm font-semibold text-charcoal/80">Password</label>
                 <Link
                   href="/forgot-password"
-                  tabIndex={-1}
                   className="text-xs text-leaf-green hover:text-forest-green transition-colors"
                 >
                   Forgot password?
@@ -188,19 +187,19 @@ export default function LoginPage() {
               </div>
               <div className="relative">
                 <input
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
-                  tabIndex={2}
                   className={`${inputClass} pr-12`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/40 hover:text-charcoal/70 transition-colors"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-charcoal/40 transition-colors hover:text-charcoal/70"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -211,7 +210,6 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              tabIndex={3}
               className="flex w-full items-center justify-center gap-2 bg-[#F4C430] py-4 font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white disabled:opacity-60 dark:hover:bg-white dark:hover:text-[#0D3B2A]"
             >
               {loading ? <Spinner /> : 'Sign In'}

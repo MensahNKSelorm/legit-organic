@@ -140,7 +140,7 @@ export default async function ProductDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <main className="page-container py-10 md:py-16">
+      <div className="page-container py-10 md:py-16">
         <div className="grid gap-12 lg:grid-cols-[1.12fr_.88fr] lg:gap-20">
           <ProductImageGallery
             images={product.images ?? []}
@@ -206,7 +206,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </p>
           </div>
         </div>
-      </main>
+      </div>
 
       <section className="border-y border-[#0D3B2A]/15 bg-[#F5F0E6] dark:border-white/15 dark:bg-[#202621]">
         <div className="page-container pt-16 pb-8 md:pt-20 md:pb-10">

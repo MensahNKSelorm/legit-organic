@@ -95,11 +95,14 @@ export default function RootLayout({
         <meta name="theme-color" content="#0D3B2A" />
       </head>
       <body className="antialiased">
+        <a className="skip-link" href="#main-content">
+          Skip to main content
+        </a>
         <AuthProvider>
           <CartProvider>
             <Navbar />
             <VerificationBanner />
-            <main>{children}</main>
+            <main id="main-content" tabIndex={-1}>{children}</main>
             <SiteFooter />
           </CartProvider>
         </AuthProvider>
