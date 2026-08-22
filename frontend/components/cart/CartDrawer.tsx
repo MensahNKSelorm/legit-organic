@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
 import { getMediaUrl } from '@/lib/media'
+import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-placeholders'
 import { api } from '@/lib/api'
 import type { PromoCode } from '@/types'
 import CheckoutButton from './CheckoutButton'
@@ -183,6 +184,8 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         fill
                         className="object-cover"
                         sizes="76px"
+                        placeholder="blur"
+                        blurDataURL={PRODUCT_BLUR_DATA_URL}
                       />
                     </div>
 
@@ -289,7 +292,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           {appliedPromo ? (
             <div className="mb-4 space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#5B3E31] dark:text-[#9ca3af]">Subtotal</span>
+                <span className="text-sm text-[#5B3E31] dark:text-[#9ca3af]">Product subtotal</span>
                 <span className="text-sm text-[#0D3B2A] dark:text-[#faf7f0]">GH₵ {total.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between">
@@ -297,7 +300,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">−GH₵ {appliedPromo.discount_amount.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between pt-1.5 border-t border-[#E6D8BD] dark:border-[#374151]">
-                <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
+                <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Products after discount</span>
                 <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
                   GH₵ {appliedPromo.final_amount.toFixed(2)}
                 </span>
@@ -305,12 +308,15 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             </div>
           ) : (
             <div className="flex items-center justify-between mb-4">
-              <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total</span>
+              <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Product subtotal</span>
               <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
                 GH₵ {total.toFixed(2)}
               </span>
             </div>
           )}
+          <p className="mb-4 border-l-2 border-[#F4C430] pl-3 text-xs leading-5 text-[#5B3E31] dark:text-[#B8D4BD]">
+            Delivery arrangements and any applicable charge are confirmed using the address you provide.
+          </p>
           <CheckoutButton onClose={onClose} promoCode={appliedPromo?.code} appliedPromo={appliedPromo} />
           <Link
             href="/products"

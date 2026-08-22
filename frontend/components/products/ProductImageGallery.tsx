@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import type { ProductImage } from '@/types'
 import { getMediaUrl } from '@/lib/media'
+import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-placeholders'
 
 const PLACEHOLDERS = [
   '/images/products/p1.webp',
@@ -116,6 +117,8 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
             className="object-cover transition-opacity duration-300"
             sizes="(max-width: 1024px) 100vw, 60vw"
             priority={selectedIndex === 0}
+            placeholder="blur"
+            blurDataURL={PRODUCT_BLUR_DATA_URL}
           />
         ) : (
           <LeafPlaceholder />
@@ -178,6 +181,8 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
                 fill
                 className="object-cover"
                 sizes="80px"
+                placeholder="blur"
+                blurDataURL={PRODUCT_BLUR_DATA_URL}
               />
             </button>
           ))}

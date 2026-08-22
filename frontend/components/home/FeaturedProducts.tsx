@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/types";
 import { getMediaUrl } from "@/lib/media";
+import { PRODUCT_BLUR_DATA_URL } from "@/lib/image-placeholders";
 
 const PLACEHOLDERS = [
   "/images/products/p1.webp",
@@ -131,6 +132,8 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                 fill
                 sizes="(max-width: 1024px) 100vw, 58vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+                placeholder="blur"
+                blurDataURL={PRODUCT_BLUR_DATA_URL}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 bg-black/85 p-5 text-white sm:p-7 md:p-10">
@@ -163,6 +166,8 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                       fill
                       sizes="(max-width: 1024px) 45vw, 20vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                      placeholder="blur"
+                      blurDataURL={PRODUCT_BLUR_DATA_URL}
                     />
                   </div>
                   <div className="flex flex-col justify-between p-5 md:p-7">

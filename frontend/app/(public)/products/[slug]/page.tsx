@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import type { Product, ProductDetail } from "@/types";
 import ProductCard from "@/components/products/ProductCard";
 import ProductTabs from "@/components/products/ProductTabs";
-import AddToCartButton, { WishlistButton } from "@/components/products/AddToCartButton";
+import AddToCartButton, { MobilePurchaseBar, WishlistButton } from "@/components/products/AddToCartButton";
 import ProductImageGallery from "@/components/products/ProductImageGallery";
 import JsonLd from "@/components/seo/JsonLd";
 import { getMediaUrl } from "@/lib/media";
@@ -145,7 +145,7 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F0] text-[#0D3B2A] dark:bg-[#171B18] dark:text-[#FEFCF7]">
+    <div className="min-h-screen bg-[#FAF7F0] pb-24 text-[#0D3B2A] md:pb-0 dark:bg-[#171B18] dark:text-[#FEFCF7]">
       <JsonLd
         data={{
           '@context': 'https://schema.org',
@@ -213,12 +213,15 @@ export default async function ProductDetailPage({ params }: Props) {
                 {product.unit}
               </span>
             </div>
+            <p className={`mt-3 text-sm font-semibold ${product.is_available ? 'text-[#2E7D32] dark:text-[#9FC5A4]' : 'text-red-700 dark:text-red-300'}`}>
+              {product.is_available ? 'Available to order' : 'Currently unavailable'}
+            </p>
             <div
               className="prose prose-lg dark:prose-invert mt-7 text-[#5B3E31] dark:text-[#D5E7D8]"
               dangerouslySetInnerHTML={{ __html: product.description }}
             />
 
-            <div className="mt-9 grid gap-3 sm:grid-cols-2">
+            <div id="primary-purchase-actions" className="mt-9 grid gap-3 sm:grid-cols-2">
               <AddToCartButton product={product} />
               {demo ? (
                 <button
@@ -235,8 +238,8 @@ export default async function ProductDetailPage({ params }: Props) {
             <ul className="mt-5 grid gap-2 text-sm text-[#5B3E31] dark:text-[#D5E7D8] sm:grid-cols-3" aria-label="Order reassurance">
               {[
                 'Secure hosted checkout',
-                'Delivery details confirmed before payment',
-                'Updates by email and SMS',
+                'Any delivery charge confirmed from your address',
+                'Payment updates by email and SMS',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2 border border-[#0D3B2A]/15 px-3 py-3 dark:border-white/15">
                   <svg aria-hidden="true" viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-[#2E7D32] dark:fill-[#F4C430]">
@@ -265,9 +268,11 @@ export default async function ProductDetailPage({ params }: Props) {
               ))}
             </div>
 
-            <p className="mt-7 border-l-2 border-[#F4C430] pl-5 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">
-              Sourced from Ghanaian growers and handled with care from collection to delivery.
-            </p>
+            {product.region && (
+              <p className="mt-7 border-l-2 border-[#F4C430] pl-5 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">
+                Listed origin: {product.region.name}, {product.region.country || 'Ghana'}.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -293,6 +298,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </section>
       )}
+      <MobilePurchaseBar product={product} />
     </div>
   );
 }

@@ -144,16 +144,16 @@ export default function SignupPage() {
             <Image
               src="/images/logo-lightmode.svg"
               alt="Legit Organic"
-              width={120}
-              height={60}
+              width={355}
+              height={140}
               className="dark:hidden"
               style={{ width: 'auto', height: '48px' }}
             />
             <Image
               src="/images/logo-darkmode.svg"
               alt="Legit Organic"
-              width={120}
-              height={60}
+              width={355}
+              height={140}
               className="hidden dark:block"
               style={{ width: 'auto', height: '48px' }}
             />

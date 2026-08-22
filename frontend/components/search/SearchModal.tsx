@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { getMediaUrl } from '@/lib/media'
+import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-placeholders'
 import type { Product, Category } from '@/types'
 
 interface Props {
@@ -43,6 +44,8 @@ function ProductCard({ product, onClose }: { product: Product; onClose: () => vo
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-[1.035]"
           sizes="(max-width: 768px) 50vw, 25vw"
+          placeholder="blur"
+          blurDataURL={PRODUCT_BLUR_DATA_URL}
         />
         {product.category && (
           <span className="absolute left-0 top-0 bg-[#0D3B2A] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.12em] text-white">

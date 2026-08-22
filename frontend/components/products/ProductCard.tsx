@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Product } from '@/types'
 import { getMediaUrl } from '@/lib/media'
+import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-placeholders'
 import { useCart } from '@/lib/cart'
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim()
@@ -41,6 +42,8 @@ export default function ProductCard({ product, featured = false, preview = false
           alt={product.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
+          placeholder="blur"
+          blurDataURL={PRODUCT_BLUR_DATA_URL}
           sizes={featured ? '(max-width: 640px) 50vw, (max-width: 768px) 100vw, 55vw' : '(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw'}
         />
         {product.badge && (
@@ -76,20 +79,25 @@ export default function ProductCard({ product, featured = false, preview = false
             <span className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-[#5B3E31] dark:text-[#E6D8BD] sm:min-h-[2rem] sm:max-w-[80px] sm:text-xs">
               {product.unit}
             </span>
+            <span className={`mt-1 text-[10px] font-semibold ${product.is_available ? 'text-[#2E7D32] dark:text-[#9FC5A4]' : 'text-red-700 dark:text-red-300'}`}>
+              {product.is_available ? 'Available' : 'Currently unavailable'}
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2">
             <button
-              onClick={() => addItem(product)}
-              aria-label={inCart ? `${product.name} is in cart` : `Add ${product.name} to cart`}
+              onClick={() => product.is_available && addItem(product)}
+              aria-label={!product.is_available ? `${product.name} is currently unavailable` : inCart ? `${product.name} is in cart` : `Add ${product.name} to cart`}
               className={[
                 'flex min-h-11 items-center justify-center gap-1 whitespace-nowrap px-2 py-2 text-[10px] font-semibold transition-colors sm:px-3 sm:text-xs',
-                inCart
+                !product.is_available
+                  ? 'cursor-not-allowed bg-[#D8D1C3] text-[#5B3E31] dark:bg-white/10 dark:text-white/55'
+                  : inCart
                   ? 'bg-[#2E7D32] text-white cursor-default'
                   : 'bg-[#F4C430] text-[#0D3B2A] hover:bg-[#C59F2C]',
               ].join(' ')}
-              disabled={inCart}
+              disabled={inCart || !product.is_available}
             >
-              {inCart ? 'In Cart ✓' : <><span className="sm:hidden">Add</span><span className="hidden sm:inline">Add to Cart</span></>}
+              {!product.is_available ? 'Unavailable' : inCart ? 'In Cart ✓' : <><span className="sm:hidden">Add</span><span className="hidden sm:inline">Add to Cart</span></>}
             </button>
             <Link
               href={`/products/${product.slug}`}

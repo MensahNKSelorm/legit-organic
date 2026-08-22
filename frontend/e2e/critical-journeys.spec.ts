@@ -99,9 +99,14 @@ test.describe('critical customer journeys', () => {
     await page.goto('/products')
     await page.getByRole('searchbox', { name: 'Search this market' }).fill('rice')
     await expect(page.getByText('2 items found')).toBeVisible()
+    await expect(page.getByText('Available').first()).toBeVisible()
     await page.getByRole('button', { name: /add elez rice to cart/i }).click()
     await page.getByRole('button', { name: /open cart/i }).click()
     await expect(page.getByRole('dialog', { name: 'Shopping cart' })).toContainText('Elez Rice')
+    await expect(page.getByRole('dialog', { name: 'Shopping cart' })).toContainText('Product subtotal')
+    await expect(page.getByRole('dialog', { name: 'Shopping cart' })).toContainText(
+      'Delivery arrangements and any applicable charge are confirmed',
+    )
     await page.getByRole('button', { name: 'Pay securely with SeevCash' }).click()
 
     const guest = page.getByRole('dialog', { name: 'Quick order details' })

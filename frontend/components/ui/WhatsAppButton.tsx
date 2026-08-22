@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function WhatsAppButton() {
   const [hovered, setHovered] = useState(false)
+  const pathname = usePathname()
+  const isProductDetail = /^\/products\/[^/]+/.test(pathname)
 
   return (
     <a
@@ -13,7 +16,7 @@ export default function WhatsAppButton() {
       aria-label="Chat with us on WhatsApp"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="whatsapp-pulse fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full transition-transform duration-200 hover:scale-110 hover:shadow-lg"
+      className={`whatsapp-pulse fixed right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full transition-[transform,bottom] duration-200 hover:scale-110 hover:shadow-lg ${isProductDetail ? 'bottom-28 md:bottom-6' : 'bottom-6'}`}
       style={{ backgroundColor: '#25D366' }}
     >
       <svg

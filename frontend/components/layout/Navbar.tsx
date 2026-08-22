@@ -202,8 +202,8 @@ export default function Navbar() {
                 transparent || darkMode ? "/images/logo-darkmode.svg" : "/images/logo-lightmode.svg"
               }
               alt="Legit Organic"
-              width={160}
-              height={44}
+              width={355}
+              height={140}
               priority
               className="h-[34px] w-auto sm:h-10"
             />

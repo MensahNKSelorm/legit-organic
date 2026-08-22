@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart'
 import { useAuth } from '@/lib/auth'
@@ -82,6 +82,18 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     setTimeout(() => setAdded(false), 2000)
   }
 
+  if (!product.is_available) {
+    return (
+      <button
+        type="button"
+        disabled
+        className="w-full cursor-not-allowed bg-[#D8D1C3] px-6 py-3 font-semibold text-[#5B3E31] dark:bg-white/10 dark:text-white/55"
+      >
+        Currently unavailable
+      </button>
+    )
+  }
+
   if (inCart && cartItem) {
     return (
       <div className="flex items-center gap-3 w-full">
@@ -123,5 +135,45 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     >
       {added ? 'Added to Cart ✓' : 'Add to Cart'}
     </button>
+  )
+}
+
+export function MobilePurchaseBar({ product }: AddToCartButtonProps) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const purchaseActions = document.getElementById('primary-purchase-actions')
+    if (!purchaseActions || typeof IntersectionObserver === 'undefined') return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(!entry.isIntersecting),
+      { threshold: 0.1 },
+    )
+    observer.observe(purchaseActions)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      aria-hidden={!visible}
+      inert={!visible}
+      className={[
+        'fixed inset-x-0 bottom-0 z-40 border-t border-[#0D3B2A]/20 bg-[#FAF7F0]/98 px-4 pt-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(13,59,42,.12)] backdrop-blur md:hidden dark:border-white/15 dark:bg-[#171B18]/98',
+        'transition-transform duration-200 motion-reduce:transition-none',
+        visible ? 'translate-y-0' : 'pointer-events-none translate-y-full',
+      ].join(' ')}
+    >
+      <div className="mx-auto grid max-w-lg grid-cols-[auto_1fr] items-center gap-4">
+        <div>
+          <strong className="block text-lg leading-tight text-[#2E7D32] dark:text-[#F4C430]">
+            GH₵ {product.price}
+          </strong>
+          <span className="block max-w-28 truncate text-xs text-[#5B3E31] dark:text-[#B8D4BD]">
+            {product.unit}
+          </span>
+        </div>
+        <AddToCartButton product={product} />
+      </div>
+    </div>
   )
 }
