@@ -74,6 +74,21 @@ class StaffAccessAdminSecurityTests(TestCase):
         self.staff.groups.add(self.operations)
         self.client.force_login(self.owner)
 
+    def test_staff_account_shows_owner_password_and_2fa_controls(self):
+        response = self.client.get(
+            reverse('admin:users_staff_change', args=[self.staff.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f"{reverse('admin:users_user_change', args=[self.staff.pk])}password/",
+        )
+        self.assertContains(
+            response,
+            reverse('staff-security:reset-staff', args=[self.staff.pk]),
+        )
+
     def test_role_change_requires_owner_reauthentication_and_reason(self):
         # The form imports the verifier lazily, so patch the canonical function.
         with patch('security.auth.verify_staff_code', return_value=(True, False)):

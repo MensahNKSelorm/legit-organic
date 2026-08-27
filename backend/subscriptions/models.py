@@ -355,3 +355,152 @@ class WholesaleQuoteItem(models.Model):
         if self.quoted_unit_price is None:
             return None
         return self.quoted_unit_price * self.quantity
+
+
+class BusinessSupplyAgreement(models.Model):
+    STATUSES = [
+        ('draft', 'Draft'), ('under_review', 'Under review'),
+        ('approved', 'Approved'), ('active', 'Active'),
+        ('paused', 'Paused'), ('cancelled', 'Cancelled'),
+    ]
+    FREQUENCIES = [
+        ('weekly', 'Weekly'), ('fortnightly', 'Every two weeks'),
+        ('monthly', 'Monthly'),
+    ]
+
+    business = models.ForeignKey(
+        'users.B2BProfile', on_delete=models.PROTECT, related_name='supply_agreements'
+    )
+    name = models.CharField(max_length=160)
+    status = models.CharField(max_length=20, choices=STATUSES, default='draft')
+    frequency = models.CharField(max_length=20, choices=FREQUENCIES)
+    delivery_zone = models.ForeignKey(
+        DeliveryZone, on_delete=models.PROTECT, related_name='business_supply_agreements'
+    )
+    delivery_address = models.TextField()
+    receiving_contact_name = models.CharField(max_length=150)
+    receiving_contact_phone = models.CharField(max_length=20)
+    receiving_hours = models.CharField(max_length=200, blank=True)
+    delivery_instructions = models.TextField(blank=True)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    next_delivery_date = models.DateField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    activated_at = models.DateTimeField(null=True, blank=True)
+    paused_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    staff_note = models.TextField(blank=True)
+    legacy_subscription = models.OneToOneField(
+        Subscription, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='migrated_business_supply',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def total(self):
+        return self.subtotal + self.delivery_fee
+
+    def __str__(self):
+        return f'{self.business.company_name} · {self.name}'
+
+
+class BusinessSupplyItem(models.Model):
+    agreement = models.ForeignKey(
+        BusinessSupplyAgreement, on_delete=models.CASCADE, related_name='items'
+    )
+    product = models.ForeignKey(
+        'products.Product', on_delete=models.PROTECT,
+        related_name='business_supply_items',
+    )
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    can_substitute = models.BooleanField(default=False)
+    display_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['display_order', 'pk']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['agreement', 'product'],
+                name='unique_product_per_business_supply',
+            )
+        ]
+
+    @property
+    def subtotal(self):
+        return self.unit_price * self.quantity
+
+
+class BusinessSupplyRevision(models.Model):
+    STATUSES = [
+        ('submitted', 'Submitted'), ('approved', 'Approved'),
+        ('rejected', 'Rejected'), ('withdrawn', 'Withdrawn'),
+    ]
+
+    agreement = models.ForeignKey(
+        BusinessSupplyAgreement, on_delete=models.PROTECT, related_name='revisions'
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name='business_supply_revisions',
+    )
+    status = models.CharField(max_length=20, choices=STATUSES, default='submitted')
+    proposed_changes = models.JSONField(default=dict)
+    customer_note = models.TextField(blank=True)
+    staff_note = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+        related_name='reviewed_business_supply_revisions',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class BusinessSupplyCycle(models.Model):
+    STATUSES = [
+        ('renewal_order', 'Renewal order'), ('payment_due', 'Payment due'),
+        ('paid', 'Paid'), ('skipped', 'Skipped'),
+        ('payment_failed', 'Payment failed'), ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'), ('packing', 'Packing'),
+        ('out_for_delivery', 'Out for delivery'), ('delivered', 'Delivered'),
+    ]
+
+    agreement = models.ForeignKey(
+        BusinessSupplyAgreement, on_delete=models.PROTECT, related_name='cycles'
+    )
+    delivery_date = models.DateField()
+    payment_due_at = models.DateTimeField()
+    status = models.CharField(max_length=30, choices=STATUSES, default='renewal_order')
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    payment_reference = models.CharField(max_length=120, blank=True)
+    payment_attempts = models.PositiveSmallIntegerField(default=0)
+    payment_error = models.CharField(max_length=500, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    order = models.OneToOneField(
+        'orders.Order', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='business_supply_cycle',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['delivery_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['agreement', 'delivery_date'],
+                name='unique_business_supply_delivery_cycle',
+            )
+        ]
+
+    @property
+    def total(self):
+        return self.subtotal + self.delivery_fee

@@ -84,10 +84,13 @@ class Order(models.Model):
     guest_name = models.CharField(max_length=200, blank=True)
     guest_phone = models.CharField(max_length=20, blank=True)
     guest_email = models.CharField(max_length=255, blank=True)
+    submission_report_sent_at = models.DateTimeField(null=True, blank=True, editable=False)
     payment_report_sent_at = models.DateTimeField(null=True, blank=True, editable=False)
     delivery_report_sent_at = models.DateTimeField(null=True, blank=True, editable=False)
+    submission_report_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
     payment_report_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
     delivery_report_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
+    submission_report_error = models.CharField(max_length=500, blank=True, editable=False)
     payment_report_error = models.CharField(max_length=500, blank=True, editable=False)
     delivery_report_error = models.CharField(max_length=500, blank=True, editable=False)
     is_test = models.BooleanField(
@@ -102,6 +105,7 @@ class Order(models.Model):
         max_length=20,
         choices=[
             ('seevcash', 'SeevCash'), ('subscription', 'Subscription renewal'),
+            ('business_supply', 'Business supply renewal'),
             ('paystack', 'Paystack (legacy)'), ('whatsapp', 'WhatsApp'),
         ],
         default='whatsapp',
@@ -162,6 +166,23 @@ class Order(models.Model):
             and self.__original_payment_status != 'success'
         )
         super().save(*args, **kwargs)
+
+        if is_update and status_changed:
+            try:
+                cycle = self.business_supply_cycle
+            except Exception:
+                cycle = None
+            if cycle is not None:
+                cycle_status = {
+                    'ready_for_dispatch': 'packing',
+                    'out_for_delivery': 'out_for_delivery',
+                    'shipped': 'out_for_delivery',
+                    'delivered': 'delivered',
+                    'cancelled': 'cancelled',
+                }.get(self.status)
+                if cycle_status and cycle.status != cycle_status:
+                    cycle.status = cycle_status
+                    cycle.save(update_fields=['status', 'updated_at'])
 
         report_events = []
         if is_update and payment_became_successful and not self.is_test:

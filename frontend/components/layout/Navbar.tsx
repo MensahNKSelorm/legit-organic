@@ -92,6 +92,9 @@ function SalesIcon() {
 
 export default function Navbar() {
   const { user, isAuthenticated, isB2B, isSalesRep, logout } = useAuth();
+  const visibleNavLinks = isB2B
+    ? navLinks.filter((link) => link.href !== "/subscriptions")
+    : navLinks;
 
   const pathname = usePathname();
   const isAuthPage =
@@ -214,7 +217,7 @@ export default function Navbar() {
             className="hidden flex-1 items-center justify-center gap-8 md:flex"
             style={{ listStyle: "none", margin: 0, padding: 0 }}
           >
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
@@ -286,7 +289,7 @@ export default function Navbar() {
             </div>
 
             {/* Cart icon */}
-            <CartIcon isTransparent={transparent} />
+            {!isB2B && <CartIcon isTransparent={transparent} />}
 
             {isAuthenticated && user ? (
               <>
@@ -348,11 +351,11 @@ export default function Navbar() {
                           My Recipes
                         </Link>
                         <Link
-                          href="/subscriptions/manage"
+                          href={isB2B ? "/b2b/supply/manage" : "/subscriptions/manage"}
                           onClick={() => setDropdownOpen(false)}
                           className="block border-b border-[#0D3B2A]/10 px-3 py-3 text-sm font-medium text-[#0D3B2A] transition-colors hover:bg-[#F4C430]/20 dark:border-white/10 dark:text-white dark:hover:bg-white/10"
                         >
-                          Weekly Deliveries
+                          {isB2B ? "Supply Agreements" : "Weekly Deliveries"}
                         </Link>
                         <Link
                           href={isB2B ? "/b2b/dashboard" : "/b2b/apply"}
@@ -433,7 +436,7 @@ export default function Navbar() {
                 </svg>
               </button>
             )}
-            <CartIcon isTransparent={transparent} />
+            {!isB2B && <CartIcon isTransparent={transparent} />}
             {isAuthenticated && user?.is_staff && <NotificationBell isTransparent={transparent} />}
             <button
               ref={mobileMenuButtonRef}
@@ -474,7 +477,7 @@ export default function Navbar() {
           ].join(" ")}
         >
           {menuOpen && <ul className="flex flex-col gap-1 px-6 py-5 pb-6" style={{ listStyle: "none" }}>
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
@@ -561,11 +564,11 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    href="/subscriptions/manage"
+                    href={isB2B ? "/b2b/supply/manage" : "/subscriptions/manage"}
                     onClick={() => setMenuOpen(false)}
                     className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
                   >
-                    Weekly Deliveries
+                    {isB2B ? "Supply Agreements" : "Weekly Deliveries"}
                   </Link>
                 </li>
                 <li>

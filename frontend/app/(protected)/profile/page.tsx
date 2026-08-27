@@ -40,7 +40,7 @@ function getWishlistImageSrc(product: Product): string {
 }
 
 export default function ProfilePage() {
-  const { user, logout, updateUser } = useAuth()
+  const { user, logout, updateUser, isB2B } = useAuth()
   const { addItem: addToCart } = useCart()
   const { items: wishlistItems, isLoading: wishlistLoading, removeItem: removeWishlistItem } = useWishlist()
 
@@ -218,10 +218,10 @@ export default function ProfilePage() {
               ))}
             </nav>
             <Link
-              href="/subscriptions/manage"
+              href={isB2B ? "/b2b/dashboard" : "/subscriptions/manage"}
               className="mt-5 flex w-full items-center justify-between border border-[#0D3B2A]/25 bg-[#0D3B2A] px-4 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 dark:border-[#F4C430]/40 dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
             >
-              <span>Weekly Deliveries</span>
+              <span>{isB2B ? 'Business workspace' : 'Weekly Deliveries'}</span>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </Link>
           </aside>
@@ -477,12 +477,17 @@ export default function ProfilePage() {
 
                           {/* Actions */}
                           <div className="flex items-center gap-2 shrink-0">
-                            <button
+                            {isB2B ? <Link
+                              href="/b2b/supply"
+                              className="border border-forest-green bg-forest-green px-3 py-2 text-xs font-semibold text-mist-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:border-[#F4C430] dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
+                            >
+                              Add to supply request
+                            </Link> : <button
                               onClick={() => addToCart(item.product)}
                               className="border border-forest-green bg-forest-green px-3 py-2 text-xs font-semibold text-mist-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:border-[#F4C430] dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426]"
                             >
                               Add to Cart
-                            </button>
+                            </button>}
                             <button
                               onClick={() => removeWishlistItem(item.id)}
                               aria-label="Remove from list"

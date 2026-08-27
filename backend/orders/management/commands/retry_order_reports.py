@@ -13,6 +13,11 @@ class Command(BaseCommand):
         max_attempts = getattr(settings, 'ORDER_REPORT_MAX_ATTEMPTS', 10)
         candidates = Order.objects.filter(is_test=False).filter(
             Q(
+                order_source='whatsapp', status='whatsapp_pending',
+                submission_report_sent_at__isnull=True,
+                submission_report_attempts__lt=max_attempts,
+            )
+            | Q(
                 payment_status='success', payment_report_sent_at__isnull=True,
                 payment_report_attempts__lt=max_attempts,
             )
@@ -21,13 +26,21 @@ class Command(BaseCommand):
                 delivery_report_attempts__lt=max_attempts,
             )
         ).only(
-            'id', 'payment_status', 'status', 'payment_report_sent_at',
+            'id', 'order_source', 'payment_status', 'status',
+            'submission_report_sent_at', 'submission_report_attempts',
+            'payment_report_sent_at',
             'delivery_report_sent_at', 'payment_report_attempts',
             'delivery_report_attempts',
         )
 
         sent = 0
         for order in candidates.iterator():
+            if (
+                order.order_source == 'whatsapp'
+                and order.status == 'whatsapp_pending'
+                and order.submission_report_sent_at is None
+            ):
+                sent += int(send_owner_report_once(order.pk, 'whatsapp_submitted'))
             if order.payment_status == 'success' and order.payment_report_sent_at is None:
                 sent += int(send_owner_report_once(order.pk, 'payment_success'))
             if order.status == 'delivered' and order.delivery_report_sent_at is None:

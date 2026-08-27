@@ -1,13 +1,17 @@
+from django import forms
 from django.contrib import admin
 from django.utils import timezone
 from unfold.admin import ModelAdmin, TabularInline
 
 from .models import (
+    BusinessSupplyAgreement, BusinessSupplyCycle, BusinessSupplyItem,
+    BusinessSupplyRevision,
     DeliveryZone, Subscription, SubscriptionItem, SubscriptionPlan,
     SubscriptionPlanItem, SubscriptionPlanPriceChange, SubscriptionPriceNotice,
     SubscriptionWeek, WholesaleQuote, WholesaleQuoteItem,
 )
 from .services import apply_price_change, deliver_price_notice, prepare_price_change
+from .services import schedule_business_cycle
 
 
 class SubscriptionPlanItemInline(TabularInline):
@@ -248,6 +252,169 @@ class WholesaleQuoteAdmin(ModelAdmin):
     ]
     readonly_fields = ['business', 'converted_order', 'created_at', 'updated_at']
     inlines = [WholesaleQuoteItemInline]
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class BusinessSupplyItemInline(TabularInline):
+    model = BusinessSupplyItem
+    extra = 0
+    fields = ['product', 'quantity', 'unit_price', 'can_substitute', 'display_order']
+
+
+class BusinessSupplyCycleInline(TabularInline):
+    model = BusinessSupplyCycle
+    extra = 0
+    fields = [
+        'delivery_date', 'payment_due_at', 'status', 'subtotal',
+        'delivery_fee', 'payment_reference', 'order',
+    ]
+    readonly_fields = ['payment_reference', 'order']
+
+
+class BusinessSupplyAgreementAdminForm(forms.ModelForm):
+    review_note = forms.CharField(
+        required=False, widget=forms.Textarea(attrs={'rows': 3}),
+        help_text='Required when changing the agreement status.',
+    )
+
+    class Meta:
+        model = BusinessSupplyAgreement
+        fields = '__all__'
+
+    def clean(self):
+        cleaned = super().clean()
+        if self.instance.pk:
+            previous = BusinessSupplyAgreement.objects.filter(
+                pk=self.instance.pk
+            ).values_list('status', flat=True).first()
+            if previous != cleaned.get('status') and not cleaned.get('review_note', '').strip():
+                self.add_error('review_note', 'Record a concise reason for this status change.')
+        return cleaned
+
+
+@admin.register(BusinessSupplyAgreement)
+class BusinessSupplyAgreementAdmin(ModelAdmin):
+    form = BusinessSupplyAgreementAdminForm
+    list_display = [
+        'name', 'business', 'status', 'frequency', 'next_delivery_date',
+        'subtotal', 'delivery_fee', 'updated_at',
+    ]
+    list_filter = ['status', 'frequency', 'delivery_zone', 'next_delivery_date']
+    search_fields = [
+        'name', 'business__company_name', 'business__business_email',
+        'receiving_contact_name', 'receiving_contact_phone',
+    ]
+    readonly_fields = [
+        'business', 'subtotal', 'legacy_subscription', 'approved_at',
+        'activated_at', 'paused_at', 'cancelled_at', 'created_at', 'updated_at',
+    ]
+    fieldsets = (
+        ('Agreement', {'fields': (
+            'business', 'name', 'status', 'frequency', 'delivery_zone',
+            'next_delivery_date', 'review_note', 'staff_note',
+        )}),
+        ('Receiving', {'fields': (
+            'delivery_address', 'receiving_contact_name',
+            'receiving_contact_phone', 'receiving_hours', 'delivery_instructions',
+        )}),
+        ('Commercial terms', {'fields': ('subtotal', 'delivery_fee')}),
+        ('History', {'fields': (
+            'legacy_subscription', 'approved_at', 'activated_at', 'paused_at',
+            'cancelled_at', 'created_at', 'updated_at',
+        ), 'classes': ('collapse',)}),
+    )
+    inlines = [BusinessSupplyItemInline, BusinessSupplyCycleInline]
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        previous = None
+        if change:
+            previous = BusinessSupplyAgreement.objects.filter(pk=obj.pk).values_list(
+                'status', flat=True
+            ).first()
+        if obj.status in {'approved', 'active'} and previous not in {'approved', 'active'}:
+            obj.approved_at = obj.approved_at or timezone.now()
+        super().save_model(request, obj, form, change)
+        if obj.status in {'approved', 'active'} and previous not in {'approved', 'active'}:
+            schedule_business_cycle(obj, obj.next_delivery_date)
+        if previous and previous != obj.status:
+            from security.audit import record_event
+            record_event(
+                action='business_supply.status_changed', request=request, target=obj,
+                before={'status': previous}, after={'status': obj.status},
+                reason=form.cleaned_data.get('review_note', ''),
+            )
+
+
+@admin.register(BusinessSupplyRevision)
+class BusinessSupplyRevisionAdmin(ModelAdmin):
+    list_display = ['agreement', 'status', 'requested_by', 'reviewed_by', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['agreement__name', 'agreement__business__company_name', 'customer_note']
+    readonly_fields = [
+        'agreement', 'requested_by', 'proposed_changes', 'customer_note',
+        'created_at', 'updated_at',
+    ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        previous = None
+        if change:
+            previous = BusinessSupplyRevision.objects.filter(pk=obj.pk).values_list(
+                'status', flat=True
+            ).first()
+        if previous == 'submitted' and obj.status in {'approved', 'rejected'}:
+            obj.reviewed_by = request.user
+            obj.reviewed_at = timezone.now()
+        super().save_model(request, obj, form, change)
+        if previous == 'submitted' and obj.status == 'approved':
+            allowed = {
+                'frequency', 'delivery_address', 'receiving_contact_name',
+                'receiving_contact_phone', 'receiving_hours',
+                'delivery_instructions',
+            }
+            changes = {
+                key: value for key, value in obj.proposed_changes.items()
+                if key in allowed
+            }
+            if changes:
+                BusinessSupplyAgreement.objects.filter(pk=obj.agreement_id).update(
+                    **changes, updated_at=timezone.now()
+                )
+            from security.audit import record_event
+            record_event(
+                action='business_supply.revision_approved', request=request,
+                target=obj.agreement, before={}, after=changes,
+                reason=obj.staff_note or obj.customer_note,
+            )
+
+
+@admin.register(BusinessSupplyCycle)
+class BusinessSupplyCycleAdmin(ModelAdmin):
+    list_display = [
+        'delivery_date', 'agreement', 'status', 'subtotal', 'delivery_fee', 'order'
+    ]
+    list_filter = ['status', 'delivery_date']
+    search_fields = [
+        'agreement__name', 'agreement__business__company_name', 'payment_reference'
+    ]
+    readonly_fields = [
+        'agreement', 'subtotal', 'delivery_fee', 'payment_reference',
+        'payment_attempts', 'payment_error', 'paid_at', 'order',
+        'created_at', 'updated_at',
+    ]
+
+    def has_add_permission(self, request):
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False

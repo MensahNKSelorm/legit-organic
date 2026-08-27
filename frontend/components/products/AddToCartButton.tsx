@@ -71,7 +71,9 @@ export function WishlistButton({ productId }: { productId: number }) {
 }
 
 export default function AddToCartButton({ product }: AddToCartButtonProps) {
+  const router = useRouter()
   const { addItem, isInCart, items, updateQuantity } = useCart()
+  const { isB2B } = useAuth()
   const inCart = isInCart(product.id)
   const cartItem = items.find((i) => i.product.id === product.id)
   const [added, setAdded] = useState(false)
@@ -80,6 +82,18 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     addItem(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
+  }
+
+  if (isB2B) {
+    return (
+      <button
+        type="button"
+        onClick={() => router.push('/b2b/supply')}
+        className="w-full bg-[#F4C430] px-6 py-3 font-semibold text-[#0D3B2A] transition-colors hover:bg-[#C59F2C]"
+      >
+        Add to supply request
+      </button>
+    )
   }
 
   if (!product.is_available) {

@@ -11,7 +11,8 @@ from products.models import Product
 from users.models import B2BProfile, User
 
 from .models import (
-    DeliveryZone, Subscription, SubscriptionPlan, SubscriptionPlanPriceChange,
+    BusinessSupplyAgreement, BusinessSupplyCycle, DeliveryZone,
+    Subscription, SubscriptionPlan, SubscriptionPlanPriceChange,
     SubscriptionPriceNotice, SubscriptionWeek,
 )
 from .services import apply_price_change, deliver_price_notice, prepare_price_change
@@ -65,7 +66,7 @@ class SubscriptionAPITests(APITestCase):
         }, format='json')
         self.assertEqual(response.status_code, 400)
 
-    def test_business_subscription_requires_approved_profile(self):
+    def test_business_deliveries_cannot_be_created_as_household_subscriptions(self):
         response = self.create_subscription(audience='business')
         self.assertEqual(response.status_code, 400)
         B2BProfile.objects.create(
@@ -74,7 +75,8 @@ class SubscriptionAPITests(APITestCase):
             business_email=self.user.email, business_address='Accra', status='approved',
         )
         response = self.create_subscription(audience='business')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 403)
+        self.assertIn('business supply workspace', str(response.data).lower())
 
     def test_users_only_see_their_own_subscriptions(self):
         own = self.create_subscription().data['id']
@@ -162,6 +164,114 @@ class SubscriptionAPITests(APITestCase):
         self.assertEqual(response.status_code, 402)
         week.refresh_from_db()
         self.assertEqual(week.status, 'payment_due')
+
+
+class BusinessSupplyAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='buyer@example.com', password='test-pass', email_verified=True
+        )
+        self.other = User.objects.create_user(
+            email='other-buyer@example.com', password='test-pass', email_verified=True
+        )
+        self.profile = B2BProfile.objects.create(
+            user=self.user, company_name='Buyer Kitchen Ltd', business_type='restaurant',
+            contact_person='Ama Buyer', business_phone='0244000000',
+            business_email=self.user.email, business_address='Accra', status='approved',
+        )
+        self.product = Product.objects.create(
+            name='Business tomatoes', price=Decimal('25.00'), unit='crate',
+            business_supply_category='tomato',
+        )
+        self.zone = DeliveryZone.objects.create(
+            name='Business Accra', delivery_weekday=(timezone.localdate().weekday() + 3) % 7,
+            delivery_fee=Decimal('20.00'), cutoff_hours=48,
+        )
+        self.client.force_authenticate(self.user)
+
+    def payload(self):
+        return {
+            'name': 'Kitchen essentials', 'frequency': 'fortnightly',
+            'delivery_zone': self.zone.pk, 'delivery_address': '1 Trade Road, Accra',
+            'receiving_contact_name': 'Ama Buyer',
+            'receiving_contact_phone': '0244000000',
+            'receiving_hours': 'Monday to Friday, 8am to 4pm',
+            'items': [{'product_id': self.product.pk, 'quantity': 5}],
+        }
+
+    def test_approved_business_submits_separate_supply_agreement(self):
+        response = self.client.post(
+            '/api/subscriptions/business/supply/', self.payload(), format='json'
+        )
+        self.assertEqual(response.status_code, 201)
+        agreement = BusinessSupplyAgreement.objects.get(pk=response.data['id'])
+        self.assertEqual(agreement.status, 'under_review')
+        self.assertEqual(agreement.subtotal, Decimal('125.00'))
+        self.assertEqual(agreement.items.count(), 1)
+        self.assertFalse(Subscription.objects.filter(user=self.user).exists())
+
+    def test_business_supply_rejects_regular_market_product(self):
+        regular_product = Product.objects.create(
+            name='Market yam', price=Decimal('30.00'), unit='tuber'
+        )
+        payload = self.payload()
+        payload['items'] = [{'product_id': regular_product.pk, 'quantity': 5}]
+        response = self.client.post(
+            '/api/subscriptions/business/supply/', payload, format='json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_business_only_sees_its_own_agreements(self):
+        own = self.client.post(
+            '/api/subscriptions/business/supply/', self.payload(), format='json'
+        ).data['id']
+        other_profile = B2BProfile.objects.create(
+            user=self.other, company_name='Other Ltd', business_type='hotel',
+            contact_person='Kojo', business_phone='0200000000',
+            business_email=self.other.email, business_address='Tema', status='approved',
+        )
+        BusinessSupplyAgreement.objects.create(
+            business=other_profile, name='Other supply', frequency='monthly',
+            delivery_zone=self.zone, delivery_address='Tema',
+            receiving_contact_name='Kojo', receiving_contact_phone='0200000000',
+        )
+        response = self.client.get('/api/subscriptions/business/supply/')
+        self.assertEqual([row['id'] for row in response.data], [own])
+
+    def test_unapproved_business_cannot_create_supply(self):
+        self.profile.status = 'under_review'
+        self.profile.save(update_fields=['status'])
+        response = self.client.post(
+            '/api/subscriptions/business/supply/', self.payload(), format='json'
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_approved_business_is_isolated_from_household_commerce(self):
+        self.assertEqual(self.client.get('/api/orders/cart/').status_code, 403)
+        self.assertEqual(self.client.get('/api/subscriptions/').status_code, 403)
+        self.assertEqual(
+            self.client.post('/api/orders/create/', {}, format='json').status_code,
+            403,
+        )
+
+    def test_cycle_actions_are_scoped_to_business_owner(self):
+        agreement = BusinessSupplyAgreement.objects.create(
+            business=self.profile, name='Active supply', status='active',
+            frequency='weekly', delivery_zone=self.zone, delivery_address='Accra',
+            receiving_contact_name='Ama', receiving_contact_phone='0244000000',
+            subtotal=Decimal('125.00'), delivery_fee=Decimal('20.00'),
+            next_delivery_date=timezone.localdate() + timedelta(days=3),
+        )
+        BusinessSupplyCycle.objects.create(
+            agreement=agreement, delivery_date=agreement.next_delivery_date,
+            payment_due_at=timezone.now() + timedelta(days=1),
+            subtotal=agreement.subtotal, delivery_fee=agreement.delivery_fee,
+        )
+        response = self.client.post(
+            f'/api/subscriptions/business/supply/{agreement.pk}/skip/'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(agreement.cycles.order_by('delivery_date').first().status, 'skipped')
 
 
 class SubscriptionPriceChangeTests(APITestCase):

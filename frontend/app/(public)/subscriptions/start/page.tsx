@@ -99,6 +99,10 @@ function StartSubscriptionContent() {
     region: "",
     phone: "",
   });
+
+  useEffect(() => {
+    if (audience === "business" || isB2B) router.replace("/b2b/supply");
+  }, [audience, isB2B, router]);
   const [showMap, setShowMap] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -296,7 +300,7 @@ function StartSubscriptionContent() {
     else void continueToPayment();
   }
 
-  if (authLoading) return <div className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />;
+  if (authLoading || isB2B) return <div className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />;
 
   return (
     <div className="min-h-screen bg-[#F4EFE4] pt-28 pb-24 text-[#173C2A] md:pt-36 dark:bg-[#171B18] dark:text-white">

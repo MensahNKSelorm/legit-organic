@@ -86,7 +86,7 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       {
-        source: '/b2b/:path(apply|dashboard|quote|setup-password)',
+        source: '/b2b/:path(apply|dashboard|quote|setup-password|supply)',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       {

@@ -9,9 +9,14 @@ from products.models import Product
 from users.models import BusinessPrice, B2BProfile
 
 from .models import (
-    DeliveryZone, Subscription, SubscriptionItem, SubscriptionPlan,
+    BusinessSupplyAgreement, BusinessSupplyCycle, BusinessSupplyItem,
+    BusinessSupplyRevision, DeliveryZone, Subscription, SubscriptionItem, SubscriptionPlan,
     SubscriptionPlanItem, SubscriptionWeek, WholesaleQuote, WholesaleQuoteItem,
 )
+
+
+def business_supply_products():
+    return Product.objects.filter(is_available=True).exclude(business_supply_category='')
 
 
 class ProductSummarySerializer(serializers.ModelSerializer):
@@ -118,18 +123,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         user = self.context['request'].user
         audience = attrs.get('audience', 'household')
+        if audience == 'business':
+            raise serializers.ValidationError({
+                'audience': 'Use a Business Supply Agreement for recurring business deliveries.'
+            })
         plan = attrs.get('plan')
         if plan and plan.audience != audience:
             raise serializers.ValidationError({'plan': 'Choose a plan for this account type.'})
-        if audience == 'business':
-            try:
-                profile = user.b2b_profile
-            except B2BProfile.DoesNotExist:
-                profile = None
-            if profile is None or profile.status != 'approved':
-                raise serializers.ValidationError(
-                    {'audience': 'An approved business account is required.'}
-                )
         items = attrs.get('items') or []
         if not plan and not items:
             raise serializers.ValidationError({'items': 'Choose at least one product.'})
@@ -217,7 +217,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 class WholesaleQuoteItemSerializer(serializers.ModelSerializer):
     product = ProductSummarySerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
-        source='product', queryset=Product.objects.filter(is_available=True),
+        source='product', queryset=business_supply_products(),
         write_only=True,
     )
 
@@ -256,3 +256,128 @@ class WholesaleQuoteSerializer(serializers.ModelSerializer):
             WholesaleQuoteItem(quote=quote, **item) for item in items
         ])
         return quote
+
+
+class BusinessSupplyItemSerializer(serializers.ModelSerializer):
+    product = ProductSummarySerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        source='product', queryset=business_supply_products(),
+        write_only=True,
+    )
+    subtotal = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = BusinessSupplyItem
+        fields = [
+            'id', 'product', 'product_id', 'quantity', 'unit_price',
+            'subtotal', 'can_substitute', 'display_order',
+        ]
+        read_only_fields = ['id', 'unit_price', 'subtotal']
+
+
+class BusinessSupplyCycleSerializer(serializers.ModelSerializer):
+    total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = BusinessSupplyCycle
+        fields = [
+            'id', 'delivery_date', 'payment_due_at', 'status', 'subtotal',
+            'delivery_fee', 'total', 'payment_reference', 'paid_at', 'order',
+        ]
+
+
+class BusinessSupplyRevisionSerializer(serializers.ModelSerializer):
+    ALLOWED_FIELDS = {
+        'frequency', 'delivery_address', 'receiving_contact_name',
+        'receiving_contact_phone', 'receiving_hours', 'delivery_instructions',
+    }
+
+    class Meta:
+        model = BusinessSupplyRevision
+        fields = [
+            'id', 'status', 'proposed_changes', 'customer_note', 'staff_note',
+            'reviewed_at', 'created_at',
+        ]
+        read_only_fields = ['id', 'status', 'staff_note', 'reviewed_at', 'created_at']
+
+    def validate_proposed_changes(self, changes):
+        if not isinstance(changes, dict) or not changes:
+            raise serializers.ValidationError('Describe at least one requested change.')
+        unsupported = set(changes) - self.ALLOWED_FIELDS
+        if unsupported:
+            raise serializers.ValidationError(
+                f"Unsupported fields: {', '.join(sorted(unsupported))}."
+            )
+        if 'frequency' in changes and changes['frequency'] not in {
+            choice[0] for choice in BusinessSupplyAgreement.FREQUENCY_CHOICES
+        }:
+            raise serializers.ValidationError('Choose a valid delivery frequency.')
+        for field, value in changes.items():
+            if field != 'delivery_instructions' and not str(value).strip():
+                raise serializers.ValidationError(f'{field} cannot be blank.')
+        return changes
+
+
+class BusinessSupplyAgreementSerializer(serializers.ModelSerializer):
+    items = BusinessSupplyItemSerializer(many=True)
+    delivery_zone_detail = DeliveryZoneSerializer(source='delivery_zone', read_only=True)
+    cycles = BusinessSupplyCycleSerializer(many=True, read_only=True)
+    revisions = BusinessSupplyRevisionSerializer(many=True, read_only=True)
+    total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = BusinessSupplyAgreement
+        fields = [
+            'id', 'name', 'status', 'frequency', 'delivery_zone',
+            'delivery_zone_detail', 'delivery_address', 'receiving_contact_name',
+            'receiving_contact_phone', 'receiving_hours', 'delivery_instructions',
+            'subtotal', 'delivery_fee', 'total', 'next_delivery_date',
+            'approved_at', 'activated_at', 'items', 'cycles', 'revisions',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = [
+            'id', 'status', 'subtotal', 'delivery_fee', 'approved_at',
+            'activated_at', 'created_at', 'updated_at',
+        ]
+
+    def validate_items(self, items):
+        if not items:
+            raise serializers.ValidationError('Choose at least one product.')
+        ids = [item['product'].pk for item in items]
+        if len(ids) != len(set(ids)):
+            raise serializers.ValidationError('Choose each product once.')
+        return items
+
+    @transaction.atomic
+    def create(self, validated_data):
+        profile = self.context['request'].user.b2b_profile
+        items = validated_data.pop('items')
+        zone = validated_data['delivery_zone']
+        agreement = BusinessSupplyAgreement.objects.create(
+            business=profile, status='under_review', delivery_fee=zone.delivery_fee,
+            **validated_data,
+        )
+        subtotal = Decimal('0.00')
+        rows = []
+        for index, item in enumerate(items):
+            product = item['product']
+            quantity = item['quantity']
+            price = product.price
+            if profile.price_list_id:
+                business_price = BusinessPrice.objects.filter(
+                    price_list=profile.price_list, product=product,
+                    is_available=True, minimum_quantity__lte=quantity,
+                ).first()
+                if business_price:
+                    price = business_price.unit_price
+            rows.append(BusinessSupplyItem(
+                agreement=agreement, product=product, quantity=quantity,
+                unit_price=price,
+                can_substitute=item.get('can_substitute', False),
+                display_order=item.get('display_order', index),
+            ))
+            subtotal += price * quantity
+        BusinessSupplyItem.objects.bulk_create(rows)
+        agreement.subtotal = subtotal
+        agreement.save(update_fields=['subtotal', 'updated_at'])
+        return agreement

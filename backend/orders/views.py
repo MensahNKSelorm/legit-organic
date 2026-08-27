@@ -5,6 +5,7 @@ import json
 import time
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -24,10 +25,11 @@ from products.models import Product
 from legitorganic.seevcash import SeevCashError, create_checkout, verify_checkout
 from .access import issue_guest_order_token, valid_guest_order_token
 from security.api import StaffSessionMFARequired
+from users.permissions import NotApprovedBusiness, is_approved_business
 
 
 class CartView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def get(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -37,7 +39,7 @@ class CartView(APIView):
 
 
 class CartItemViewSet(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -70,7 +72,7 @@ class CartItemViewSet(APIView):
 
 
 class CartClearView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -85,6 +87,11 @@ class CreateOrderView(APIView):
     throttle_scope = 'guest_order'
 
     def post(self, request):
+        if is_approved_business(request.user):
+            return Response(
+                {'detail': 'Use your business supply workspace to place business orders.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = CreateOrderSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -246,6 +253,9 @@ def _complete_verified_order(order_id, pdata):
     if hasattr(order, 'subscription_week'):
         from subscriptions.services import finalize_paid_week
         finalize_paid_week(order.subscription_week.pk, pdata)
+    if hasattr(order, 'business_supply_cycle'):
+        from subscriptions.services import finalize_paid_business_cycle
+        finalize_paid_business_cycle(order.business_supply_cycle.pk, pdata)
     try:
         from users.emails import send_order_confirmation_email
         if order.user:
@@ -402,6 +412,16 @@ class SeevCashWebhookView(APIView):
                     if locked.payment_status == 'pending':
                         locked.payment_status = 'failed'
                         locked.save(update_fields=['payment_status'])
+                        try:
+                            cycle = locked.business_supply_cycle
+                        except ObjectDoesNotExist:
+                            cycle = None
+                        if cycle is not None:
+                            cycle.status = 'payment_failed'
+                            cycle.payment_error = 'Payment was declined by the provider.'
+                            cycle.save(update_fields=[
+                                'status', 'payment_error', 'updated_at'
+                            ])
             event.status = 'processed'
             event.error = ''
             event.processed_at = timezone.now()

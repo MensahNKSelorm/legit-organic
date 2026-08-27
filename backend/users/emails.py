@@ -6,7 +6,7 @@ EMAIL_LOGO_URL = 'https://legitorganic.com/images/email-logo.png'
 
 
 def send_owner_order_report(order, event):
-    """Send a concise internal report when payment succeeds or delivery completes."""
+    """Send a concise internal report for an important order milestone."""
     recipient = settings.ORDER_REPORT_EMAIL
     if not recipient:
         return
@@ -28,8 +28,27 @@ def send_owner_order_report(order, event):
         f'GH&#8373;{item.subtotal:.2f}</td></tr>'
         for item in order.items.all()
     )
-    is_paid = event == 'payment_success'
-    heading = 'Payment received' if is_paid else 'Order delivered'
+    event_copy = {
+        'whatsapp_submitted': (
+            'New WhatsApp order',
+            'Awaiting manual payment confirmation',
+            'Contact the customer if needed. Confirm payment before processing this order.',
+            '#fff4cf',
+        ),
+        'payment_success': (
+            'Payment received',
+            'Paid',
+            'Payment has been verified. This order is ready for processing.',
+            '#eff6ef',
+        ),
+        'delivered': (
+            'Order delivered',
+            'Delivered',
+            'Delivery has been recorded as complete.',
+            '#eff6ef',
+        ),
+    }
+    heading, payment_label, next_action, notice_colour = event_copy[event]
     subject = f'{heading}: {order.reference}'
 
     resend.Emails.send({
@@ -50,8 +69,12 @@ def send_owner_order_report(order, event):
                 <tr><td style="padding:6px 0;color:#66756c;">Email</td><td style="text-align:right;">{escape(customer_email or 'Not supplied')}</td></tr>
                 <tr><td style="padding:6px 0;color:#66756c;">Phone</td><td style="text-align:right;">{escape(customer_phone or 'Not supplied')}</td></tr>
                 <tr><td style="padding:6px 0;color:#66756c;">Channel</td><td style="text-align:right;">{escape(order.get_order_source_display())}</td></tr>
+                <tr><td style="padding:6px 0;color:#66756c;">Payment</td><td style="text-align:right;font-weight:700;">{escape(payment_label)}</td></tr>
                 <tr><td style="padding:6px 0;color:#66756c;">Delivery</td><td style="text-align:right;max-width:360px;">{escape(order.delivery_address or 'Not supplied')}</td></tr>
               </table>
+              <div style="margin-top:22px;padding:16px;background:{notice_colour};font-size:14px;line-height:1.5;">
+                <strong>Next step:</strong> {escape(next_action)}
+              </div>
               <h2 style="font-size:17px;margin:26px 0 8px;">Order contents</h2>
               <table style="width:100%;border-collapse:collapse;font-size:14px;">{rows}</table>
               <div style="margin-top:22px;padding:16px;background:#eff6ef;font-size:18px;font-weight:700;">

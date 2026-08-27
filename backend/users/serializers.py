@@ -169,11 +169,18 @@ class BusinessPriceSerializer(serializers.ModelSerializer):
 
 
 class BusinessPriceListSerializer(serializers.ModelSerializer):
-    prices = BusinessPriceSerializer(many=True, read_only=True)
+    prices = serializers.SerializerMethodField()
 
     class Meta:
         model = BusinessPriceList
         fields = ['id', 'name', 'description', 'prices']
+
+    def get_prices(self, obj):
+        rows = obj.prices.filter(
+            is_available=True,
+            product__is_available=True,
+        ).exclude(product__business_supply_category='').select_related('product')
+        return BusinessPriceSerializer(rows, many=True, context=self.context).data
 
 
 class B2BProfileSerializer(serializers.ModelSerializer):
@@ -185,11 +192,15 @@ class B2BProfileSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(
         source='get_status_display', read_only=True
     )
+    registration_status_display = serializers.CharField(
+        source='get_registration_status_display', read_only=True
+    )
 
     class Meta:
         model = B2BProfile
         fields = [
-            'id', 'company_name', 'business_type', 'business_type_display',
+            'id', 'company_name', 'registration_status', 'registration_status_display',
+            'business_type', 'business_type_display',
             'contact_person', 'business_phone', 'business_email',
             'business_address', 'business_registration',
             'trading_name', 'legal_structure', 'sector', 'year_started', 'website',
@@ -236,19 +247,22 @@ class B2BProfileSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Select valid produce categories.')
         cleaned = list(dict.fromkeys(item.strip() for item in value if item.strip()))
         if not cleaned:
-            raise serializers.ValidationError('Select at least one produce category.')
+            raise serializers.ValidationError('Select tomatoes, onions, or both.')
+        allowed = {'Tomatoes', 'Onions'}
+        unsupported = [item for item in cleaned if item not in allowed]
+        if unsupported:
+            raise serializers.ValidationError('Business supply is currently limited to tomatoes and onions.')
         return cleaned
 
     def validate(self, attrs):
         registered = {'business_name', 'partnership', 'limited_shares', 'limited_guarantee'}
         exempt = {'public_institution', 'cooperative', 'foreign_mission', 'other'}
         structure = attrs.get('legal_structure', '')
+        registration_status = attrs.get('registration_status', 'registered')
 
         required = {
-            'company_name': 'Enter the registered organisation name.',
-            'organization_tin': 'Enter the organisation TIN.',
+            'company_name': 'Enter the business or organisation name.',
             'contact_person': 'Enter the authorised contact name.',
-            'contact_job_title': 'Enter the contact person’s role.',
             'business_phone': 'Enter a primary business phone.',
             'business_email': 'Enter a work email address.',
             'delivery_region': 'Select the delivery region.',
@@ -261,7 +275,7 @@ class B2BProfileSerializer(serializers.ModelSerializer):
         }
         errors = {field: message for field, message in required.items() if not attrs.get(field)}
         if not attrs.get('produce_categories'):
-            errors['produce_categories'] = 'Select at least one produce category.'
+            errors['produce_categories'] = 'Select tomatoes, onions, or both.'
         if not attrs.get('ghana_post_gps') and not (
             attrs.get('delivery_landmark') and attrs.get('delivery_directions')
         ):
@@ -271,17 +285,31 @@ class B2BProfileSerializer(serializers.ModelSerializer):
         ):
             errors['ghana_post_gps'] = 'Use a GhanaPost GPS format such as GA-123-4567.'
 
-        if structure in registered:
+        if registration_status == 'informal':
+            attrs['legal_structure'] = 'informal_operator'
+            if not attrs.get('registration_exemption_reason'):
+                errors['registration_exemption_reason'] = 'Describe where and how the business operates.'
+            if attrs.get('verification_document_type') not in {
+                'ghana_card', 'drivers_licence', 'passport',
+                'trade_association_letter', 'operating_site_evidence'
+            }:
+                errors['verification_document_type'] = 'Choose the evidence you are providing.'
+        elif not attrs.get('organization_tin'):
+            errors['organization_tin'] = 'Enter the organisation TIN.'
+        if registration_status == 'registered' and not attrs.get('contact_job_title'):
+            errors['contact_job_title'] = 'Enter the contact person’s role.'
+
+        if registration_status == 'registered' and structure in registered:
             if not attrs.get('business_registration'):
                 errors['business_registration'] = 'Enter the ORC registration number.'
             if attrs.get('verification_document_type') != 'orc_certificate':
                 errors['verification_document_type'] = 'Select the ORC certificate option.'
-        elif structure in exempt:
+        elif registration_status == 'registered' and structure in exempt:
             if not attrs.get('registration_exemption_reason'):
                 errors['registration_exemption_reason'] = 'Explain the organisation’s registration basis.'
             if attrs.get('verification_document_type') != 'introductory_letter':
                 errors['verification_document_type'] = 'Select the official letter option.'
-        else:
+        elif registration_status == 'registered':
             errors['legal_structure'] = 'Select a recognised legal structure.'
 
         if not self.instance and not attrs.get('verification_document'):

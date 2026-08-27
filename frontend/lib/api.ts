@@ -3,7 +3,7 @@ import type {
   BlogPost, BlogCategory,
   Recipe, RecipeWithPairings, UserRecipe,
   User, Order, PromoCode, WishlistItem,
-  B2BProfile, BusinessPriceList, DeliveryZone, FoodSubscription,
+  B2BProfile, BusinessPriceList, BusinessSupplyAgreement, DeliveryZone, FoodSubscription,
   SubscriptionPlan, WholesaleQuote,
   SalesRepProfile, ReferredCustomer, CommissionSummary,
   AppNotification, NotificationResponse,
@@ -290,6 +290,36 @@ export const api = {
     apply: (data: FormData) => fetchFormAPI<B2BProfile>('/api/users/b2b/apply/', data),
     status: () => fetchWithAuth<B2BProfile | { status: null }>('/api/users/b2b/status/'),
     prices: () => fetchWithAuth<{ price_list: BusinessPriceList | null }>('/api/users/b2b/prices/'),
+    supply: {
+      list: () => fetchWithAuth<BusinessSupplyAgreement[]>('/api/subscriptions/business/supply/'),
+      create: (data: {
+        name: string
+        frequency: 'weekly' | 'fortnightly' | 'monthly'
+        delivery_zone: number
+        delivery_address: string
+        receiving_contact_name: string
+        receiving_contact_phone: string
+        receiving_hours?: string
+        delivery_instructions?: string
+        items: Array<{ product_id: number; quantity: number; can_substitute?: boolean }>
+      }) => fetchWithAuth<BusinessSupplyAgreement>('/api/subscriptions/business/supply/', {
+        method: 'POST', body: JSON.stringify(data),
+      }),
+      action: (id: number, action: 'pause' | 'resume' | 'cancel' | 'skip') =>
+        fetchWithAuth<BusinessSupplyAgreement>(`/api/subscriptions/business/supply/${id}/${action}/`, { method: 'POST' }),
+      revise: (id: number, proposed_changes: Record<string, unknown>, customer_note: string) =>
+        fetchWithAuth(`/api/subscriptions/business/supply/${id}/revisions/`, {
+          method: 'POST', body: JSON.stringify({ proposed_changes, customer_note }),
+        }),
+      initializePayment: (cycleId: number) => fetchWithAuth<{ checkout_url: string; reference: string }>(
+        `/api/subscriptions/business/supply/cycles/${cycleId}/payment/`, { method: 'POST' },
+      ),
+      verifyPayment: (cycleId: number) => fetchWithAuth<BusinessSupplyAgreement>(
+        '/api/subscriptions/business/supply/payment/verify/', {
+          method: 'POST', body: JSON.stringify({ cycle_id: cycleId }),
+        },
+      ),
+    },
     setupPassword: (uid: string, token: string, password: string) =>
       fetchAPI<{ message: string; access: string; user: import('@/types').User }>(
         '/api/users/b2b/setup-password/',

@@ -390,6 +390,28 @@ class AtomicOrderCreationTests(TestCase):
         self.assertEqual(order.guest_phone, '0200000000')
         self.assertEqual(order.delivery_address, '10, Farm Road, Accra, Greater Accra')
 
+    @override_settings(ORDER_REPORT_EMAIL='legitorganic9@gmail.com')
+    @patch('users.emails.resend.Emails.send')
+    def test_whatsapp_order_alert_is_sent_once_after_items_are_saved(self, mock_send):
+        payload = self._payload([{'product_id': self.product.id, 'quantity': 2}])
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(CREATE_URL, payload, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        order = Order.objects.get(reference=response.data['reference'])
+        self.assertIsNotNone(order.submission_report_sent_at)
+        self.assertEqual(order.submission_report_attempts, 1)
+        self.assertEqual(mock_send.call_count, 1)
+        payload = mock_send.call_args.args[0]
+        self.assertEqual(payload['to'], ['legitorganic9@gmail.com'])
+        self.assertIn('New WhatsApp order', payload['subject'])
+        self.assertIn('Awaiting manual payment confirmation', payload['html'])
+        self.assertIn('Tomatoes', payload['html'])
+
+        from .reporting import send_owner_report_once
+        self.assertFalse(send_owner_report_once(order.pk, 'whatsapp_submitted'))
+        self.assertEqual(mock_send.call_count, 1)
+
     def test_invalid_product_leaves_no_orphan_order(self):
         before = Order.objects.count()
         resp = self.client.post(CREATE_URL, self._payload([

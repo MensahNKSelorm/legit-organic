@@ -52,6 +52,10 @@ class Badge(models.Model):
 
 
 class Product(models.Model):
+    BUSINESS_SUPPLY_CATEGORY_CHOICES = [
+        ('tomato', 'Tomatoes'),
+        ('onion', 'Onions'),
+    ]
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = CKEditor5Field(blank=True, config_name='extends')
@@ -78,6 +82,12 @@ class Product(models.Model):
     )
     is_featured = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
+    business_supply_category = models.CharField(
+        max_length=20,
+        choices=BUSINESS_SUPPLY_CATEGORY_CHOICES,
+        blank=True,
+        help_text='Set only for products available through the B2B tomato and onion catalogue.',
+    )
     storage_tips = CKEditor5Field(
         blank=True, config_name='default',
         help_text='Storage and handling instructions e.g. Keep refrigerated, use within 7 days'

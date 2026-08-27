@@ -41,6 +41,7 @@ export interface Product {
   badge: Badge | null
   is_featured: boolean
   is_available: boolean
+  business_supply_category?: 'tomato' | 'onion' | ''
   storage_tips?: string
   nutritional_info?: string
   nutritional_score?: number
@@ -292,6 +293,8 @@ export interface BusinessPriceList {
 export interface B2BProfile {
   id: number
   company_name: string
+  registration_status: 'registered' | 'informal'
+  registration_status_display: string
   business_type: string
   business_type_display: string
   contact_person: string
@@ -305,6 +308,64 @@ export interface B2BProfile {
   rejection_reason: string
   approved_at: string | null
   created_at: string
+}
+
+export interface BusinessSupplyItem {
+  id: number
+  product: Product
+  quantity: number
+  unit_price: string
+  subtotal: string
+  can_substitute: boolean
+  display_order: number
+}
+
+export interface BusinessSupplyCycle {
+  id: number
+  delivery_date: string
+  payment_due_at: string
+  status: 'renewal_order' | 'payment_due' | 'paid' | 'skipped' | 'payment_failed' | 'expired' | 'cancelled' | 'packing' | 'out_for_delivery' | 'delivered'
+  subtotal: string
+  delivery_fee: string
+  total: string
+  payment_reference: string
+  paid_at: string | null
+  order: number | null
+}
+
+export interface BusinessSupplyRevision {
+  id: number
+  status: 'submitted' | 'approved' | 'rejected' | 'withdrawn'
+  proposed_changes: Record<string, unknown>
+  customer_note: string
+  staff_note: string
+  reviewed_at: string | null
+  created_at: string
+}
+
+export interface BusinessSupplyAgreement {
+  id: number
+  name: string
+  status: 'draft' | 'under_review' | 'approved' | 'active' | 'paused' | 'cancelled'
+  frequency: 'weekly' | 'fortnightly' | 'monthly'
+  delivery_zone: number
+  delivery_zone_detail: DeliveryZone
+  delivery_address: string
+  receiving_contact_name: string
+  receiving_contact_phone: string
+  receiving_hours: string
+  delivery_instructions: string
+  subtotal: string
+  delivery_fee: string
+  total: string
+  next_delivery_date: string | null
+  approved_at: string | null
+  activated_at: string | null
+  items: BusinessSupplyItem[]
+  cycles: BusinessSupplyCycle[]
+  revisions: BusinessSupplyRevision[]
+  created_at: string
+  updated_at: string
 }
 
 export interface DeliveryZone {

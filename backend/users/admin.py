@@ -187,8 +187,15 @@ class StaffAdmin(ModelAdmin):
     def security_controls(self, obj):
         if not obj or obj.is_superuser:
             return 'Owner security is managed from the signed-in account.'
-        url = reverse('staff-security:reset-staff', args=[obj.pk])
-        return format_html('<a href="{}">Reset 2FA and revoke sessions</a>', url)
+        password_url = f"{reverse('admin:users_user_change', args=[obj.pk])}password/"
+        reset_url = reverse('staff-security:reset-staff', args=[obj.pk])
+        return format_html(
+            '<a href="{}">Change password</a>'
+            '<span aria-hidden="true"> &nbsp;·&nbsp; </span>'
+            '<a href="{}">Reset 2FA and revoke sessions</a>',
+            password_url,
+            reset_url,
+        )
 
     def has_module_permission(self, request):
         return request.user.is_superuser
@@ -457,10 +464,10 @@ class B2BReviewAdminForm(forms.ModelForm):
 class B2BProfileAdmin(ModelAdmin):
     form = B2BReviewAdminForm
     list_display = [
-        'company_name', 'get_email', 'business_type', 'status',
+        'company_name', 'registration_status', 'get_email', 'business_type', 'status',
         'assigned_to', 'price_list', 'created_at',
     ]
-    list_filter = ['status', 'business_type', 'assigned_to', 'price_list']
+    list_filter = ['registration_status', 'status', 'business_type', 'assigned_to', 'price_list']
     search_fields = ['company_name', 'business_email', 'contact_person', 'business_phone']
     ordering = ['-created_at']
     readonly_fields = ['user', 'verification_document_download', 'created_at', 'updated_at', 'approved_at']
@@ -468,7 +475,7 @@ class B2BProfileAdmin(ModelAdmin):
     fieldsets = (
         ('Organisation', {
             'fields': (
-                'user', 'company_name', 'trading_name', 'legal_structure',
+                'user', 'registration_status', 'company_name', 'trading_name', 'legal_structure',
                 'business_type', 'sector', 'year_started', 'website',
             ),
         }),

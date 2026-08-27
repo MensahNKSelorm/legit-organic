@@ -6,6 +6,7 @@ import type { Product } from '@/types'
 import { getMediaUrl } from '@/lib/media'
 import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-placeholders'
 import { useCart } from '@/lib/cart'
+import { useAuth } from '@/lib/auth'
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim()
 
@@ -27,6 +28,7 @@ export default function ProductCard({ product, featured = false, preview = false
     ? getMediaUrl(product.images[0].image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
     : getMediaUrl(product.image, PLACEHOLDERS[product.id % PLACEHOLDERS.length])
   const { addItem, isInCart } = useCart()
+  const { isB2B } = useAuth()
   const inCart = isInCart(product.id)
 
   return (
@@ -84,7 +86,10 @@ export default function ProductCard({ product, featured = false, preview = false
             </span>
           </div>
           <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2">
-            <button
+            {isB2B ? <Link
+              href="/b2b/supply"
+              className="flex min-h-11 items-center justify-center bg-[#F4C430] px-2 py-2 text-[10px] font-semibold text-[#0D3B2A] transition-colors hover:bg-[#C59F2C] sm:px-3 sm:text-xs"
+            >Add to supply request</Link> : <button
               onClick={() => product.is_available && addItem(product)}
               aria-label={!product.is_available ? `${product.name} is currently unavailable` : inCart ? `${product.name} is in cart` : `Add ${product.name} to cart`}
               className={[
@@ -98,7 +103,7 @@ export default function ProductCard({ product, featured = false, preview = false
               disabled={inCart || !product.is_available}
             >
               {!product.is_available ? 'Unavailable' : inCart ? 'In Cart ✓' : <><span className="sm:hidden">Add</span><span className="hidden sm:inline">Add to Cart</span></>}
-            </button>
+            </button>}
             <Link
               href={`/products/${product.slug}`}
               className="flex min-h-11 items-center justify-center gap-1 whitespace-nowrap border border-[#0D3B2A]/20 px-2 py-2 text-[10px] font-semibold text-[#0D3B2A] transition-colors hover:bg-[#E6D8BD] dark:border-white/20 dark:text-[#faf7f0] dark:hover:bg-white/10 sm:px-3 sm:text-xs"

@@ -39,9 +39,9 @@ class ProductAdmin(ModelAdmin):
     inlines = [ProductImageInline]
     list_display = [
         'name', 'category', 'price', 'unit', 'region',
-        'is_featured', 'is_available', 'created_at',
+        'business_supply_category', 'is_featured', 'is_available', 'created_at',
     ]
-    list_filter = ['category', 'is_featured', 'is_available', 'region']
+    list_filter = ['category', 'business_supply_category', 'is_featured', 'is_available', 'region']
     search_fields = ['name', 'description']
     list_editable = ['is_featured', 'is_available']
     prepopulated_fields = {'slug': ('name',)}
@@ -57,7 +57,7 @@ class ProductAdmin(ModelAdmin):
             'fields': ('region', 'badge'),
         }),
         ('Storefront state', {
-            'fields': ('is_featured', 'is_available'),
+            'fields': ('is_featured', 'is_available', 'business_supply_category'),
         }),
         ('Nutrition, care & storage', {
             'fields': ('nutritional_score', 'nutritional_info', 'storage_tips'),

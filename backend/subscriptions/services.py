@@ -1,11 +1,104 @@
-from datetime import datetime, time, timedelta
+import calendar
+from datetime import date, datetime, time, timedelta
 
 from django.utils import timezone
 from django.db import transaction
 
 from .models import (
+    BusinessSupplyAgreement, BusinessSupplyCycle,
     SubscriptionPlanPriceChange, SubscriptionPriceNotice, SubscriptionWeek,
 )
+
+
+def next_business_delivery(agreement, after_date=None):
+    current = after_date or agreement.next_delivery_date or timezone.localdate()
+    if agreement.frequency == 'weekly':
+        return current + timedelta(days=7)
+    if agreement.frequency == 'fortnightly':
+        return current + timedelta(days=14)
+    month = current.month + 1
+    year = current.year + (month > 12)
+    month = 1 if month > 12 else month
+    return date(year, month, min(current.day, calendar.monthrange(year, month)[1]))
+
+
+def schedule_business_cycle(agreement, delivery_date=None):
+    delivery_date = delivery_date or agreement.next_delivery_date
+    if not delivery_date:
+        delivery_date = next_business_delivery(agreement)
+    due_at = timezone.make_aware(datetime.combine(delivery_date, time.min)) - timedelta(
+        hours=agreement.delivery_zone.cutoff_hours
+    )
+    cycle, _ = BusinessSupplyCycle.objects.get_or_create(
+        agreement=agreement, delivery_date=delivery_date,
+        defaults={
+            'payment_due_at': due_at, 'status': 'renewal_order',
+            'subtotal': agreement.subtotal, 'delivery_fee': agreement.delivery_fee,
+        },
+    )
+    agreement.next_delivery_date = delivery_date
+    agreement.save(update_fields=['next_delivery_date', 'updated_at'])
+    return cycle
+
+
+@transaction.atomic
+def ensure_business_supply_order(cycle_id):
+    from orders.models import Order, OrderItem
+
+    cycle = BusinessSupplyCycle.objects.select_for_update().select_related(
+        'agreement__business__user'
+    ).get(pk=cycle_id)
+    if cycle.order_id:
+        return cycle.order
+    agreement = cycle.agreement
+    user = agreement.business.user
+    reference = f'LO-B2B-{agreement.pk}-{cycle.delivery_date:%Y%m%d}'
+    order, created = Order.objects.get_or_create(
+        reference=reference,
+        defaults={
+            'user': user, 'status': 'pending', 'payment_status': 'pending',
+            'total_amount': cycle.total, 'delivery_address': agreement.delivery_address,
+            'guest_name': agreement.receiving_contact_name,
+            'guest_email': user.email,
+            'guest_phone': agreement.receiving_contact_phone,
+            'order_source': 'business_supply', 'payment_provider': 'seevcash',
+        },
+    )
+    if created:
+        OrderItem.objects.bulk_create([
+            OrderItem(
+                order=order, product=item.product, quantity=item.quantity,
+                unit_price=item.unit_price,
+            )
+            for item in agreement.items.select_related('product')
+        ])
+    cycle.order = order
+    cycle.status = 'payment_due'
+    cycle.save(update_fields=['order', 'status', 'updated_at'])
+    return order
+
+
+@transaction.atomic
+def finalize_paid_business_cycle(cycle_id, payment_data):
+    cycle = BusinessSupplyCycle.objects.select_for_update().select_related(
+        'agreement'
+    ).get(pk=cycle_id)
+    if cycle.status == 'paid':
+        return cycle
+    order = ensure_business_supply_order(cycle.pk)
+    order.provider_transaction_id = str(payment_data.get('id', '') or '')
+    order.payment_status = 'success'
+    order.status = 'processing'
+    order.save(update_fields=['provider_transaction_id', 'payment_status', 'status'])
+    agreement = cycle.agreement
+    agreement.status = 'active'
+    agreement.activated_at = agreement.activated_at or timezone.now()
+    agreement.save(update_fields=['status', 'activated_at', 'updated_at'])
+    cycle.status = 'paid'
+    cycle.payment_error = ''
+    cycle.paid_at = timezone.now()
+    cycle.save(update_fields=['status', 'payment_error', 'paid_at', 'updated_at'])
+    return cycle
 
 
 def schedule_next_week(subscription, after_date=None):

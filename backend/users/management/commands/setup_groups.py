@@ -80,7 +80,8 @@ class Command(BaseCommand):
         ops_perms += list(get_perms('products', 'category', ['view']))
         for model in [
             'subscription', 'subscriptionweek', 'deliveryzone', 'wholesalequote',
-            'subscriptionpricenotice',
+            'subscriptionpricenotice', 'businesssupplyagreement',
+            'businesssupplyrevision', 'businesssupplycycle',
         ]:
             ops_perms += list(get_perms('subscriptions', model, ['change', 'view']))
 
@@ -165,6 +166,8 @@ class Command(BaseCommand):
                 'subscription', 'subscriptionitem', 'subscriptionweek',
                 'subscriptionplanpricechange', 'subscriptionpricenotice',
                 'wholesalequote', 'wholesalequoteitem',
+                'businesssupplyagreement', 'businesssupplyitem',
+                'businesssupplyrevision', 'businesssupplycycle',
             ],
         }
         for app_label, models in business_models.items():

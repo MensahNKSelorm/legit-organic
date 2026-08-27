@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { FoodSubscription } from "@/types";
 
@@ -14,7 +15,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function ManageSubscriptionsPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isB2B } = useAuth();
+  const router = useRouter();
   const [rows, setRows] = useState<FoodSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,8 +35,12 @@ export default function ManageSubscriptionsPage() {
   }, [user]);
 
   useEffect(() => {
+    if (!isLoading && isB2B) {
+      router.replace("/b2b/supply/manage");
+      return;
+    }
     Promise.resolve().then(load);
-  }, [load]);
+  }, [isB2B, isLoading, load, router]);
 
   async function act(row: FoodSubscription, action: "pause" | "resume" | "cancel" | "skip") {
     if (action === "cancel" && !window.confirm("Cancel this weekly delivery?")) return;
@@ -62,7 +68,7 @@ export default function ManageSubscriptionsPage() {
     }
   }
 
-  if (isLoading) return <div className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />;
+  if (isLoading || isB2B) return <div className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />;
   if (!user)
     return (
       <div className="min-h-screen bg-[#F4EFE4] px-6 pt-40 text-center dark:bg-[#171B18]">

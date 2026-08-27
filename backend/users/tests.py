@@ -53,7 +53,7 @@ def b2b_payload(email='trade@example.com'):
         'receiving_contact_name': 'Kojo Asare',
         'receiving_contact_phone': '0200000000',
         'receiving_hours': 'Monday to Friday, 8:00–16:00',
-        'produce_categories': '["Fresh vegetables", "Fresh fruit"]',
+        'produce_categories': '["Tomatoes", "Onions"]',
         'order_frequency': 'weekly',
         'applicant_authorized': 'true',
         'information_confirmed': 'true',
@@ -149,6 +149,7 @@ class B2BApplicationBotProtectionTests(TestCase):
 @override_settings(TURNSTILE_ENABLED=False)
 class B2BApplicationValidationTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
 
     def test_registered_business_requires_orc_number(self):
@@ -168,6 +169,31 @@ class B2BApplicationValidationTests(TestCase):
         })
         response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
         self.assertEqual(response.status_code, 201, response.data)
+
+    def test_informal_operator_can_apply_with_identity_document(self):
+        payload = b2b_payload('trader@example.com')
+        payload.update({
+            'registration_status': 'informal',
+            'legal_structure': 'informal_operator',
+            'company_name': 'Adwoa Tomato Supply',
+            'organization_tin': '',
+            'business_registration': '',
+            'contact_job_title': 'Owner / operator',
+            'verification_document_type': 'ghana_card',
+            'registration_exemption_reason': 'Tomato and onion trader operating at Madina Market.',
+        })
+        response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
+        self.assertEqual(response.status_code, 201, response.data)
+        profile = B2BProfile.objects.get(business_email='trader@example.com')
+        self.assertEqual(profile.registration_status, 'informal')
+        self.assertEqual(profile.legal_structure, 'informal_operator')
+
+    def test_application_rejects_products_outside_b2b_scope(self):
+        payload = b2b_payload()
+        payload['produce_categories'] = '["Fresh fruit"]'
+        response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('produce_categories', response.data)
 
     def test_document_content_is_checked(self):
         payload = b2b_payload()

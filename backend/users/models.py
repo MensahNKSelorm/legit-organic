@@ -223,12 +223,18 @@ class BusinessPrice(models.Model):
 
 
 class B2BProfile(models.Model):
+    REGISTRATION_STATUS_CHOICES = [
+        ('registered', 'Registered business or organisation'),
+        ('informal', 'Informal / owner-operated business'),
+    ]
     BUSINESS_TYPE_CHOICES = [
         ('restaurant', 'Restaurant'),
         ('school', 'School / University'),
         ('hotel', 'Hotel / Hospitality'),
         ('catering', 'Catering Company'),
         ('supermarket', 'Supermarket / Retail'),
+        ('market_trader', 'Market trader / produce retailer'),
+        ('food_vendor', 'Food vendor / chop bar'),
         ('other', 'Other'),
     ]
     STATUS_CHOICES = [
@@ -248,10 +254,16 @@ class B2BProfile(models.Model):
         ('cooperative', 'Cooperative'),
         ('foreign_mission', 'Foreign mission / external organisation'),
         ('other', 'Other'),
+        ('informal_operator', 'Informal / owner-operated business'),
     ]
     DOCUMENT_TYPE_CHOICES = [
         ('orc_certificate', 'ORC registration or incorporation certificate'),
         ('introductory_letter', 'Official introductory or authorisation letter'),
+        ('ghana_card', 'Ghana Card'),
+        ('drivers_licence', 'Ghanaian driver’s licence'),
+        ('passport', 'Passport'),
+        ('trade_association_letter', 'Trade or market association letter'),
+        ('operating_site_evidence', 'Evidence of operating location'),
     ]
     ORDER_FREQUENCY_CHOICES = [
         ('weekly', 'Weekly'), ('fortnightly', 'Every two weeks'),
@@ -266,6 +278,9 @@ class B2BProfile(models.Model):
         blank=True,
     )
     company_name = models.CharField(max_length=200)
+    registration_status = models.CharField(
+        max_length=20, choices=REGISTRATION_STATUS_CHOICES, default='registered'
+    )
     trading_name = models.CharField(max_length=200, blank=True)
     legal_structure = models.CharField(max_length=40, choices=LEGAL_STRUCTURE_CHOICES, default='business_name')
     business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES)

@@ -4,9 +4,9 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Food Supply for Restaurants, Schools and Businesses",
+  title: "Tomato and Onion Supply for Ghanaian Businesses",
   description:
-    "Order dependable Ghanaian produce for restaurants, schools, hotels, caterers, retailers and institutions.",
+    "Order tomatoes and onions for restaurants, traders, food vendors, schools, caterers, retailers and institutions in Ghana.",
   path: "/b2b",
 });
 
@@ -42,8 +42,8 @@ const INSTITUTIONS = [
     position: "center",
   },
   {
-    name: "Institutions",
-    detail: "Reliable goods receiving",
+    name: "Market traders",
+    detail: "Stock for everyday trade",
     image: "/images/photography/b2b-institution.webp",
     position: "58% center",
   },
@@ -53,12 +53,12 @@ const STEPS = [
   {
     verb: "Order",
     title: "Your catalogue. Your prices.",
-    body: "See the produce available to your business at your agreed prices, then order what service actually needs.",
+    body: "Choose the tomato and onion pack sizes available to your business at the agreed price.",
   },
   {
     verb: "Quote",
     title: "Ask for the unusual.",
-    body: "Send a quote request when the quantity, crop or delivery requirement needs a more considered answer.",
+    body: "Send a quote request when the quantity, grade, pack size or delivery requirement needs a closer look.",
   },
   {
     verb: "Repeat",
@@ -216,17 +216,17 @@ function StepArtifact({ index }: { index: number }) {
         </g>
         <g className="order-moving-item order-moving-eggplant">
           <path
-            d="M43 98c2-9 11-13 18-7 7 7 0 19-13 25-7-4-8-11-5-18Z"
+            d="M42 101c0-9 5-15 12-15s12 6 12 15c0 10-5 16-12 16s-12-6-12-16Z"
             className="order-eggplant"
           />
-          <path d="m48 94 4-6 4 5 7-1" className="order-stem" />
+          <path d="M50 87c2-6 6-9 9-12M54 87c0-6-2-9-4-12" className="order-stem" />
         </g>
         <g className="order-moving-item order-moving-pepper">
           <path
-            d="M40 128c0-8 5-13 11-13 7 0 12 5 12 13 0 10-5 16-12 16-7 0-11-6-11-16Z"
+            d="M40 130c0-8 5-14 12-14s12 6 12 14c0 9-5 15-12 15s-12-6-12-15Z"
             className="order-pepper"
           />
-          <path d="M51 116c-1-6 3-9 7-9" className="order-stem" />
+          <path d="M48 117c2-6 6-9 10-12M52 117c0-6-2-9-4-12" className="order-stem" />
         </g>
         <g className="order-box-front">
           <path d="M178 105h74v52h-74z" className="produce-box" />
@@ -282,10 +282,10 @@ export default function B2BPage() {
       <section className="b2b-hero-shell">
         <div className="b2b-hero page-container">
           <div className="b2b-hero-copy">
-            <h1>Produce that keeps service moving.</h1>
+            <h1>Tomatoes and onions that keep service moving.</h1>
             <p className="b2b-hero-lede">
-              Wholesale ordering, agreed pricing and recurring supply for teams that cannot leave
-              tomorrow&apos;s stock to chance.
+              Wholesale ordering, agreed pricing and recurring supply for registered organisations
+              and owner-operated businesses.
             </p>
             <div className="b2b-actions">
               <Link href="/b2b/apply" className="b2b-button b2b-button-primary">
@@ -316,7 +316,7 @@ export default function B2BPage() {
           <header className="workflow-head">
             <h2 id="workflow-title">From order to repeat delivery</h2>
             <p className="workflow-intro">
-              Use the catalogue for regular orders. Request a quote when your needs change, then
+              Use your tomato and onion catalogue for regular orders. Request a quote when your needs change, then
               save the order for future deliveries.
             </p>
           </header>
@@ -350,7 +350,7 @@ export default function B2BPage() {
         <div className="reliability-copy">
           <h2>Reliable supply, without the chase</h2>
           <p>
-            Order from your catalogue, request a quote when the requirement changes, and set regular
+            Order tomatoes and onions from your catalogue, request a quote when the requirement changes, and set regular
             supply to repeat.
           </p>
           <div className="reliability-rhythm" aria-hidden="true">
@@ -370,8 +370,8 @@ export default function B2BPage() {
           </div>
           <div className="close-action">
             <p>
-              Tell us about your organisation and usual order. We&apos;ll review the right trade setup
-              for you.
+              Registered organisation or owner-operated business, tell us where you work and the
+              quantities you need. We&apos;ll review the right trade setup for you.
             </p>
             <Link href="/b2b/apply" className="b2b-button b2b-button-dark">
               Start your application <ArrowIcon />

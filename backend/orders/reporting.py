@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 def send_owner_report_once(order_id, event):
     """Send one owner report per order milestone, safely under concurrency."""
     config = {
+        'whatsapp_submitted': (
+            'submission_report_sent_at', 'submission_report_attempts',
+            'submission_report_error'
+        ),
         'payment_success': (
             'payment_report_sent_at', 'payment_report_attempts', 'payment_report_error'
         ),
@@ -27,6 +31,12 @@ def send_owner_report_once(order_id, event):
         with transaction.atomic():
             locked = Order.objects.select_for_update().get(pk=order_id)
             if getattr(locked, field) is not None:
+                return False
+            if event == 'whatsapp_submitted' and (
+                locked.order_source != 'whatsapp'
+                or locked.status != 'whatsapp_pending'
+                or locked.is_test
+            ):
                 return False
             if event == 'payment_success' and locked.payment_status != 'success':
                 return False

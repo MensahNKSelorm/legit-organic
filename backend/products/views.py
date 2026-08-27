@@ -31,10 +31,13 @@ class ProductListView(generics.ListAPIView):
         qs = Product.objects.filter(is_available=True).select_related('category', 'region', 'badge')
         featured = self.request.query_params.get('featured')
         category = self.request.query_params.get('category')
+        business_supply = self.request.query_params.get('business_supply')
         if featured:
             qs = qs.filter(is_featured=True)
         if category:
             qs = qs.filter(category__slug=category)
+        if business_supply == 'true':
+            qs = qs.exclude(business_supply_category='')
         return qs
 
 

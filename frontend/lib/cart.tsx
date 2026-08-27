@@ -30,7 +30,7 @@ const STORAGE_KEY = 'legit_cart'
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
-  const { user } = useAuth()
+  const { user, isB2B } = useAuth()
 
   // Keep a ref so effects/callbacks always read the latest items
   // without needing items in their dependency arrays.
@@ -39,6 +39,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Load after hydration so the server and first client render stay identical.
   useEffect(() => {
+    if (isB2B) {
+      Promise.resolve().then(() => setItems([]))
+      return
+    }
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       const parsed = stored ? JSON.parse(stored) as CartItem[] : null
@@ -48,7 +52,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore corrupt local cart data.
     }
-  }, [])
+  }, [isB2B])
 
   // Persist to localStorage on every change
   useEffect(() => {
@@ -57,7 +61,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Sync with DB when a user logs in
   useEffect(() => {
-    if (!user) return
+    if (!user || isB2B) return
 
     const syncCart = async () => {
       try {
@@ -91,7 +95,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     syncCart()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
+  }, [user?.id, isB2B])
 
   const total = items.reduce(
     (sum, item) => sum + parseFloat(item.product.price) * item.quantity,
@@ -101,6 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   const addItem = useCallback(async (product: Product, quantity = 1) => {
+    if (isB2B) return
     // Compute the new absolute quantity for the DB call before state update
     const currentItem = itemsRef.current.find(i => i.product.id === product.id)
     const newQuantity = currentItem ? currentItem.quantity + quantity : quantity
@@ -121,17 +126,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (user) {
       try { await api.cart.addItem(product.id, newQuantity) } catch {}
     }
-  }, [user])
+  }, [user, isB2B])
 
   const removeItem = useCallback(async (productId: number) => {
+    if (isB2B) return
     setItems((prev) => prev.filter((i) => i.product.id !== productId))
 
     if (user) {
       try { await api.cart.removeItem(productId) } catch {}
     }
-  }, [user])
+  }, [user, isB2B])
 
   const updateQuantity = useCallback(async (productId: number, quantity: number) => {
+    if (isB2B) return
     if (quantity <= 0) {
       setItems((prev) => prev.filter((i) => i.product.id !== productId))
       if (user) {
@@ -145,7 +152,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         try { await api.cart.addItem(productId, quantity) } catch {}
       }
     }
-  }, [user])
+  }, [user, isB2B])
 
   const clearCart = useCallback(async () => {
     setItems([])

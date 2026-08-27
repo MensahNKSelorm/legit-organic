@@ -388,6 +388,24 @@ UNFOLD = {
                         "link": "/admin/subscriptions/wholesalequote/",
                         "permission": admin_permission("subscriptions.view_wholesalequote"),
                     },
+                    {
+                        "title": "Supply Agreements",
+                        "icon": "contract",
+                        "link": "/admin/subscriptions/businesssupplyagreement/",
+                        "permission": admin_permission("subscriptions.view_businesssupplyagreement"),
+                    },
+                    {
+                        "title": "Supply Revisions",
+                        "icon": "difference",
+                        "link": "/admin/subscriptions/businesssupplyrevision/",
+                        "permission": admin_permission("subscriptions.view_businesssupplyrevision"),
+                    },
+                    {
+                        "title": "Supply Cycles",
+                        "icon": "event_repeat",
+                        "link": "/admin/subscriptions/businesssupplycycle/",
+                        "permission": admin_permission("subscriptions.view_businesssupplycycle"),
+                    },
                 ],
             },
             {
@@ -615,16 +633,24 @@ REST_FRAMEWORK = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'legitorganic'),
-        'USER': os.getenv('DB_USER', 'legitorganic_user'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+if os.getenv('DB_ENGINE', 'postgresql').strip().lower() == 'sqlite':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'legitorganic'),
+            'USER': os.getenv('DB_USER', 'legitorganic_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation

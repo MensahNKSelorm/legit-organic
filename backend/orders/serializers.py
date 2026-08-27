@@ -291,4 +291,15 @@ class CreateOrderSerializer(serializers.Serializer):
 
             order.save(update_fields=update_fields)
 
+            if order_source == 'whatsapp' and not order.is_test:
+                order_id = order.pk
+                transaction.on_commit(
+                    lambda: _send_whatsapp_order_report(order_id)
+                )
+
         return order
+
+
+def _send_whatsapp_order_report(order_id):
+    from .reporting import send_owner_report_once
+    send_owner_report_once(order_id, 'whatsapp_submitted')

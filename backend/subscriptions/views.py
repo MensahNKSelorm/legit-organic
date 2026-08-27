@@ -8,16 +8,22 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (
+    BusinessSupplyAgreement, BusinessSupplyCycle, BusinessSupplyRevision,
     DeliveryZone, Subscription, SubscriptionPlan, SubscriptionWeek,
     WholesaleQuote,
 )
 from .serializers import (
+    BusinessSupplyAgreementSerializer, BusinessSupplyRevisionSerializer,
     DeliveryZoneSerializer, SubscriptionPlanSerializer, SubscriptionSerializer,
     WholesaleQuoteSerializer,
 )
-from .services import finalize_paid_week, schedule_next_week
-from .services import ensure_renewal_order
+from .services import (
+    ensure_business_supply_order, ensure_renewal_order,
+    finalize_paid_business_cycle, finalize_paid_week,
+    next_business_delivery, schedule_business_cycle, schedule_next_week,
+)
 from legitorganic.seevcash import SeevCashError, create_checkout, verify_checkout
+from users.permissions import NotApprovedBusiness
 
 
 class DeliveryZoneListView(generics.ListAPIView):
@@ -40,30 +46,30 @@ class SubscriptionPlanListView(generics.ListAPIView):
 
 class SubscriptionListCreateView(generics.ListCreateAPIView):
     serializer_class = SubscriptionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def get_queryset(self):
-        return Subscription.objects.filter(user=self.request.user).select_related(
+        return Subscription.objects.filter(user=self.request.user, audience='household').select_related(
             'plan', 'delivery_zone', 'business_profile'
         ).prefetch_related('items__product', 'plan__items__product', 'weeks')
 
 
 class SubscriptionDetailView(generics.RetrieveAPIView):
     serializer_class = SubscriptionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def get_queryset(self):
-        return Subscription.objects.filter(user=self.request.user).select_related(
+        return Subscription.objects.filter(user=self.request.user, audience='household').select_related(
             'plan', 'delivery_zone', 'business_profile'
         ).prefetch_related('items__product', 'plan__items__product', 'weeks')
 
 
 class SubscriptionActionView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def post(self, request, pk, action):
         subscription = get_object_or_404(
-            Subscription, pk=pk, user=request.user
+            Subscription, pk=pk, user=request.user, audience='household'
         )
         now = timezone.now()
         if action == 'pause' and subscription.status == 'active':
@@ -144,12 +150,220 @@ class WholesaleQuoteListCreateView(generics.ListCreateAPIView):
         serializer.save()
 
 
-class SubscriptionPaymentInitializeView(APIView):
+class BusinessSupplyListCreateView(generics.ListCreateAPIView):
+    serializer_class = BusinessSupplyAgreementSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        profile = _business_profile(self.request.user)
+        if not profile or profile.status != 'approved':
+            return BusinessSupplyAgreement.objects.none()
+        return profile.supply_agreements.select_related('delivery_zone').prefetch_related(
+            'items__product', 'cycles', 'revisions'
+        )
+
+    def perform_create(self, serializer):
+        profile = _business_profile(self.request.user)
+        if not profile or profile.status != 'approved':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('An approved business account is required.')
+        serializer.save()
+
+
+class BusinessSupplyDetailView(generics.RetrieveAPIView):
+    serializer_class = BusinessSupplyAgreementSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        profile = _business_profile(self.request.user)
+        if not profile:
+            return BusinessSupplyAgreement.objects.none()
+        return profile.supply_agreements.select_related('delivery_zone').prefetch_related(
+            'items__product', 'cycles', 'revisions'
+        )
+
+
+class BusinessSupplyRevisionCreateView(generics.CreateAPIView):
+    serializer_class = BusinessSupplyRevisionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        agreement = get_object_or_404(
+            BusinessSupplyAgreement,
+            pk=self.kwargs['pk'], business__user=self.request.user,
+            status__in=['approved', 'active', 'paused'],
+        )
+        serializer.save(agreement=agreement, requested_by=self.request.user)
+
+
+class BusinessSupplyActionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk, action):
+        agreement = get_object_or_404(
+            BusinessSupplyAgreement.objects.prefetch_related('cycles'),
+            pk=pk, business__user=request.user,
+        )
+        now = timezone.now()
+
+        def cancel_open_cycles(queryset):
+            for cycle in queryset.select_related('order'):
+                cycle.status = 'cancelled'
+                cycle.save(update_fields=['status', 'updated_at'])
+                if cycle.order and cycle.order.status in {'pending', 'processing'}:
+                    cycle.order.status = 'cancelled'
+                    cycle.order.save(update_fields=['status'])
+
+        if action == 'pause' and agreement.status == 'active':
+            agreement.status = 'paused'
+            agreement.paused_at = now
+            cancel_open_cycles(
+                agreement.cycles.filter(status__in=['renewal_order', 'payment_due'])
+            )
+        elif action == 'resume' and agreement.status == 'paused':
+            agreement.status = 'active'
+            agreement.paused_at = None
+            delivery_date = next_business_delivery(agreement)
+            schedule_business_cycle(agreement, delivery_date)
+        elif action == 'cancel' and agreement.status != 'cancelled':
+            agreement.status = 'cancelled'
+            agreement.cancelled_at = now
+            cancel_open_cycles(
+                agreement.cycles.filter(status__in=['renewal_order', 'payment_due'])
+            )
+        elif action == 'skip' and agreement.status == 'active':
+            cycle = agreement.cycles.filter(
+                status__in=['renewal_order', 'payment_due'], payment_due_at__gt=now,
+            ).order_by('delivery_date').first()
+            if not cycle:
+                return Response(
+                    {'detail': 'This delivery can no longer be skipped.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            cycle.status = 'skipped'
+            cycle.save(update_fields=['status', 'updated_at'])
+            if cycle.order and cycle.order.status in {'pending', 'processing'}:
+                cycle.order.status = 'cancelled'
+                cycle.order.save(update_fields=['status'])
+            schedule_business_cycle(
+                agreement, next_business_delivery(agreement, cycle.delivery_date)
+            )
+            return Response(BusinessSupplyAgreementSerializer(
+                agreement, context={'request': request}
+            ).data)
+        else:
+            return Response(
+                {'detail': 'That action is not available.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        agreement.save(update_fields=[
+            'status', 'paused_at', 'cancelled_at', 'updated_at'
+        ])
+        return Response(BusinessSupplyAgreementSerializer(
+            agreement, context={'request': request}
+        ).data)
+
+
+class BusinessSupplyPaymentInitializeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, cycle_pk):
+        cycle = get_object_or_404(
+            BusinessSupplyCycle.objects.select_related('agreement__business'),
+            pk=cycle_pk, agreement__business__user=request.user,
+            status__in=['renewal_order', 'payment_due', 'payment_failed'],
+        )
+        if cycle.payment_due_at <= timezone.now():
+            cycle.status = 'expired'
+            cycle.payment_error = 'The payment window closed before payment was completed.'
+            cycle.save(update_fields=['status', 'payment_error', 'updated_at'])
+            return Response(
+                {'detail': 'This payment window has expired.'},
+                status=status.HTTP_410_GONE,
+            )
+        order = ensure_business_supply_order(cycle.pk)
+        if not settings.SEEVCASH_SECRET_KEY:
+            return Response(
+                {'detail': 'Payments are not configured.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        agreement = cycle.agreement
+        amount = int((cycle.total * 100).to_integral_value(rounding=ROUND_HALF_UP))
+        try:
+            session = create_checkout(
+                recipient={
+                    'name': agreement.receiving_contact_name,
+                    'email': request.user.email,
+                    'phone': agreement.receiving_contact_phone,
+                    'address': agreement.delivery_address,
+                },
+                amount_minor=amount,
+                redirect_url=f'{settings.FRONTEND_URL}/b2b/supply/payment?cycle={cycle.pk}',
+                meta={
+                    'orderId': order.reference, 'businessSupplyId': agreement.pk,
+                    'businessSupplyCycleId': cycle.pk,
+                },
+                idempotency_key=f'business-supply-cycle-{cycle.pk}-checkout',
+                channels=['mobile_money'],
+            )
+        except SeevCashError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        order.checkout_reference = session.reference
+        order.checkout_url = session.checkout_url
+        order.payment_provider = 'seevcash'
+        order.save(update_fields=[
+            'checkout_reference', 'checkout_url', 'payment_provider', 'updated_at'
+        ])
+        cycle.payment_reference = session.reference
+        cycle.payment_attempts += 1
+        cycle.status = 'payment_due'
+        cycle.save(update_fields=[
+            'payment_reference', 'payment_attempts', 'status', 'updated_at'
+        ])
+        return Response({'checkout_url': session.checkout_url, 'reference': session.reference})
+
+
+class BusinessSupplyPaymentVerifyView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        cycle = get_object_or_404(
+            BusinessSupplyCycle.objects.select_related('agreement__business'),
+            pk=request.data.get('cycle_id'), agreement__business__user=request.user,
+        )
+        if cycle.status == 'paid':
+            return Response(BusinessSupplyAgreementSerializer(
+                cycle.agreement, context={'request': request}
+            ).data)
+        if not cycle.payment_reference:
+            return Response({'detail': 'This cycle has no checkout session.'}, status=400)
+        try:
+            data = verify_checkout(cycle.payment_reference)
+        except SeevCashError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        expected = int((cycle.total * 100).to_integral_value(rounding=ROUND_HALF_UP))
+        paid = data.get('final_amount', data.get('amount'))
+        valid = (
+            str(data.get('status') or '').lower() in ('completed', 'success')
+            and data.get('reference') == cycle.payment_reference
+            and (data.get('currency') or '').upper() == settings.SEEVCASH_CURRENCY.upper()
+            and isinstance(paid, int) and paid >= expected
+        )
+        if not valid:
+            return Response({'detail': 'Payment verification failed.'}, status=402)
+        finalize_paid_business_cycle(cycle.pk, data)
+        return Response(BusinessSupplyAgreementSerializer(
+            cycle.agreement, context={'request': request}
+        ).data)
+
+
+class SubscriptionPaymentInitializeView(APIView):
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def post(self, request, pk):
         subscription = get_object_or_404(
-            Subscription.objects.prefetch_related('weeks'), pk=pk, user=request.user
+            Subscription.objects.prefetch_related('weeks'), pk=pk, user=request.user,
+            audience='household',
         )
         week = subscription.weeks.filter(
             status__in=['renewal_order', 'payment_due']
@@ -202,7 +416,7 @@ class SubscriptionPaymentInitializeView(APIView):
 
 
 class SubscriptionPaymentVerifyView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, NotApprovedBusiness]
 
     def post(self, request):
         reference = request.data.get('reference', '')
