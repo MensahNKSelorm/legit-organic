@@ -10,6 +10,156 @@
   window.addEventListener('load', apply);
 })();
 
+(function initialiseAdminNotifications() {
+  const ready = (callback) => {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', callback);
+    else callback();
+  };
+  const csrfToken = () => document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('csrftoken='))
+    ?.split('=')[1] || '';
+  const request = async (url, options = {}) => {
+    const response = await fetch(url, {
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken(), ...(options.headers || {}) },
+      ...options,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || data.detail || 'The request failed.');
+    return data;
+  };
+  const timeAgo = (value) => {
+    const seconds = Math.floor((Date.now() - new Date(value).getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
+  const applicationKey = (value) => {
+    const padding = '='.repeat((4 - value.length % 4) % 4);
+    const raw = atob((value + padding).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(raw, (character) => character.charCodeAt(0));
+  };
+
+  ready(() => {
+    if (!document.body.classList.contains('dashboard') && !document.querySelector('#header-inner')) return;
+    const shell = document.createElement('div');
+    shell.className = 'lo-admin-notifications';
+    shell.innerHTML = `
+      <button type="button" class="lo-admin-bell" aria-label="Notifications" aria-expanded="false">
+        <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
+        <span class="lo-admin-notification-count" hidden></span>
+      </button>
+      <section class="lo-admin-notification-panel" aria-label="Notifications" hidden>
+        <header><strong>Notifications</strong><button type="button" data-mark-all>Mark all read</button></header>
+        <div class="lo-admin-push" hidden>
+          <strong>Never miss a new order</strong>
+          <span>Enable alerts on this browser or phone.</span>
+          <button type="button" data-enable-push>Enable browser alerts</button>
+          <small data-push-error></small>
+        </div>
+        <div class="lo-admin-notification-list"><p class="lo-admin-notification-state">Loading…</p></div>
+      </section>`;
+    document.body.appendChild(shell);
+
+    const bell = shell.querySelector('.lo-admin-bell');
+    const panel = shell.querySelector('.lo-admin-notification-panel');
+    const count = shell.querySelector('.lo-admin-notification-count');
+    const list = shell.querySelector('.lo-admin-notification-list');
+    const push = shell.querySelector('.lo-admin-push');
+    const pushButton = shell.querySelector('[data-enable-push]');
+    const pushError = shell.querySelector('[data-push-error]');
+    let notifications = [];
+
+    const render = (unreadCount) => {
+      count.hidden = unreadCount === 0;
+      count.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+      bell.setAttribute('aria-label', unreadCount ? `Notifications, ${unreadCount} unread` : 'Notifications');
+      if (!notifications.length) {
+        list.innerHTML = '<p class="lo-admin-notification-state">No notifications yet.</p>';
+        return;
+      }
+      list.replaceChildren(...notifications.map((notification) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `lo-admin-notification-row${notification.is_read ? '' : ' is-unread'}`;
+        const title = document.createElement('strong'); title.textContent = notification.title;
+        const body = document.createElement('span'); body.textContent = notification.body;
+        const time = document.createElement('small'); time.textContent = timeAgo(notification.created_at);
+        button.append(title, body, time);
+        button.addEventListener('click', async () => {
+          if (!notification.is_read) {
+            await request(`/api/notifications/${notification.id}/read/`, { method: 'PATCH', body: '{}' }).catch(() => {});
+          }
+          if (notification.link) window.location.assign(notification.link);
+        });
+        return button;
+      }));
+    };
+    const refresh = async () => {
+      try {
+        const data = await request('/api/notifications/');
+        notifications = data.results;
+        render(data.unread_count);
+      } catch (error) {
+        list.innerHTML = `<p class="lo-admin-notification-state">${error.message || 'Notifications could not be loaded.'}</p>`;
+      }
+    };
+
+    bell.addEventListener('click', () => {
+      panel.hidden = !panel.hidden;
+      bell.setAttribute('aria-expanded', String(!panel.hidden));
+      if (!panel.hidden) refresh();
+    });
+    document.addEventListener('click', (event) => {
+      if (!shell.contains(event.target)) {
+        panel.hidden = true;
+        bell.setAttribute('aria-expanded', 'false');
+      }
+    });
+    shell.querySelector('[data-mark-all]').addEventListener('click', async () => {
+      await request('/api/notifications/mark-all-read/', { method: 'POST', body: '{}' });
+      notifications = notifications.map((notification) => ({ ...notification, is_read: true }));
+      render(0);
+    });
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      Promise.all([
+        request('/api/notifications/push/config/'),
+        navigator.serviceWorker.register('/admin-push-sw.js').then((registration) => registration.pushManager.getSubscription()),
+      ]).then(([config, subscription]) => {
+        push.hidden = !config.enabled || Boolean(subscription);
+        push.dataset.publicKey = config.public_key || '';
+      }).catch(() => { push.hidden = true; });
+    }
+    pushButton.addEventListener('click', async () => {
+      pushButton.disabled = true;
+      pushError.textContent = '';
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') throw new Error('Notifications were not allowed in this browser.');
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: applicationKey(push.dataset.publicKey),
+        });
+        await request('/api/notifications/push/subscription/', {
+          method: 'POST', body: JSON.stringify(subscription.toJSON()),
+        });
+        push.hidden = true;
+      } catch (error) {
+        pushError.textContent = error.message || 'Browser alerts could not be enabled.';
+      } finally {
+        pushButton.disabled = false;
+      }
+    });
+
+    refresh();
+    window.setInterval(refresh, 30000);
+  });
+})();
+
 (function initialiseWritingAssistant() {
   const ready = (callback) => {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', callback);

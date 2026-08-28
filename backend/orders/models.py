@@ -210,15 +210,16 @@ class Order(models.Model):
             and self.status == 'processing'
             and self.payment_status == 'success'
             and not self.is_test
-            and self.user is not None
         ):
             try:
                 from sales.models import Commission, ReferredCustomer
 
-                try:
-                    referred = self.user.referral_record
-                except ReferredCustomer.DoesNotExist:
-                    referred = None
+                referred = None
+                if self.user is not None:
+                    try:
+                        referred = self.user.referral_record
+                    except ReferredCustomer.DoesNotExist:
+                        pass
 
                 if referred is not None:
                     rep = referred.sales_rep
@@ -273,6 +274,8 @@ class Order(models.Model):
                         f'{self.user.first_name} {self.user.last_name}'.strip()
                         or self.user.email
                     )
+                elif self.guest_name:
+                    customer_name = self.guest_name
                 notify_admins(
                     type='order_paid',
                     title='Order paid',

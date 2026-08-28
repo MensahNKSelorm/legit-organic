@@ -458,6 +458,20 @@ export const api = {
       '/api/notifications/mark-all-read/',
       { method: 'POST' }
     ),
+    pushConfig: () => fetchWithAuth<{
+      enabled: boolean
+      public_key: string
+    }>('/api/notifications/push/config/'),
+    subscribePush: (subscription: PushSubscriptionJSON) =>
+      fetchWithAuth<{ subscribed: boolean; id: number }>(
+        '/api/notifications/push/subscription/',
+        { method: 'POST', body: JSON.stringify(subscription) }
+      ),
+    unsubscribePush: (endpoint: string) =>
+      fetchWithAuth<{ unsubscribed: boolean }>(
+        '/api/notifications/push/subscription/',
+        { method: 'DELETE', body: JSON.stringify({ endpoint }) }
+      ),
   },
 }
 

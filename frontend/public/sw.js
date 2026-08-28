@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legit-organic-v2'
+const CACHE_NAME = 'legit-organic-v3'
 const STATIC_ASSETS = [
   '/',
   '/sales/dashboard',
@@ -52,4 +52,22 @@ self.addEventListener('fetch', (event) => {
       cached || fetch(event.request)
     )
   )
+})
+
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {}
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Legit Organic', {
+      body: data.body || 'A new order update is ready.',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: data.tag || 'legitorganic-order',
+      data: { url: data.url || '/' },
+    })
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  event.waitUntil(clients.openWindow(event.notification.data.url || '/'))
 })

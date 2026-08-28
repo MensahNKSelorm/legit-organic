@@ -6,6 +6,7 @@ from users.staff_views import staff_setup
 from legitorganic.writing_assistant import writing_assistant
 from django.conf.urls.static import static
 from django.conf import settings
+from notifications.views import admin_push_service_worker
 
 
 admin.site.site_header = "Legit Organic Admin"
@@ -18,6 +19,7 @@ def health(request):
 
 
 urlpatterns = [
+    path('admin-push-sw.js', admin_push_service_worker, name='admin-push-service-worker'),
     path('staff/setup/<str:token>/', staff_setup, name='staff-setup'),
     path('staff/security/', include('security.urls')),
     path('admin/writing-assistant/', writing_assistant, name='writing-assistant'),

@@ -8,6 +8,110 @@ body,
   font-family: "Inter", Arial, sans-serif !important;
 }
 
+.lo-admin-notifications {
+  position: fixed;
+  top: 1rem;
+  right: 5.25rem;
+  z-index: 1000;
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.lo-admin-bell {
+  position: relative;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.18);
+  background: #17211c;
+  color: #f8f4e9;
+}
+
+.lo-admin-bell:hover { border-color: #f4c430; color: #f4c430; }
+.lo-admin-notification-count {
+  position: absolute;
+  top: -.4rem;
+  right: -.45rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 .25rem;
+  border-radius: 999px;
+  background: #f4c430;
+  color: #0d3b2a;
+  font-size: .62rem;
+  font-weight: 800;
+  line-height: 1.15rem;
+}
+
+.lo-admin-notification-panel {
+  position: absolute;
+  top: 3rem;
+  right: 0;
+  width: min(23rem, calc(100vw - 2rem));
+  max-height: min(32rem, calc(100vh - 5rem));
+  overflow: auto;
+  border: 1px solid rgba(244,196,48,.3);
+  background: #111827;
+  color: #f8f4e9;
+  box-shadow: 0 18px 45px rgba(0,0,0,.35);
+}
+
+.lo-admin-notification-panel > header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .85rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  background: #111827;
+}
+
+.lo-admin-notification-panel > header button,
+.lo-admin-push button {
+  border: 0;
+  background: transparent;
+  color: #f4c430;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.lo-admin-push {
+  display: grid;
+  gap: .3rem;
+  padding: .9rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  background: #17211c;
+  font-size: .75rem;
+}
+.lo-admin-push[hidden] { display: none; }
+.lo-admin-push span { color: #b8c3ba; }
+.lo-admin-push button { width: max-content; padding: .55rem .7rem; background: #f4c430; color: #0d3b2a; }
+.lo-admin-push small { color: #ff9d9d; }
+
+.lo-admin-notification-row {
+  display: grid;
+  width: 100%;
+  gap: .28rem;
+  padding: .9rem 1rem;
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  background: transparent;
+  color: #f8f4e9;
+  text-align: left;
+}
+.lo-admin-notification-row:hover { background: rgba(244,196,48,.07); }
+.lo-admin-notification-row.is-unread { box-shadow: inset 3px 0 #f4c430; background: rgba(244,196,48,.045); }
+.lo-admin-notification-row span { color: #b8c3ba; font-size: .76rem; line-height: 1.45; }
+.lo-admin-notification-row small { color: #8f9b93; font-size: .68rem; }
+.lo-admin-notification-state { padding: 2rem 1rem; color: #b8c3ba; font-size: .8rem; text-align: center; }
+
+@media (max-width: 640px) {
+  .lo-admin-notifications { top: .75rem; right: 3.75rem; }
+  .lo-admin-notification-panel { position: fixed; top: 4rem; right: 1rem; left: 1rem; width: auto; }
+}
+
 #main h1,
 #main h2,
 #main h3,

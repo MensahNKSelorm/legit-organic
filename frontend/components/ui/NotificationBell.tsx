@@ -24,6 +24,13 @@ function BellIcon() {
   )
 }
 
+function urlBase64ToUint8Array(value: string): Uint8Array<ArrayBuffer> {
+  const padding = '='.repeat((4 - (value.length % 4)) % 4)
+  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw = window.atob(base64)
+  return Uint8Array.from(raw, (character) => character.charCodeAt(0))
+}
+
 interface NotificationBellProps {
   isTransparent: boolean
 }
@@ -33,6 +40,11 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
   const [unreadCount, setUnreadCount] = useState(0)
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [pushSupported, setPushSupported] = useState(false)
+  const [pushConfigured, setPushConfigured] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushError, setPushError] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
 
   const fetchNotifications = useCallback(async () => {
@@ -53,6 +65,21 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
     const interval = setInterval(fetchNotifications, 60000)
     return () => clearInterval(interval)
   }, [fetchNotifications])
+
+  useEffect(() => {
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window
+    if (!supported) return
+    Promise.all([
+      api.notifications.pushConfig(),
+      navigator.serviceWorker.ready.then((registration) =>
+        registration.pushManager.getSubscription()
+      ),
+    ]).then(([config, subscription]) => {
+      setPushSupported(true)
+      setPushConfigured(config.enabled)
+      setPushEnabled(Boolean(subscription))
+    }).catch(() => setPushConfigured(false))
+  }, [])
 
   // Close dropdown when clicking outside — same pattern as the account
   // dropdown in Navbar.tsx
@@ -100,6 +127,33 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
     }
   }, [])
 
+  const handleEnablePush = useCallback(async () => {
+    setPushBusy(true)
+    setPushError('')
+    try {
+      const config = await api.notifications.pushConfig()
+      if (!config.enabled || !config.public_key) {
+        throw new Error('Browser alerts are not configured yet.')
+      }
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        throw new Error('Notifications were not allowed in this browser.')
+      }
+      const registration = await navigator.serviceWorker.ready
+      const existing = await registration.pushManager.getSubscription()
+      const subscription = existing || await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(config.public_key),
+      })
+      await api.notifications.subscribePush(subscription.toJSON())
+      setPushEnabled(true)
+    } catch (error) {
+      setPushError(error instanceof Error ? error.message : 'Browser alerts could not be enabled.')
+    } finally {
+      setPushBusy(false)
+    }
+  }, [])
+
   return (
     <div className="relative" ref={containerRef}>
       <button
@@ -139,6 +193,30 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
               Mark all read
             </button>
           </div>
+
+          {pushSupported && pushConfigured && !pushEnabled && (
+            <div className="px-4 py-3 border-b border-[#F5F0E6] dark:border-[#374151] bg-[#fffaf0] dark:bg-[#17211c]">
+              <p className="text-xs font-semibold text-[#0D3B2A] dark:text-white">Never miss a new order</p>
+              <p className="mt-1 text-[11px] leading-4 text-[#68766f] dark:text-[#b8c3ba]">
+                Enable alerts on this browser or phone.
+              </p>
+              <button
+                type="button"
+                onClick={handleEnablePush}
+                disabled={pushBusy}
+                className="mt-2 text-xs font-bold text-[#0D3B2A] bg-[#F4C430] px-3 py-2 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32]"
+              >
+                {pushBusy ? 'Enabling…' : 'Enable browser alerts'}
+              </button>
+              {pushError && <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">{pushError}</p>}
+            </div>
+          )}
+
+          {pushEnabled && (
+            <p className="px-4 py-2 text-[11px] text-[#2E7D32] dark:text-[#9bd49f] border-b border-[#F5F0E6] dark:border-[#374151]">
+              Browser alerts are on for this device.
+            </p>
+          )}
 
           {loading && (
             <div className="p-8 text-center text-sm text-[#9ca3af]">Loading…</div>

@@ -56,6 +56,11 @@ resend.api_key = RESEND_API_KEY
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'hello@legitorganic.com')
 ORDER_REPORT_EMAIL = os.getenv('ORDER_REPORT_EMAIL', 'legitorganic9@gmail.com')
 ORDER_REPORT_MAX_ATTEMPTS = int(os.getenv('ORDER_REPORT_MAX_ATTEMPTS', '10'))
+WEB_PUSH_VAPID_PUBLIC_KEY = os.getenv('WEB_PUSH_VAPID_PUBLIC_KEY', '')
+WEB_PUSH_VAPID_PRIVATE_KEY = os.getenv('WEB_PUSH_VAPID_PRIVATE_KEY', '')
+WEB_PUSH_VAPID_SUBJECT = os.getenv(
+    'WEB_PUSH_VAPID_SUBJECT', 'mailto:legitorganic9@gmail.com'
+)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://legitorganic.com')
 DASHBOARD_URL = os.getenv('DASHBOARD_URL', 'https://dashboard.legitorganic.com')
 LOGIN_REDIRECT_URL = '/admin/'
@@ -180,7 +185,7 @@ UNFOLD = {
         lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260822-1',
     ],
     "SCRIPTS": [
-        lambda request: static("admin/js/legitorganic-admin.js"),
+        lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260828-1',
     ],
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
