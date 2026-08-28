@@ -87,7 +87,7 @@ def render_email(*, eyebrow, title, greeting, paragraphs, details=None, items=No
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3efe6"><tr><td align="center" style="padding:28px 12px">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border-collapse:collapse">
 <tr><td style="padding:25px 30px;background:#173c2a;border-top:6px solid #f4c430">
-<img src="{EMAIL_LOGO_URL}" width="150" alt="Legit Organic" style="display:block;width:150px;max-width:100%;height:auto;margin-bottom:24px">
+<img src="{EMAIL_LOGO_URL}" width="150" alt="Legit Organic" style="display:block;width:150px;max-width:100%;height:auto;margin:0 auto 24px">
 <div style="color:#f4c430;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase">{escape(str(eyebrow))}</div>
 <h1 style="margin:8px 0 0;color:#ffffff;font-size:28px;line-height:1.2">{escape(str(title))}</h1>
 </td></tr>
