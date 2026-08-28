@@ -5,7 +5,7 @@ from html import escape
 from django.conf import settings
 
 
-EMAIL_LOGO_URL = 'https://legitorganic.com/images/email-logo.png'
+EMAIL_LOGO_URL = 'https://legitorganic.com/images/email-logo-dark.png'
 
 
 def sender_for(stream):

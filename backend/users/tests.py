@@ -153,7 +153,7 @@ class B2BApplicationBotProtectionTests(TestCase):
         self.assertEqual(email['from'], 'Legit Organic <operations@legitorganic.com>')
         self.assertIn('text', email)
         self.assertIn('LO-B2B-', email['subject'])
-        self.assertIn('/images/email-logo.png', email['html'])
+        self.assertIn('/images/email-logo-dark.png', email['html'])
 
 
 @override_settings(TURNSTILE_ENABLED=False)
