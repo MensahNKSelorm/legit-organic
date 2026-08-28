@@ -2,6 +2,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Notification, WebPushSubscription
@@ -9,6 +10,7 @@ from .serializers import NotificationSerializer
 
 
 class NotificationListView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -30,6 +32,7 @@ class NotificationListView(APIView):
 
 
 class NotificationMarkReadView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def patch(self, request, pk):
@@ -48,6 +51,7 @@ class NotificationMarkReadView(APIView):
 
 
 class NotificationMarkAllReadView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -64,6 +68,7 @@ class NotificationMarkAllReadView(APIView):
 
 
 class PushConfigView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -79,6 +84,7 @@ class PushConfigView(APIView):
 
 
 class PushSubscriptionView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):

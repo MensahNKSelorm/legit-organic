@@ -45,11 +45,25 @@ class NotificationApiTests(TestCase):
 
     def test_customer_cannot_access_staff_notification_feed(self):
         client = APIClient()
-        client.force_authenticate(self.customer)
+        client.force_login(self.customer)
         self.assertEqual(client.get('/api/notifications/').status_code, 403)
         self.assertEqual(
             client.get('/api/notifications/push/config/').status_code, 403,
         )
+
+    def test_admin_session_can_read_notification_feed(self):
+        Notification.objects.create(
+            recipient=self.staff,
+            type='order_placed',
+            title='New order placed',
+            body='LO-SESSION was submitted.',
+        )
+        client = APIClient()
+        client.force_login(self.staff)
+        response = client.get('/api/notifications/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['unread_count'], 1)
+        self.assertEqual(response.data['results'][0]['title'], 'New order placed')
 
     @override_settings(WEB_PUSH_VAPID_PRIVATE_KEY='')
     def test_notification_is_recorded_when_push_is_not_configured(self):
