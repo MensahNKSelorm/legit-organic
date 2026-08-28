@@ -243,6 +243,16 @@ class B2BApplyView(generics.CreateAPIView):
         serializer.save()
 
         try:
+            from .emails import send_b2b_application_received_email
+            send_b2b_application_received_email(serializer.instance)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).error(
+                'B2B application confirmation failed for profile %s: %s',
+                serializer.instance.pk, exc, exc_info=True,
+            )
+
+        try:
             from notifications.utils import notify_admins
             profile = serializer.instance
             notify_admins(

@@ -256,6 +256,42 @@ class WholesaleQuoteAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def save_model(self, request, obj, form, change):
+        previous = None
+        if change:
+            previous = WholesaleQuote.objects.filter(pk=obj.pk).values_list(
+                'status', flat=True
+            ).first()
+        super().save_model(request, obj, form, change)
+        if previous == obj.status or obj.status not in {'quoted', 'declined', 'expired'}:
+            return
+        copy = {
+            'quoted': (
+                f'Quote ready · LO-QUOTE-{obj.pk}', 'Your quote is ready.',
+                'Pricing and validity details are now available in your business dashboard.',
+            ),
+            'declined': (
+                f'Quote update · LO-QUOTE-{obj.pk}', 'We could not complete this quote.',
+                'This quote request has been closed. Reply if you would like to discuss another quantity or delivery date.',
+            ),
+            'expired': (
+                f'Quote expired · LO-QUOTE-{obj.pk}', 'This quote has expired.',
+                'The quoted price is no longer active. You can submit a new request from your business dashboard.',
+            ),
+        }
+        subject, title, message = copy[obj.status]
+        try:
+            from users.emails import send_b2b_status_email
+            send_b2b_status_email(
+                obj.business, subject=subject, title=title, message=message,
+                reference=f'LO-QUOTE-{obj.pk}',
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'B2B quote status email failed for quote %s', obj.pk
+            )
+
 
 class BusinessSupplyItemInline(TabularInline):
     model = BusinessSupplyItem
@@ -348,6 +384,26 @@ class BusinessSupplyAgreementAdmin(ModelAdmin):
                 before={'status': previous}, after={'status': obj.status},
                 reason=form.cleaned_data.get('review_note', ''),
             )
+            if obj.status in {'approved', 'active', 'paused', 'cancelled'}:
+                copy = {
+                    'approved': ('Supply request approved', 'Your supply request is approved.', 'Review the agreed quantities, pricing and delivery details in your dashboard.'),
+                    'active': ('Supply schedule active', 'Your supply schedule is active.', 'Your next delivery and payment window are available in your dashboard.'),
+                    'paused': ('Supply schedule paused', 'Your supply schedule is paused.', 'No new delivery cycle will be prepared until the schedule is resumed.'),
+                    'cancelled': ('Supply schedule cancelled', 'Your supply schedule is cancelled.', 'No further delivery cycles will be created for this agreement.'),
+                }
+                subject, title, message = copy[obj.status]
+                try:
+                    from users.emails import send_b2b_status_email
+                    send_b2b_status_email(
+                        obj.business, subject=f'{subject} · LO-SUPPLY-{obj.pk}',
+                        title=title, message=message,
+                        reference=f'LO-SUPPLY-{obj.pk}',
+                    )
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception(
+                        'B2B supply status email failed for agreement %s', obj.pk
+                    )
 
 
 @admin.register(BusinessSupplyRevision)

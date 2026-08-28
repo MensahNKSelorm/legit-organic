@@ -120,6 +120,9 @@ class B2BApplicationBotProtectionTests(TestCase):
     def setUp(self):
         cache.clear()
         self.client = APIClient()
+        self.email_patcher = patch('users.emails.resend.Emails.send', return_value={'id': 'email_test'})
+        self.mock_email_send = self.email_patcher.start()
+        self.addCleanup(self.email_patcher.stop)
 
     @override_settings(TURNSTILE_ENABLED=True, TURNSTILE_SECRET_KEY='secret')
     def test_missing_turnstile_token_cannot_create_application(self):
@@ -144,6 +147,13 @@ class B2BApplicationBotProtectionTests(TestCase):
         resp = self.client.post(B2B_APPLY_URL, payload, format='multipart')
         self.assertEqual(resp.status_code, 201, resp.data)
         self.assertTrue(B2BProfile.objects.filter(business_email='trade@example.com').exists())
+        email = self.mock_email_send.call_args.args[0]
+        self.assertEqual(email['to'], ['trade@example.com'])
+        self.assertEqual(email['reply_to'], 'operations@legitorganic.com')
+        self.assertEqual(email['from'], 'Legit Organic <operations@legitorganic.com>')
+        self.assertIn('text', email)
+        self.assertIn('LO-B2B-', email['subject'])
+        self.assertIn('/images/email-logo.png', email['html'])
 
 
 @override_settings(TURNSTILE_ENABLED=False)
@@ -151,6 +161,9 @@ class B2BApplicationValidationTests(TestCase):
     def setUp(self):
         cache.clear()
         self.client = APIClient()
+        self.email_patcher = patch('users.emails.resend.Emails.send', return_value={'id': 'email_test'})
+        self.email_patcher.start()
+        self.addCleanup(self.email_patcher.stop)
 
     def test_registered_business_requires_orc_number(self):
         payload = b2b_payload()

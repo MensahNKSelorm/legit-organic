@@ -210,7 +210,19 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             delivery_fee=zone.delivery_fee,
         )
         from .services import ensure_renewal_order
-        ensure_renewal_order(week.pk)
+        ensure_renewal_order(week.pk, notify=False)
+        from .emails import send_subscription_created_email
+
+        def notify_created():
+            try:
+                send_subscription_created_email(subscription)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    'Subscription creation email failed for subscription %s', subscription.pk
+                )
+
+        transaction.on_commit(notify_created)
         return subscription
 
 

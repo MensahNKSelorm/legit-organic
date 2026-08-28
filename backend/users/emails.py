@@ -2,7 +2,45 @@ import resend
 from django.conf import settings
 from django.utils.html import escape
 
-EMAIL_LOGO_URL = 'https://legitorganic.com/images/email-logo.png'
+from .email_design import EMAIL_LOGO_URL, payload
+
+def send_b2b_application_received_email(profile):
+    reference = f'LO-B2B-{profile.pk}'
+    resend.Emails.send(payload(
+        to=profile.business_email,
+        subject=f'We received your business application | {reference}',
+        stream='business', eyebrow='Business application',
+        title='Your application is with us', greeting=profile.contact_person,
+        paragraphs=[
+            f'We received the application for {profile.company_name}. Our team will review the business and delivery details before approving access.',
+            'We will email you when the review is complete or if we need more information.',
+        ],
+        details=[('Reference', reference)],
+        note='Reply to this email if any submitted detail needs to be corrected.',
+    ))
+
+
+def send_b2b_request_received_email(profile, *, request_type, reference, title):
+    dashboard_url = f'{settings.FRONTEND_URL}/b2b/dashboard'
+    resend.Emails.send(payload(
+        to=profile.business_email,
+        subject=f'{request_type} received | {reference}', stream='business',
+        eyebrow='Business supply', title=title, greeting=profile.contact_person,
+        paragraphs=['Your request is with our team. We will confirm pricing, availability and delivery details before anything becomes payable.'],
+        details=[('Reference', reference)],
+        action=('Open business dashboard', dashboard_url),
+    ))
+
+
+def send_b2b_status_email(profile, *, subject, title, message, reference):
+    dashboard_url = f'{settings.FRONTEND_URL}/b2b/dashboard'
+    resend.Emails.send(payload(
+        to=profile.business_email,
+        subject=subject, stream='business', eyebrow='Business supply', title=title,
+        greeting=profile.contact_person, paragraphs=[message],
+        details=[('Reference', reference)], action=('View details', dashboard_url),
+        note='Reply to this email if you need help.',
+    ))
 
 
 def send_owner_order_report(order, event):
@@ -88,7 +126,7 @@ def send_owner_order_report(order, event):
     })
 
 
-def send_welcome_email(user):
+def _legacy_send_welcome_email(user):
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
         "to": [user.email],
@@ -162,7 +200,7 @@ def send_welcome_email(user):
     })
 
 
-def send_order_confirmation_email(user, order):
+def _legacy_send_order_confirmation_email(user, order):
     items_html = ''.join([
         f"""
         <tr>
@@ -312,7 +350,7 @@ def send_order_confirmation_email(user, order):
     })
 
 
-def send_order_status_email(order):
+def _legacy_send_order_status_email(order):
     """Send email when order status changes. Works for both
     registered users and guests (if they have an email)."""
 
@@ -585,9 +623,8 @@ def send_b2b_approval_email(profile, uid=None, token=None):
                         padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 
               <div style="text-align:center;margin-bottom:24px;">
-                <div style="font-size:48px;margin-bottom:12px;">&#127881;</div>
                 <h2 style="color:#2E7D32;font-size:24px;margin:0;">
-                  You&rsquo;re Approved!
+                  Your business account is approved
                 </h2>
                 <p style="color:#666;margin:8px 0 0;font-size:14px;">
                   Welcome to the Legit Organic B2B Program
@@ -608,8 +645,8 @@ def send_b2b_approval_email(profile, uid=None, token=None):
                           padding:16px;border-radius:0 8px 8px 0;margin:24px 0;">
                 <p style="margin:0;color:#0D3B2A;font-weight:600;">Your Benefits:</p>
                 <ul style="color:#333;margin:8px 0 0;padding-left:20px;">
-                  <li>Automatic bulk discounts on all orders</li>
-                  <li>The more you order, the more you save</li>
+                  <li>Approved tomato and onion business pricing</li>
+                  <li>Quote requests for your required quantities</li>
                   <li>Dedicated support via WhatsApp</li>
                   <li>Invoice generation for all orders</li>
                 </ul>
@@ -745,7 +782,7 @@ def send_b2b_review_update_email(profile, status, note):
     })
 
 
-def send_verification_email(user, token):
+def _legacy_send_verification_email(user, token):
     verification_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
     resend.Emails.send({
         "from": f"Legit Organic <{settings.DEFAULT_FROM_EMAIL}>",
@@ -852,3 +889,141 @@ def send_staff_invitation_email(invitation, token):
         </html>
         """,
     })
+
+
+# Unified customer order mail. Keeping these definitions together ensures that
+# confirmations and dashboard-driven status updates share one visual system.
+def _order_recipient(order):
+    if order.user_id and order.user.email:
+        return order.user.email, order.user.first_name or order.user.email.split('@')[0]
+    if order.guest_email:
+        return order.guest_email, order.guest_name or 'there'
+    return None, None
+
+
+def _order_stream(order):
+    if order.order_source == 'subscription':
+        return 'updates', 'Weekly delivery', f'{settings.FRONTEND_URL}/subscriptions/manage'
+    if order.order_source == 'business_supply':
+        return 'business', 'Business supply', f'{settings.FRONTEND_URL}/b2b/dashboard'
+    return 'orders', 'Order update', f'{settings.FRONTEND_URL}/profile'
+
+
+def _order_items(order):
+    return [
+        (
+            item.product.name if item.product_id else 'Produce item',
+            item.quantity,
+            f'{item.subtotal:.2f}',
+        )
+        for item in order.items.select_related('product').all()
+    ]
+
+
+def send_order_confirmation_email(user, order):
+    """Confirm receipt without describing an unpaid order as paid."""
+    stream, eyebrow, destination = _order_stream(order)
+    paid = order.payment_status == 'success'
+    resend.Emails.send(payload(
+        to=user.email, subject=f'Order received | {order.reference}', stream=stream,
+        eyebrow=eyebrow, title='We have your order',
+        greeting=user.first_name or user.email.split('@')[0],
+        paragraphs=[
+            'Your payment is confirmed and we will begin preparing your produce.'
+            if paid else
+            'Your order is saved. Complete payment from your order page so we can begin preparing your produce.'
+        ],
+        details=[
+            ('Reference', order.reference),
+            ('Payment', 'Confirmed' if paid else 'Pending'),
+            ('Delivery address', order.delivery_address),
+        ],
+        items=_order_items(order), total=f'{order.final_amount:.2f}',
+        action=('View order', destination),
+        note='We will send another update when the order moves to the next stage.',
+    ))
+
+
+def send_order_status_email(order):
+    """Send a branded message for the current customer-visible order state."""
+    recipient, customer = _order_recipient(order)
+    if not recipient:
+        return
+    stream, eyebrow, destination = _order_stream(order)
+    configs = {
+        'paid': (f'Payment confirmed | {order.reference}', 'Payment confirmed',
+                 'We received your payment. Your produce will now move into preparation.',
+                 'We will let you know when it is packed.'),
+        'processing': (f'We are preparing your order | {order.reference}', 'We are preparing your produce',
+                       'Our team is selecting and packing the produce in your order.',
+                       'No action is needed from you right now.'),
+        'ready_for_dispatch': (f'Your order is packed | {order.reference}', 'Packed and ready',
+                               'Your order has been packed and is waiting for dispatch.',
+                               'We will send your delivery details when it leaves with the driver.'),
+        'out_for_delivery': (f'Your order is on the way | {order.reference}', 'Out for delivery',
+                             'Your produce is with the driver and is on its way to your delivery address.',
+                             (f'Your delivery PIN is {getattr(order, "_delivery_pin_plaintext", "")}. Share it only after you receive your order.'
+                              if getattr(order, '_delivery_pin_plaintext', '') else
+                              'Please make sure someone is available to receive the delivery.')),
+        'shipped': (f'Your order is on the way | {order.reference}', 'Dispatched',
+                    'Your produce has left our team and is on the way to you.',
+                    'Please make sure someone is available to receive it.'),
+        'delivered': (f'Order delivered | {order.reference}', 'Delivered',
+                      'Your delivery has been completed. We hope everything arrived in good condition.',
+                      'Thank you for choosing Legit Organic.'),
+        'cancelled': (f'Order cancelled | {order.reference}', 'Order cancelled',
+                      'This order has been cancelled and will not be prepared or delivered.',
+                      'Reply to this email if you did not request the cancellation or need help.'),
+    }
+    config = configs.get(order.status)
+    if not config:
+        return
+    subject, title, message, note = config
+    resend.Emails.send(payload(
+        to=recipient, subject=subject, stream=stream, eyebrow=eyebrow,
+        title=title, greeting=customer, paragraphs=[message],
+        details=[('Reference', order.reference), ('Delivery address', order.delivery_address)],
+        items=_order_items(order), total=f'{order.final_amount:.2f}',
+        action=('View details', destination), note=note,
+    ))
+
+
+def send_order_payment_failed_email(order):
+    recipient, customer = _order_recipient(order)
+    if not recipient:
+        return
+    stream, eyebrow, destination = _order_stream(order)
+    resend.Emails.send(payload(
+        to=recipient, subject=f'Payment was not completed | {order.reference}',
+        stream=stream, eyebrow=eyebrow, title='Payment was not completed',
+        greeting=customer,
+        paragraphs=['Your order is still safe. You can return and try the payment again.'],
+        details=[('Reference', order.reference), ('Amount', f'GHS {order.final_amount:.2f}')],
+        action=('Try payment again', destination),
+        note='You will not be charged twice for retrying an unpaid order.',
+    ))
+
+
+def send_welcome_email(user):
+    resend.Emails.send(payload(
+        to=user.email, subject='Welcome to Legit Organic', stream='updates',
+        eyebrow='Your account', title='Welcome to Legit Organic',
+        greeting=user.first_name or user.email.split('@')[0],
+        paragraphs=[
+            'Your account is ready. You can shop fresh produce, follow deliveries and manage your weekly plan in one place.'
+        ],
+        action=('Browse the market', f'{settings.FRONTEND_URL}/products'),
+        note='Reply to this email if you need help getting started.',
+    ))
+
+
+def send_verification_email(user, token):
+    verification_url = f'{settings.FRONTEND_URL}/verify-email?token={token}'
+    resend.Emails.send(payload(
+        to=user.email, subject='Verify your Legit Organic email address', stream='updates',
+        eyebrow='Account security', title='Verify your email address',
+        greeting=user.first_name or user.email.split('@')[0],
+        paragraphs=['Confirm this email address to finish setting up your account.'],
+        action=('Verify email address', verification_url),
+        note='This link expires in 24 hours. If you did not create this account, you can ignore this message.',
+    ))

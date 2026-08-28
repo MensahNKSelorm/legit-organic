@@ -1,52 +1,125 @@
 import resend
 from django.conf import settings
-from django.utils.html import escape
+
+from users.email_design import payload
+
+
+def _name(subscription):
+    return subscription.user.first_name or subscription.user.email.split('@')[0]
+
+
+def _send(subscription, *, subject, title, paragraphs, details=None, action=None, note=None):
+    return resend.Emails.send(payload(
+        to=subscription.user.email, subject=subject, stream='updates',
+        eyebrow='Plan the week', title=title, greeting=_name(subscription),
+        paragraphs=paragraphs, details=details, action=action, note=note,
+    ))
+
+
+def send_subscription_created_email(subscription):
+    return _send(
+        subscription, subject='Your weekly delivery plan is ready', title='Your week is set',
+        paragraphs=[
+            'Your weekly delivery plan has been created. Each delivery will have its own order and payment window.',
+            'You stay in control. Nothing is charged automatically.',
+        ],
+        details=[('Plan', subscription.name or 'Weekly basket'),
+                 ('Next delivery', subscription.next_delivery_date.strftime('%d %B %Y')),
+                 ('Weekly total', f'GHS {subscription.weekly_total:.2f}')],
+        action=('Manage weekly deliveries', f'{settings.FRONTEND_URL}/subscriptions/manage'),
+        note='You can skip, pause or cancel before the relevant cutoff.',
+    )
+
+
+def send_subscription_action_email(subscription, action):
+    copy = {
+        'paused': ('Weekly deliveries paused', 'Your plan is paused', 'No new weekly order will be prepared while your plan is paused.'),
+        'resumed': ('Weekly deliveries resumed', 'Your plan is active again', 'We have scheduled your next weekly delivery.'),
+        'cancelled': ('Weekly deliveries cancelled', 'Your plan is cancelled', 'No further weekly orders will be created for this plan.'),
+        'skipped': ('This week has been skipped', 'Your next delivery has moved', 'We skipped the current delivery and scheduled the following week.'),
+    }
+    subject, title, message = copy[action]
+    return _send(
+        subscription, subject=subject, title=title, paragraphs=[message],
+        details=[('Plan', subscription.name or 'Weekly basket'),
+                 ('Next delivery', subscription.next_delivery_date.strftime('%d %B %Y'))],
+        action=('Manage weekly deliveries', f'{settings.FRONTEND_URL}/subscriptions/manage'),
+    )
+
+
+def send_renewal_ready_email(week):
+    return _send(
+        week.subscription, subject=f'Approve your delivery for {week.delivery_date:%d %B}',
+        title='This week is ready for your approval',
+        paragraphs=['Review the renewal order and pay when you are ready. We will not prepare it until payment is confirmed.'],
+        details=[('Delivery date', week.delivery_date.strftime('%d %B %Y')),
+                 ('Amount due', f'GHS {week.total:.2f}'),
+                 ('Payment closes', week.cutoff_at.strftime('%d %B %Y, %H:%M'))],
+        action=('Review and pay', f'{settings.FRONTEND_URL}/subscriptions/manage'),
+        note='If the payment window closes, this delivery will expire without a charge.',
+    )
+
+
+def send_week_expired_email(week):
+    return _send(
+        week.subscription, subject=f'Delivery window closed for {week.delivery_date:%d %B}',
+        title='This delivery has expired',
+        paragraphs=['The payment window closed before payment was completed, so this delivery will not be prepared.'],
+        details=[('Delivery date', week.delivery_date.strftime('%d %B %Y'))],
+        action=('View weekly deliveries', f'{settings.FRONTEND_URL}/subscriptions/manage'),
+        note='Your plan remains active unless you pause or cancel it.',
+    )
+
+
+def send_business_cycle_email(cycle, event):
+    agreement = cycle.agreement
+    profile = agreement.business
+    copy = {
+        'payment_due': ('Business order ready for approval', 'Your next supply order is ready',
+                        'Review the order and complete payment before the payment window closes.'),
+        'expired': ('Business payment window closed', 'This supply order has expired',
+                    'The payment window closed before payment was completed, so this order will not be prepared.'),
+        'skipped': ('Business delivery skipped', 'This delivery has been skipped',
+                    'The current delivery was skipped. Your supply agreement remains available for its next cycle.'),
+    }
+    subject, title, message = copy[event]
+    return resend.Emails.send(payload(
+        to=profile.business_email, subject=f'{subject} | LO-SUPPLY-{agreement.pk}',
+        stream='business', eyebrow='Business supply', title=title,
+        greeting=profile.contact_person, paragraphs=[message],
+        details=[('Delivery date', cycle.delivery_date.strftime('%d %B %Y')),
+                 ('Amount', f'GHS {cycle.total:.2f}')],
+        action=('Open business dashboard', f'{settings.FRONTEND_URL}/b2b/dashboard'),
+        note='Reply to this email if the quantity, delivery date or address needs attention.',
+    ))
 
 
 def send_weekly_payment_link(subscription, week, authorization_url):
-    resend.Emails.send({
-        'from': f'Legit Organic <{settings.DEFAULT_FROM_EMAIL}>',
-        'to': [subscription.user.email],
-        'subject': f'Approve your delivery for {week.delivery_date:%d %B}',
-        'html': f'''
-        <div style="background:#f4efe4;padding:32px 18px;font-family:Arial,sans-serif;color:#173c2a">
-          <div style="max-width:560px;margin:auto;background:#fff;padding:32px;border-top:6px solid #f4c430">
-            <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px">Weekly delivery</p>
-            <h1 style="font-size:28px">Approve this week</h1>
-            <p>{escape(subscription.name or 'Your basket')} · GH&#8373;{week.total:.2f}</p>
-            <a href="{escape(authorization_url)}" style="display:inline-block;margin-top:20px;background:#173c2a;color:#fff;padding:13px 20px;text-decoration:none;font-weight:700">Pay with mobile money</a>
-            <p style="margin-top:24px;font-size:12px;color:#66756c">If you do not approve it, this week will be skipped.</p>
-          </div>
-        </div>''',
-    })
+    return _send(
+        subscription, subject=f'Complete payment for {week.delivery_date:%d %B}',
+        title='Approve this week',
+        paragraphs=['Your renewal order is ready. Complete payment to confirm this delivery.'],
+        details=[('Delivery date', week.delivery_date.strftime('%d %B %Y')),
+                 ('Amount due', f'GHS {week.total:.2f}')],
+        action=('Pay securely', authorization_url),
+        note='No automatic charge will be made. If you do not approve it, this week will be skipped.',
+    )
 
 
 def send_price_change_notice(notice):
     change = notice.price_change
     subscription = notice.subscription
-    manage_url = f'{settings.FRONTEND_URL}/subscriptions/manage'
-    result = resend.Emails.send({
-        'from': f'Legit Organic <{settings.DEFAULT_FROM_EMAIL}>',
-        'to': [notice.recipient_email],
-        'subject': f'An update to your {change.plan.name} weekly price',
-        'html': f'''
-        <!doctype html><html><body style="margin:0;background:#f4efe4;font-family:Arial,sans-serif;color:#173c2a">
-          <div style="max-width:600px;margin:auto;padding:36px 18px">
-            <div style="background:#173c2a;color:white;padding:30px;border-top:6px solid #f4c430">
-              <p style="margin:0 0 10px;color:#f4c430;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase">Plan the Week</p>
-              <h1 style="margin:0;font-size:30px">Your weekly price is changing.</h1>
-            </div>
-            <div style="background:white;padding:30px">
-              <p>Hello {escape(subscription.user.first_name or 'there')},</p>
-              <p style="line-height:1.65">From <strong>{change.effective_at:%d %B %Y}</strong>, your {escape(change.plan.name)} plan will change from <strong>GH&#8373;{change.old_price:.2f}</strong> to <strong>GH&#8373;{change.new_price:.2f}</strong> per week.</p>
-              <p style="line-height:1.65">{escape(change.reason)}</p>
-              <p style="line-height:1.65">You can keep your plan, pause it, or cancel before the new price begins.</p>
-              <a href="{escape(manage_url)}" style="display:inline-block;margin-top:16px;background:#f4c430;color:#173c2a;padding:13px 20px;text-decoration:none;font-weight:700">Manage my plan</a>
-              <p style="margin-top:28px;font-size:12px;color:#66756c">No automatic charge will be made. Each weekly delivery still requires your approval.</p>
-            </div>
-          </div>
-        </body></html>''',
-    })
+    result = _send(
+        subscription, subject=f'An update to your {change.plan.name} weekly price',
+        title='Your weekly price is changing',
+        paragraphs=[
+            f'From {change.effective_at:%d %B %Y}, your {change.plan.name} plan will change from GHS {change.old_price:.2f} to GHS {change.new_price:.2f} per week.',
+            change.reason,
+            'You can keep your plan, pause it or cancel before the new price begins.',
+        ],
+        action=('Manage my plan', f'{settings.FRONTEND_URL}/subscriptions/manage'),
+        note='No automatic charge will be made. Each weekly delivery still requires your approval.',
+    )
     if isinstance(result, dict):
         return str(result.get('id', ''))
     return str(getattr(result, 'id', '') or '')

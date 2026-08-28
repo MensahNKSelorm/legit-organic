@@ -7,6 +7,15 @@ from subscriptions.models import SubscriptionWeek
 from subscriptions.services import ensure_renewal_order, schedule_next_week
 
 
+def notify_expired(week):
+    try:
+        from subscriptions.emails import send_week_expired_email
+        send_week_expired_email(week)
+    except Exception as exc:
+        return str(exc)
+    return ''
+
+
 class Command(BaseCommand):
     help = 'Create renewal orders and expire unpaid subscription payment windows.'
 
@@ -26,6 +35,9 @@ class Command(BaseCommand):
                 week.order.save(update_fields=['payment_status'])
             if week.subscription.status == 'active':
                 schedule_next_week(week.subscription, week.delivery_date)
+            error = notify_expired(week)
+            if error:
+                self.stderr.write(f'Expiry email failed for week {week.pk}: {error}')
             self.stdout.write(f'Expired renewal week {week.pk}')
 
         scheduled = SubscriptionWeek.objects.select_related('subscription').filter(

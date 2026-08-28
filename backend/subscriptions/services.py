@@ -1,4 +1,5 @@
 import calendar
+import logging
 from datetime import date, datetime, time, timedelta
 
 from django.utils import timezone
@@ -8,6 +9,28 @@ from .models import (
     BusinessSupplyAgreement, BusinessSupplyCycle,
     SubscriptionPlanPriceChange, SubscriptionPriceNotice, SubscriptionWeek,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def _send_week_email(week_id, function_name):
+    try:
+        from . import emails
+        week = SubscriptionWeek.objects.select_related('subscription__user').get(pk=week_id)
+        getattr(emails, function_name)(week)
+    except Exception:
+        logger.exception('Subscription email %s failed for week %s', function_name, week_id)
+
+
+def _send_business_cycle_email(cycle_id, event):
+    try:
+        from .emails import send_business_cycle_email
+        cycle = BusinessSupplyCycle.objects.select_related(
+            'agreement__business__user'
+        ).get(pk=cycle_id)
+        send_business_cycle_email(cycle, event)
+    except Exception:
+        logger.exception('Business cycle email %s failed for cycle %s', event, cycle_id)
 
 
 def next_business_delivery(agreement, after_date=None):
@@ -75,6 +98,7 @@ def ensure_business_supply_order(cycle_id):
     cycle.order = order
     cycle.status = 'payment_due'
     cycle.save(update_fields=['order', 'status', 'updated_at'])
+    transaction.on_commit(lambda: _send_business_cycle_email(cycle.pk, 'payment_due'))
     return order
 
 
@@ -121,7 +145,7 @@ def schedule_next_week(subscription, after_date=None):
 
 
 @transaction.atomic
-def ensure_renewal_order(week_id):
+def ensure_renewal_order(week_id, *, notify=True):
     """Create exactly one unpaid order for a subscription delivery cycle."""
     from orders.models import Order, OrderItem
 
@@ -156,6 +180,8 @@ def ensure_renewal_order(week_id):
     week.payment_reference = reference
     week.status = 'payment_due'
     week.save(update_fields=['order', 'payment_reference', 'status', 'updated_at'])
+    if notify:
+        transaction.on_commit(lambda: _send_week_email(week.pk, 'send_renewal_ready_email'))
     return order
 
 

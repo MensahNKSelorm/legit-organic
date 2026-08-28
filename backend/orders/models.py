@@ -16,6 +16,14 @@ def _send_owner_report(order_id, event):
     send_owner_report_once(order_id, event)
 
 
+def _send_payment_failed_email(order_id):
+    try:
+        from users.emails import send_order_payment_failed_email
+        send_order_payment_failed_email(Order.objects.get(pk=order_id))
+    except Exception:
+        logger.exception('Payment failure email failed for order %s', order_id)
+
+
 class Cart(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cart'
@@ -165,7 +173,15 @@ class Order(models.Model):
             self.payment_status == 'success'
             and self.__original_payment_status != 'success'
         )
+        payment_became_failed = (
+            self.payment_status == 'failed'
+            and self.__original_payment_status != 'failed'
+        )
         super().save(*args, **kwargs)
+
+        if is_update and payment_became_failed:
+            from django.db import transaction
+            transaction.on_commit(lambda: _send_payment_failed_email(self.pk))
 
         if is_update and status_changed:
             try:
@@ -196,7 +212,7 @@ class Order(models.Model):
                 lambda event=event: _send_owner_report(order_id, event)
             )
 
-        if status_changed and self.status in [
+        if status_changed and not getattr(self, '_suppress_customer_notifications', False) and self.status in [
             'paid', 'processing', 'ready_for_dispatch', 'out_for_delivery',
             'shipped', 'delivered', 'cancelled'
         ]:

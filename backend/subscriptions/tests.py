@@ -20,6 +20,11 @@ from .services import apply_price_change, deliver_price_notice, prepare_price_ch
 
 class SubscriptionAPITests(APITestCase):
     def setUp(self):
+        self.email_patcher = patch(
+            'subscriptions.emails.resend.Emails.send', return_value={'id': 'email_test'}
+        )
+        self.mock_email_send = self.email_patcher.start()
+        self.addCleanup(self.email_patcher.stop)
         self.user = User.objects.create_user(
             email='family@example.com', password='test-pass', email_verified=True
         )
@@ -168,6 +173,9 @@ class SubscriptionAPITests(APITestCase):
 
 class BusinessSupplyAPITests(APITestCase):
     def setUp(self):
+        self.email_patcher = patch('users.emails.resend.Emails.send', return_value={'id': 'email_test'})
+        self.mock_email_send = self.email_patcher.start()
+        self.addCleanup(self.email_patcher.stop)
         self.user = User.objects.create_user(
             email='buyer@example.com', password='test-pass', email_verified=True
         )
@@ -209,6 +217,28 @@ class BusinessSupplyAPITests(APITestCase):
         self.assertEqual(agreement.subtotal, Decimal('125.00'))
         self.assertEqual(agreement.items.count(), 1)
         self.assertFalse(Subscription.objects.filter(user=self.user).exists())
+        email = self.mock_email_send.call_args.args[0]
+        self.assertEqual(email['to'], [self.user.email])
+        self.assertEqual(email['reply_to'], 'operations@legitorganic.com')
+        self.assertEqual(email['from'], 'Legit Organic <operations@legitorganic.com>')
+        self.assertIn('text', email)
+        self.assertIn(f'LO-SUPPLY-{agreement.pk}', email['subject'])
+        self.assertIn('/b2b/dashboard', email['html'])
+
+    def test_business_quote_sends_review_confirmation(self):
+        response = self.client.post('/api/subscriptions/business/quotes/', {
+            'requested_delivery_date': str(timezone.localdate() + timedelta(days=5)),
+            'is_recurring': False,
+            'customer_note': 'Please confirm crate availability.',
+            'items': [{
+                'product_id': self.product.pk, 'quantity': 8,
+                'requested_unit': 'crate',
+            }],
+        }, format='json')
+        self.assertEqual(response.status_code, 201, response.data)
+        email = self.mock_email_send.call_args.args[0]
+        self.assertEqual(email['to'], [self.user.email])
+        self.assertIn(f"LO-QUOTE-{response.data['id']}", email['subject'])
 
     def test_business_supply_rejects_regular_market_product(self):
         regular_product = Product.objects.create(
