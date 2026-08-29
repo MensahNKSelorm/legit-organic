@@ -53,6 +53,8 @@ def b2b_payload(email='trade@example.com'):
         'receiving_contact_name': 'Kojo Asare',
         'receiving_contact_phone': '0200000000',
         'receiving_hours': 'Monday to Friday, 8:00–16:00',
+        'delivery_latitude': '5.556020',
+        'delivery_longitude': '-0.182830',
         'produce_categories': '["Tomatoes", "Onions"]',
         'order_frequency': 'weekly',
         'applicant_authorized': 'true',
@@ -146,7 +148,9 @@ class B2BApplicationBotProtectionTests(TestCase):
         payload = {**b2b_payload(), 'turnstile_token': 'valid-token'}
         resp = self.client.post(B2B_APPLY_URL, payload, format='multipart')
         self.assertEqual(resp.status_code, 201, resp.data)
-        self.assertTrue(B2BProfile.objects.filter(business_email='trade@example.com').exists())
+        profile = B2BProfile.objects.get(business_email='trade@example.com')
+        self.assertEqual(str(profile.delivery_latitude), '5.556020')
+        self.assertEqual(str(profile.delivery_longitude), '-0.182830')
         email = self.mock_email_send.call_args.args[0]
         self.assertEqual(email['to'], ['trade@example.com'])
         self.assertEqual(email['reply_to'], 'operations@legitorganic.com')

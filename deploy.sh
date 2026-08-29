@@ -54,8 +54,11 @@ NEXT_DIST_DIR=.next-build npm run build
 # Runtime-owned paths must remain writable after root performs a deployment.
 if id -u legitorganic >/dev/null 2>&1; then
     install -d -o legitorganic -g legitorganic ../backend/media
+    install -d -o legitorganic -g legitorganic -m 0770 \
+        ../backend/private_media ../backend/private_media/b2b
     touch ../backend/django_errors.log
-    chown -R legitorganic:legitorganic ../backend/media ../backend/django_errors.log .next-build
+    chown -R legitorganic:legitorganic \
+        ../backend/media ../backend/private_media ../backend/django_errors.log .next-build
 fi
 
 # Restart the backend, then atomically replace the frontend build while the

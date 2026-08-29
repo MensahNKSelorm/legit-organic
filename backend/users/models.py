@@ -309,6 +309,8 @@ class B2BProfile(models.Model):
     receiving_contact_name = models.CharField(max_length=150, blank=True)
     receiving_contact_phone = models.CharField(max_length=20, blank=True)
     receiving_hours = models.CharField(max_length=200, blank=True)
+    delivery_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    delivery_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     access_restrictions = models.TextField(blank=True)
     produce_categories = models.JSONField(default=list, blank=True)
     order_frequency = models.CharField(max_length=20, choices=ORDER_FREQUENCY_CHOICES, blank=True)
