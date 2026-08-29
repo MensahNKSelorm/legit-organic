@@ -19,12 +19,15 @@ interface LocationPickerProps {
 }
 
 export default function LocationPicker({ onLocationSelect, initialAddress }: LocationPickerProps) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
   const [marker, setMarker] = useState<google.maps.Marker | null>(null)
   const [searchInput, setSearchInput] = useState(initialAddress || '')
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(Boolean(apiKey))
+  const [error, setError] = useState(
+    apiKey ? '' : 'Map is temporarily unavailable. Please enter the delivery address manually.'
+  )
   const [locating, setLocating] = useState(false)
   const [locError, setLocError] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
@@ -156,8 +159,10 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
   }
 
   useEffect(() => {
+    if (!apiKey) return
+
     const loader = new Loader({
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+      apiKey,
       version: 'weekly',
       libraries: ['places', 'geocoding'],
     })
@@ -233,8 +238,9 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
       setMarker(markerInstance)
       setIsLoading(false)
 
-    }).catch(() => {
-      setError('Failed to load map. Please enter address manually.')
+    }).catch((loadError) => {
+      console.error('Google Maps failed to load', loadError)
+      setError('Map is temporarily unavailable. Please enter the delivery address manually.')
       setIsLoading(false)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps

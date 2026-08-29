@@ -11,11 +11,11 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  `script-src 'self' 'unsafe-inline'${developmentScriptSources} https://accounts.google.com https://challenges.cloudflare.com`,
-  "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
-  "font-src 'self' data: https://cdn.fontshare.com",
-  "img-src 'self' data: blob: https://api.legitorganic.com",
-  `connect-src 'self' https://api.legitorganic.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://challenges.cloudflare.com${developmentApiSources}`,
+  `script-src 'self' 'unsafe-inline'${developmentScriptSources} https://accounts.google.com https://challenges.cloudflare.com https://maps.googleapis.com https://maps.gstatic.com`,
+  "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://fonts.googleapis.com",
+  "font-src 'self' data: https://cdn.fontshare.com https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https://api.legitorganic.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleusercontent.com",
+  `connect-src 'self' https://api.legitorganic.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://challenges.cloudflare.com${developmentApiSources}`,
   "frame-src https://accounts.google.com https://challenges.cloudflare.com https://www.google.com https://www.youtube.com https://youtube.com",
 ].join('; ');
 
