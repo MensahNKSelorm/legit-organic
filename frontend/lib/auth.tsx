@@ -1,30 +1,23 @@
-'use client'
+"use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  type ReactNode,
-} from 'react'
-import { useRouter } from 'next/navigation'
-import { api, setAccessToken } from '@/lib/api'
-import type { User, B2BProfile, SalesRepProfile } from '@/types'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { api, setAccessToken } from "@/lib/api";
+import type { User, B2BProfile, SalesRepProfile } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 interface AuthContextType {
-  user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  isB2B: boolean
-  b2bProfile: B2BProfile | null
-  isSalesRep: boolean
-  salesRepProfile: SalesRepProfile | null
-  login: (email: string, password: string, returnTo?: string) => Promise<void>
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  isB2B: boolean;
+  b2bProfile: B2BProfile | null;
+  isSalesRep: boolean;
+  salesRepProfile: SalesRepProfile | null;
+  login: (email: string, password: string, returnTo?: string) => Promise<void>;
   register: (
     email: string,
     password: string,
@@ -32,83 +25,86 @@ interface AuthContextType {
     lastName: string,
     referralCode?: string,
     turnstileToken?: string | null
-  ) => Promise<void>
-  googleLogin: (token: string, returnTo?: string) => Promise<void>
-  logout: () => void
-  updateUser: (data: Partial<User>) => void
-  refreshB2B: () => Promise<void>
-  refreshSalesRep: () => Promise<void>
-  resendVerification: (email?: string) => Promise<void>
-  completeEmailVerification: (token: string) => Promise<User>
+  ) => Promise<void>;
+  googleLogin: (token: string, returnTo?: string) => Promise<void>;
+  logout: () => void;
+  updateUser: (data: Partial<User>) => void;
+  refreshB2B: () => Promise<void>;
+  refreshSalesRep: () => Promise<void>;
+  resendVerification: (email?: string) => Promise<void>;
+  completeEmailVerification: (token: string) => Promise<User>;
 }
 
 // ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
 
-const AuthContext = createContext<AuthContextType | null>(null)
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [b2bProfile, setB2bProfile] = useState<B2BProfile | null>(null)
-  const [salesRepProfile, setSalesRepProfile] = useState<SalesRepProfile | null>(null)
-  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [b2bProfile, setB2bProfile] = useState<B2BProfile | null>(null);
+  const [salesRepProfile, setSalesRepProfile] = useState<SalesRepProfile | null>(null);
+  const router = useRouter();
 
   const refreshB2B = useCallback(async () => {
     try {
-      const data = await api.b2b.status()
-      setB2bProfile('id' in data ? (data as B2BProfile) : null)
+      const data = await api.b2b.status();
+      setB2bProfile("id" in data ? (data as B2BProfile) : null);
     } catch {
-      setB2bProfile(null)
+      setB2bProfile(null);
     }
-  }, [])
+  }, []);
 
   const refreshSalesRep = useCallback(async () => {
     try {
-      const data = await api.sales.me()
-      if (data && 'referral_code' in data) {
-        setSalesRepProfile(data as SalesRepProfile)
+      const data = await api.sales.me();
+      if (data && "referral_code" in data) {
+        setSalesRepProfile(data as SalesRepProfile);
       } else {
-        setSalesRepProfile(null)
+        setSalesRepProfile(null);
       }
     } catch {
-      setSalesRepProfile(null)
+      setSalesRepProfile(null);
     }
-  }, [])
+  }, []);
 
   // On mount: restore the short-lived access token from the HttpOnly refresh cookie.
   useEffect(() => {
-    api.auth.refresh()
+    api.auth
+      .refresh()
       .then(({ access }) => {
-        setAccessToken(access)
-        return api.users.me()
+        setAccessToken(access);
+        return api.users.me();
       })
       .then((u) => {
-        setUser(u)
-        refreshB2B()
-        refreshSalesRep()
+        setUser(u);
+        refreshB2B();
+        refreshSalesRep();
       })
       .catch(() => setAccessToken(null))
-      .finally(() => setIsLoading(false))
-  }, [refreshB2B, refreshSalesRep])
+      .finally(() => setIsLoading(false));
+  }, [refreshB2B, refreshSalesRep]);
 
   const login = useCallback(
     async (email: string, password: string, returnTo?: string) => {
-      const { access } = await api.auth.login(email, password)
-      setAccessToken(access)
-      const userData = await api.users.me()
-      setUser(userData)
-      refreshB2B()
-      refreshSalesRep()
-      router.push(returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/profile')
+      const { access } = await api.auth.login(email, password);
+      setAccessToken(access);
+      const userData = await api.users.me();
+      setUser(userData);
+      refreshB2B();
+      refreshSalesRep();
+      router.push(
+        returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/profile"
+      );
     },
     [router, refreshB2B, refreshSalesRep]
-  )
+  );
 
   const register = useCallback(
     async (
@@ -129,56 +125,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password_confirm: password,
         ...(referralCode ? { referral_code: referralCode } : {}),
         ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
-      })
-      router.push(`/check-email?email=${encodeURIComponent(email)}`)
+      });
+      router.push(`/check-email?email=${encodeURIComponent(email)}`);
     },
     [router]
-  )
+  );
 
   const logout = useCallback(() => {
-    void api.auth.logout().catch(() => undefined)
-    setAccessToken(null)
-    setUser(null)
-    setB2bProfile(null)
-    setSalesRepProfile(null)
-    router.push('/')
-  }, [router])
+    void api.auth.logout().catch(() => undefined);
+    setAccessToken(null);
+    setUser(null);
+    setB2bProfile(null);
+    setSalesRepProfile(null);
+    router.push("/");
+  }, [router]);
 
   const updateUser = useCallback((data: Partial<User>) => {
-    setUser((prev) => (prev ? { ...prev, ...data } : null))
-  }, [])
+    setUser((prev) => (prev ? { ...prev, ...data } : null));
+  }, []);
 
   const googleLogin = useCallback(
     async (token: string, returnTo?: string) => {
-      const data = await api.auth.googleAuth(token)
-      setAccessToken(data.access)
-      setUser(data.user)
-      refreshB2B()
-      refreshSalesRep()
-      router.push(returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/profile')
+      const data = await api.auth.googleAuth(token);
+      setAccessToken(data.access);
+      setUser(data.user);
+      refreshB2B();
+      refreshSalesRep();
+      router.push(
+        returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/profile"
+      );
     },
     [router, refreshB2B, refreshSalesRep]
-  )
+  );
 
-  const resendVerification = useCallback(async (email?: string) => {
-    const target = email ?? user?.email
-    if (!target) throw new Error('No email address available to resend to.')
-    await api.auth.resendVerification(target)
-  }, [user])
+  const resendVerification = useCallback(
+    async (email?: string) => {
+      const target = email ?? user?.email;
+      if (!target) throw new Error("No email address available to resend to.");
+      await api.auth.resendVerification(target);
+    },
+    [user]
+  );
 
   // Called from the verify-email page: verifies the token, then logs the user
   // in with the session the endpoint now returns.
   const completeEmailVerification = useCallback(
     async (token: string) => {
-      const data = await api.auth.verifyEmail(token)
-      setAccessToken(data.access)
-      setUser(data.user)
-      refreshB2B()
-      refreshSalesRep()
-      return data.user
+      const data = await api.auth.verifyEmail(token);
+      setAccessToken(data.access);
+      setUser(data.user);
+      refreshB2B();
+      refreshSalesRep();
+      return data.user;
     },
     [refreshB2B, refreshSalesRep]
-  )
+  );
 
   return (
     <AuthContext.Provider
@@ -186,9 +187,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
-        isB2B: b2bProfile?.status === 'approved',
+        isB2B: b2bProfile?.status === "approved",
         b2bProfile,
-        isSalesRep: salesRepProfile?.status === 'active',
+        isSalesRep: salesRepProfile?.status === "active",
         salesRepProfile,
         login,
         register,
@@ -203,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -211,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // ---------------------------------------------------------------------------
 
 export function useAuth(): AuthContextType {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }

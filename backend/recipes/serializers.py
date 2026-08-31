@@ -2,8 +2,13 @@ from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
 from security.html import SafeHTMLRepresentationMixin
 from .models import (
-    Recipe, RecipeIngredient, RecipeNutrition, RecipeStep, RecipePairing,
-    UserRecipe, UserRecipeIngredient,
+    Recipe,
+    RecipeIngredient,
+    RecipeNutrition,
+    RecipeStep,
+    RecipePairing,
+    UserRecipe,
+    UserRecipeIngredient,
 )
 
 
@@ -24,19 +29,33 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = [
-            'id', 'product', 'matched_products', 'name', 'raw_text', 'quantity',
-            'quantity_max', 'unit', 'normalized_unit', 'preparation', 'optional', 'notes',
+            'id',
+            'product',
+            'matched_products',
+            'name',
+            'raw_text',
+            'quantity',
+            'quantity_max',
+            'unit',
+            'normalized_unit',
+            'preparation',
+            'optional',
+            'notes',
         ]
 
     def get_matched_products(self, obj):
         matches = obj.product_matches.filter(
-            product__is_available=True, manually_verified=True,
+            product__is_available=True,
+            manually_verified=True,
         ).select_related('product')[:3]
-        return MinimalProductSerializer([match.product for match in matches], many=True, context=self.context).data
+        return MinimalProductSerializer(
+            [match.product for match in matches], many=True, context=self.context
+        ).data
 
 
 class RecipeStepSerializer(SafeHTMLRepresentationMixin, serializers.ModelSerializer):
     html_fields = ('instruction',)
+
     class Meta:
         model = RecipeStep
         fields = ['id', 'step_number', 'section', 'instruction', 'image']
@@ -51,11 +70,30 @@ class RecipeListSerializer(SafeHTMLRepresentationMixin, serializers.ModelSeriali
 
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'local_name', 'slug', 'description', 'cover_image',
-                  'prep_time', 'cook_time', 'servings', 'difficulty',
-                  'total_time', 'cuisine', 'country', 'region', 'recipe_category',
-                  'meal_type', 'keywords', 'is_default', 'nutritional_score',
-                  'video_url', 'published_at', 'created_at']
+        fields = [
+            'id',
+            'title',
+            'local_name',
+            'slug',
+            'description',
+            'cover_image',
+            'prep_time',
+            'cook_time',
+            'servings',
+            'difficulty',
+            'total_time',
+            'cuisine',
+            'country',
+            'region',
+            'recipe_category',
+            'meal_type',
+            'keywords',
+            'is_default',
+            'nutritional_score',
+            'video_url',
+            'published_at',
+            'created_at',
+        ]
         read_only_fields = ['id', 'slug', 'created_at']
 
 
@@ -93,8 +131,12 @@ class RecipeDetailSerializer(RecipeListSerializer):
 
     class Meta(RecipeListSerializer.Meta):
         fields = RecipeListSerializer.Meta.fields + [
-            'ingredients', 'steps', 'nutrition', 'nutrition_attribution',
-            'source_attribution', 'updated_at',
+            'ingredients',
+            'steps',
+            'nutrition',
+            'nutrition_attribution',
+            'source_attribution',
+            'updated_at',
         ]
 
 
@@ -102,10 +144,19 @@ class RecipeNutritionSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeNutrition
         fields = [
-            'source', 'is_complete', 'calculation_warnings', 'calories',
-            'protein_g', 'carbohydrate_g', 'fat_g',
-            'saturated_fat_g', 'fibre_g', 'sugar_g', 'sodium_mg',
-            'cholesterol_mg', 'calculated_at',
+            'source',
+            'is_complete',
+            'calculation_warnings',
+            'calories',
+            'protein_g',
+            'carbohydrate_g',
+            'fat_g',
+            'saturated_fat_g',
+            'fibre_g',
+            'sugar_g',
+            'sodium_mg',
+            'cholesterol_mg',
+            'calculated_at',
         ]
 
 
@@ -138,14 +189,23 @@ class UserRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserRecipe
-        fields = ['id', 'name', 'description', 'base_recipes', 'ingredients',
-                  'is_saved', 'created_at', 'updated_at']
+        fields = [
+            'id',
+            'name',
+            'description',
+            'base_recipes',
+            'ingredients',
+            'is_saved',
+            'created_at',
+            'updated_at',
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 # ---------------------------------------------------------------------------
 # Input serializers for create / update
 # ---------------------------------------------------------------------------
+
 
 class CreateIngredientSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200)
@@ -173,6 +233,7 @@ class CreateUserRecipeSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         from django.db import transaction
+
         user = self.context['request'].user
         base_recipe_ids = validated_data.pop('base_recipe_ids', [])
         ingredients_data = validated_data.pop('ingredients')
@@ -184,9 +245,7 @@ class CreateUserRecipeSerializer(serializers.Serializer):
                 description=validated_data.get('description', ''),
             )
             if base_recipe_ids:
-                user_recipe.base_recipes.set(
-                    Recipe.objects.filter(id__in=base_recipe_ids)
-                )
+                user_recipe.base_recipes.set(Recipe.objects.filter(id__in=base_recipe_ids))
             for i_data in ingredients_data:
                 product_id = i_data.get('product_id')
                 UserRecipeIngredient.objects.create(

@@ -4,6 +4,7 @@ from django.utils import timezone
 
 def revoke_user_sessions(user, exclude_session_key=None):
     from django.contrib.sessions.models import Session
+
     session_keys = []
     for session in Session.objects.filter(expire_date__gt=timezone.now()):
         try:
@@ -18,8 +19,18 @@ def revoke_user_sessions(user, exclude_session_key=None):
 
 
 SENSITIVE_KEYS = {
-    'password', 'password1', 'password2', 'new_password1', 'new_password2',
-    'token', 'access', 'refresh', 'secret', 'otp', 'otp_token', 'api_key',
+    'password',
+    'password1',
+    'password2',
+    'new_password1',
+    'new_password2',
+    'token',
+    'access',
+    'refresh',
+    'secret',
+    'otp',
+    'otp_token',
+    'api_key',
 }
 
 
@@ -36,12 +47,22 @@ def client_ip(request):
     if request is None:
         return None
     forwarded = request.META.get('HTTP_X_FORWARDED_FOR', '')
-    return (forwarded.split(',')[0].strip() if forwarded else request.META.get('REMOTE_ADDR')) or None
+    return (
+        forwarded.split(',')[0].strip() if forwarded else request.META.get('REMOTE_ADDR')
+    ) or None
 
 
 def record_event(
-    *, action, request=None, actor=None, severity=AuditEvent.Severity.INFO,
-    target=None, reason='', before=None, after=None, metadata=None,
+    *,
+    action,
+    request=None,
+    actor=None,
+    severity=AuditEvent.Severity.INFO,
+    target=None,
+    reason='',
+    before=None,
+    after=None,
+    metadata=None,
 ):
     actor = actor or (getattr(request, 'user', None) if request is not None else None)
     if actor is not None and not getattr(actor, 'is_authenticated', False):
@@ -72,7 +93,10 @@ def record_boolean_state_change(*, request, target, field, old_value, new_value,
     if old_value == new_value:
         return None
     return record_event(
-        action=action, request=request, target=target,
+        action=action,
+        request=request,
+        target=target,
         severity=AuditEvent.Severity.SENSITIVE,
-        before={field: old_value}, after={field: new_value},
+        before={field: old_value},
+        after={field: new_value},
     )

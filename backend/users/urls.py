@@ -1,10 +1,17 @@
 from django.urls import path
 from .views import (
-    RegisterView, ProfileView, VerifyEmailView,
-    ResendVerificationView, GoogleAuthView,
-    WishlistView, WishlistItemDeleteView,
-    B2BApplyView, B2BStatusView, B2BPriceListView,
-    B2BSetupPasswordView, B2BDocumentView,
+    RegisterView,
+    ProfileView,
+    VerifyEmailView,
+    ResendVerificationView,
+    GoogleAuthView,
+    WishlistView,
+    WishlistItemDeleteView,
+    B2BApplyView,
+    B2BStatusView,
+    B2BPriceListView,
+    B2BSetupPasswordView,
+    B2BDocumentView,
 )
 
 urlpatterns = [

@@ -7,11 +7,11 @@ def on_order_placed(sender, instance, created, **kwargs):
     if not created:
         return
     from .utils import notify_admins
+
     customer_name = 'Guest'
     if instance.user:
         customer_name = (
-            f'{instance.user.first_name} {instance.user.last_name}'.strip()
-            or instance.user.email
+            f'{instance.user.first_name} {instance.user.last_name}'.strip() or instance.user.email
         )
     elif instance.guest_name:
         customer_name = instance.guest_name

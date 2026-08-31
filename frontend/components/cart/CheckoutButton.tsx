@@ -86,7 +86,7 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
       const checkout = guest
         ? await api.orders.initializeGuestPayment(
             reference,
-            sessionStorage.getItem(`guest_order_${reference}`) || "",
+            sessionStorage.getItem(`guest_order_${reference}`) || ""
           )
         : await api.orders.initializePayment(reference);
       window.location.assign(checkout.checkout_url);
@@ -287,7 +287,7 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
         sessionStorage.setItem(`guest_order_${order.reference}`, order.guest_access_token);
         const checkout = await api.orders.initializeGuestPayment(
           order.reference,
-          order.guest_access_token,
+          order.guest_access_token
         );
         window.location.assign(checkout.checkout_url);
         return;

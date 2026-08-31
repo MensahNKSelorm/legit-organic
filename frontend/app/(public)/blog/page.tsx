@@ -63,8 +63,7 @@ export default async function BlogPage({ searchParams }: Props) {
             title: "What freshness looks like before the market opens",
             desk: "Field notes",
             image: "/images/hero/3.webp",
-            excerpt:
-              "How harvest timing and careful handling affect what reaches your home.",
+            excerpt: "How harvest timing and careful handling affect what reaches your home.",
           },
           {
             title: "The case for eating with Ghana’s seasons",

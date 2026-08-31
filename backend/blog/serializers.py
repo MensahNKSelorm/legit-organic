@@ -21,13 +21,24 @@ class BlogPostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BlogPost
-        fields = ['id', 'title', 'slug', 'excerpt', 'cover_image',
-                  'author_name', 'category', 'tags', 'is_published',
-                  'published_at', 'created_at']
+        fields = [
+            'id',
+            'title',
+            'slug',
+            'excerpt',
+            'cover_image',
+            'author_name',
+            'category',
+            'tags',
+            'is_published',
+            'published_at',
+            'created_at',
+        ]
         read_only_fields = ['id', 'slug', 'created_at']
 
 
 class BlogPostDetailSerializer(SafeHTMLRepresentationMixin, BlogPostListSerializer):
     html_fields = ('content',)
+
     class Meta(BlogPostListSerializer.Meta):
         fields = BlogPostListSerializer.Meta.fields + ['content', 'updated_at']

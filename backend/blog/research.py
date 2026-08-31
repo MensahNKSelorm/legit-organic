@@ -8,6 +8,7 @@ Config is read from the environment (populated by settings.load_dotenv): set
 TAVILY_API_KEY to enable search. With no key, research returns nothing and the
 weekly job skips the topic instead of fabricating information.
 """
+
 import logging
 import os
 
@@ -55,12 +56,14 @@ def fetch_web(topic, limit=10):
         content = (r.get('content') or '').strip()
         if not url or not content:
             continue
-        out.append({
-            'title': (r.get('title') or url).strip(),
-            'snippet': content[:800],
-            'url': url,
-            'source': 'Web',
-        })
+        out.append(
+            {
+                'title': (r.get('title') or url).strip(),
+                'snippet': content[:800],
+                'url': url,
+                'source': 'Web',
+            }
+        )
     return out
 
 

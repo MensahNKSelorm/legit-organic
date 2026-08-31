@@ -1,18 +1,18 @@
-'use client'
+"use client";
 
-import { usePathname } from 'next/navigation'
-import Footer from './Footer'
+import { usePathname } from "next/navigation";
+import Footer from "./Footer";
 
 const footerlessRoutes = new Set([
-  '/login',
-  '/signup',
-  '/check-email',
-  '/verify-email',
-  '/forgot-password',
-  '/reset-password',
-])
+  "/login",
+  "/signup",
+  "/check-email",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+]);
 
 export default function SiteFooter() {
-  const pathname = usePathname()
-  return footerlessRoutes.has(pathname) ? null : <Footer />
+  const pathname = usePathname();
+  return footerlessRoutes.has(pathname) ? null : <Footer />;
 }

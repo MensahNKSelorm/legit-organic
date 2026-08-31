@@ -26,7 +26,8 @@ const config = {
         sans: ['"Cabinet Grotesk"', "system-ui", "sans-serif"],
       },
       backgroundImage: {
-        "hero-pattern": "radial-gradient(circle at 20% 80%, #2E7D3215 0%, transparent 50%), radial-gradient(circle at 80% 20%, #F4C43010 0%, transparent 50%)",
+        "hero-pattern":
+          "radial-gradient(circle at 20% 80%, #2E7D3215 0%, transparent 50%), radial-gradient(circle at 80% 20%, #F4C43010 0%, transparent 50%)",
       },
     },
   },

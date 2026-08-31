@@ -5,6 +5,7 @@ debug and production modes deterministically.
 
 Run: python manage.py test legitorganic.tests_settings --settings=legitorganic.settings_test
 """
+
 import os
 from unittest import mock
 
@@ -52,11 +53,11 @@ class LiveSettingsInvariantsTests(SimpleTestCase):
     def test_csrf_cookie_not_httponly(self):
         # Frontend JS may need the CSRF token — must never be HttpOnly.
         from django.conf import settings
+
         self.assertFalse(settings.CSRF_COOKIE_HTTPONLY)
 
     def test_proxy_ssl_header_configured(self):
         # Required so Secure cookies / SSL redirect work behind nginx TLS.
         from django.conf import settings
-        self.assertEqual(
-            settings.SECURE_PROXY_SSL_HEADER, ('HTTP_X_FORWARDED_PROTO', 'https')
-        )
+
+        self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, ('HTTP_X_FORWARDED_PROTO', 'https'))

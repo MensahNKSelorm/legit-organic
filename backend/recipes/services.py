@@ -12,27 +12,53 @@ from django.utils import timezone
 
 from products.models import Product
 from .models import (
-    IngredientAlias, IngredientMeasurementConversion, IngredientNutritionProfile,
-    NutritionSourceRecord, RecipeIngredientProductMatch, RecipeNutrition,
-    RegionalNutritionCandidate, USDANutritionCandidate,
+    IngredientAlias,
+    IngredientMeasurementConversion,
+    IngredientNutritionProfile,
+    NutritionSourceRecord,
+    RecipeIngredientProductMatch,
+    RecipeNutrition,
+    RegionalNutritionCandidate,
+    USDANutritionCandidate,
 )
 from .wafct import profile_values_from_record
 
 UNIT_ALIASES = {
-    't': 'tablespoon', 'tbsp': 'tablespoon', 'tbs': 'tablespoon', 'tablespoons': 'tablespoon',
-    'tsp': 'teaspoon', 'teaspoons': 'teaspoon', 'g': 'gram', 'grams': 'gram',
-    'kg': 'kilogram', 'kgs': 'kilogram', 'ml': 'millilitre',
-    'millilitres': 'millilitre', 'l': 'litre', 'litres': 'litre',
-    'cups': 'cup', 'pieces': 'piece', 'pcs': 'piece',
+    't': 'tablespoon',
+    'tbsp': 'tablespoon',
+    'tbs': 'tablespoon',
+    'tablespoons': 'tablespoon',
+    'tsp': 'teaspoon',
+    'teaspoons': 'teaspoon',
+    'g': 'gram',
+    'grams': 'gram',
+    'kg': 'kilogram',
+    'kgs': 'kilogram',
+    'ml': 'millilitre',
+    'millilitres': 'millilitre',
+    'l': 'litre',
+    'litres': 'litre',
+    'cups': 'cup',
+    'pieces': 'piece',
+    'pcs': 'piece',
 }
 UNICODE_FRACTIONS = {
-    '½': Decimal('0.5'), '¼': Decimal('0.25'), '¾': Decimal('0.75'),
-    '⅓': Decimal('0.333'), '⅔': Decimal('0.667'),
+    '½': Decimal('0.5'),
+    '¼': Decimal('0.25'),
+    '¾': Decimal('0.75'),
+    '⅓': Decimal('0.333'),
+    '⅔': Decimal('0.667'),
 }
 USDA_NUTRIENTS = {
-    '1008': 'calories', '1003': 'protein_g', '1005': 'carbohydrate_g',
-    '1004': 'fat_g', '1258': 'saturated_fat_g', '1079': 'fibre_g',
-    '2000': 'sugar_g', '1093': 'sodium_mg', '1253': 'cholesterol_mg',
+    '1008': 'calories',
+    '1003': 'protein_g',
+    '1005': 'carbohydrate_g',
+    '1004': 'fat_g',
+    '1258': 'saturated_fat_g',
+    '1079': 'fibre_g',
+    '2000': 'sugar_g',
+    '1093': 'sodium_mg',
+    '1253': 'cholesterol_mg',
 }
 logger = logging.getLogger(__name__)
 
@@ -101,10 +127,14 @@ def normalize_ingredient(ingredient):
     ingredient.normalized_unit = normalize_unit(ingredient.unit)
     ingredient.quantity_max = quantity_max
     if not ingredient.raw_text:
-        ingredient.raw_text = ' '.join(filter(None, [ingredient.quantity, ingredient.unit, ingredient.name]))
-    profile = ingredient.nutrition_profile if (
-        ingredient.nutrition_profile_id and ingredient.nutrition_profile.verified
-    ) else preferred_verified_profile(canonical)
+        ingredient.raw_text = ' '.join(
+            filter(None, [ingredient.quantity, ingredient.unit, ingredient.name])
+        )
+    profile = (
+        ingredient.nutrition_profile
+        if (ingredient.nutrition_profile_id and ingredient.nutrition_profile.verified)
+        else preferred_verified_profile(canonical)
+    )
     ingredient.nutrition_profile = profile
     if profile:
         if profile.source == 'wafct_2019':
@@ -115,19 +145,33 @@ def normalize_ingredient(ingredient):
             ingredient.nutrition_match_status = 'local_verified'
     else:
         ingredient.nutrition_match_status = 'normalized'
-    ingredient.save(update_fields=[
-        'normalized_ingredient_name', 'normalized_unit', 'quantity_max',
-        'nutrition_match_status', 'nutrition_profile', 'raw_text',
-    ])
+    ingredient.save(
+        update_fields=[
+            'normalized_ingredient_name',
+            'normalized_unit',
+            'quantity_max',
+            'nutrition_match_status',
+            'nutrition_profile',
+            'raw_text',
+        ]
+    )
 
 
 def preferred_verified_profile(normalized_name):
-    whens = [When(source=source, then=Value(priority)) for source, priority in SOURCE_PRIORITY.items()]
-    return IngredientNutritionProfile.objects.filter(
-        normalized_name__iexact=normalized_name, verified=True,
-    ).order_by(
-        Case(*whens, default=Value(99), output_field=IntegerField()), '-updated_at',
-    ).first()
+    whens = [
+        When(source=source, then=Value(priority)) for source, priority in SOURCE_PRIORITY.items()
+    ]
+    return (
+        IngredientNutritionProfile.objects.filter(
+            normalized_name__iexact=normalized_name,
+            verified=True,
+        )
+        .order_by(
+            Case(*whens, default=Value(99), output_field=IntegerField()),
+            '-updated_at',
+        )
+        .first()
+    )
 
 
 def search_regional_candidates(ingredient, limit=12):
@@ -140,19 +184,18 @@ def search_regional_candidates(ingredient, limit=12):
     matches = []
     for term in terms:
         tokens = [
-            token for token in re.findall(r'[a-z0-9]+', term.casefold())
+            token
+            for token in re.findall(r'[a-z0-9]+', term.casefold())
             if token not in {'and', 'or', 'the', 'fresh'}
         ]
         lookup = Q()
         for token in tokens:
-            lookup &= (
-                Q(original_food_name__icontains=token)
-                | Q(scientific_name__icontains=token)
-            )
+            lookup &= Q(original_food_name__icontains=token) | Q(scientific_name__icontains=token)
         for record in queryset.filter(lookup)[:limit]:
             if record.pk not in {item.source_record_id for item in matches}:
                 candidate, _ = RegionalNutritionCandidate.objects.get_or_create(
-                    recipe_ingredient=ingredient, source_record=record,
+                    recipe_ingredient=ingredient,
+                    source_record=record,
                 )
                 matches.append(candidate)
                 if len(matches) >= limit:
@@ -171,8 +214,15 @@ def confirm_regional_candidate(candidate, user):
         raise NutritionConfigurationError(
             f'Commercial-use permission is not recorded for {dataset.code}.'
         )
-    canonical = (record.canonical_name or candidate.recipe_ingredient.normalized_ingredient_name
-                 or candidate.recipe_ingredient.name).strip().lower()
+    canonical = (
+        (
+            record.canonical_name
+            or candidate.recipe_ingredient.normalized_ingredient_name
+            or candidate.recipe_ingredient.name
+        )
+        .strip()
+        .lower()
+    )
     values = profile_values_from_record(record)
     profile, _ = IngredientNutritionProfile.objects.update_or_create(
         source='wafct_2019',
@@ -181,14 +231,18 @@ def confirm_regional_candidate(candidate, user):
             'ingredient_name': record.original_food_name,
             'source_reference': dataset.citation,
             'source_metadata': {
-                'dataset_code': dataset.code, 'dataset_version': dataset.version,
-                'food_code': record.food_code, 'original_food_name': record.original_food_name,
+                'dataset_code': dataset.code,
+                'dataset_version': dataset.version,
+                'food_code': record.food_code,
+                'original_food_name': record.original_food_name,
                 'preparation_state': record.preparation_state,
                 'source_identifiers': record.source_identifiers,
                 'quality_indicators': record.quality_indicators,
                 'workbook_sha256': dataset.workbook_sha256,
             },
-            'verified': True, 'verified_by': user, 'verified_at': timezone.now(),
+            'verified': True,
+            'verified_by': user,
+            'verified_at': timezone.now(),
             **values,
         },
     )
@@ -196,9 +250,15 @@ def confirm_regional_candidate(candidate, user):
     record.verified_by = user
     record.verified_at = timezone.now()
     record.nutrition_profile = profile
-    record.save(update_fields=[
-        'status', 'verified_by', 'verified_at', 'nutrition_profile', 'updated_at',
-    ])
+    record.save(
+        update_fields=[
+            'status',
+            'verified_by',
+            'verified_at',
+            'nutrition_profile',
+            'updated_at',
+        ]
+    )
     candidate.status = 'accepted'
     candidate.save(update_fields=['status'])
     ingredient = candidate.recipe_ingredient
@@ -227,8 +287,22 @@ def review_warnings(recipe):
         warnings.append('Ingredient quantity missing')
     if any(item.quantity and parse_quantity(item.quantity)[0] is None for item in ingredients):
         warnings.append('Unparseable ingredient quantity')
-    known_units = {'gram', 'kilogram', 'millilitre', 'litre', 'cup', 'tablespoon',
-                   'teaspoon', 'piece', 'small', 'medium', 'large', 'bunch', 'tin', 'can'}
+    known_units = {
+        'gram',
+        'kilogram',
+        'millilitre',
+        'litre',
+        'cup',
+        'tablespoon',
+        'teaspoon',
+        'piece',
+        'small',
+        'medium',
+        'large',
+        'bunch',
+        'tin',
+        'can',
+    }
     if any(item.unit and normalize_unit(item.unit) not in known_units for item in ingredients):
         warnings.append('Ambiguous ingredient unit')
     if any(
@@ -259,15 +333,20 @@ def match_products(recipe):
             candidate_count += 1
             exact = product.name.lower().strip() == normalized
             RecipeIngredientProductMatch.objects.update_or_create(
-                recipe_ingredient=ingredient, product=product,
+                recipe_ingredient=ingredient,
+                product=product,
                 defaults={
                     'match_type': 'exact' if exact else 'alias',
                     'confidence': Decimal('1') if exact else Decimal('0.75'),
                 },
             )
-    logger.info('Recipe product matching completed', extra={
-        'recipe_id': recipe.pk, 'candidate_count': candidate_count,
-    })
+    logger.info(
+        'Recipe product matching completed',
+        extra={
+            'recipe_id': recipe.pk,
+            'candidate_count': candidate_count,
+        },
+    )
 
 
 def search_usda_candidates(ingredient, page_size=8):
@@ -280,9 +359,14 @@ def search_usda_candidates(ingredient, page_size=8):
     )
     try:
         response = requests.post(
-            'https://api.nal.usda.gov/fdc/v1/foods/search', params={'api_key': api_key},
-            json={'query': query, 'pageSize': min(page_size, 20),
-                  'dataType': ['Foundation', 'SR Legacy', 'Survey (FNDDS)']}, timeout=15,
+            'https://api.nal.usda.gov/fdc/v1/foods/search',
+            params={'api_key': api_key},
+            json={
+                'query': query,
+                'pageSize': min(page_size, 20),
+                'dataType': ['Foundation', 'SR Legacy', 'Survey (FNDDS)'],
+            },
+            timeout=15,
         )
         response.raise_for_status()
         foods = response.json().get('foods', [])
@@ -291,15 +375,23 @@ def search_usda_candidates(ingredient, page_size=8):
     candidates = []
     for food in foods:
         candidate, _ = USDANutritionCandidate.objects.update_or_create(
-            recipe_ingredient=ingredient, fdc_id=food['fdcId'],
-            defaults={'description': food.get('description', '')[:500],
-                      'data_type': food.get('dataType', ''), 'score': food.get('score'),
-                      'payload': food},
+            recipe_ingredient=ingredient,
+            fdc_id=food['fdcId'],
+            defaults={
+                'description': food.get('description', '')[:500],
+                'data_type': food.get('dataType', ''),
+                'score': food.get('score'),
+                'payload': food,
+            },
         )
         candidates.append(candidate)
-    logger.info('USDA candidate search completed', extra={
-        'recipe_ingredient_id': ingredient.pk, 'candidate_count': len(candidates),
-    })
+    logger.info(
+        'USDA candidate search completed',
+        extra={
+            'recipe_ingredient_id': ingredient.pk,
+            'candidate_count': len(candidates),
+        },
+    )
     return candidates
 
 
@@ -316,7 +408,8 @@ def _usda_nutrients(food):
             values[USDA_NUTRIENTS[number]] = Decimal(str(amount))
         micronutrients[number or str(nutrient.get('id', ''))] = {
             'name': nutrient.get('name', entry.get('nutrientName', '')),
-            'amount': amount, 'unit': nutrient.get('unitName', entry.get('unitName', '')),
+            'amount': amount,
+            'unit': nutrient.get('unitName', entry.get('unitName', '')),
         }
     return values, micronutrients
 
@@ -329,7 +422,8 @@ def confirm_usda_candidate(candidate, user):
     try:
         response = requests.get(
             f'https://api.nal.usda.gov/fdc/v1/food/{candidate.fdc_id}',
-            params={'api_key': api_key}, timeout=15,
+            params={'api_key': api_key},
+            timeout=15,
         )
         response.raise_for_status()
         food = response.json()
@@ -339,14 +433,22 @@ def confirm_usda_candidate(candidate, user):
     ingredient = candidate.recipe_ingredient
     profile, _ = IngredientNutritionProfile.objects.update_or_create(
         fdc_id=candidate.fdc_id,
-        defaults={'ingredient_name': food.get('description', candidate.description),
-                  'normalized_name': ingredient.normalized_ingredient_name, 'source': 'usda',
-                  'source_reference': f'https://fdc.nal.usda.gov/fdc-app.html#/food-details/{candidate.fdc_id}/nutrients',
-                  'source_metadata': {'fdc_id': candidate.fdc_id, 'data_type': food.get('dataType'),
-                                      'publication_date': food.get('publicationDate')},
-                  'micronutrients_json': micronutrients, 'verified': True,
-                  'verified_by': user, 'verified_at': timezone.now(),
-                  **{f'{key}_per_100g': value for key, value in nutrients.items()}},
+        defaults={
+            'ingredient_name': food.get('description', candidate.description),
+            'normalized_name': ingredient.normalized_ingredient_name,
+            'source': 'usda',
+            'source_reference': f'https://fdc.nal.usda.gov/fdc-app.html#/food-details/{candidate.fdc_id}/nutrients',
+            'source_metadata': {
+                'fdc_id': candidate.fdc_id,
+                'data_type': food.get('dataType'),
+                'publication_date': food.get('publicationDate'),
+            },
+            'micronutrients_json': micronutrients,
+            'verified': True,
+            'verified_by': user,
+            'verified_at': timezone.now(),
+            **{f'{key}_per_100g': value for key, value in nutrients.items()},
+        },
     )
     candidate.status = 'accepted'
     candidate.save(update_fields=['status'])
@@ -354,9 +456,13 @@ def confirm_usda_candidate(candidate, user):
     ingredient.nutrition_profile = profile
     ingredient.nutrition_match_status = 'usda_verified'
     ingredient.save(update_fields=['nutrition_profile', 'nutrition_match_status'])
-    logger.info('USDA nutrition mapping confirmed', extra={
-        'recipe_ingredient_id': ingredient.pk, 'fdc_id': candidate.fdc_id,
-    })
+    logger.info(
+        'USDA nutrition mapping confirmed',
+        extra={
+            'recipe_ingredient_id': ingredient.pk,
+            'fdc_id': candidate.fdc_id,
+        },
+    )
     return profile
 
 
@@ -373,9 +479,15 @@ def resolve_grams(ingredient):
         return quantity * Decimal('1000'), ''
     if not ingredient.nutrition_profile_id:
         return None, 'no verified nutrition profile'
-    conversion = IngredientMeasurementConversion.objects.filter(
-        profile=ingredient.nutrition_profile, unit=unit, verified=True,
-    ).order_by('-confidence').first()
+    conversion = (
+        IngredientMeasurementConversion.objects.filter(
+            profile=ingredient.nutrition_profile,
+            unit=unit,
+            verified=True,
+        )
+        .order_by('-confidence')
+        .first()
+    )
     if not conversion:
         return None, f'no verified {unit or "unit"}-to-gram conversion'
     grams = quantity * conversion.grams / conversion.quantity
@@ -387,11 +499,21 @@ def resolve_grams(ingredient):
 
 
 def _calculation_fingerprint(recipe, rows):
-    payload = {'servings': recipe.servings, 'ingredients': [
-        [item.pk, item.normalized_ingredient_name, item.quantity, item.normalized_unit,
-         str(grams), item.nutrition_profile_id, item.nutrition_profile.version]
-        for item, grams in rows
-    ]}
+    payload = {
+        'servings': recipe.servings,
+        'ingredients': [
+            [
+                item.pk,
+                item.normalized_ingredient_name,
+                item.quantity,
+                item.normalized_unit,
+                str(grams),
+                item.nutrition_profile_id,
+                item.nutrition_profile.version,
+            ]
+            for item, grams in rows
+        ],
+    }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
@@ -414,8 +536,17 @@ def calculate_nutrition(recipe, force=False):
         recipe.ingredients_hash = fingerprint
         recipe.save(update_fields=['nutrition_status', 'ingredients_hash', 'updated_at'])
         return existing
-    fields = ['calories', 'protein_g', 'carbohydrate_g', 'fat_g', 'saturated_fat_g',
-              'fibre_g', 'sugar_g', 'sodium_mg', 'cholesterol_mg']
+    fields = [
+        'calories',
+        'protein_g',
+        'carbohydrate_g',
+        'fat_g',
+        'saturated_fat_g',
+        'fibre_g',
+        'sugar_g',
+        'sodium_mg',
+        'cholesterol_mg',
+    ]
     totals = {field: Decimal('0') for field in fields}
     observed = {field: False for field in fields}
     for ingredient, grams in rows:
@@ -427,24 +558,44 @@ def calculate_nutrition(recipe, force=False):
     servings = Decimal(max(recipe.servings, 1))
     totals = {field: value if observed[field] else None for field, value in totals.items()}
     per_serving = {
-        field: (value / servings if value is not None else None)
-        for field, value in totals.items()
+        field: (value / servings if value is not None else None) for field, value in totals.items()
     }
-    nutrition, _ = RecipeNutrition.objects.update_or_create(recipe=recipe, defaults={
-        'source': 'legitorganic', 'is_complete': not warnings,
-        'calculation_warnings': warnings, 'ingredients_hash': fingerprint,
-        'total_recipe_values_json': {k: (str(v) if v is not None else None) for k, v in totals.items()},
-        'per_serving_values_json': {k: (str(v) if v is not None else None) for k, v in per_serving.items()},
-        **per_serving,
-    })
+    nutrition, _ = RecipeNutrition.objects.update_or_create(
+        recipe=recipe,
+        defaults={
+            'source': 'legitorganic',
+            'is_complete': not warnings,
+            'calculation_warnings': warnings,
+            'ingredients_hash': fingerprint,
+            'total_recipe_values_json': {
+                k: (str(v) if v is not None else None) for k, v in totals.items()
+            },
+            'per_serving_values_json': {
+                k: (str(v) if v is not None else None) for k, v in per_serving.items()
+            },
+            **per_serving,
+        },
+    )
     recipe.nutrition_status = 'ready' if not warnings else 'partial'
     recipe.nutrition_calculated_at = timezone.now()
     if recipe.status == 'nutrition_pending':
         recipe.status = 'ready'
     recipe.ingredients_hash = fingerprint
-    recipe.save(update_fields=['nutrition_status', 'nutrition_calculated_at', 'status',
-                               'ingredients_hash', 'updated_at'])
-    logger.info('Recipe nutrition calculated', extra={
-        'recipe_id': recipe.pk, 'complete': not warnings, 'warning_count': len(warnings),
-    })
+    recipe.save(
+        update_fields=[
+            'nutrition_status',
+            'nutrition_calculated_at',
+            'status',
+            'ingredients_hash',
+            'updated_at',
+        ]
+    )
+    logger.info(
+        'Recipe nutrition calculated',
+        extra={
+            'recipe_id': recipe.pk,
+            'complete': not warnings,
+            'warning_count': len(warnings),
+        },
+    )
     return nutrition

@@ -117,7 +117,10 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div aria-hidden="true" className="market-ribbon absolute inset-x-0 bottom-0 z-20 overflow-hidden border-y border-[#F4C430]/35 bg-[#F4C430] py-3 text-[#0D3B2A]">
+      <div
+        aria-hidden="true"
+        className="market-ribbon absolute inset-x-0 bottom-0 z-20 overflow-hidden border-y border-[#F4C430]/35 bg-[#F4C430] py-3 text-[#0D3B2A]"
+      >
         <div className="market-ribbon-track flex w-max items-center text-[10px] font-bold tracking-[.16em] whitespace-nowrap uppercase sm:text-[11px] sm:tracking-[.2em]">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((copy) => (
             <div key={copy} className="flex items-center">

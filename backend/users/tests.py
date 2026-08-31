@@ -39,7 +39,8 @@ def b2b_payload(email='trade@example.com'):
         'business_registration': 'CS123456789',
         'verification_document_type': 'orc_certificate',
         'verification_document': SimpleUploadedFile(
-            'certificate.pdf', b'%PDF-1.4\nvalid test document',
+            'certificate.pdf',
+            b'%PDF-1.4\nvalid test document',
             content_type='application/pdf',
         ),
         'contact_person': 'Ama Mensah',
@@ -102,7 +103,9 @@ class RegistrationGatingTests(TestCase):
         codes = []
         for i in range(6):
             r = self.client.post(
-                REGISTER_URL, reg_payload(f'spoof{i}@example.com'), format='json',
+                REGISTER_URL,
+                reg_payload(f'spoof{i}@example.com'),
+                format='json',
                 HTTP_X_FORWARDED_FOR=f'{i}.{i}.{i}.{i}, 127.0.0.1',
             )
             codes.append(r.status_code)
@@ -122,7 +125,9 @@ class B2BApplicationBotProtectionTests(TestCase):
     def setUp(self):
         cache.clear()
         self.client = APIClient()
-        self.email_patcher = patch('users.emails.resend.Emails.send', return_value={'id': 'email_test'})
+        self.email_patcher = patch(
+            'users.emails.resend.Emails.send', return_value={'id': 'email_test'}
+        )
         self.mock_email_send = self.email_patcher.start()
         self.addCleanup(self.email_patcher.stop)
 
@@ -165,7 +170,9 @@ class B2BApplicationValidationTests(TestCase):
     def setUp(self):
         cache.clear()
         self.client = APIClient()
-        self.email_patcher = patch('users.emails.resend.Emails.send', return_value={'id': 'email_test'})
+        self.email_patcher = patch(
+            'users.emails.resend.Emails.send', return_value={'id': 'email_test'}
+        )
         self.email_patcher.start()
         self.addCleanup(self.email_patcher.stop)
 
@@ -178,27 +185,31 @@ class B2BApplicationValidationTests(TestCase):
 
     def test_public_institution_can_use_official_letter(self):
         payload = b2b_payload('school@example.com')
-        payload.update({
-            'legal_structure': 'public_institution',
-            'business_registration': '',
-            'verification_document_type': 'introductory_letter',
-            'registration_exemption_reason': 'Public school established by the Government of Ghana.',
-        })
+        payload.update(
+            {
+                'legal_structure': 'public_institution',
+                'business_registration': '',
+                'verification_document_type': 'introductory_letter',
+                'registration_exemption_reason': 'Public school established by the Government of Ghana.',
+            }
+        )
         response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
         self.assertEqual(response.status_code, 201, response.data)
 
     def test_informal_operator_can_apply_with_identity_document(self):
         payload = b2b_payload('trader@example.com')
-        payload.update({
-            'registration_status': 'informal',
-            'legal_structure': 'informal_operator',
-            'company_name': 'Adwoa Tomato Supply',
-            'organization_tin': '',
-            'business_registration': '',
-            'contact_job_title': 'Owner / operator',
-            'verification_document_type': 'ghana_card',
-            'registration_exemption_reason': 'Tomato and onion trader operating at Madina Market.',
-        })
+        payload.update(
+            {
+                'registration_status': 'informal',
+                'legal_structure': 'informal_operator',
+                'company_name': 'Adwoa Tomato Supply',
+                'organization_tin': '',
+                'business_registration': '',
+                'contact_job_title': 'Owner / operator',
+                'verification_document_type': 'ghana_card',
+                'registration_exemption_reason': 'Tomato and onion trader operating at Madina Market.',
+            }
+        )
         response = self.client.post(B2B_APPLY_URL, payload, format='multipart')
         self.assertEqual(response.status_code, 201, response.data)
         profile = B2BProfile.objects.get(business_email='trader@example.com')
@@ -233,19 +244,27 @@ class LoginGatingTests(TestCase):
 
     def _make(self, email, verified, staff=False):
         return User.objects.create_user(
-            email=email, password=STRONG, first_name='A', last_name='B',
-            email_verified=verified, is_staff=staff,
+            email=email,
+            password=STRONG,
+            first_name='A',
+            last_name='B',
+            email_verified=verified,
+            is_staff=staff,
         )
 
     def test_unverified_non_staff_cannot_obtain_token(self):
         self._make('u@example.com', verified=False)
-        resp = self.client.post(TOKEN_URL, {'email': 'u@example.com', 'password': STRONG}, format='json')
+        resp = self.client.post(
+            TOKEN_URL, {'email': 'u@example.com', 'password': STRONG}, format='json'
+        )
         self.assertEqual(resp.status_code, 400)
         self.assertIn('verify', str(resp.data).lower())
 
     def test_verified_user_can_obtain_token(self):
         self._make('v@example.com', verified=True)
-        resp = self.client.post(TOKEN_URL, {'email': 'v@example.com', 'password': STRONG}, format='json')
+        resp = self.client.post(
+            TOKEN_URL, {'email': 'v@example.com', 'password': STRONG}, format='json'
+        )
         self.assertEqual(resp.status_code, 200)
         self.assertIn('access', resp.data)
         self.assertNotIn('refresh', resp.data)
@@ -294,7 +313,9 @@ class LoginGatingTests(TestCase):
         self.client.cookies['refresh_token'] = login.cookies['refresh_token'].value
 
         response = self.client.post(
-            '/api/auth/token/refresh/', {}, format='json',
+            '/api/auth/token/refresh/',
+            {},
+            format='json',
             HTTP_ORIGIN='https://attacker.example',
         )
 
@@ -312,7 +333,9 @@ class LoginGatingTests(TestCase):
 
     def test_staff_must_use_secure_staff_portal(self):
         self._make('s@example.com', verified=False, staff=True)
-        resp = self.client.post(TOKEN_URL, {'email': 's@example.com', 'password': STRONG}, format='json')
+        resp = self.client.post(
+            TOKEN_URL, {'email': 's@example.com', 'password': STRONG}, format='json'
+        )
         self.assertEqual(resp.status_code, 400)
         self.assertIn('staff portal', str(resp.data).lower())
 
@@ -325,8 +348,12 @@ class VerifyEmailTests(TestCase):
     @patch('users.emails.resend.Emails.send')
     def test_verify_marks_verified_logs_in_and_sends_welcome(self, mock_send):
         user = User.objects.create_user(
-            email='p@example.com', password=STRONG, first_name='P', last_name='Q',
-            email_verified=False, email_verification_token='tok123',
+            email='p@example.com',
+            password=STRONG,
+            first_name='P',
+            last_name='Q',
+            email_verified=False,
+            email_verification_token='tok123',
             email_verification_sent_at=timezone.now(),
         )
         resp = self.client.get(f'{VERIFY_URL}?token=tok123')
@@ -346,9 +373,14 @@ class VerifyEmailTests(TestCase):
 
     def test_expired_token_is_rejected(self):
         from datetime import timedelta
+
         user = User.objects.create_user(
-            email='exp@example.com', password=STRONG, first_name='E', last_name='X',
-            email_verified=False, email_verification_token='exptok',
+            email='exp@example.com',
+            password=STRONG,
+            first_name='E',
+            last_name='X',
+            email_verified=False,
+            email_verification_token='exptok',
             email_verification_sent_at=timezone.now() - timedelta(hours=25),
         )
         resp = self.client.get(f'{VERIFY_URL}?token=exptok')
@@ -359,8 +391,12 @@ class VerifyEmailTests(TestCase):
     def test_token_without_timestamp_is_rejected(self):
         # Invariant: a missing send timestamp means invalid, not valid-forever.
         user = User.objects.create_user(
-            email='nots@example.com', password=STRONG, first_name='N', last_name='S',
-            email_verified=False, email_verification_token='notstok',
+            email='nots@example.com',
+            password=STRONG,
+            first_name='N',
+            last_name='S',
+            email_verified=False,
+            email_verification_token='notstok',
             email_verification_sent_at=None,
         )
         resp = self.client.get(f'{VERIFY_URL}?token=notstok')
@@ -371,9 +407,14 @@ class VerifyEmailTests(TestCase):
     @patch('users.emails.resend.Emails.send')
     def test_fresh_token_within_window_is_accepted(self, mock_send):
         from django.utils import timezone
+
         user = User.objects.create_user(
-            email='fresh@example.com', password=STRONG, first_name='F', last_name='R',
-            email_verified=False, email_verification_token='freshtok',
+            email='fresh@example.com',
+            password=STRONG,
+            first_name='F',
+            last_name='R',
+            email_verified=False,
+            email_verification_token='freshtok',
             email_verification_sent_at=timezone.now(),
         )
         resp = self.client.get(f'{VERIFY_URL}?token=freshtok')
@@ -390,8 +431,12 @@ class GoogleAuthTests(TestCase):
     @patch('users.views.verify_google_token')
     def test_google_rejected_when_email_unverified(self, mock_verify):
         mock_verify.return_value = {
-            'google_id': '1', 'email': 'g@example.com', 'first_name': 'G',
-            'last_name': 'Oogle', 'avatar': '', 'email_verified': False,
+            'google_id': '1',
+            'email': 'g@example.com',
+            'first_name': 'G',
+            'last_name': 'Oogle',
+            'avatar': '',
+            'email_verified': False,
         }
         resp = self.client.post(GOOGLE_URL, {'token': 'abc'}, format='json')
         self.assertEqual(resp.status_code, 400)
@@ -401,8 +446,12 @@ class GoogleAuthTests(TestCase):
     @patch('users.views.verify_google_token')
     def test_google_accepted_when_email_verified(self, mock_verify, mock_send):
         mock_verify.return_value = {
-            'google_id': '1', 'email': 'g2@example.com', 'first_name': 'G',
-            'last_name': 'Oogle', 'avatar': '', 'email_verified': True,
+            'google_id': '1',
+            'email': 'g2@example.com',
+            'first_name': 'G',
+            'last_name': 'Oogle',
+            'avatar': '',
+            'email_verified': True,
         }
         resp = self.client.post(GOOGLE_URL, {'token': 'abc'}, format='json')
         self.assertEqual(resp.status_code, 200)
@@ -417,7 +466,10 @@ class ResendVerificationTests(TestCase):
     @patch('users.emails.resend.Emails.send')
     def test_unauthenticated_user_can_resend_by_email(self, mock_send):
         user = User.objects.create_user(
-            email='r@example.com', password=STRONG, first_name='R', last_name='E',
+            email='r@example.com',
+            password=STRONG,
+            first_name='R',
+            last_name='E',
             email_verified=False,
         )
         resp = self.client.post(RESEND_URL, {'email': 'r@example.com'}, format='json')
@@ -434,25 +486,33 @@ class ResendVerificationTests(TestCase):
     def test_anonymous_resend_is_enumeration_resistant(self, mock_send):
         # Unknown, verified, unverified, and delivery-failure must be indistinguishable.
         User.objects.create_user(
-            email='ver@example.com', password=STRONG, first_name='V', last_name='R',
+            email='ver@example.com',
+            password=STRONG,
+            first_name='V',
+            last_name='R',
             email_verified=True,
         )
         User.objects.create_user(
-            email='unv@example.com', password=STRONG, first_name='U', last_name='V',
+            email='unv@example.com',
+            password=STRONG,
+            first_name='U',
+            last_name='V',
             email_verified=False,
         )
 
         def call(email, fail=False):
             cache.clear()  # isolate from the resend throttle between probes
             if fail:
-                with patch('users.views.send_verification_email', side_effect=Exception('smtp down')):
+                with patch(
+                    'users.views.send_verification_email', side_effect=Exception('smtp down')
+                ):
                     return self.client.post(RESEND_URL, {'email': email}, format='json')
             return self.client.post(RESEND_URL, {'email': email}, format='json')
 
         responses = [
-            call('nobody@example.com'),      # unknown
-            call('ver@example.com'),         # verified
-            call('unv@example.com'),         # unverified (delivery succeeds)
+            call('nobody@example.com'),  # unknown
+            call('ver@example.com'),  # verified
+            call('unv@example.com'),  # unverified (delivery succeeds)
             call('unv@example.com', fail=True),  # unverified (delivery fails)
         ]
         codes = {r.status_code for r in responses}

@@ -21,8 +21,14 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 DEMO_RECIPE_TITLES = {
-    'Fufu', 'Light soup', 'Groundnut soup', 'Palm nut soup',
-    'Ebunebunu soup', 'Kontomire stew', 'Plain rice', 'Garden egg stew',
+    'Fufu',
+    'Light soup',
+    'Groundnut soup',
+    'Palm nut soup',
+    'Ebunebunu soup',
+    'Kontomire stew',
+    'Plain rice',
+    'Garden egg stew',
 }
 
 
@@ -48,7 +54,10 @@ def _groq_note(titles):
     payload = {
         'model': model,
         'messages': [
-            {'role': 'system', 'content': 'You are a concise Ghanaian food editor for Legit Organic.'},
+            {
+                'role': 'system',
+                'content': 'You are a concise Ghanaian food editor for Legit Organic.',
+            },
             {'role': 'user', 'content': prompt},
         ],
         'temperature': 0.6,
@@ -81,18 +90,30 @@ class RecipeCombinationNoteView(views.APIView):
     def post(self, request):
         raw_titles = request.data.get('titles')
         if not isinstance(raw_titles, list) or not 2 <= len(raw_titles) <= 4:
-            return Response({'detail': 'Choose between two and four dishes.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Choose between two and four dishes.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         requested = [str(title).strip()[:100] for title in raw_titles]
         if any(not title for title in requested):
-            return Response({'detail': 'Every dish needs a title.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Every dish needs a title.'}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         allowed_titles = set(DEMO_RECIPE_TITLES)
-        allowed_titles.update(Recipe.objects.filter(is_default=True).values_list('title', flat=True))
+        allowed_titles.update(
+            Recipe.objects.filter(is_default=True).values_list('title', flat=True)
+        )
         allowed = {_normalise_title(title): title for title in allowed_titles}
         normalised = [_normalise_title(title) for title in requested]
-        if len(set(normalised)) != len(normalised) or any(title not in allowed for title in normalised):
-            return Response({'detail': 'One or more dishes are not in the recipe shelf.'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(set(normalised)) != len(normalised) or any(
+            title not in allowed for title in normalised
+        ):
+            return Response(
+                {'detail': 'One or more dishes are not in the recipe shelf.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         canonical = sorted(normalised)
         key = '|'.join(canonical)
@@ -124,8 +145,10 @@ class RecipeListView(generics.ListAPIView):
         meal_type = self.request.query_params.get('meal_type', '').strip()[:100]
         if search:
             queryset = queryset.filter(
-                Q(title__icontains=search) | Q(local_name__icontains=search)
-                | Q(description__icontains=search) | Q(ingredients__name__icontains=search)
+                Q(title__icontains=search)
+                | Q(local_name__icontains=search)
+                | Q(description__icontains=search)
+                | Q(ingredients__name__icontains=search)
             ).distinct()
         if cuisine:
             queryset = queryset.filter(cuisine__iexact=cuisine)
@@ -138,8 +161,10 @@ class RecipeListView(generics.ListAPIView):
 
 class RecipeDetailView(generics.RetrieveAPIView):
     queryset = Recipe.objects.filter(is_published=True).prefetch_related(
-        'ingredients__product', 'ingredients__product_matches__product',
-        'steps', 'pairings__suggested_recipe'
+        'ingredients__product',
+        'ingredients__product_matches__product',
+        'steps',
+        'pairings__suggested_recipe',
     )
     serializer_class = RecipeDetailWithPairingsSerializer
     permission_classes = []
@@ -177,8 +202,7 @@ class UserRecipeListView(generics.ListAPIView):
 
     def get_queryset(self):
         return (
-            UserRecipe.objects
-            .filter(user=self.request.user)
+            UserRecipe.objects.filter(user=self.request.user)
             .prefetch_related('base_recipes', 'ingredients__product')
             .order_by('-created_at')
         )
@@ -203,10 +227,8 @@ class UserRecipeDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return (
-            UserRecipe.objects
-            .filter(user=self.request.user)
-            .prefetch_related('base_recipes', 'ingredients__product')
+        return UserRecipe.objects.filter(user=self.request.user).prefetch_related(
+            'base_recipes', 'ingredients__product'
         )
 
     def update(self, request, *args, **kwargs):

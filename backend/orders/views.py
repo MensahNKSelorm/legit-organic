@@ -18,8 +18,10 @@ from rest_framework.authentication import SessionAuthentication
 from .models import Cart, CartItem, Order, OrderStatusEvent, SeevCashWebhookEvent
 from .promo_models import PromoCode
 from .serializers import (
-    CartSerializer, CartItemSerializer,
-    OrderSerializer, CreateOrderSerializer,
+    CartSerializer,
+    CartItemSerializer,
+    OrderSerializer,
+    CreateOrderSerializer,
 )
 from products.models import Product
 from legitorganic.seevcash import SeevCashError, create_checkout, verify_checkout
@@ -99,7 +101,9 @@ class CreateOrderView(APIView):
             order = serializer.save()
         except Exception:
             return Response(
-                {'detail': 'We could not create the order. Please check the details and try again.'},
+                {
+                    'detail': 'We could not create the order. Please check the details and try again.'
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         data = OrderSerializer(order).data
@@ -125,11 +129,15 @@ class InitializePaymentView(APIView):
     throttle_scope = 'payment_initialize'
 
     def post(self, request, reference):
-        order = get_object_or_404(Order.objects.prefetch_related('items__product'), reference=reference)
+        order = get_object_or_404(
+            Order.objects.prefetch_related('items__product'), reference=reference
+        )
         if not _can_access_payment_order(request, order):
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
         if order.payment_status == 'success':
-            return Response({'detail': 'This order is already paid.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'This order is already paid.'}, status=status.HTTP_400_BAD_REQUEST
+            )
         email = order.user.email if order.user_id else order.guest_email
         if not email:
             return Response(
@@ -145,8 +153,10 @@ class InitializePaymentView(APIView):
         try:
             session = create_checkout(
                 recipient={
-                    'name': _customer_name(order), 'email': email,
-                    'phone': order.guest_phone, 'address': order.delivery_address,
+                    'name': _customer_name(order),
+                    'email': email,
+                    'phone': order.guest_phone,
+                    'address': order.delivery_address,
                 },
                 amount_minor=amount,
                 redirect_url=f'{settings.FRONTEND_URL}/payment?order={order.reference}',
@@ -159,13 +169,21 @@ class InitializePaymentView(APIView):
         order.payment_provider = 'seevcash'
         order.checkout_reference = session.reference
         order.checkout_url = session.checkout_url
-        order.checkout_expires_at = parse_datetime(session.expires_at) if session.expires_at else None
+        order.checkout_expires_at = (
+            parse_datetime(session.expires_at) if session.expires_at else None
+        )
         if order.order_source != 'subscription':
             order.order_source = 'seevcash'
-        order.save(update_fields=[
-            'payment_provider', 'checkout_reference', 'checkout_url',
-            'checkout_expires_at', 'order_source', 'updated_at',
-        ])
+        order.save(
+            update_fields=[
+                'payment_provider',
+                'checkout_reference',
+                'checkout_url',
+                'checkout_expires_at',
+                'order_source',
+                'updated_at',
+            ]
+        )
         return Response({'checkout_url': session.checkout_url, 'reference': session.reference})
 
 
@@ -177,8 +195,14 @@ class VerifyPaymentView(APIView):
         session_reference = request.data.get('reference')
         order_reference = request.data.get('order_reference')
         if not session_reference and not order_reference:
-            return Response({'detail': 'Reference is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        filters = {'checkout_reference': session_reference} if session_reference else {'reference': order_reference}
+            return Response(
+                {'detail': 'Reference is required.'}, status=status.HTTP_400_BAD_REQUEST
+            )
+        filters = (
+            {'checkout_reference': session_reference}
+            if session_reference
+            else {'reference': order_reference}
+        )
         order = get_object_or_404(Order, **filters)
         if not _can_access_payment_order(request, order):
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
@@ -246,18 +270,24 @@ def _complete_verified_order(order_id, pdata):
         order.status = 'processing'
         order.save(update_fields=['payment_status', 'status', 'provider_transaction_id'])
         OrderStatusEvent.objects.create(
-            order=order, from_status=old_status, to_status='processing',
-            source='payment_provider', note='Payment verified.',
+            order=order,
+            from_status=old_status,
+            to_status='processing',
+            source='payment_provider',
+            note='Payment verified.',
         )
 
     if hasattr(order, 'subscription_week'):
         from subscriptions.services import finalize_paid_week
+
         finalize_paid_week(order.subscription_week.pk, pdata)
     if hasattr(order, 'business_supply_cycle'):
         from subscriptions.services import finalize_paid_business_cycle
+
         finalize_paid_business_cycle(order.business_supply_cycle.pk, pdata)
     try:
         from users.emails import send_order_confirmation_email
+
         if order.user:
             send_order_confirmation_email(order.user, order)
     except Exception:
@@ -285,9 +315,15 @@ def _webhook_value(payload, names):
 
 
 def _webhook_reference(payload):
-    reference = _webhook_value(payload, {
-        'checkoutreference', 'paymentreference', 'sessionreference', 'reference',
-    })
+    reference = _webhook_value(
+        payload,
+        {
+            'checkoutreference',
+            'paymentreference',
+            'sessionreference',
+            'reference',
+        },
+    )
     if reference:
         return str(reference)
     # Some SeevCash payload versions put the checkout reference under an ID-like
@@ -340,9 +376,7 @@ class SeevCashWebhookView(APIView):
             event_id=event_id,
             defaults={'event_type': event_type, 'payload_hash': payload_hash},
         )
-        if not created and (
-            event.payload_hash != payload_hash or event.event_type != event_type
-        ):
+        if not created and (event.payload_hash != payload_hash or event.event_type != event_type):
             return Response({'detail': 'Webhook event identity conflict.'}, status=409)
         if not created and event.status in ('processed', 'ignored'):
             return Response({'received': True})
@@ -388,9 +422,7 @@ class SeevCashWebhookView(APIView):
                         payload_amount = int(webhook_amount)
                 except (TypeError, ValueError, ArithmeticError) as exc:
                     raise ValueError('Payment amount is invalid.') from exc
-                transaction_id = _webhook_value(
-                    payload, {'transactionid', 'paymentid', 'id'}
-                )
+                transaction_id = _webhook_value(payload, {'transactionid', 'paymentid', 'id'})
                 # A valid signature plus payment.succeeded is the primary
                 # provider confirmation. SeevCash's sandbox session lookup can
                 # remain pending after the simulator has emitted this event.
@@ -419,9 +451,7 @@ class SeevCashWebhookView(APIView):
                         if cycle is not None:
                             cycle.status = 'payment_failed'
                             cycle.payment_error = 'Payment was declined by the provider.'
-                            cycle.save(update_fields=[
-                                'status', 'payment_error', 'updated_at'
-                            ])
+                            cycle.save(update_fields=['status', 'payment_error', 'updated_at'])
             event.status = 'processed'
             event.error = ''
             event.processed_at = timezone.now()
@@ -445,29 +475,25 @@ class ValidatePromoView(APIView):
         try:
             promo = PromoCode.objects.get(code=code)
         except PromoCode.DoesNotExist:
-            return Response(
-                {'error': 'Invalid promo code.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'Invalid promo code.'}, status=status.HTTP_400_BAD_REQUEST)
 
         is_valid, message = promo.is_valid(order_amount)
         if not is_valid:
-            return Response(
-                {'error': message},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
 
         discount = promo.calculate_discount(order_amount)
 
-        return Response({
-            'code': promo.code,
-            'ambassador_name': promo.ambassador_name,
-            'discount_type': promo.discount_type,
-            'discount_value': float(promo.discount_value),
-            'discount_amount': float(discount),
-            'final_amount': round(order_amount - float(discount), 2),
-            'message': f'Promo code applied! You save GH₵{discount:.2f}',
-        })
+        return Response(
+            {
+                'code': promo.code,
+                'ambassador_name': promo.ambassador_name,
+                'discount_type': promo.discount_type,
+                'discount_value': float(promo.discount_value),
+                'discount_amount': float(discount),
+                'final_amount': round(order_amount - float(discount), 2),
+                'message': f'Promo code applied! You save GH₵{discount:.2f}',
+            }
+        )
 
 
 class UserOrderListView(generics.ListAPIView):
@@ -476,8 +502,7 @@ class UserOrderListView(generics.ListAPIView):
 
     def get_queryset(self):
         return (
-            Order.objects
-            .filter(user=self.request.user)
+            Order.objects.filter(user=self.request.user)
             .prefetch_related('items__product__images')
             .order_by('-created_at')
         )
@@ -497,18 +522,19 @@ class ExportOrdersView(APIView):
     permission_classes = [StaffSessionMFARequired]
 
     def get(self, request):
-        date_from     = request.query_params.get('date_from')
-        date_to       = request.query_params.get('date_to')
+        date_from = request.query_params.get('date_from')
+        date_to = request.query_params.get('date_to')
         status_filter = request.query_params.get('status')
         source_filter = request.query_params.get('source')
         payment_filter = request.query_params.get('payment_status')
         customer = request.query_params.get('customer', '').strip()
 
-        orders = Order.objects.select_related(
-            'user', 'promo_code'
-        ).prefetch_related(
-            'items', 'items__product'
-        ).filter(is_test=False).order_by('-created_at')
+        orders = (
+            Order.objects.select_related('user', 'promo_code')
+            .prefetch_related('items', 'items__product')
+            .filter(is_test=False)
+            .order_by('-created_at')
+        )
 
         if date_from:
             orders = orders.filter(created_at__date__gte=date_from)
@@ -522,6 +548,7 @@ class ExportOrdersView(APIView):
             orders = orders.filter(payment_status=payment_filter)
         if customer:
             from django.db.models import Q
+
             orders = orders.filter(
                 Q(reference__icontains=customer)
                 | Q(user__email__icontains=customer)
@@ -535,24 +562,36 @@ class ExportOrdersView(APIView):
         from .exports import generate_orders_excel
         from security.audit import record_event
         from security.models import AuditEvent
+
         record_event(
-            action='order.exported', request=request,
+            action='order.exported',
+            request=request,
             severity=AuditEvent.Severity.SENSITIVE,
             metadata={
-                'scope': 'api_filtered', 'count': orders.count(),
+                'scope': 'api_filtered',
+                'count': orders.count(),
                 'filters': {
-                    'date_from': date_from, 'date_to': date_to,
-                    'status': status_filter, 'payment_status': payment_filter,
-                    'source': source_filter, 'customer': customer,
+                    'date_from': date_from,
+                    'date_to': date_to,
+                    'status': status_filter,
+                    'payment_status': payment_filter,
+                    'source': source_filter,
+                    'customer': customer,
                 },
             },
         )
         return generate_orders_excel(
-            list(orders), date_from, date_to, status_filter,
+            list(orders),
+            date_from,
+            date_to,
+            status_filter,
             filters={
-                'Date from': date_from, 'Date to': date_to,
-                'Order status': status_filter, 'Payment status': payment_filter,
-                'Channel': source_filter, 'Customer/reference': customer,
+                'Date from': date_from,
+                'Date to': date_to,
+                'Order status': status_filter,
+                'Payment status': payment_filter,
+                'Channel': source_filter,
+                'Customer/reference': customer,
             },
         )
 
@@ -565,9 +604,9 @@ class OrderReceiptView(APIView):
 
     def get(self, request, reference):
         try:
-            order = Order.objects.prefetch_related(
-                'items', 'items__product', 'promo_code'
-            ).get(reference=reference)
+            order = Order.objects.prefetch_related('items', 'items__product', 'promo_code').get(
+                reference=reference
+            )
         except Order.DoesNotExist:
             return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -579,4 +618,5 @@ class OrderReceiptView(APIView):
             return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
         from .receipt import generate_receipt_pdf
+
         return generate_receipt_pdf(order)

@@ -25,9 +25,13 @@ def transition_order(order_id, to_status, *, actor=None, source='admin', note=''
         update_fields = ['status', 'updated_at']
         if to_status == 'out_for_delivery':
             order.issue_delivery_pin()
-            update_fields.extend([
-                'delivery_pin_hash', 'delivery_pin_expires_at', 'delivery_pin_attempts',
-            ])
+            update_fields.extend(
+                [
+                    'delivery_pin_hash',
+                    'delivery_pin_expires_at',
+                    'delivery_pin_attempts',
+                ]
+            )
         elif to_status == 'delivered':
             if not order.check_delivery_pin(delivery_pin):
                 order.delivery_pin_attempts += 1
@@ -37,9 +41,13 @@ def transition_order(order_id, to_status, *, actor=None, source='admin', note=''
                 order.delivery_confirmed_at = timezone.now()
                 order.delivery_pin_hash = ''
                 order.delivery_pin_expires_at = None
-                update_fields.extend([
-                    'delivery_confirmed_at', 'delivery_pin_hash', 'delivery_pin_expires_at',
-                ])
+                update_fields.extend(
+                    [
+                        'delivery_confirmed_at',
+                        'delivery_pin_hash',
+                        'delivery_pin_expires_at',
+                    ]
+                )
 
         if not pin_error:
             order.status = to_status

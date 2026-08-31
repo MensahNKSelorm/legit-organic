@@ -1,6 +1,6 @@
-import { defineConfig, globalIgnores } from 'eslint/config'
-import nextVitals from 'eslint-config-next/core-web-vitals'
-import nextTypeScript from 'eslint-config-next/typescript'
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTypeScript from "eslint-config-next/typescript";
 
 export default defineConfig([
   ...nextVitals,
@@ -10,8 +10,8 @@ export default defineConfig([
     // when an external source (auth, storage, search params, modal state) changes.
     // Keep these visible while allowing the upgraded lint command to be useful.
     rules: {
-      'react-hooks/set-state-in-effect': 'warn',
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
-])
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+]);

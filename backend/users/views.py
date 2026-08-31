@@ -16,12 +16,17 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 logger = logging.getLogger(__name__)
 from .models import User, WishlistItem, B2BProfile, BusinessPriceList
 from .serializers import (
-    RegisterSerializer, UserSerializer, WishlistItemSerializer,
-    B2BProfileSerializer, BusinessPriceListSerializer,
+    RegisterSerializer,
+    UserSerializer,
+    WishlistItemSerializer,
+    B2BProfileSerializer,
+    BusinessPriceListSerializer,
 )
 from .emails import (
-    send_welcome_email, send_verification_email,
-    send_b2b_approval_email, send_b2b_rejection_email,
+    send_welcome_email,
+    send_verification_email,
+    send_b2b_approval_email,
+    send_b2b_rejection_email,
 )
 from .google_auth import verify_google_token
 from .turnstile import verify_turnstile
@@ -31,6 +36,7 @@ from security.api import StaffSessionMFARequired
 
 def link_guest_orders(user):
     from orders.models import Order
+
     Order.objects.filter(user__isnull=True, guest_email=user.email).update(user=user)
 
 
@@ -77,11 +83,14 @@ class RegisterView(generics.CreateAPIView):
         except Exception:
             pass
 
-        return Response({
-            'user': UserSerializer(user).data,
-            'email_verification_required': True,
-            'detail': 'Account created. Please check your email to verify your address before logging in.',
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                'user': UserSerializer(user).data,
+                'email_verification_required': True,
+                'detail': 'Account created. Please check your email to verify your address before logging in.',
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):
@@ -103,7 +112,9 @@ class VerifyEmailView(APIView):
         try:
             user = User.objects.get(email_verification_token=token)
         except User.DoesNotExist:
-            return Response({'error': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Enforce token expiry. Invariant: a token with no send timestamp is
         # invalid (not indefinitely valid), and one older than the window expires.
@@ -133,11 +144,14 @@ class VerifyEmailView(APIView):
 
         # Issue tokens so the freshly-verified user is logged in immediately.
         refresh = RefreshToken.for_user(user)
-        response = Response({
-            'message': 'Email verified successfully.',
-            'access': str(refresh.access_token),
-            'user': UserSerializer(user).data,
-        }, status=status.HTTP_200_OK)
+        response = Response(
+            {
+                'message': 'Email verified successfully.',
+                'access': str(refresh.access_token),
+                'user': UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
         set_refresh_cookie(response, str(refresh))
         return response
 
@@ -194,10 +208,12 @@ class GoogleAuthView(APIView):
                 pass
 
         refresh = RefreshToken.for_user(user)
-        response = Response({
-            'access': str(refresh.access_token),
-            'user': UserSerializer(user).data,
-        })
+        response = Response(
+            {
+                'access': str(refresh.access_token),
+                'user': UserSerializer(user).data,
+            }
+        )
         set_refresh_cookie(response, str(refresh))
         return response
 
@@ -207,9 +223,9 @@ class WishlistView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return WishlistItem.objects.filter(
-            user=self.request.user
-        ).select_related('product', 'product__category', 'product__region', 'product__badge')
+        return WishlistItem.objects.filter(user=self.request.user).select_related(
+            'product', 'product__category', 'product__region', 'product__badge'
+        )
 
 
 class WishlistItemDeleteView(generics.DestroyAPIView):
@@ -239,21 +255,29 @@ class B2BApplyView(generics.CreateAPIView):
         email = self.request.data.get('business_email', '')
         if B2BProfile.objects.filter(business_email=email).exists():
             from rest_framework.exceptions import ValidationError
-            raise ValidationError({'business_email': 'An application with this email already exists.'})
+
+            raise ValidationError(
+                {'business_email': 'An application with this email already exists.'}
+            )
         serializer.save()
 
         try:
             from .emails import send_b2b_application_received_email
+
             send_b2b_application_received_email(serializer.instance)
         except Exception as exc:
             import logging
+
             logging.getLogger(__name__).error(
                 'B2B application confirmation failed for profile %s: %s',
-                serializer.instance.pk, exc, exc_info=True,
+                serializer.instance.pk,
+                exc,
+                exc_info=True,
             )
 
         try:
             from notifications.utils import notify_admins
+
             profile = serializer.instance
             notify_admins(
                 type='b2b_application',
@@ -263,6 +287,7 @@ class B2BApplyView(generics.CreateAPIView):
             )
         except Exception as e:
             import logging
+
             logger = logging.getLogger(__name__)
             logger.error(f'b2b_application notification failed: {e}', exc_info=True)
 
@@ -296,7 +321,10 @@ class B2BSetupPasswordView(APIView):
         password = request.data.get('password')
 
         if not uid or not token or not password:
-            return Response({'error': 'uid, token and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'uid, token and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             from django.utils.http import urlsafe_base64_decode
@@ -325,12 +353,15 @@ class B2BSetupPasswordView(APIView):
 
             from rest_framework_simplejwt.tokens import RefreshToken as JWTRefreshToken
             from .serializers import UserSerializer as US
+
             refresh = JWTRefreshToken.for_user(user)
-            response = Response({
-                'message': 'Password set successfully!',
-                'access': str(refresh.access_token),
-                'user': US(user).data,
-            })
+            response = Response(
+                {
+                    'message': 'Password set successfully!',
+                    'access': str(refresh.access_token),
+                    'user': US(user).data,
+                }
+            )
             set_refresh_cookie(response, str(refresh))
             return response
 
@@ -366,14 +397,17 @@ class B2BPriceListView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        price_list = profile.price_list or BusinessPriceList.objects.filter(
-            is_default=True, is_active=True
-        ).first()
+        price_list = (
+            profile.price_list
+            or BusinessPriceList.objects.filter(is_default=True, is_active=True).first()
+        )
         if not price_list:
             return Response({'price_list': None})
-        return Response({
-            'price_list': BusinessPriceListSerializer(price_list).data,
-        })
+        return Response(
+            {
+                'price_list': BusinessPriceListSerializer(price_list).data,
+            }
+        )
 
 
 class ResendVerificationView(APIView):
@@ -412,7 +446,9 @@ class ResendVerificationView(APIView):
         if request.user and request.user.is_authenticated:
             user = request.user
             if user.email_verified:
-                return Response({'message': 'Email is already verified.'}, status=status.HTTP_200_OK)
+                return Response(
+                    {'message': 'Email is already verified.'}, status=status.HTTP_200_OK
+                )
             self._issue(user)
             return Response({'message': 'Verification email sent.'}, status=status.HTTP_200_OK)
 

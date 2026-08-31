@@ -4,62 +4,361 @@
 {% block extrahead %}
 {{ block.super }}
 <style>
-  .lo-dashboard { --forest:#0d3b2a; --leaf:#82c68a; --gold:#f4c430; --paper:#171b18; --ink:#f8f4e9; --muted:#b8c3ba; margin:0 -1rem; padding:1.25rem 2.25rem 3rem; background:#111827; color:var(--ink); font-family:"Inter",Arial,sans-serif; color-scheme:dark; }
-  .lo-display { font-family:"Inter",Arial,sans-serif; font-weight:700; letter-spacing:-.025em; }
-  .lo-hero { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(18rem,.55fr); min-height:12rem; background:var(--forest); color:white; }
-  .lo-hero-main { padding:1.75rem 2rem; display:flex; flex-direction:column; justify-content:center; }
-  .lo-hero h1 { max-width:50rem; margin-top:.65rem; font-size:clamp(2rem,3vw,3.4rem); line-height:1; letter-spacing:-.035em; }
-  .lo-hero h1 em { color:var(--gold); font-weight:400; }
-  .lo-kicker { color:var(--gold); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
-  .lo-owner-card { padding:1.5rem 1.75rem; background:var(--gold); color:var(--forest); display:flex; flex-direction:column; justify-content:space-between; }
-  .lo-owner-card strong { font-size:1.4rem; }
-  .lo-rule { border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
-  .lo-section { margin-top:2rem; }
-  .lo-section-head { display:flex; align-items:end; justify-content:space-between; gap:1rem; border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); padding-bottom:1rem; margin-bottom:1.2rem; }
-  .lo-section-head h2 { font-size:clamp(1.35rem,2vw,1.8rem); line-height:1.1; }
-  .lo-section-head p { color:var(--muted); font-size:.82rem; }
-  .lo-analytics { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(18rem,.65fr); gap:1.25rem; }
-  .lo-analytics-secondary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.25rem; margin-top:1.25rem; }
-  .lo-snapshot { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); background:var(--forest); color:white; }
-  .lo-snapshot-item { min-width:0; padding:1.25rem; border-right:1px solid rgba(255,255,255,.16); }
-  .lo-snapshot-item:last-child { border-right:0; }
-  .lo-snapshot-item span { display:block; color:rgba(255,255,255,.62); font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
-  .lo-snapshot-item strong { display:block; margin-top:.45rem; color:var(--gold); font-family:"Inter",Arial,sans-serif; font-size:clamp(1.35rem,2vw,2rem); font-weight:700; line-height:1; white-space:nowrap; font-variant-numeric:tabular-nums; }
-  .lo-chart { min-width:0; border:1px solid color-mix(in srgb,var(--ink) 20%,transparent); padding:1.25rem; }
-  .lo-chart-featured { background:var(--forest); border-color:var(--forest); color:white; }
-  .lo-chart-featured .lo-chart-head span { color:rgba(255,255,255,.58); }
-  .lo-chart-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
-  .lo-chart-head h3 { font-size:.82rem; font-weight:800; }
-  .lo-chart-head span { color:var(--muted); font-size:.7rem; }
-  .lo-chart-wrap { position:relative; height:18rem; }
-  .lo-chart-wrap.lo-chart-compact { height:14rem; }
-  .lo-chart-empty { height:100%; display:grid; place-items:center; border-top:1px solid color-mix(in srgb,var(--ink) 12%,transparent); color:var(--muted); text-align:center; }
-  .lo-chart-empty span { max-width:13rem; font-size:.78rem; line-height:1.45; }
-  .lo-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-left:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
-  .lo-action { min-height:8.5rem; padding:1.2rem; border-right:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); display:flex; flex-direction:column; justify-content:space-between; color:var(--ink); text-decoration:none; transition:.18s ease; }
-  .lo-action:hover { background:var(--gold); color:var(--forest); }
-  .lo-action .material-symbols-outlined { font-size:1.6rem; }
-  .lo-attention { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); border-top:1px solid color-mix(in srgb,var(--ink) 20%,transparent); }
-  .lo-attention a { padding:1.2rem 1rem; border-right:1px solid color-mix(in srgb,var(--ink) 20%,transparent); border-bottom:1px solid color-mix(in srgb,var(--ink) 20%,transparent); color:var(--ink); text-decoration:none; }
-  .lo-attention a:last-child { border-right:0; }
-  .lo-attention strong { display:block; font-family:"Inter",Arial,sans-serif; font-size:2.15rem; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
-  .lo-attention span { display:block; margin-top:.55rem; color:var(--muted); font-size:.75rem; }
-  .lo-main-grid { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(18rem,.65fr); gap:2rem; }
-  .lo-orders { width:100%; border-collapse:collapse; }
-  .lo-orders th { padding:.75rem .5rem; border-bottom:1px solid color-mix(in srgb,var(--ink) 25%,transparent); color:var(--muted); text-align:left; font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; }
-  .lo-orders td { padding:1rem .5rem; border-bottom:1px solid color-mix(in srgb,var(--ink) 14%,transparent); font-size:.82rem; vertical-align:top; }
-  .lo-orders a { color:var(--ink); font-weight:700; text-decoration:none; }
-  .lo-status { display:inline-block; border-bottom:2px solid var(--gold); padding-bottom:.12rem; font-size:.72rem; font-weight:700; }
-  .lo-metrics { background:var(--forest); color:white; padding:1.5rem; }
-  .lo-metric { display:flex; align-items:end; justify-content:space-between; gap:1rem; padding:1.1rem 0; border-bottom:1px solid rgba(255,255,255,.17); }
-  .lo-metric:last-child { border-bottom:0; }
-  .lo-metric span { color:rgba(255,255,255,.62); font-size:.76rem; }
-  .lo-metric strong { font-family:"Inter",Arial,sans-serif; color:var(--gold); font-size:1.65rem; font-weight:700; font-variant-numeric:tabular-nums; }
-  .lo-link { color:var(--gold); border-bottom:1px solid currentColor; font-size:.75rem; font-weight:800; text-decoration:none; }
-  @media(max-width:1000px){ .lo-analytics-secondary{grid-template-columns:1fr 1fr}.lo-analytics-secondary .lo-chart:last-child{grid-column:1/-1}.lo-snapshot{grid-template-columns:repeat(3,1fr)}.lo-snapshot-item{border-bottom:1px solid rgba(255,255,255,.16)} }
-  @media(max-width:900px){ .lo-hero,.lo-main-grid,.lo-analytics{grid-template-columns:1fr}.lo-attention{grid-template-columns:repeat(2,1fr)}.lo-attention a:last-child{grid-column:span 2}.lo-owner-card{min-height:11rem}.lo-dashboard{padding:.75rem} }
-  @media(max-width:560px){ .lo-attention,.lo-analytics-secondary{grid-template-columns:1fr}.lo-analytics-secondary .lo-chart:last-child{grid-column:auto}.lo-snapshot{grid-template-columns:1fr 1fr}.lo-snapshot-item strong{white-space:normal}.lo-attention a:last-child{grid-column:auto}.lo-hero-main{padding:1.5rem}.lo-orders th:nth-child(3),.lo-orders td:nth-child(3){display:none} }
-</style>
+    .lo-dashboard {
+      --forest: #0d3b2a;
+      --leaf: #82c68a;
+      --gold: #f4c430;
+      --paper: #171b18;
+      --ink: #f8f4e9;
+      --muted: #b8c3ba;
+      margin: 0 -1rem;
+      padding: 1.25rem 2.25rem 3rem;
+      background: #111827;
+      color: var(--ink);
+      font-family: "Inter",Arial,sans-serif;
+      color-scheme: dark;
+    }
+    .lo-display {
+      font-family: "Inter",Arial,sans-serif;
+      font-weight: 700;
+      letter-spacing: -.025em;
+    }
+    .lo-hero {
+      display: grid;
+      grid-template-columns: minmax(0,1.45fr) minmax(18rem,.55fr);
+      min-height: 12rem;
+      background: var(--forest);
+      color: white;
+    }
+    .lo-hero-main {
+      padding: 1.75rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .lo-hero h1 {
+      max-width: 50rem;
+      margin-top: .65rem;
+      font-size: clamp(2rem,3vw,3.4rem);
+      line-height: 1;
+      letter-spacing: -.035em;
+    }
+    .lo-hero h1 em {
+      color: var(--gold);
+      font-weight: 400;
+    }
+    .lo-kicker {
+      color: var(--gold);
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .lo-owner-card {
+      padding: 1.5rem 1.75rem;
+      background: var(--gold);
+      color: var(--forest);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .lo-owner-card strong {
+      font-size: 1.4rem;
+    }
+    .lo-rule {
+      border-top: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+    }
+    .lo-section {
+      margin-top: 2rem;
+    }
+    .lo-section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      padding-bottom: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .lo-section-head h2 {
+      font-size: clamp(1.35rem,2vw,1.8rem);
+      line-height: 1.1;
+    }
+    .lo-section-head p {
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    .lo-analytics {
+      display: grid;
+      grid-template-columns: minmax(0,1.55fr) minmax(18rem,.65fr);
+      gap: 1.25rem;
+    }
+    .lo-analytics-secondary {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+    .lo-snapshot {
+      display: grid;
+      grid-template-columns: repeat(5,minmax(0,1fr));
+      background: var(--forest);
+      color: white;
+    }
+    .lo-snapshot-item {
+      min-width: 0;
+      padding: 1.25rem;
+      border-right: 1px solid rgba(255,255,255,.16);
+    }
+    .lo-snapshot-item:last-child {
+      border-right: 0;
+    }
+    .lo-snapshot-item span {
+      display: block;
+      color: rgba(255,255,255,.62);
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .lo-snapshot-item strong {
+      display: block;
+      margin-top: .45rem;
+      color: var(--gold);
+      font-family: "Inter",Arial,sans-serif;
+      font-size: clamp(1.35rem,2vw,2rem);
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .lo-chart {
+      min-width: 0;
+      border: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      padding: 1.25rem;
+    }
+    .lo-chart-featured {
+      background: var(--forest);
+      border-color: var(--forest);
+      color: white;
+    }
+    .lo-chart-featured .lo-chart-head span {
+      color: rgba(255,255,255,.58);
+    }
+    .lo-chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .lo-chart-head h3 {
+      font-size: .82rem;
+      font-weight: 800;
+    }
+    .lo-chart-head span {
+      color: var(--muted);
+      font-size: .7rem;
+    }
+    .lo-chart-wrap {
+      position: relative;
+      height: 18rem;
+    }
+    .lo-chart-wrap.lo-chart-compact {
+      height: 14rem;
+    }
+    .lo-chart-empty {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      border-top: 1px solid color-mix(in srgb,var(--ink) 12%,transparent);
+      color: var(--muted);
+      text-align: center;
+    }
+    .lo-chart-empty span {
+      max-width: 13rem;
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+    .lo-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(10rem,1fr));
+      border-top: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-left: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+    }
+    .lo-action {
+      min-height: 8.5rem;
+      padding: 1.2rem;
+      border-right: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-bottom: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: var(--ink);
+      text-decoration: none;
+      transition: .18s ease;
+    }
+    .lo-action:hover {
+      background: var(--gold);
+      color: var(--forest);
+    }
+    .lo-action .material-symbols-outlined {
+      font-size: 1.6rem;
+    }
+    .lo-attention {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(10rem,1fr));
+      border-top: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+    }
+    .lo-attention a {
+      padding: 1.2rem 1rem;
+      border-right: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-bottom: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .lo-attention a:last-child {
+      border-right: 0;
+    }
+    .lo-attention strong {
+      display: block;
+      font-family: "Inter",Arial,sans-serif;
+      font-size: 2.15rem;
+      font-weight: 700;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .lo-attention span {
+      display: block;
+      margin-top: .55rem;
+      color: var(--muted);
+      font-size: .75rem;
+    }
+    .lo-main-grid {
+      display: grid;
+      grid-template-columns: minmax(0,1.55fr) minmax(18rem,.65fr);
+      gap: 2rem;
+    }
+    .lo-orders {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .lo-orders th {
+      padding: .75rem .5rem;
+      border-bottom: 1px solid color-mix(in srgb,var(--ink) 25%,transparent);
+      color: var(--muted);
+      text-align: left;
+      font-size: .66rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .lo-orders td {
+      padding: 1rem .5rem;
+      border-bottom: 1px solid color-mix(in srgb,var(--ink) 14%,transparent);
+      font-size: .82rem;
+      vertical-align: top;
+    }
+    .lo-orders a {
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .lo-status {
+      display: inline-block;
+      border-bottom: 2px solid var(--gold);
+      padding-bottom: .12rem;
+      font-size: .72rem;
+      font-weight: 700;
+    }
+    .lo-metrics {
+      background: var(--forest);
+      color: white;
+      padding: 1.5rem;
+    }
+    .lo-metric {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.17);
+    }
+    .lo-metric:last-child {
+      border-bottom: 0;
+    }
+    .lo-metric span {
+      color: rgba(255,255,255,.62);
+      font-size: .76rem;
+    }
+    .lo-metric strong {
+      font-family: "Inter",Arial,sans-serif;
+      color: var(--gold);
+      font-size: 1.65rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .lo-link {
+      color: var(--gold);
+      border-bottom: 1px solid currentColor;
+      font-size: .75rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    @media(max-width:1000px) {
+      .lo-analytics-secondary {
+        grid-template-columns: 1fr 1fr;
+      }
+      .lo-analytics-secondary .lo-chart:last-child {
+        grid-column: 1/-1;
+      }
+      .lo-snapshot {
+        grid-template-columns: repeat(3,1fr);
+      }
+      .lo-snapshot-item {
+        border-bottom: 1px solid rgba(255,255,255,.16);
+      }
+    }
+    @media(max-width:900px) {
+      .lo-hero,.lo-main-grid,.lo-analytics {
+        grid-template-columns: 1fr;
+      }
+      .lo-attention {
+        grid-template-columns: repeat(2,1fr);
+      }
+      .lo-attention a:last-child {
+        grid-column: span 2;
+      }
+      .lo-owner-card {
+        min-height: 11rem;
+      }
+      .lo-dashboard {
+        padding: .75rem;
+      }
+    }
+    @media(max-width:560px) {
+      .lo-attention,.lo-analytics-secondary {
+        grid-template-columns: 1fr;
+      }
+      .lo-analytics-secondary .lo-chart:last-child {
+        grid-column: auto;
+      }
+      .lo-snapshot {
+        grid-template-columns: 1fr 1fr;
+      }
+      .lo-snapshot-item strong {
+        white-space: normal;
+      }
+      .lo-attention a:last-child {
+        grid-column: auto;
+      }
+      .lo-hero-main {
+        padding: 1.5rem;
+      }
+      .lo-orders th:nth-child(3),.lo-orders td:nth-child(3) {
+        display: none;
+      }
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -73,7 +372,9 @@
     </div>
     <div class="lo-owner-card">
       <span class="material-symbols-outlined" style="font-size:2.2rem">eco</span>
-      <div><span style="display:block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.14em">Signed in as</span><strong>{{ role_label }}</strong><span style="display:block;margin-top:.35rem;font-size:.78rem">{{ request.user.email }}</span></div>
+      <div><span
+        style="display:block;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.14em"
+      >Signed in as</span><strong>{{ role_label }}</strong><span style="display:block;margin-top:.35rem;font-size:.78rem">{{ request.user.email }}</span></div>
     </div>
   </header>
 

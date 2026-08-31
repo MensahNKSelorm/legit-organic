@@ -13,12 +13,14 @@ logger = logging.getLogger(__name__)
 
 def _send_owner_report(order_id, event):
     from .reporting import send_owner_report_once
+
     send_owner_report_once(order_id, event)
 
 
 def _send_payment_failed_email(order_id):
     try:
         from users.emails import send_order_payment_failed_email
+
         send_order_payment_failed_email(Order.objects.get(pk=order_id))
     except Exception:
         logger.exception('Payment failure email failed for order %s', order_id)
@@ -69,7 +71,7 @@ class Order(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='orders'
+        related_name='orders',
     )
     reference = models.CharField(max_length=100, unique=True)
     paystack_id = models.CharField(max_length=100, blank=True)
@@ -85,8 +87,11 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     promo_code = models.ForeignKey(
-        PromoCode, null=True, blank=True,
-        on_delete=models.SET_NULL, related_name='orders',
+        PromoCode,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='orders',
     )
     delivery_address = models.TextField()
     guest_name = models.CharField(max_length=200, blank=True)
@@ -112,9 +117,11 @@ class Order(models.Model):
     order_source = models.CharField(
         max_length=20,
         choices=[
-            ('seevcash', 'SeevCash'), ('subscription', 'Subscription renewal'),
+            ('seevcash', 'SeevCash'),
+            ('subscription', 'Subscription renewal'),
             ('business_supply', 'Business supply renewal'),
-            ('paystack', 'Paystack (legacy)'), ('whatsapp', 'WhatsApp'),
+            ('paystack', 'Paystack (legacy)'),
+            ('whatsapp', 'WhatsApp'),
         ],
         default='whatsapp',
     )
@@ -170,17 +177,16 @@ class Order(models.Model):
         old_status = self.__original_status
         status_changed = self.status != old_status
         payment_became_successful = (
-            self.payment_status == 'success'
-            and self.__original_payment_status != 'success'
+            self.payment_status == 'success' and self.__original_payment_status != 'success'
         )
         payment_became_failed = (
-            self.payment_status == 'failed'
-            and self.__original_payment_status != 'failed'
+            self.payment_status == 'failed' and self.__original_payment_status != 'failed'
         )
         super().save(*args, **kwargs)
 
         if is_update and payment_became_failed:
             from django.db import transaction
+
             transaction.on_commit(lambda: _send_payment_failed_email(self.pk))
 
         if is_update and status_changed:
@@ -208,15 +214,25 @@ class Order(models.Model):
         for event in report_events:
             order_id = self.pk
             from django.db import transaction
-            transaction.on_commit(
-                lambda event=event: _send_owner_report(order_id, event)
-            )
 
-        if status_changed and not getattr(self, '_suppress_customer_notifications', False) and self.status in [
-            'paid', 'processing', 'ready_for_dispatch', 'out_for_delivery',
-            'shipped', 'delivered', 'cancelled'
-        ]:
+            transaction.on_commit(lambda event=event: _send_owner_report(order_id, event))
+
+        if (
+            status_changed
+            and not getattr(self, '_suppress_customer_notifications', False)
+            and self.status
+            in [
+                'paid',
+                'processing',
+                'ready_for_dispatch',
+                'out_for_delivery',
+                'shipped',
+                'delivered',
+                'cancelled',
+            ]
+        ):
             from .notifications import deliver_order_status_notifications
+
             deliver_order_status_notifications(self)
 
         if (
@@ -239,17 +255,19 @@ class Order(models.Model):
 
                 if referred is not None:
                     rep = referred.sales_rep
-                    completed_orders = Order.objects.filter(
-                        user=self.user,
-                        status='processing',
-                        payment_status='success',
-                    ).exclude(pk=self.pk).count()
+                    completed_orders = (
+                        Order.objects.filter(
+                            user=self.user,
+                            status='processing',
+                            payment_status='success',
+                        )
+                        .exclude(pk=self.pk)
+                        .count()
+                    )
 
                     if completed_orders == 0:
                         commission_type = 'first_purchase'
-                        amount = self.final_amount * (
-                            rep.commission_rate_first_purchase / 100
-                        )
+                        amount = self.final_amount * (rep.commission_rate_first_purchase / 100)
                         referred.status = 'converted'
                         referred.save(update_fields=['status'])
                         Commission.objects.create(
@@ -262,11 +280,10 @@ class Order(models.Model):
                         )
                     else:
                         from django.utils import timezone
+
                         if timezone.now() <= referred.commission_expires_at:
                             commission_type = 'repeat_purchase'
-                            amount = self.final_amount * (
-                                rep.commission_rate_repeat_purchase / 100
-                            )
+                            amount = self.final_amount * (rep.commission_rate_repeat_purchase / 100)
                             Commission.objects.create(
                                 sales_rep=rep,
                                 referred_customer=referred,
@@ -284,11 +301,11 @@ class Order(models.Model):
 
             try:
                 from notifications.utils import notify_admins
+
                 customer_name = 'Guest'
                 if self.user:
                     customer_name = (
-                        f'{self.user.first_name} {self.user.last_name}'.strip()
-                        or self.user.email
+                        f'{self.user.first_name} {self.user.last_name}'.strip() or self.user.email
                     )
                 elif self.guest_name:
                     customer_name = self.guest_name
@@ -324,7 +341,10 @@ class SeevCashWebhookEvent(models.Model):
     event_type = models.CharField(max_length=80)
     payload_hash = models.CharField(max_length=64)
     order = models.ForeignKey(
-        Order, null=True, blank=True, on_delete=models.SET_NULL,
+        Order,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         related_name='seevcash_webhook_events',
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='processing')
@@ -355,8 +375,11 @@ class OrderStatusEvent(models.Model):
     from_status = models.CharField(max_length=20, blank=True)
     to_status = models.CharField(max_length=20)
     actor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True,
-        on_delete=models.SET_NULL, related_name='order_status_events',
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='order_status_events',
     )
     source = models.CharField(max_length=30, default='admin')
     note = models.CharField(max_length=300, blank=True)
@@ -372,8 +395,11 @@ class OrderStatusEvent(models.Model):
 class OrderNotificationDelivery(models.Model):
     CHANNEL_CHOICES = [('email', 'Email'), ('sms', 'SMS')]
     STATUS_CHOICES = [
-        ('pending', 'Pending'), ('sent', 'Sent'), ('failed', 'Failed'),
-        ('skipped', 'Skipped'), ('superseded', 'Superseded'),
+        ('pending', 'Pending'),
+        ('sent', 'Sent'),
+        ('failed', 'Failed'),
+        ('skipped', 'Skipped'),
+        ('superseded', 'Superseded'),
         ('exhausted', 'Retry limit reached'),
     ]
 

@@ -8,7 +8,10 @@ import { api } from "@/lib/api";
 import type { Product, ProductDetail } from "@/types";
 import ProductCard from "@/components/products/ProductCard";
 import ProductTabs from "@/components/products/ProductTabs";
-import AddToCartButton, { MobilePurchaseBar, WishlistButton } from "@/components/products/AddToCartButton";
+import AddToCartButton, {
+  MobilePurchaseBar,
+  WishlistButton,
+} from "@/components/products/AddToCartButton";
 import ProductImageGallery from "@/components/products/ProductImageGallery";
 import JsonLd from "@/components/seo/JsonLd";
 import { getMediaUrl } from "@/lib/media";
@@ -148,34 +151,41 @@ export default async function ProductDetailPage({ params }: Props) {
     <div className="min-h-screen bg-[#FAF7F0] pb-24 text-[#0D3B2A] md:pb-0 dark:bg-[#171B18] dark:text-[#FEFCF7]">
       <JsonLd
         data={{
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          '@id': `${productUrl}#product`,
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "@id": `${productUrl}#product`,
           name: product.name,
           description: plainText(product.description, 500) || undefined,
           image: productImage ? [productImage] : undefined,
           category: product.category?.name,
-          countryOfOrigin: product.region ? { '@type': 'Country', name: product.region.country || 'Ghana' } : undefined,
-          brand: { '@type': 'Brand', name: 'Legit Organic' },
+          countryOfOrigin: product.region
+            ? { "@type": "Country", name: product.region.country || "Ghana" }
+            : undefined,
+          brand: { "@type": "Brand", name: "Legit Organic" },
           offers: {
-            '@type': 'Offer',
+            "@type": "Offer",
             url: productUrl,
-            priceCurrency: 'GHS',
+            priceCurrency: "GHS",
             price: product.price,
             availability: product.is_available
-              ? 'https://schema.org/InStock'
-              : 'https://schema.org/OutOfStock',
-            seller: { '@id': 'https://legitorganic.com/#organization' },
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+            seller: { "@id": "https://legitorganic.com/#organization" },
           },
         }}
       />
       <JsonLd
         data={{
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Market', item: 'https://legitorganic.com/products' },
-            { '@type': 'ListItem', position: 2, name: product.name, item: productUrl },
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Market",
+              item: "https://legitorganic.com/products",
+            },
+            { "@type": "ListItem", position: 2, name: product.name, item: productUrl },
           ],
         }}
       />
@@ -213,8 +223,10 @@ export default async function ProductDetailPage({ params }: Props) {
                 {product.unit}
               </span>
             </div>
-            <p className={`mt-3 text-sm font-semibold ${product.is_available ? 'text-[#2E7D32] dark:text-[#9FC5A4]' : 'text-red-700 dark:text-red-300'}`}>
-              {product.is_available ? 'Available to order' : 'Currently unavailable'}
+            <p
+              className={`mt-3 text-sm font-semibold ${product.is_available ? "text-[#2E7D32] dark:text-[#9FC5A4]" : "text-red-700 dark:text-red-300"}`}
+            >
+              {product.is_available ? "Available to order" : "Currently unavailable"}
             </p>
             <div
               className="prose prose-lg dark:prose-invert mt-7 text-[#5B3E31] dark:text-[#D5E7D8]"
@@ -235,14 +247,24 @@ export default async function ProductDetailPage({ params }: Props) {
               )}
             </div>
 
-            <ul className="mt-5 grid gap-2 text-sm text-[#5B3E31] dark:text-[#D5E7D8] sm:grid-cols-3" aria-label="Order reassurance">
+            <ul
+              className="mt-5 grid gap-2 text-sm text-[#5B3E31] dark:text-[#D5E7D8] sm:grid-cols-3"
+              aria-label="Order reassurance"
+            >
               {[
-                'Secure hosted checkout',
-                'Any delivery charge confirmed from your address',
-                'Payment updates by email and SMS',
+                "Secure hosted checkout",
+                "Any delivery charge confirmed from your address",
+                "Payment updates by email and SMS",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-2 border border-[#0D3B2A]/15 px-3 py-3 dark:border-white/15">
-                  <svg aria-hidden="true" viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-[#2E7D32] dark:fill-[#F4C430]">
+                <li
+                  key={item}
+                  className="flex items-start gap-2 border border-[#0D3B2A]/15 px-3 py-3 dark:border-white/15"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    className="mt-0.5 h-4 w-4 shrink-0 fill-[#2E7D32] dark:fill-[#F4C430]"
+                  >
                     <path d="M7.8 14.2 3.9 10.3l1.4-1.4 2.5 2.5 6.9-6.9 1.4 1.4-8.3 8.3Z" />
                   </svg>
                   <span className="leading-5">{item}</span>
@@ -270,7 +292,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
             {product.region && (
               <p className="mt-7 border-l-2 border-[#F4C430] pl-5 text-sm leading-6 text-[#5B3E31] dark:text-[#B8D4BD]">
-                Listed origin: {product.region.name}, {product.region.country || 'Ghana'}.
+                Listed origin: {product.region.name}, {product.region.country || "Ghana"}.
               </p>
             )}
           </div>

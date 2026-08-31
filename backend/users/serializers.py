@@ -6,7 +6,11 @@ from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
 from .models import (
-    B2BProfile, BusinessPrice, BusinessPriceList, User, WishlistItem,
+    B2BProfile,
+    BusinessPrice,
+    BusinessPriceList,
+    User,
+    WishlistItem,
 )
 from products.serializers import ProductSerializer
 
@@ -15,9 +19,19 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'first_name', 'last_name', 'phone_number',
-            'street_address', 'house_number', 'city', 'delivery_region',
-            'avatar', 'created_at', 'email_verified', 'is_staff',
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'phone_number',
+            'street_address',
+            'house_number',
+            'city',
+            'delivery_region',
+            'avatar',
+            'created_at',
+            'email_verified',
+            'is_staff',
         ]
         read_only_fields = ['id', 'created_at', 'email_verified', 'is_staff']
 
@@ -38,11 +52,15 @@ class UserSerializer(serializers.ModelSerializer):
         # See RegisterSerializer.create() for the complementary new-signup direction.
         new_phone = validated_data.get('phone_number', '')
         if new_phone and new_phone != instance.phone_number:
-            placeholder = User.objects.filter(
-                phone_number=new_phone,
-                email__startswith='noemail+',
-                email__endswith='@rep.legitorganic.internal',
-            ).exclude(pk=instance.pk).first()
+            placeholder = (
+                User.objects.filter(
+                    phone_number=new_phone,
+                    email__startswith='noemail+',
+                    email__endswith='@rep.legitorganic.internal',
+                )
+                .exclude(pk=instance.pk)
+                .first()
+            )
 
             if placeholder is not None:
                 with transaction.atomic():
@@ -70,11 +88,21 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
     phone_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
-    referral_code = serializers.CharField(max_length=10, required=False, allow_blank=True, write_only=True)
+    referral_code = serializers.CharField(
+        max_length=10, required=False, allow_blank=True, write_only=True
+    )
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'phone_number', 'password', 'password_confirm', 'referral_code']
+        fields = [
+            'email',
+            'first_name',
+            'last_name',
+            'phone_number',
+            'password',
+            'password_confirm',
+            'referral_code',
+        ]
 
     def validate(self, data):
         if data['password'] != data['password_confirm']:
@@ -119,9 +147,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         if referral_code and not hasattr(user, 'referral_record'):
             try:
                 from sales.models import SalesRep, ReferredCustomer
-                rep = SalesRep.objects.filter(
-                    referral_code=referral_code, status='active'
-                ).first()
+
+                rep = SalesRep.objects.filter(referral_code=referral_code, status='active').first()
                 if not rep:
                     pass  # typo'd, expired, or suspended code — silent skip, not an error
                 else:
@@ -164,7 +191,11 @@ class BusinessPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = BusinessPrice
         fields = [
-            'id', 'product', 'unit_price', 'minimum_quantity', 'is_available',
+            'id',
+            'product',
+            'unit_price',
+            'minimum_quantity',
+            'is_available',
         ]
 
 
@@ -176,10 +207,14 @@ class BusinessPriceListSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'prices']
 
     def get_prices(self, obj):
-        rows = obj.prices.filter(
-            is_available=True,
-            product__is_available=True,
-        ).exclude(product__business_supply_category='').select_related('product')
+        rows = (
+            obj.prices.filter(
+                is_available=True,
+                product__is_available=True,
+            )
+            .exclude(product__business_supply_category='')
+            .select_related('product')
+        )
         return BusinessPriceSerializer(rows, many=True, context=self.context).data
 
 
@@ -189,9 +224,7 @@ class B2BProfileSerializer(serializers.ModelSerializer):
     business_type_display = serializers.CharField(
         source='get_business_type_display', read_only=True
     )
-    status_display = serializers.CharField(
-        source='get_status_display', read_only=True
-    )
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
     registration_status_display = serializers.CharField(
         source='get_registration_status_display', read_only=True
     )
@@ -199,29 +232,68 @@ class B2BProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = B2BProfile
         fields = [
-            'id', 'company_name', 'registration_status', 'registration_status_display',
-            'business_type', 'business_type_display',
-            'contact_person', 'business_phone', 'business_email',
-            'business_address', 'business_registration',
-            'trading_name', 'legal_structure', 'sector', 'year_started', 'website',
-            'organization_tin', 'verification_document_type',
-            'verification_document', 'registration_exemption_reason',
-            'contact_job_title', 'alternative_phone',
-            'delivery_region', 'delivery_city', 'delivery_district',
-            'delivery_locality', 'delivery_street', 'ghana_post_gps',
-            'delivery_landmark', 'delivery_directions',
-            'receiving_contact_name', 'receiving_contact_phone',
-            'receiving_hours', 'delivery_latitude', 'delivery_longitude',
-            'access_restrictions', 'produce_categories',
-            'order_frequency', 'preferred_start_date', 'purchase_order_required',
-            'invoice_requirements', 'procurement_notes', 'applicant_authorized',
-            'information_confirmed', 'privacy_acknowledged',
-            'estimated_monthly_order', 'status', 'status_display',
-            'price_list', 'rejection_reason', 'approved_at', 'created_at',
+            'id',
+            'company_name',
+            'registration_status',
+            'registration_status_display',
+            'business_type',
+            'business_type_display',
+            'contact_person',
+            'business_phone',
+            'business_email',
+            'business_address',
+            'business_registration',
+            'trading_name',
+            'legal_structure',
+            'sector',
+            'year_started',
+            'website',
+            'organization_tin',
+            'verification_document_type',
+            'verification_document',
+            'registration_exemption_reason',
+            'contact_job_title',
+            'alternative_phone',
+            'delivery_region',
+            'delivery_city',
+            'delivery_district',
+            'delivery_locality',
+            'delivery_street',
+            'ghana_post_gps',
+            'delivery_landmark',
+            'delivery_directions',
+            'receiving_contact_name',
+            'receiving_contact_phone',
+            'receiving_hours',
+            'delivery_latitude',
+            'delivery_longitude',
+            'access_restrictions',
+            'produce_categories',
+            'order_frequency',
+            'preferred_start_date',
+            'purchase_order_required',
+            'invoice_requirements',
+            'procurement_notes',
+            'applicant_authorized',
+            'information_confirmed',
+            'privacy_acknowledged',
+            'estimated_monthly_order',
+            'status',
+            'status_display',
+            'price_list',
+            'rejection_reason',
+            'approved_at',
+            'created_at',
         ]
         read_only_fields = [
-            'id', 'business_address', 'status', 'status_display', 'price_list',
-            'rejection_reason', 'approved_at', 'created_at',
+            'id',
+            'business_address',
+            'status',
+            'status_display',
+            'price_list',
+            'rejection_reason',
+            'approved_at',
+            'created_at',
         ]
 
     def validate_verification_document(self, value):
@@ -230,9 +302,9 @@ class B2BProfileSerializer(serializers.ModelSerializer):
         header = value.read(8)
         value.seek(0)
         valid = (
-            header.startswith(b'%PDF-') or
-            header.startswith(b'\xff\xd8\xff') or
-            header.startswith(b'\x89PNG\r\n\x1a\n')
+            header.startswith(b'%PDF-')
+            or header.startswith(b'\xff\xd8\xff')
+            or header.startswith(b'\x89PNG\r\n\x1a\n')
         )
         if not valid:
             raise serializers.ValidationError('Upload a PDF, JPG or PNG document.')
@@ -252,7 +324,9 @@ class B2BProfileSerializer(serializers.ModelSerializer):
         allowed = {'Tomatoes', 'Onions'}
         unsupported = [item for item in cleaned if item not in allowed]
         if unsupported:
-            raise serializers.ValidationError('Business supply is currently limited to tomatoes and onions.')
+            raise serializers.ValidationError(
+                'Business supply is currently limited to tomatoes and onions.'
+            )
         return cleaned
 
     def validate(self, attrs):
@@ -280,7 +354,9 @@ class B2BProfileSerializer(serializers.ModelSerializer):
         if not attrs.get('ghana_post_gps') and not (
             attrs.get('delivery_landmark') and attrs.get('delivery_directions')
         ):
-            errors['ghana_post_gps'] = 'Add a GhanaPost GPS address, or provide both a landmark and directions.'
+            errors['ghana_post_gps'] = (
+                'Add a GhanaPost GPS address, or provide both a landmark and directions.'
+            )
         if attrs.get('ghana_post_gps') and not re.fullmatch(
             r'[A-Za-z]{2}-\d{3,4}-\d{4}', attrs['ghana_post_gps'].strip()
         ):
@@ -289,10 +365,15 @@ class B2BProfileSerializer(serializers.ModelSerializer):
         if registration_status == 'informal':
             attrs['legal_structure'] = 'informal_operator'
             if not attrs.get('registration_exemption_reason'):
-                errors['registration_exemption_reason'] = 'Describe where and how the business operates.'
+                errors['registration_exemption_reason'] = (
+                    'Describe where and how the business operates.'
+                )
             if attrs.get('verification_document_type') not in {
-                'ghana_card', 'drivers_licence', 'passport',
-                'trade_association_letter', 'operating_site_evidence'
+                'ghana_card',
+                'drivers_licence',
+                'passport',
+                'trade_association_letter',
+                'operating_site_evidence',
             }:
                 errors['verification_document_type'] = 'Choose the evidence you are providing.'
         elif not attrs.get('organization_tin'):
@@ -307,7 +388,9 @@ class B2BProfileSerializer(serializers.ModelSerializer):
                 errors['verification_document_type'] = 'Select the ORC certificate option.'
         elif registration_status == 'registered' and structure in exempt:
             if not attrs.get('registration_exemption_reason'):
-                errors['registration_exemption_reason'] = 'Explain the organisation’s registration basis.'
+                errors['registration_exemption_reason'] = (
+                    'Explain the organisation’s registration basis.'
+                )
             if attrs.get('verification_document_type') != 'introductory_letter':
                 errors['verification_document_type'] = 'Select the official letter option.'
         elif registration_status == 'registered':
@@ -325,9 +408,16 @@ class B2BProfileSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
 
-        attrs['business_address'] = ', '.join(filter(None, [
-            attrs.get('delivery_street'), attrs.get('delivery_locality'),
-            attrs.get('delivery_city'), attrs.get('delivery_region'),
-            attrs.get('ghana_post_gps'),
-        ]))
+        attrs['business_address'] = ', '.join(
+            filter(
+                None,
+                [
+                    attrs.get('delivery_street'),
+                    attrs.get('delivery_locality'),
+                    attrs.get('delivery_city'),
+                    attrs.get('delivery_region'),
+                    attrs.get('ghana_post_gps'),
+                ],
+            )
+        )
         return attrs

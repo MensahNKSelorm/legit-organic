@@ -33,8 +33,7 @@ def _data(response):
     return payload['data']
 
 
-def create_checkout(*, recipient, amount_minor, redirect_url, meta, idempotency_key,
-                    channels=None):
+def create_checkout(*, recipient, amount_minor, redirect_url, meta, idempotency_key, channels=None):
     if not settings.SEEVCASH_SECRET_KEY:
         raise SeevCashError('SeevCash payments are not configured.')
     body = {

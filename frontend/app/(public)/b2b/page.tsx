@@ -316,8 +316,8 @@ export default function B2BPage() {
           <header className="workflow-head">
             <h2 id="workflow-title">From order to repeat delivery</h2>
             <p className="workflow-intro">
-              Use your tomato and onion catalogue for regular orders. Request a quote when your needs change, then
-              save the order for future deliveries.
+              Use your tomato and onion catalogue for regular orders. Request a quote when your
+              needs change, then save the order for future deliveries.
             </p>
           </header>
           <ol className="workflow-list">
@@ -350,8 +350,8 @@ export default function B2BPage() {
         <div className="reliability-copy">
           <h2>Reliable supply, without the chase</h2>
           <p>
-            Order tomatoes and onions from your catalogue, request a quote when the requirement changes, and set regular
-            supply to repeat.
+            Order tomatoes and onions from your catalogue, request a quote when the requirement
+            changes, and set regular supply to repeat.
           </p>
           <div className="reliability-rhythm" aria-hidden="true">
             <span>Order</span>

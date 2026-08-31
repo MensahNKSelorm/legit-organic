@@ -52,10 +52,15 @@ class OrderAdminForm(forms.ModelForm):
                     f'Order cannot move from {old.get_status_display()} to '
                     f'{dict(Order.STATUS_CHOICES).get(new_status, new_status)}.',
                 )
-            if new_status in {'processing', 'ready_for_dispatch', 'out_for_delivery', 'delivered'} and old.payment_status != 'success':
+            if (
+                new_status in {'processing', 'ready_for_dispatch', 'out_for_delivery', 'delivered'}
+                and old.payment_status != 'success'
+            ):
                 self.add_error('status', 'Only a successfully paid order can enter fulfilment.')
             if new_status == 'delivered':
-                self.add_error('status', 'Use the delivery PIN confirmation action to mark an order delivered.')
+                self.add_error(
+                    'status', 'Use the delivery PIN confirmation action to mark an order delivered.'
+                )
 
         new_is_test = cleaned.get('is_test', old.is_test)
         if new_is_test != old.is_test:
@@ -67,15 +72,21 @@ class OrderAdminForm(forms.ModelForm):
         new_payment = cleaned.get('payment_status', old.payment_status)
         if new_payment != old.payment_status:
             if old.order_source in ('paystack', 'seevcash', 'subscription'):
-                self.add_error('payment_status', 'Gateway payment state is controlled by verified provider responses.')
+                self.add_error(
+                    'payment_status',
+                    'Gateway payment state is controlled by verified provider responses.',
+                )
             if not (cleaned.get('payment_change_reason') or '').strip():
-                self.add_error('payment_change_reason', 'Explain why this payment correction is necessary.')
+                self.add_error(
+                    'payment_change_reason', 'Explain why this payment correction is necessary.'
+                )
             if self.request is None or not self.request.user.check_password(
                 cleaned.get('current_password') or ''
             ):
                 self.add_error('current_password', 'Enter your current password.')
             else:
                 from security.auth import verify_staff_code
+
                 verified, recovery_used = verify_staff_code(
                     self.request.user, cleaned.get('otp_token') or ''
                 )

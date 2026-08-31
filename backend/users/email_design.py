@@ -64,11 +64,22 @@ def _items_table(items, total=None):
     )
 
 
-def render_email(*, eyebrow, title, greeting, paragraphs, details=None, items=None,
-                 total=None, action=None, note=None):
+def render_email(
+    *,
+    eyebrow,
+    title,
+    greeting,
+    paragraphs,
+    details=None,
+    items=None,
+    total=None,
+    action=None,
+    note=None,
+):
     paragraph_html = ''.join(
         f'<p style="margin:0 0 16px;color:#34483c;font-size:15px;line-height:1.65">{escape(str(p))}</p>'
-        for p in paragraphs if p
+        for p in paragraphs
+        if p
     )
     action_html = ''
     if action:
@@ -103,12 +114,15 @@ Fresh produce supplied with care.<br>
 </td></tr></table></td></tr></table></body></html>'''
 
 
-def plain_text(*, title, greeting, paragraphs, details=None, items=None, total=None,
-               action=None, note=None):
+def plain_text(
+    *, title, greeting, paragraphs, details=None, items=None, total=None, action=None, note=None
+):
     lines = [title, '', f'Hello {greeting},', '']
     lines.extend(str(p) for p in paragraphs if p)
     if details:
-        lines.extend(['', *(f'{label}: {value}' for label, value in details if value not in (None, ''))])
+        lines.extend(
+            ['', *(f'{label}: {value}' for label, value in details if value not in (None, ''))]
+        )
     if items:
         lines.extend(['', 'Order summary'])
         lines.extend(f'{name} x {qty}: GHS {amount}' for name, qty, amount in items)
@@ -122,12 +136,31 @@ def plain_text(*, title, greeting, paragraphs, details=None, items=None, total=N
     return '\n'.join(lines)
 
 
-def payload(*, to, subject, stream, eyebrow, title, greeting, paragraphs,
-            details=None, items=None, total=None, action=None, note=None,
-            reply_to=None):
+def payload(
+    *,
+    to,
+    subject,
+    stream,
+    eyebrow,
+    title,
+    greeting,
+    paragraphs,
+    details=None,
+    items=None,
+    total=None,
+    action=None,
+    note=None,
+    reply_to=None,
+):
     content = dict(
-        title=title, greeting=greeting, paragraphs=paragraphs, details=details,
-        items=items, total=total, action=action, note=note,
+        title=title,
+        greeting=greeting,
+        paragraphs=paragraphs,
+        details=details,
+        items=items,
+        total=total,
+        action=action,
+        note=note,
     )
     return {
         'from': sender_for(stream),

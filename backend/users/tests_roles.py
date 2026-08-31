@@ -59,15 +59,22 @@ class StaffAccessAdminSecurityTests(TestCase):
     def setUp(self):
         call_command('setup_groups', verbosity=0)
         self.owner = User.objects.create_superuser(
-            email='owner@legitorganic.com', password='OwnerPass123!',
-            first_name='Owner', last_name='User',
+            email='owner@legitorganic.com',
+            password='OwnerPass123!',
+            first_name='Owner',
+            last_name='User',
         )
         TOTPDevice.objects.create(
-            user=self.owner, name='Owner authenticator', confirmed=True,
+            user=self.owner,
+            name='Owner authenticator',
+            confirmed=True,
         )
         self.staff = User.objects.create_user(
-            email='staff@legitorganic.com', password='StaffPass123!',
-            first_name='Staff', last_name='Member', is_staff=True,
+            email='staff@legitorganic.com',
+            password='StaffPass123!',
+            first_name='Staff',
+            last_name='Member',
+            is_staff=True,
         )
         self.operations = Group.objects.get(name='Operations')
         self.product_manager = Group.objects.get(name='Product Manager')
@@ -75,9 +82,7 @@ class StaffAccessAdminSecurityTests(TestCase):
         self.client.force_login(self.owner)
 
     def test_staff_account_shows_owner_password_and_2fa_controls(self):
-        response = self.client.get(
-            reverse('admin:users_staff_change', args=[self.staff.pk])
-        )
+        response = self.client.get(reverse('admin:users_staff_change', args=[self.staff.pk]))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(
@@ -93,30 +98,37 @@ class StaffAccessAdminSecurityTests(TestCase):
         # The form imports the verifier lazily, so patch the canonical function.
         with patch('security.auth.verify_staff_code', return_value=(True, False)):
             url = reverse('admin:users_staff_change', args=[self.staff.pk])
-            denied = self.client.post(url, {
-                'email': self.staff.email,
-                'is_active': 'on', 'groups': [self.product_manager.pk],
-                'access_change_reason': '', 'owner_password': 'wrong',
-                'owner_otp_token': '000000', '_save': 'Save',
-            })
-            self.assertEqual(denied.status_code, 200)
-            self.assertEqual(
-                set(self.staff.groups.values_list('name', flat=True)), {'Operations'}
+            denied = self.client.post(
+                url,
+                {
+                    'email': self.staff.email,
+                    'is_active': 'on',
+                    'groups': [self.product_manager.pk],
+                    'access_change_reason': '',
+                    'owner_password': 'wrong',
+                    'owner_otp_token': '000000',
+                    '_save': 'Save',
+                },
             )
+            self.assertEqual(denied.status_code, 200)
+            self.assertEqual(set(self.staff.groups.values_list('name', flat=True)), {'Operations'})
 
-            allowed = self.client.post(url, {
-                'email': self.staff.email,
-                'is_active': 'on', 'groups': [self.product_manager.pk],
-                'access_change_reason': 'Moved to catalogue operations',
-                'owner_password': 'OwnerPass123!', 'owner_otp_token': '123456',
-                '_save': 'Save',
-            })
+            allowed = self.client.post(
+                url,
+                {
+                    'email': self.staff.email,
+                    'is_active': 'on',
+                    'groups': [self.product_manager.pk],
+                    'access_change_reason': 'Moved to catalogue operations',
+                    'owner_password': 'OwnerPass123!',
+                    'owner_otp_token': '123456',
+                    '_save': 'Save',
+                },
+            )
             self.assertEqual(allowed.status_code, 302)
 
         self.staff.refresh_from_db()
-        self.assertEqual(
-            set(self.staff.groups.values_list('name', flat=True)), {'Product Manager'}
-        )
+        self.assertEqual(set(self.staff.groups.values_list('name', flat=True)), {'Product Manager'})
         event = AuditEvent.objects.get(action='staff.access_changed')
         self.assertEqual(event.reason, 'Moved to catalogue operations')
         self.assertEqual(event.before['roles'], ['Operations'])
@@ -146,18 +158,14 @@ class StaffAccessAdminSecurityTests(TestCase):
         self.staff.refresh_from_db()
         self.assertEqual(self.staff.email, 'new.staff@legitorganic.com')
         self.assertTrue(self.staff.check_password('StaffPass123!'))
-        self.assertEqual(
-            set(self.staff.groups.values_list('name', flat=True)), {'Operations'}
-        )
+        self.assertEqual(set(self.staff.groups.values_list('name', flat=True)), {'Operations'})
         self.assertFalse(Session.objects.filter(session_key=staff_session_key).exists())
         event = AuditEvent.objects.get(action='staff.access_changed')
         self.assertEqual(event.before['email'], 'staff@legitorganic.com')
         self.assertEqual(event.after['email'], 'new.staff@legitorganic.com')
 
     def test_staff_login_email_rejects_personal_and_duplicate_addresses(self):
-        User.objects.create_user(
-            email='existing@legitorganic.com', password='ExistingPass123!'
-        )
+        User.objects.create_user(email='existing@legitorganic.com', password='ExistingPass123!')
         url = reverse('admin:users_staff_change', args=[self.staff.pk])
         common = {
             'is_active': 'on',
@@ -169,9 +177,7 @@ class StaffAccessAdminSecurityTests(TestCase):
         }
         with patch('security.auth.verify_staff_code', return_value=(True, False)):
             personal = self.client.post(url, {**common, 'email': 'staff@gmail.com'})
-            duplicate = self.client.post(
-                url, {**common, 'email': 'EXISTING@legitorganic.com'}
-            )
+            duplicate = self.client.post(url, {**common, 'email': 'EXISTING@legitorganic.com'})
 
         self.assertEqual(personal.status_code, 200)
         self.assertContains(personal, 'must end in @legitorganic.com')

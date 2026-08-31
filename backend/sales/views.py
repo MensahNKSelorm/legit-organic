@@ -15,8 +15,10 @@ from users.models import User
 from users.sms import send_sms
 from .models import SalesRep, ReferredCustomer, Commission
 from .serializers import (
-    SalesRepSerializer, ReferredCustomerSerializer,
-    CommissionSerializer, AddCustomerSerializer,
+    SalesRepSerializer,
+    ReferredCustomerSerializer,
+    CommissionSerializer,
+    AddCustomerSerializer,
 )
 
 
@@ -28,9 +30,7 @@ class ValidateReferralCodeView(APIView):
         code = request.query_params.get('code', '').strip().upper()
         if not code:
             return Response({'valid': False}, status=status.HTTP_400_BAD_REQUEST)
-        rep = SalesRep.objects.filter(
-            referral_code=code, status='active'
-        ).first()
+        rep = SalesRep.objects.filter(referral_code=code, status='active').first()
         if not rep:
             return Response({'valid': False})
         return Response({'valid': True})
@@ -77,23 +77,23 @@ class CommissionListView(APIView):
     def get(self, request):
         rep = _get_rep_or_403(request.user)
 
-        commissions = rep.commissions.select_related(
-            'referred_customer__customer', 'order'
-        )
+        commissions = rep.commissions.select_related('referred_customer__customer', 'order')
         agg = commissions.aggregate(
             pending=Sum('amount', filter=Q(status='pending')),
             approved=Sum('amount', filter=Q(status='approved')),
             paid=Sum('amount', filter=Q(status='paid')),
         )
 
-        return Response({
-            'commissions': CommissionSerializer(commissions, many=True).data,
-            'summary': {
-                'pending': str(agg['pending'] or Decimal('0.00')),
-                'approved': str(agg['approved'] or Decimal('0.00')),
-                'paid': str(agg['paid'] or Decimal('0.00')),
-            },
-        })
+        return Response(
+            {
+                'commissions': CommissionSerializer(commissions, many=True).data,
+                'summary': {
+                    'pending': str(agg['pending'] or Decimal('0.00')),
+                    'approved': str(agg['approved'] or Decimal('0.00')),
+                    'paid': str(agg['paid'] or Decimal('0.00')),
+                },
+            }
+        )
 
 
 class AddCustomerView(APIView):
@@ -141,6 +141,7 @@ class AddCustomerView(APIView):
 
             try:
                 from notifications.utils import notify_admins
+
                 notify_admins(
                     type='sales_rep_customer',
                     title='New referred customer',
@@ -149,6 +150,7 @@ class AddCustomerView(APIView):
                 )
             except Exception as e:
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.error(f'sales_rep_customer notification failed: {e}', exc_info=True)
 

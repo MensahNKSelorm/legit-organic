@@ -63,9 +63,7 @@ BUSINESS_REPLY_TO_EMAIL = os.getenv('BUSINESS_REPLY_TO_EMAIL', 'operations@legit
 ORDER_REPORT_MAX_ATTEMPTS = int(os.getenv('ORDER_REPORT_MAX_ATTEMPTS', '10'))
 WEB_PUSH_VAPID_PUBLIC_KEY = os.getenv('WEB_PUSH_VAPID_PUBLIC_KEY', '')
 WEB_PUSH_VAPID_PRIVATE_KEY = os.getenv('WEB_PUSH_VAPID_PRIVATE_KEY', '')
-WEB_PUSH_VAPID_SUBJECT = os.getenv(
-    'WEB_PUSH_VAPID_SUBJECT', 'mailto:legitorganic9@gmail.com'
-)
+WEB_PUSH_VAPID_SUBJECT = os.getenv('WEB_PUSH_VAPID_SUBJECT', 'mailto:legitorganic9@gmail.com')
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://legitorganic.com')
 DASHBOARD_URL = os.getenv('DASHBOARD_URL', 'https://dashboard.legitorganic.com')
 LOGIN_REDIRECT_URL = '/admin/'
@@ -79,20 +77,18 @@ PAYSTACK_CURRENCY = os.getenv('PAYSTACK_CURRENCY', 'GHS')
 # SeevCash Checkout API. Keep the checkout secret server-side; the public key is
 # retained for future provider widgets but is not required by the hosted REST flow.
 SEEVCASH_PUBLIC_KEY = os.getenv('SEEVCASH_PUBLIC_KEY', '')
-SEEVCASH_SECRET_KEY = os.getenv(
-    'SEEVCASH_SECRET_KEY', os.getenv('SEEV_CHECKOUT_API_KEY', '')
-)
+SEEVCASH_SECRET_KEY = os.getenv('SEEVCASH_SECRET_KEY', os.getenv('SEEV_CHECKOUT_API_KEY', ''))
 SEEVCASH_CURRENCY = os.getenv('SEEVCASH_CURRENCY', 'GHS')
 SEEVCASH_BASE_URL = os.getenv('SEEVCASH_BASE_URL', 'https://api.seevplus.com').rstrip('/')
 SEEVCASH_TIMEOUT = int(os.getenv('SEEVCASH_TIMEOUT', '15'))
-SEEVCASH_WEBHOOK_SECRET = os.getenv(
-    'SEEVCASH_WEBHOOK_SECRET', os.getenv('SEEV_WEBHOOK_SECRET', '')
-)
+SEEVCASH_WEBHOOK_SECRET = os.getenv('SEEVCASH_WEBHOOK_SECRET', os.getenv('SEEV_WEBHOOK_SECRET', ''))
 
 # Cloudflare Turnstile — configurable, and OFF until a secret key is provisioned.
 # With no key set (current dev + production), registration is unaffected.
 TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
-TURNSTILE_ENABLED = os.getenv('TURNSTILE_ENABLED', 'true').lower() == 'true' and bool(TURNSTILE_SECRET_KEY)
+TURNSTILE_ENABLED = os.getenv('TURNSTILE_ENABLED', 'true').lower() == 'true' and bool(
+    TURNSTILE_SECRET_KEY
+)
 
 # Email-verification token lifetime (hours). email_verification_sent_at is enforced
 # against this in VerifyEmailView.
@@ -162,6 +158,7 @@ INSTALLED_APPS = [
     'subscriptions.apps.SubscriptionsConfig',
     'security.apps.SecurityConfig',
 ]
+
 
 def admin_permission(permission):
     return lambda request: request.user.has_perm(permission)
@@ -300,13 +297,17 @@ UNFOLD = {
                         "title": "Scheduled pricing",
                         "icon": "calendar_clock",
                         "link": "/admin/subscriptions/subscriptionplanpricechange/",
-                        "permission": admin_permission("subscriptions.view_subscriptionplanpricechange"),
+                        "permission": admin_permission(
+                            "subscriptions.view_subscriptionplanpricechange"
+                        ),
                     },
                     {
                         "title": "Price notices",
                         "icon": "mark_email_read",
                         "link": "/admin/subscriptions/subscriptionpricenotice/",
-                        "permission": admin_permission("subscriptions.view_subscriptionpricenotice"),
+                        "permission": admin_permission(
+                            "subscriptions.view_subscriptionpricenotice"
+                        ),
                     },
                     {
                         "title": "Subscribers",
@@ -402,7 +403,9 @@ UNFOLD = {
                         "title": "Supply Agreements",
                         "icon": "contract",
                         "link": "/admin/subscriptions/businesssupplyagreement/",
-                        "permission": admin_permission("subscriptions.view_businesssupplyagreement"),
+                        "permission": admin_permission(
+                            "subscriptions.view_businesssupplyagreement"
+                        ),
                     },
                     {
                         "title": "Supply Revisions",
@@ -486,12 +489,21 @@ CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': {
             'items': [
-                'heading', '|',
-                'bold', 'italic', 'underline', '|',
-                'bulletedList', 'numberedList', '|',
-                'blockQuote', '|',
-                'link', '|',
-                'undo', 'redo',
+                'heading',
+                '|',
+                'bold',
+                'italic',
+                'underline',
+                '|',
+                'bulletedList',
+                'numberedList',
+                '|',
+                'blockQuote',
+                '|',
+                'link',
+                '|',
+                'undo',
+                'redo',
             ],
             'shouldNotGroupWhenFull': True,
         },
@@ -505,21 +517,37 @@ CKEDITOR_5_CONFIGS = {
     },
     'extends': {
         'blockToolbar': [
-            'paragraph', 'heading1', 'heading2', 'heading3',
+            'paragraph',
+            'heading1',
+            'heading2',
+            'heading3',
             '|',
-            'bulletedList', 'numberedList',
+            'bulletedList',
+            'numberedList',
             '|',
             'blockQuote',
         ],
         'toolbar': {
             'items': [
-                'heading', '|',
-                'bold', 'italic', 'underline', 'strikethrough', '|',
-                'bulletedList', 'numberedList', '|',
-                'outdent', 'indent', '|',
-                'blockQuote', '|',
-                'link', '|',
-                'undo', 'redo',
+                'heading',
+                '|',
+                'bold',
+                'italic',
+                'underline',
+                'strikethrough',
+                '|',
+                'bulletedList',
+                'numberedList',
+                '|',
+                'outdent',
+                'indent',
+                '|',
+                'blockQuote',
+                '|',
+                'link',
+                '|',
+                'undo',
+                'redo',
             ],
             'shouldNotGroupWhenFull': True,
         },
@@ -572,7 +600,7 @@ CORS_ALLOWED_ORIGINS = [
     o.strip()
     for o in os.getenv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200,http://127.0.0.1:4200"
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:4200,http://127.0.0.1:4200",
     ).split(",")
 ]
 CORS_ALLOW_CREDENTIALS = True
@@ -603,19 +631,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'legitorganic.wsgi.application'
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "users.authentication.CustomerJWTAuthentication",
-    ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("users.authentication.CustomerJWTAuthentication",),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticatedOrReadOnly",),
     # ScopedRateThrottle only throttles views that declare `throttle_scope`, so
     # everything else is unaffected. Defense-in-depth: the observed bot campaign
     # used ~1 IP per request, so these per-IP limits are one layer, not the whole
     # defense (Turnstile is the other).
-    "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.ScopedRateThrottle",
-    ),
+    "DEFAULT_THROTTLE_CLASSES": ("rest_framework.throttling.ScopedRateThrottle",),
     # Exactly one trusted proxy hop (Nginx). DRF derives the throttle identity from
     # the LAST X-Forwarded-For entry (the address Nginx observed), so a client
     # cannot mint fresh identities by spoofing the first X-Forwarded-For value.
@@ -637,7 +659,6 @@ REST_FRAMEWORK = {
         "promo_validate": "30/hour",
     },
 }
-
 
 
 # Database
@@ -702,9 +723,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-PRIVATE_B2B_ROOT = Path(
-    os.environ.get('PRIVATE_B2B_ROOT', BASE_DIR / 'private_media' / 'b2b')
-)
+PRIVATE_B2B_ROOT = Path(os.environ.get('PRIVATE_B2B_ROOT', BASE_DIR / 'private_media' / 'b2b'))
 
 # USDA FoodData Central is queried server-side. Never expose this key to the browser.
 USDA_FDC_API_KEY = os.getenv('USDA_FDC_API_KEY', '')
@@ -718,10 +737,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 
-LOG_FILE = os.environ.get(
-    'DJANGO_LOG_FILE',
-    os.path.join(BASE_DIR, 'django_errors.log')
-)
+LOG_FILE = os.environ.get('DJANGO_LOG_FILE', os.path.join(BASE_DIR, 'django_errors.log'))
 
 LOGGING = {
     'version': 1,

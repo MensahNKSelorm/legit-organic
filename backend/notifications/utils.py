@@ -11,22 +11,23 @@ logger = logging.getLogger(__name__)
 
 def notify_admins(type, title, body, link=''):
     from .models import Notification
+
     admins = User.objects.filter(is_staff=True)
-    notifications = Notification.objects.bulk_create([
-        Notification(
-            recipient=admin,
-            type=type,
-            title=title,
-            body=body,
-            link=link,
-        )
-        for admin in admins
-    ])
+    notifications = Notification.objects.bulk_create(
+        [
+            Notification(
+                recipient=admin,
+                type=type,
+                title=title,
+                body=body,
+                link=link,
+            )
+            for admin in admins
+        ]
+    )
     notification_ids = [notification.pk for notification in notifications]
     if notification_ids:
-        transaction.on_commit(
-            lambda: send_web_push_for_notifications(notification_ids)
-        )
+        transaction.on_commit(lambda: send_web_push_for_notifications(notification_ids))
 
 
 def send_web_push_for_notifications(notification_ids):
@@ -42,13 +43,18 @@ def send_web_push_for_notifications(notification_ids):
             pk__in=notification_ids,
         ).select_related('recipient')
         for notification in notifications:
-            payload = json.dumps({
-                'title': notification.title,
-                'body': notification.body,
-                'url': f'{settings.DASHBOARD_URL}{notification.link}'
-                if notification.link else settings.DASHBOARD_URL,
-                'tag': f'legitorganic-notification-{notification.pk}',
-            })
+            payload = json.dumps(
+                {
+                    'title': notification.title,
+                    'body': notification.body,
+                    'url': (
+                        f'{settings.DASHBOARD_URL}{notification.link}'
+                        if notification.link
+                        else settings.DASHBOARD_URL
+                    ),
+                    'tag': f'legitorganic-notification-{notification.pk}',
+                }
+            )
             subscriptions = WebPushSubscription.objects.filter(
                 recipient=notification.recipient,
                 is_active=True,
@@ -77,7 +83,8 @@ def send_web_push_for_notifications(notification_ids):
                     else:
                         logger.warning(
                             'Web push failed for subscription=%s: %s',
-                            subscription.pk, exc,
+                            subscription.pk,
+                            exc,
                         )
     except Exception:
         logger.exception('Web push notification fan-out failed')

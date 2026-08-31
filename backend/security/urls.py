@@ -1,8 +1,11 @@
 from django.urls import path
 
 from .views import (
-    anonymize_customer, exceptional_delete,
-    security_reset_staff, security_setup, security_verify,
+    anonymize_customer,
+    exceptional_delete,
+    security_reset_staff,
+    security_setup,
+    security_verify,
 )
 
 app_name = 'staff-security'

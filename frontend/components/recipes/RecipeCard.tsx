@@ -1,27 +1,30 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import type { Recipe } from '@/types'
-import { getMediaUrl } from '@/lib/media'
+import Link from "next/link";
+import Image from "next/image";
+import type { Recipe } from "@/types";
+import { getMediaUrl } from "@/lib/media";
 
-const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim()
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
 
 const difficultyConfig: Record<string, { label: string; classes: string }> = {
-  easy:   { label: 'Easy',     classes: 'bg-[#E8F5E9] text-[#2E7D32] border border-[#2E7D32]/30' },
-  medium: { label: 'Medium',   classes: 'bg-[#FFF8E1] text-[#F57F17] border border-[#F57F17]/30' },
-  hard:   { label: 'Advanced', classes: 'bg-[#FFEBEE] text-[#C62828] border border-[#C62828]/30' },
-}
+  easy: { label: "Easy", classes: "bg-[#E8F5E9] text-[#2E7D32] border border-[#2E7D32]/30" },
+  medium: { label: "Medium", classes: "bg-[#FFF8E1] text-[#F57F17] border border-[#F57F17]/30" },
+  hard: { label: "Advanced", classes: "bg-[#FFEBEE] text-[#C62828] border border-[#C62828]/30" },
+};
 
 function formatTime(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m ? `${h}h ${m}m` : `${h}h`
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
 }
 
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
-  const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, classes: 'text-charcoal/60 bg-charcoal/10' }
-  const coverSrc = getMediaUrl(recipe.cover_image)
-  const totalTime = recipe.prep_time + recipe.cook_time
+  const diff = difficultyConfig[recipe.difficulty] ?? {
+    label: recipe.difficulty,
+    classes: "text-charcoal/60 bg-charcoal/10",
+  };
+  const coverSrc = getMediaUrl(recipe.cover_image);
+  const totalTime = recipe.prep_time + recipe.cook_time;
 
   return (
     <article className="group relative flex flex-col overflow-hidden border-b border-[#0D3B2A]/20 bg-transparent dark:border-white/15">
@@ -37,7 +40,17 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
           />
         ) : (
           <div className="h-full bg-gradient-to-br from-earth-brown/10 to-ghana-gold/20 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#5B3E31" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.25 }}>
+            <svg
+              viewBox="0 0 24 24"
+              width="52"
+              height="52"
+              fill="none"
+              stroke="#5B3E31"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ opacity: 0.25 }}
+            >
               <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
               <path d="M7 2v20" />
               <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
@@ -52,7 +65,11 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
 
       {/* Body */}
       <div className="p-6 flex flex-col flex-1">
-        <Link href={`/recipes/${recipe.slug}`} aria-label={`Open ${recipe.title} recipe`} className="before:absolute before:inset-0 before:content-['']">
+        <Link
+          href={`/recipes/${recipe.slug}`}
+          aria-label={`Open ${recipe.title} recipe`}
+          className="before:absolute before:inset-0 before:content-['']"
+        >
           <h3 className="font-display text-xl font-bold text-forest-green dark:text-[#faf7f0] mb-2 group-hover:text-leaf-green dark:group-hover:text-[#81C784] transition-colors line-clamp-2">
             {recipe.title}
           </h3>
@@ -90,5 +107,5 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         </div>
       </div>
     </article>
-  )
+  );
 }

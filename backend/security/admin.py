@@ -8,8 +8,10 @@ from .models import AuditEvent
 def export_audit_events(modeladmin, request, queryset):
     from .exports import generate_audit_excel
     from .audit import record_event
+
     record_event(
-        action='security.audit_exported', request=request,
+        action='security.audit_exported',
+        request=request,
         severity=AuditEvent.Severity.CRITICAL,
         metadata={'count': queryset.count()},
     )
@@ -20,17 +22,33 @@ def export_audit_events(modeladmin, request, queryset):
 class AuditEventAdmin(ModelAdmin):
     actions = [export_audit_events]
     list_display = [
-        'created_at', 'severity', 'action', 'actor_email',
-        'target_type', 'target_label', 'ip_address',
+        'created_at',
+        'severity',
+        'action',
+        'actor_email',
+        'target_type',
+        'target_label',
+        'ip_address',
     ]
     list_filter = ['severity', 'action', 'target_type', 'created_at']
     search_fields = ['actor_email', 'action', 'target_label', 'target_id', 'reason']
     date_hierarchy = 'created_at'
     ordering = ['-created_at']
     readonly_fields = [
-        'created_at', 'severity', 'action', 'actor', 'actor_email',
-        'target_type', 'target_id', 'target_label', 'reason', 'before',
-        'after', 'ip_address', 'user_agent', 'metadata',
+        'created_at',
+        'severity',
+        'action',
+        'actor',
+        'actor_email',
+        'target_type',
+        'target_id',
+        'target_label',
+        'reason',
+        'before',
+        'after',
+        'ip_address',
+        'user_agent',
+        'metadata',
     ]
 
     def has_module_permission(self, request):

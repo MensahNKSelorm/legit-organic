@@ -25,9 +25,11 @@ def _attempt(delivery, order):
     try:
         if delivery.channel == 'email':
             from users.emails import send_order_status_email
+
             send_order_status_email(order)
         else:
             from users.sms import send_order_status_sms
+
             if not send_order_status_sms(order):
                 raise RuntimeError('Wigal did not accept the SMS for processing.')
     except Exception as exc:
@@ -35,15 +37,23 @@ def _attempt(delivery, order):
         delivery.error = str(exc)[:500]
         logger.exception(
             'Order notification failed order=%s event=%s channel=%s',
-            order.reference, delivery.event, delivery.channel,
+            order.reference,
+            delivery.event,
+            delivery.channel,
         )
     else:
         delivery.status = 'sent'
         delivery.error = ''
         delivery.sent_at = timezone.now()
-    delivery.save(update_fields=[
-        'status', 'attempts', 'error', 'last_attempt_at', 'sent_at',
-    ])
+    delivery.save(
+        update_fields=[
+            'status',
+            'attempts',
+            'error',
+            'last_attempt_at',
+            'sent_at',
+        ]
+    )
     return delivery.status == 'sent'
 
 
@@ -51,7 +61,9 @@ def deliver_order_status_notifications(order, *, channels=('email', 'sms')):
     results = {}
     for channel in channels:
         delivery = OrderNotificationDelivery.objects.create(
-            order=order, event=order.status, channel=channel,
+            order=order,
+            event=order.status,
+            channel=channel,
         )
         results[channel] = _attempt(delivery, order)
     return results
@@ -68,17 +80,21 @@ def retry_failed_order_notifications(order_id, event):
     channels = sorted({delivery.channel for delivery in failed})
     if event == 'out_for_delivery':
         if order.notification_deliveries.filter(event=event, channel='sms').count() >= 3:
-            order.notification_deliveries.filter(
-                event=event, status='failed'
-            ).update(status='exhausted')
+            order.notification_deliveries.filter(event=event, status='failed').update(
+                status='exhausted'
+            )
             return {'exhausted': 'Automatic retry limit reached.'}
         if order.status != 'out_for_delivery':
             return {'skipped': 'Order is no longer out for delivery.'}
         order.issue_delivery_pin()
-        order.save(update_fields=[
-            'delivery_pin_hash', 'delivery_pin_expires_at',
-            'delivery_pin_attempts', 'updated_at',
-        ])
+        order.save(
+            update_fields=[
+                'delivery_pin_hash',
+                'delivery_pin_expires_at',
+                'delivery_pin_attempts',
+                'updated_at',
+            ]
+        )
         # The former email may contain a PIN that has just been invalidated.
         # Resend both channels with the same newly issued PIN.
         channels = ['email', 'sms']
@@ -95,7 +111,5 @@ def retry_failed_order_notifications(order_id, event):
         if not channels:
             return {'exhausted': 'Automatic retry limit reached.'}
 
-    order.notification_deliveries.filter(
-        event=event, status='failed'
-    ).update(status='superseded')
+    order.notification_deliveries.filter(event=event, status='failed').update(status='superseded')
     return deliver_order_status_notifications(order, channels=channels)

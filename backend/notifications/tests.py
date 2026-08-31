@@ -11,10 +11,13 @@ from .utils import notify_admins
 class NotificationApiTests(TestCase):
     def setUp(self):
         self.staff = User.objects.create_user(
-            email='operations@example.com', password='x', is_staff=True,
+            email='operations@example.com',
+            password='x',
+            is_staff=True,
         )
         self.customer = User.objects.create_user(
-            email='customer@example.com', password='x',
+            email='customer@example.com',
+            password='x',
         )
 
     @override_settings(
@@ -29,7 +32,9 @@ class NotificationApiTests(TestCase):
             'keys': {'p256dh': 'device-key', 'auth': 'device-auth'},
         }
         response = client.post(
-            '/api/notifications/push/subscription/', payload, format='json',
+            '/api/notifications/push/subscription/',
+            payload,
+            format='json',
         )
         self.assertEqual(response.status_code, 200)
         subscription = WebPushSubscription.objects.get(recipient=self.staff)
@@ -37,7 +42,8 @@ class NotificationApiTests(TestCase):
 
         response = client.delete(
             '/api/notifications/push/subscription/',
-            {'endpoint': payload['endpoint']}, format='json',
+            {'endpoint': payload['endpoint']},
+            format='json',
         )
         self.assertEqual(response.status_code, 200)
         subscription.refresh_from_db()
@@ -48,7 +54,8 @@ class NotificationApiTests(TestCase):
         client.force_login(self.customer)
         self.assertEqual(client.get('/api/notifications/').status_code, 403)
         self.assertEqual(
-            client.get('/api/notifications/push/config/').status_code, 403,
+            client.get('/api/notifications/push/config/').status_code,
+            403,
         )
 
     def test_admin_session_can_read_notification_feed(self):
@@ -69,7 +76,9 @@ class NotificationApiTests(TestCase):
     def test_notification_is_recorded_when_push_is_not_configured(self):
         with self.captureOnCommitCallbacks(execute=True):
             notify_admins(
-                'order_placed', 'New WhatsApp order', 'LO-TEST was submitted.',
+                'order_placed',
+                'New WhatsApp order',
+                'LO-TEST was submitted.',
                 '/admin/orders/order/1/change/',
             )
         notification = Notification.objects.get(recipient=self.staff)
@@ -86,11 +95,14 @@ class NotificationApiTests(TestCase):
         WebPushSubscription.objects.create(
             recipient=self.staff,
             endpoint='https://push.example.test/subscription/2',
-            p256dh='device-key', auth='device-auth',
+            p256dh='device-key',
+            auth='device-auth',
         )
         with self.captureOnCommitCallbacks(execute=True):
             notify_admins(
-                'order_paid', 'Order paid', 'LO-PAID has been verified.',
+                'order_paid',
+                'Order paid',
+                'LO-PAID has been verified.',
                 '/admin/orders/order/2/change/',
             )
         mock_webpush.assert_called_once()

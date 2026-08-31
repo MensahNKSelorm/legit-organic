@@ -1,44 +1,48 @@
-'use client'
+"use client";
 
-import { useMemo, useState } from 'react'
-import type { Product } from '@/types'
-import ProductCard from './ProductCard'
+import { useMemo, useState } from "react";
+import type { Product } from "@/types";
+import ProductCard from "./ProductCard";
 
-const INITIAL_COUNT = 18
-const LOAD_MORE_COUNT = 12
+const INITIAL_COUNT = 18;
+const LOAD_MORE_COUNT = 12;
 
-type SortOption = 'market' | 'price-low' | 'price-high' | 'name'
+type SortOption = "market" | "price-low" | "price-high" | "name";
 
 interface MarketGridProps {
-  products: Product[]
-  preview?: boolean
-  featureFirst?: boolean
+  products: Product[];
+  preview?: boolean;
+  featureFirst?: boolean;
 }
 
-export default function MarketGrid({ products, preview = false, featureFirst = false }: MarketGridProps) {
-  const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<SortOption>('market')
-  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT)
+export default function MarketGrid({
+  products,
+  preview = false,
+  featureFirst = false,
+}: MarketGridProps) {
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<SortOption>("market");
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
 
   const filteredProducts = useMemo(() => {
-    const search = query.trim().toLocaleLowerCase()
+    const search = query.trim().toLocaleLowerCase();
     const matches = search
       ? products.filter((product) =>
           [product.name, product.category?.name, product.region?.name, product.description]
             .filter(Boolean)
             .some((value) => String(value).toLocaleLowerCase().includes(search))
         )
-      : [...products]
+      : [...products];
 
-    if (sort === 'price-low') matches.sort((a, b) => Number(a.price) - Number(b.price))
-    if (sort === 'price-high') matches.sort((a, b) => Number(b.price) - Number(a.price))
-    if (sort === 'name') matches.sort((a, b) => a.name.localeCompare(b.name))
-    return matches
-  }, [products, query, sort])
+    if (sort === "price-low") matches.sort((a, b) => Number(a.price) - Number(b.price));
+    if (sort === "price-high") matches.sort((a, b) => Number(b.price) - Number(a.price));
+    if (sort === "name") matches.sort((a, b) => a.name.localeCompare(b.name));
+    return matches;
+  }, [products, query, sort]);
 
-  const visibleProducts = filteredProducts.slice(0, visibleCount)
-  const canLoadMore = visibleCount < filteredProducts.length
-  const useFeaturedCard = featureFirst && !query.trim() && sort === 'market'
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const canLoadMore = visibleCount < filteredProducts.length;
+  const useFeaturedCard = featureFirst && !query.trim() && sort === "market";
 
   return (
     <div>
@@ -60,8 +64,8 @@ export default function MarketGrid({ products, preview = false, featureFirst = f
             type="search"
             value={query}
             onChange={(event) => {
-              setQuery(event.target.value)
-              setVisibleCount(INITIAL_COUNT)
+              setQuery(event.target.value);
+              setVisibleCount(INITIAL_COUNT);
             }}
             placeholder="Search produce, grains or pantry staples"
             className="h-12 w-full border border-[#0D3B2A]/25 bg-transparent pr-4 pl-12 text-sm text-[#0D3B2A] outline-none placeholder:text-[#5B3E31]/65 focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20 dark:border-white/20 dark:text-white dark:placeholder:text-[#B8D4BD]/70 dark:focus:border-[#F4C430] dark:focus:ring-[#F4C430]/20"
@@ -75,8 +79,8 @@ export default function MarketGrid({ products, preview = false, featureFirst = f
           <select
             value={sort}
             onChange={(event) => {
-              setSort(event.target.value as SortOption)
-              setVisibleCount(INITIAL_COUNT)
+              setSort(event.target.value as SortOption);
+              setVisibleCount(INITIAL_COUNT);
             }}
             className="h-12 min-w-0 bg-transparent text-sm font-semibold text-[#0D3B2A] outline-none dark:text-white"
             aria-label="Sort market products"
@@ -89,17 +93,20 @@ export default function MarketGrid({ products, preview = false, featureFirst = f
         </label>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-4 text-sm text-[#5B3E31] dark:text-[#B8D4BD]" aria-live="polite">
+      <div
+        className="mt-5 flex items-center justify-between gap-4 text-sm text-[#5B3E31] dark:text-[#B8D4BD]"
+        aria-live="polite"
+      >
         <p>
-          <strong className="text-[#0D3B2A] dark:text-white">{filteredProducts.length}</strong>{' '}
-          {filteredProducts.length === 1 ? 'item' : 'items'} found
+          <strong className="text-[#0D3B2A] dark:text-white">{filteredProducts.length}</strong>{" "}
+          {filteredProducts.length === 1 ? "item" : "items"} found
         </p>
         {query && (
           <button
             type="button"
             onClick={() => {
-              setQuery('')
-              setVisibleCount(INITIAL_COUNT)
+              setQuery("");
+              setVisibleCount(INITIAL_COUNT);
             }}
             className="min-h-11 border-b border-current font-semibold text-[#2E7D32] dark:text-[#F4C430]"
           >
@@ -110,8 +117,12 @@ export default function MarketGrid({ products, preview = false, featureFirst = f
 
       {filteredProducts.length === 0 ? (
         <div className="mt-8 border-y border-[#0D3B2A]/20 py-16 text-center dark:border-white/15">
-          <p className="display-organic text-3xl text-[#0D3B2A] dark:text-white">Nothing matched that search.</p>
-          <p className="mt-2 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">Try a shorter name or browse another stall.</p>
+          <p className="display-organic text-3xl text-[#0D3B2A] dark:text-white">
+            Nothing matched that search.
+          </p>
+          <p className="mt-2 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">
+            Try a shorter name or browse another stall.
+          </p>
         </div>
       ) : (
         <>
@@ -119,7 +130,7 @@ export default function MarketGrid({ products, preview = false, featureFirst = f
             {visibleProducts.map((product, index) => (
               <div
                 key={product.id}
-                className={`h-full ${index === 0 && useFeaturedCard ? 'sm:col-span-2 lg:col-span-2' : ''}`}
+                className={`h-full ${index === 0 && useFeaturedCard ? "sm:col-span-2 lg:col-span-2" : ""}`}
               >
                 <ProductCard
                   product={product}
@@ -147,5 +158,5 @@ export default function MarketGrid({ products, preview = false, featureFirst = f
         </>
       )}
     </div>
-  )
+  );
 }

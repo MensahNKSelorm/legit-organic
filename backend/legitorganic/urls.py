@@ -24,15 +24,12 @@ urlpatterns = [
     path('staff/security/', include('security.urls')),
     path('admin/writing-assistant/', writing_assistant, name='writing-assistant'),
     path('admin/', admin.site.urls),
-
     # Health check
     path('api/health/', health, name='health'),
-
     # JWT auth
     path('api/auth/token/', VerifiedTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', ThrottledTokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/logout/', LogoutView.as_view(), name='logout'),
-
     # Domain apps
     path('api/users/', include('users.urls')),
     path('api/products/', include('products.urls')),

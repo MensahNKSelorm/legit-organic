@@ -13,8 +13,12 @@ class StaffSecurityMiddleware:
     """Staff-only session expiry and optional second-factor enforcement."""
 
     EXEMPT_PREFIXES = (
-        '/admin/login/', '/admin/logout/', '/staff/security/', '/staff/setup/',
-        '/static/', '/media/',
+        '/admin/login/',
+        '/admin/logout/',
+        '/staff/security/',
+        '/staff/setup/',
+        '/static/',
+        '/media/',
     )
 
     def __init__(self, get_response):
@@ -36,8 +40,10 @@ class StaffSecurityMiddleware:
         absolute = settings.STAFF_ABSOLUTE_SESSION_SECONDS
         if now - last_seen > idle or now - started > absolute:
             record_event(
-                action='security.session_expired', request=request,
-                severity=AuditEvent.Severity.SENSITIVE, target=request.user,
+                action='security.session_expired',
+                request=request,
+                severity=AuditEvent.Severity.SENSITIVE,
+                target=request.user,
                 metadata={'cause': 'idle' if now - last_seen > idle else 'absolute'},
             )
             logout(request)
@@ -49,11 +55,7 @@ class StaffSecurityMiddleware:
         profile, _ = StaffSecurityProfile.objects.get_or_create(user=request.user)
         has_device = request.user.totpdevice_set.filter(confirmed=True).exists()
         if settings.STAFF_2FA_MODE == 'enroll':
-            if (
-                settings.STAFF_OWNER_2FA_REQUIRED
-                and request.user.is_superuser
-                and not has_device
-            ):
+            if settings.STAFF_OWNER_2FA_REQUIRED and request.user.is_superuser and not has_device:
                 return redirect('staff-security:setup')
             return None
         if not has_device:

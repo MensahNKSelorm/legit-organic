@@ -26,9 +26,21 @@
     </select>
     <label for="lo-writing-instruction">What should this say?</label>
     {% if opts.model_name == 'blogpost' %}
-      <textarea id="lo-writing-instruction" data-writing-instruction rows="4" maxlength="1600" placeholder="Topic, audience, key facts, angle, and what the reader should take away."></textarea>
+      <textarea
+        id="lo-writing-instruction"
+        data-writing-instruction
+        rows="4"
+        maxlength="1600"
+        placeholder="Topic, audience, key facts, angle, and what the reader should take away."
+      ></textarea>
     {% else %}
-      <textarea id="lo-writing-instruction" data-writing-instruction rows="2" maxlength="800" placeholder="Give the assistant a short, factual brief."></textarea>
+      <textarea
+        id="lo-writing-instruction"
+        data-writing-instruction
+        rows="2"
+        maxlength="800"
+        placeholder="Give the assistant a short, factual brief."
+      ></textarea>
     {% endif %}
     <button type="button" data-writing-generate>Generate draft</button>
   </div>

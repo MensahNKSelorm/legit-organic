@@ -13,14 +13,19 @@ def send_owner_report_once(order_id, event):
     """Send one owner report per order milestone, safely under concurrency."""
     config = {
         'whatsapp_submitted': (
-            'submission_report_sent_at', 'submission_report_attempts',
-            'submission_report_error'
+            'submission_report_sent_at',
+            'submission_report_attempts',
+            'submission_report_error',
         ),
         'payment_success': (
-            'payment_report_sent_at', 'payment_report_attempts', 'payment_report_error'
+            'payment_report_sent_at',
+            'payment_report_attempts',
+            'payment_report_error',
         ),
         'delivered': (
-            'delivery_report_sent_at', 'delivery_report_attempts', 'delivery_report_error'
+            'delivery_report_sent_at',
+            'delivery_report_attempts',
+            'delivery_report_error',
         ),
     }.get(event)
     if not config:
@@ -46,13 +51,13 @@ def send_owner_report_once(order_id, event):
             # Lock the base order row first. PostgreSQL cannot apply FOR UPDATE
             # to the nullable side of the promo-code outer join.
             order = (
-                Order.objects
-                .select_related('user', 'promo_code')
+                Order.objects.select_related('user', 'promo_code')
                 .prefetch_related('items__product')
                 .get(pk=order_id)
             )
 
             from users.emails import send_owner_order_report
+
             send_owner_order_report(order, event)
             setattr(locked, field, timezone.now())
             setattr(locked, error_field, '')

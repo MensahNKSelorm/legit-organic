@@ -1,92 +1,109 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { useCart } from '@/lib/cart'
-import { getMediaUrl } from '@/lib/media'
-import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-placeholders'
-import { api } from '@/lib/api'
-import type { PromoCode } from '@/types'
-import CheckoutButton from './CheckoutButton'
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useCart } from "@/lib/cart";
+import { getMediaUrl } from "@/lib/media";
+import { PRODUCT_BLUR_DATA_URL } from "@/lib/image-placeholders";
+import { api } from "@/lib/api";
+import type { PromoCode } from "@/types";
+import CheckoutButton from "./CheckoutButton";
 
 interface CartDrawerProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
 const PLACEHOLDERS = [
-  '/images/products/p1.webp',
-  '/images/products/p2.webp',
-  '/images/products/p3.webp',
-  '/images/products/p4.webp',
-]
+  "/images/products/p1.webp",
+  "/images/products/p2.webp",
+  "/images/products/p3.webp",
+  "/images/products/p4.webp",
+];
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
-  const { items, total, itemCount, updateQuantity, removeItem } = useCart()
-  const drawerRef = useRef<HTMLDivElement>(null)
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
-  const previousFocusRef = useRef<HTMLElement | null>(null)
+  const { items, total, itemCount, updateQuantity, removeItem } = useCart();
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  const [promoCode, setPromoCode] = useState('')
-  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null)
-  const [promoError, setPromoError] = useState('')
-  const [promoLoading, setPromoLoading] = useState(false)
-
-  useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden'
-    else document.body.style.overflow = ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
 
   useEffect(() => {
-    if (!open) return
-    previousFocusRef.current = document.activeElement as HTMLElement
-    closeButtonRef.current?.focus()
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    closeButtonRef.current?.focus();
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { onClose(); return }
-      if (e.key !== 'Tab' || !drawerRef.current) return
-      const focusable = Array.from(drawerRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
-      if (!focusable.length) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !drawerRef.current) return;
+      const focusable = Array.from(
+        drawerRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey); previousFocusRef.current?.focus() }
-  }, [open, onClose])
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      previousFocusRef.current?.focus();
+    };
+  }, [open, onClose]);
 
   const handleApplyPromo = async () => {
-    if (!promoCode.trim()) return
-    setPromoLoading(true)
-    setPromoError('')
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError("");
     try {
-      const result = await api.orders.validatePromo(promoCode.trim(), total)
-      setAppliedPromo(result)
+      const result = await api.orders.validatePromo(promoCode.trim(), total);
+      setAppliedPromo(result);
     } catch (err: unknown) {
-      setPromoError(err instanceof Error ? err.message : 'Invalid promo code.')
+      setPromoError(err instanceof Error ? err.message : "Invalid promo code.");
     } finally {
-      setPromoLoading(false)
+      setPromoLoading(false);
     }
-  }
+  };
 
   const handleRemovePromo = () => {
-    setAppliedPromo(null)
-    setPromoCode('')
-    setPromoError('')
-  }
+    setAppliedPromo(null);
+    setPromoCode("");
+    setPromoError("");
+  };
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
     <>
       {/* Backdrop — full screen, z-40 */}
       <div
         className={[
-          'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300',
-          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-        ].join(' ')}
+          "fixed inset-0 z-40 bg-black/50 transition-opacity duration-300",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        ].join(" ")}
         onClick={onClose}
         aria-hidden
       />
@@ -99,27 +116,29 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         aria-modal="true"
         aria-label="Shopping cart"
         className={[
-          'fixed top-0 right-0 z-50',
-          'h-[100dvh] w-full max-w-lg',
-          'flex flex-col overflow-hidden',
-          'border-l border-[#0D3B2A]/15 bg-[#FAF7F0] shadow-[-12px_0_36px_rgba(13,59,42,.14)] dark:border-white/15 dark:bg-[#171B18] dark:shadow-[-12px_0_36px_rgba(0,0,0,.35)]',
-          'transition-transform duration-300 ease-in-out',
-          open ? 'translate-x-0' : 'translate-x-full',
-        ].join(' ')}
+          "fixed top-0 right-0 z-50",
+          "h-[100dvh] w-full max-w-lg",
+          "flex flex-col overflow-hidden",
+          "border-l border-[#0D3B2A]/15 bg-[#FAF7F0] shadow-[-12px_0_36px_rgba(13,59,42,.14)] dark:border-white/15 dark:bg-[#171B18] dark:shadow-[-12px_0_36px_rgba(0,0,0,.35)]",
+          "transition-transform duration-300 ease-in-out",
+          open ? "translate-x-0" : "translate-x-full",
+        ].join(" ")}
       >
         {/* 1. Header — flex-shrink-0 */}
         <div className="flex shrink-0 items-start justify-between border-b border-[#0D3B2A]/20 px-6 py-7 dark:border-white/15 md:px-8">
           <div>
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:text-[#F4C430]">Current harvest</p>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:text-[#F4C430]">
+              Current harvest
+            </p>
             <div className="flex flex-wrap items-baseline gap-x-2">
-            <h2 className="display-organic text-4xl text-[#0D3B2A] dark:text-[#faf7f0]">
-              Your market bag
-            </h2>
-            {itemCount > 0 && (
-              <span className="text-sm font-semibold text-[#5B3E31] dark:text-[#9ca3af]">
-                ({itemCount} {itemCount === 1 ? 'item' : 'items'})
-              </span>
-            )}
+              <h2 className="display-organic text-4xl text-[#0D3B2A] dark:text-[#faf7f0]">
+                Your market bag
+              </h2>
+              {itemCount > 0 && (
+                <span className="text-sm font-semibold text-[#5B3E31] dark:text-[#9ca3af]">
+                  ({itemCount} {itemCount === 1 ? "item" : "items"})
+                </span>
+              )}
             </div>
           </div>
           <button
@@ -128,11 +147,18 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             aria-label="Close cart"
             className="w-11 h-11 flex items-center justify-center border border-[#0D3B2A]/20 hover:bg-[#0D3B2A] hover:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-[#0D3B2A] transition-colors text-[#0D3B2A] dark:text-[#faf7f0]"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" strokeWidth="2.5"
-                 strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -142,15 +168,29 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           {items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
               <div className="relative mb-2 flex h-24 w-24 items-center justify-center border border-[#0D3B2A]/20 text-[#0D3B2A] dark:border-white/20 dark:text-[#F4C430]">
-                <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="52"
+                  height="52"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.25"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
                   <path d="M4.5 8.5h15l-1.2 11H5.7l-1.2-11Z" />
                   <path d="M8.5 8.5c0-2.7 1.3-4.5 3.5-4.5s3.5 1.8 3.5 4.5" />
                   <path d="M8 13h8" />
                 </svg>
                 <span className="absolute -bottom-2 -right-2 h-5 w-5 bg-[#F4C430]" aria-hidden />
               </div>
-              <h3 className="display-organic text-3xl text-[#0D3B2A] dark:text-white">Your bag is waiting.</h3>
-              <p className="max-w-xs text-[#5B3E31] dark:text-[#B8D4BD]">Fill it with something fresh from the current harvest.</p>
+              <h3 className="display-organic text-3xl text-[#0D3B2A] dark:text-white">
+                Your bag is waiting.
+              </h3>
+              <p className="max-w-xs text-[#5B3E31] dark:text-[#B8D4BD]">
+                Fill it with something fresh from the current harvest.
+              </p>
               <Link
                 href="/products"
                 onClick={onClose}
@@ -163,19 +203,22 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             <ul className="flex flex-col gap-4">
               {items.map((item) => {
                 const getProductImage = () => {
-                  const p = item.product
+                  const p = item.product;
                   if (p.images && p.images.length > 0) {
-                    return getMediaUrl(p.images[0].image) || '/images/products/p1.webp'
+                    return getMediaUrl(p.images[0].image) || "/images/products/p1.webp";
                   }
                   if (p.image) {
-                    return getMediaUrl(p.image) || '/images/products/p1.webp'
+                    return getMediaUrl(p.image) || "/images/products/p1.webp";
                   }
-                  return PLACEHOLDERS[p.id % PLACEHOLDERS.length]
-                }
-                const imageSrc = getProductImage()
-                const subtotal = (parseFloat(item.product.price) * item.quantity).toFixed(2)
+                  return PLACEHOLDERS[p.id % PLACEHOLDERS.length];
+                };
+                const imageSrc = getProductImage();
+                const subtotal = (parseFloat(item.product.price) * item.quantity).toFixed(2);
                 return (
-                  <li key={item.product.id} className="flex gap-4 py-4 border-b border-[#E6D8BD] dark:border-[#374151] last:border-0">
+                  <li
+                    key={item.product.id}
+                    className="flex gap-4 py-4 border-b border-[#E6D8BD] dark:border-[#374151] last:border-0"
+                  >
                     {/* Product image */}
                     <div className="relative w-[76px] h-[88px] overflow-hidden bg-[#F5F0E6] dark:bg-[#273029] shrink-0">
                       <Image
@@ -235,7 +278,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                       </div>
                     </div>
                   </li>
-                )
+                );
               })}
             </ul>
           )}
@@ -248,14 +291,16 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               <input
                 aria-label="Promo code"
                 aria-invalid={Boolean(promoError)}
-                aria-describedby={promoError ? 'promo-code-error' : undefined}
+                aria-describedby={promoError ? "promo-code-error" : undefined}
                 type="text"
                 value={promoCode}
                 onChange={(e) => {
-                  setPromoCode(e.target.value.toUpperCase())
-                  setPromoError('')
+                  setPromoCode(e.target.value.toUpperCase());
+                  setPromoError("");
                 }}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyPromo() }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleApplyPromo();
+                }}
                 placeholder="Promo code"
                 disabled={!!appliedPromo}
                 className="flex-1 border border-[#E6D8BD] bg-transparent px-3 py-2 text-sm text-[#0D3B2A] placeholder:text-[#5B3E31]/45 focus:border-[#2E7D32] focus:outline-none focus:ring-1 focus:ring-[#2E7D32] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/25 dark:text-[#faf7f0] dark:placeholder:text-white/40 dark:focus:border-[#F4C430] dark:focus:ring-[#F4C430]"
@@ -265,11 +310,13 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 disabled={promoLoading || !!appliedPromo || !promoCode.trim()}
                 className="bg-[#0D3B2A] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F4C430] dark:text-[#0D3B2A]"
               >
-                {promoLoading ? '…' : 'Apply'}
+                {promoLoading ? "…" : "Apply"}
               </button>
             </div>
             {promoError && (
-              <p id="promo-code-error" role="alert" className="mt-2 text-xs text-red-500">{promoError}</p>
+              <p id="promo-code-error" role="alert" className="mt-2 text-xs text-red-500">
+                {promoError}
+              </p>
             )}
             {appliedPromo && (
               <div className="mt-2 flex items-center justify-between">
@@ -293,14 +340,22 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             <div className="mb-4 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#5B3E31] dark:text-[#9ca3af]">Product subtotal</span>
-                <span className="text-sm text-[#0D3B2A] dark:text-[#faf7f0]">GH₵ {total.toFixed(2)}</span>
+                <span className="text-sm text-[#0D3B2A] dark:text-[#faf7f0]">
+                  GH₵ {total.toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">Discount ({appliedPromo.code})</span>
-                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">−GH₵ {appliedPromo.discount_amount.toFixed(2)}</span>
+                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">
+                  Discount ({appliedPromo.code})
+                </span>
+                <span className="text-sm text-[#2E7D32] dark:text-[#81C784]">
+                  −GH₵ {appliedPromo.discount_amount.toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center justify-between pt-1.5 border-t border-[#E6D8BD] dark:border-[#374151]">
-                <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Products after discount</span>
+                <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
+                  Products after discount
+                </span>
                 <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
                   GH₵ {appliedPromo.final_amount.toFixed(2)}
                 </span>
@@ -308,16 +363,23 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             </div>
           ) : (
             <div className="flex items-center justify-between mb-4">
-              <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Product subtotal</span>
+              <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
+                Product subtotal
+              </span>
               <span className="text-xl font-bold text-[#2E7D32] dark:text-[#81C784]">
                 GH₵ {total.toFixed(2)}
               </span>
             </div>
           )}
           <p className="mb-4 border-l-2 border-[#F4C430] pl-3 text-xs leading-5 text-[#5B3E31] dark:text-[#B8D4BD]">
-            Delivery arrangements and any applicable charge are confirmed using the address you provide.
+            Delivery arrangements and any applicable charge are confirmed using the address you
+            provide.
           </p>
-          <CheckoutButton onClose={onClose} promoCode={appliedPromo?.code} appliedPromo={appliedPromo} />
+          <CheckoutButton
+            onClose={onClose}
+            promoCode={appliedPromo?.code}
+            appliedPromo={appliedPromo}
+          />
           <Link
             href="/products"
             onClick={onClose}
@@ -328,5 +390,5 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         </div>
       </div>
     </>
-  )
+  );
 }

@@ -7,12 +7,20 @@ from django.utils.html import format_html
 from django.urls import reverse
 from unfold.admin import ModelAdmin, StackedInline
 from .models import (
-    User, Customer, Staff, B2BProfile, B2BReviewEvent, BusinessPrice, BusinessPriceList,
+    User,
+    Customer,
+    Staff,
+    B2BProfile,
+    B2BReviewEvent,
+    BusinessPrice,
+    BusinessPriceList,
     StaffInvitation,
 )
 from .forms import (
-    StaffAccessAdminForm, StaffInvitationAdminForm,
-    UserChangeForm, UserCreationForm,
+    StaffAccessAdminForm,
+    StaffInvitationAdminForm,
+    UserChangeForm,
+    UserCreationForm,
 )
 from sales.models import SalesRep
 
@@ -21,8 +29,11 @@ class SalesRepInline(StackedInline):
     model = SalesRep
     extra = 0
     fields = [
-        'phone', 'status', 'commission_rate_registration',
-        'commission_rate_first_purchase', 'commission_rate_repeat_purchase',
+        'phone',
+        'status',
+        'commission_rate_registration',
+        'commission_rate_first_purchase',
+        'commission_rate_repeat_purchase',
     ]
 
 
@@ -33,35 +44,50 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     model = User
     inlines = [SalesRepInline]
 
-    list_display = ['email', 'first_name', 'last_name',
-                    'get_user_type', 'is_active', 'date_joined']
+    list_display = ['email', 'first_name', 'last_name', 'get_user_type', 'is_active', 'date_joined']
     list_filter = ['is_staff', 'is_active', 'date_joined']
     search_fields = ['email', 'first_name', 'last_name']
     ordering = ['-date_joined']
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal Info', {'fields': ('first_name', 'last_name',
-                                       'phone_number', 'avatar')}),
-        ('Delivery Address', {'fields': ('house_number', 'street_address',
-                                          'city', 'delivery_region')}),
-        ('Permissions', {
-            'fields': ('is_active', 'is_staff', 'is_superuser',
-                       'groups', 'user_permissions'),
-            'classes': ('collapse',),
-        }),
-        ('Important dates', {
-            'fields': ('last_login', 'date_joined'),
-            'classes': ('collapse',),
-        }),
+        ('Personal Info', {'fields': ('first_name', 'last_name', 'phone_number', 'avatar')}),
+        (
+            'Delivery Address',
+            {'fields': ('house_number', 'street_address', 'city', 'delivery_region')},
+        ),
+        (
+            'Permissions',
+            {
+                'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+                'classes': ('collapse',),
+            },
+        ),
+        (
+            'Important dates',
+            {
+                'fields': ('last_login', 'date_joined'),
+                'classes': ('collapse',),
+            },
+        ),
     )
 
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name',
-                       'password1', 'password2', 'is_staff', 'is_active'),
-        }),
+        (
+            None,
+            {
+                'classes': ('wide',),
+                'fields': (
+                    'email',
+                    'first_name',
+                    'last_name',
+                    'password1',
+                    'password2',
+                    'is_staff',
+                    'is_active',
+                ),
+            },
+        ),
     )
 
     readonly_fields = ['last_login', 'date_joined']
@@ -78,33 +104,53 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 @admin.register(Customer)
 class CustomerAdmin(ModelAdmin):
     actions = ['deactivate_customers', 'reactivate_customers']
-    list_display = ['email', 'first_name', 'last_name',
-                    'phone_number', 'city', 'delivery_region',
-                    'email_verified', 'date_joined', 'is_active']
+    list_display = [
+        'email',
+        'first_name',
+        'last_name',
+        'phone_number',
+        'city',
+        'delivery_region',
+        'email_verified',
+        'date_joined',
+        'is_active',
+    ]
     # email_verified toggleable straight from the list — used to mark the known
     # legitimate customers verified before verification-gating is deployed.
     list_editable = ['email_verified']
     list_filter = ['email_verified', 'is_active', 'date_joined']
     search_fields = [
-        'email', 'first_name', 'last_name', 'phone_number',
-        'street_address', 'city', 'delivery_region',
+        'email',
+        'first_name',
+        'last_name',
+        'phone_number',
+        'street_address',
+        'city',
+        'delivery_region',
     ]
     ordering = ['-date_joined']
     # Explicit fields so email_verified is editable on the detail page while the
     # raw password hash field is not exposed on this proxy admin.
     fields = [
-        'email', 'first_name', 'last_name', 'phone_number',
-        'email_verified', 'is_active',
-        'house_number', 'street_address', 'city', 'delivery_region',
-        'date_joined', 'last_login', 'anonymization_control',
+        'email',
+        'first_name',
+        'last_name',
+        'phone_number',
+        'email_verified',
+        'is_active',
+        'house_number',
+        'street_address',
+        'city',
+        'delivery_region',
+        'date_joined',
+        'last_login',
+        'anonymization_control',
     ]
 
     readonly_fields = ['date_joined', 'last_login', 'anonymization_control']
 
     def get_queryset(self, request):
-        return super().get_queryset(request).filter(
-            is_staff=False, is_superuser=False
-        )
+        return super().get_queryset(request).filter(is_staff=False, is_superuser=False)
 
     def has_add_permission(self, request):
         return False
@@ -123,14 +169,18 @@ class CustomerAdmin(ModelAdmin):
     def deactivate_customers(self, request, queryset):
         from security.audit import record_event
         from security.models import AuditEvent
+
         count = 0
         for customer in queryset.filter(is_active=True):
             customer.is_active = False
             customer.save(update_fields=['is_active'])
             record_event(
-                action='customer.deactivated', request=request, target=customer,
+                action='customer.deactivated',
+                request=request,
+                target=customer,
                 severity=AuditEvent.Severity.SENSITIVE,
-                before={'is_active': True}, after={'is_active': False},
+                before={'is_active': True},
+                after={'is_active': False},
             )
             count += 1
         self.message_user(request, f'Deactivated {count} customer account(s).')
@@ -139,14 +189,18 @@ class CustomerAdmin(ModelAdmin):
     def reactivate_customers(self, request, queryset):
         from security.audit import record_event
         from security.models import AuditEvent
+
         count = 0
         for customer in queryset.filter(is_active=False):
             customer.is_active = True
             customer.save(update_fields=['is_active'])
             record_event(
-                action='customer.reactivated', request=request, target=customer,
+                action='customer.reactivated',
+                request=request,
+                target=customer,
                 severity=AuditEvent.Severity.SENSITIVE,
-                before={'is_active': False}, after={'is_active': True},
+                before={'is_active': False},
+                after={'is_active': True},
             )
             count += 1
         self.message_user(request, f'Reactivated {count} customer account(s).')
@@ -156,22 +210,38 @@ class CustomerAdmin(ModelAdmin):
 class StaffAdmin(ModelAdmin):
     form = StaffAccessAdminForm
     list_display = [
-        'email', 'first_name', 'last_name', 'staff_role',
-        'is_active', 'last_login',
+        'email',
+        'first_name',
+        'last_name',
+        'staff_role',
+        'is_active',
+        'last_login',
     ]
     list_filter = ['is_active', 'groups', 'date_joined']
     search_fields = ['email', 'first_name', 'last_name']
     ordering = ['first_name', 'last_name', 'email']
     filter_horizontal = ['groups']
     fields = [
-        'email', 'first_name', 'last_name', 'staff_role',
-        'is_active', 'groups', 'access_change_reason',
-        'owner_password', 'owner_otp_token',
-        'security_controls', 'last_login', 'date_joined',
+        'email',
+        'first_name',
+        'last_name',
+        'staff_role',
+        'is_active',
+        'groups',
+        'access_change_reason',
+        'owner_password',
+        'owner_otp_token',
+        'security_controls',
+        'last_login',
+        'date_joined',
     ]
     readonly_fields = [
-        'first_name', 'last_name', 'staff_role',
-        'security_controls', 'last_login', 'date_joined',
+        'first_name',
+        'last_name',
+        'staff_role',
+        'security_controls',
+        'last_login',
+        'date_joined',
     ]
 
     def get_queryset(self, request):
@@ -247,12 +317,15 @@ class StaffAdmin(ModelAdmin):
         if old_groups != new_groups or active_changed or email_changed:
             from security.audit import record_event, revoke_user_sessions
             from security.models import AuditEvent, StaffSecurityProfile
+
             profile, _ = StaffSecurityProfile.objects.get_or_create(user=obj)
             profile.security_version += 1
             profile.save(update_fields=['security_version', 'updated_at'])
             revoked = revoke_user_sessions(obj)
             record_event(
-                action='staff.access_changed', request=request, target=obj,
+                action='staff.access_changed',
+                request=request,
+                target=obj,
                 severity=AuditEvent.Severity.CRITICAL,
                 before={
                     'email': old_email,
@@ -267,9 +340,7 @@ class StaffAdmin(ModelAdmin):
                 reason=form.cleaned_data.get('access_change_reason', ''),
                 metadata={
                     'sessions_revoked': revoked,
-                    'recovery_code_used': getattr(
-                        form, 'access_recovery_code_used', False
-                    ),
+                    'recovery_code_used': getattr(form, 'access_recovery_code_used', False),
                 },
             )
 
@@ -278,27 +349,46 @@ class StaffAdmin(ModelAdmin):
 class StaffInvitationAdmin(ModelAdmin):
     form = StaffInvitationAdminForm
     list_display = [
-        'company_email', 'full_name', 'delivery_email', 'role',
-        'invitation_status', 'expires_at', 'invited_by',
+        'company_email',
+        'full_name',
+        'delivery_email',
+        'role',
+        'invitation_status',
+        'expires_at',
+        'invited_by',
     ]
     list_filter = ['role', 'delivery_status', 'created_at']
-    search_fields = [
-        'company_email', 'delivery_email', 'first_name', 'last_name'
-    ]
+    search_fields = ['company_email', 'delivery_email', 'first_name', 'last_name']
     ordering = ['-created_at']
     actions = ['resend_invitations', 'revoke_invitations']
 
     def get_fields(self, request, obj=None):
         if obj is None:
             return [
-                'first_name', 'last_name', 'company_email', 'delivery_email', 'role',
-                'invitation_reason', 'owner_password', 'owner_otp_token',
+                'first_name',
+                'last_name',
+                'company_email',
+                'delivery_email',
+                'role',
+                'invitation_reason',
+                'owner_password',
+                'owner_otp_token',
             ]
         return [
-            'first_name', 'last_name', 'company_email', 'delivery_email', 'role',
-            'invitation_status', 'delivery_status', 'delivery_error',
-            'expires_at', 'accepted_at', 'revoked_at', 'invited_by',
-            'created_at', 'updated_at',
+            'first_name',
+            'last_name',
+            'company_email',
+            'delivery_email',
+            'role',
+            'invitation_status',
+            'delivery_status',
+            'delivery_error',
+            'expires_at',
+            'accepted_at',
+            'revoked_at',
+            'invited_by',
+            'created_at',
+            'updated_at',
         ]
 
     def get_readonly_fields(self, request, obj=None):
@@ -333,8 +423,11 @@ class StaffInvitationAdmin(ModelAdmin):
         super().save_model(request, obj, form, change)
         from security.audit import record_event
         from security.models import AuditEvent
+
         record_event(
-            action='staff.invited', request=request, target=obj,
+            action='staff.invited',
+            request=request,
+            target=obj,
             severity=AuditEvent.Severity.CRITICAL,
             reason=form.cleaned_data.get('invitation_reason', ''),
             after={
@@ -343,9 +436,7 @@ class StaffInvitationAdmin(ModelAdmin):
                 'role': obj.role,
             },
             metadata={
-                'recovery_code_used': getattr(
-                    form, 'invitation_recovery_code_used', False
-                ),
+                'recovery_code_used': getattr(form, 'invitation_recovery_code_used', False),
             },
         )
         delivered = self._deliver(obj, raw_token)
@@ -364,21 +455,18 @@ class StaffInvitationAdmin(ModelAdmin):
 
     def _deliver(self, invitation, raw_token):
         from .emails import send_staff_invitation_email
+
         try:
             send_staff_invitation_email(invitation, raw_token)
         except Exception as exc:
             invitation.delivery_status = 'failed'
             invitation.delivery_error = str(exc)[:500]
-            invitation.save(update_fields=[
-                'delivery_status', 'delivery_error', 'updated_at'
-            ])
+            invitation.save(update_fields=['delivery_status', 'delivery_error', 'updated_at'])
             return False
 
         invitation.delivery_status = 'sent'
         invitation.delivery_error = ''
-        invitation.save(update_fields=[
-            'delivery_status', 'delivery_error', 'updated_at'
-        ])
+        invitation.save(update_fields=['delivery_status', 'delivery_error', 'updated_at'])
         return True
 
     @admin.action(description='Resend selected setup links')
@@ -389,10 +477,16 @@ class StaffInvitationAdmin(ModelAdmin):
                 skipped += 1
                 continue
             raw_token = invitation.issue_token()
-            invitation.save(update_fields=[
-                'token_digest', 'expires_at', 'revoked_at',
-                'delivery_status', 'delivery_error', 'updated_at',
-            ])
+            invitation.save(
+                update_fields=[
+                    'token_digest',
+                    'expires_at',
+                    'revoked_at',
+                    'delivery_status',
+                    'delivery_error',
+                    'updated_at',
+                ]
+            )
             if self._deliver(invitation, raw_token):
                 sent += 1
             else:
@@ -443,7 +537,9 @@ class BusinessPriceListAdmin(ModelAdmin):
 
 class B2BReviewAdminForm(forms.ModelForm):
     review_decision_note = forms.CharField(
-        label='Review decision note', required=False, widget=forms.Textarea(attrs={'rows': 3}),
+        label='Review decision note',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3}),
         help_text='Required when the review status changes. This becomes part of the audit history.',
     )
 
@@ -454,9 +550,18 @@ class B2BReviewAdminForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         if self.instance.pk:
-            previous = B2BProfile.objects.filter(pk=self.instance.pk).values_list('status', flat=True).first()
-            if previous != cleaned.get('status') and not cleaned.get('review_decision_note', '').strip():
-                self.add_error('review_decision_note', 'Add a concise reason for this status change.')
+            previous = (
+                B2BProfile.objects.filter(pk=self.instance.pk)
+                .values_list('status', flat=True)
+                .first()
+            )
+            if (
+                previous != cleaned.get('status')
+                and not cleaned.get('review_decision_note', '').strip()
+            ):
+                self.add_error(
+                    'review_decision_note', 'Add a concise reason for this status change.'
+                )
         return cleaned
 
 
@@ -464,55 +569,131 @@ class B2BReviewAdminForm(forms.ModelForm):
 class B2BProfileAdmin(ModelAdmin):
     form = B2BReviewAdminForm
     list_display = [
-        'company_name', 'registration_status', 'get_email', 'business_type', 'status',
-        'assigned_to', 'price_list', 'created_at',
+        'company_name',
+        'registration_status',
+        'get_email',
+        'business_type',
+        'status',
+        'assigned_to',
+        'price_list',
+        'created_at',
     ]
     list_filter = ['registration_status', 'status', 'business_type', 'assigned_to', 'price_list']
     search_fields = ['company_name', 'business_email', 'contact_person', 'business_phone']
     ordering = ['-created_at']
-    readonly_fields = ['user', 'verification_document_download', 'created_at', 'updated_at', 'approved_at']
+    readonly_fields = [
+        'user',
+        'verification_document_download',
+        'created_at',
+        'updated_at',
+        'approved_at',
+    ]
 
     fieldsets = (
-        ('Organisation', {
-            'fields': (
-                'user', 'registration_status', 'company_name', 'trading_name', 'legal_structure',
-                'business_type', 'sector', 'year_started', 'website',
-            ),
-        }),
-        ('Verification', {'fields': (
-            'organization_tin', 'business_registration',
-            'verification_document_type', 'verification_document_download',
-            'registration_exemption_reason',
-        )}),
-        ('Authorised Contact', {'fields': (
-            'contact_person', 'contact_job_title', 'business_phone',
-            'alternative_phone', 'business_email',
-        )}),
-        ('Delivery', {'fields': (
-            'business_address', 'delivery_region', 'delivery_city',
-            'delivery_district', 'delivery_locality', 'delivery_street',
-            'ghana_post_gps', 'delivery_landmark', 'delivery_directions',
-            'receiving_contact_name', 'receiving_contact_phone',
-            'receiving_hours', 'access_restrictions',
-        )}),
-        ('Supply Requirements', {'fields': (
-            'produce_categories', 'order_frequency', 'estimated_monthly_order',
-            'preferred_start_date', 'purchase_order_required',
-            'invoice_requirements', 'procurement_notes',
-        )}),
-        ('Declarations', {'fields': (
-            'applicant_authorized', 'information_confirmed', 'privacy_acknowledged',
-        )}),
-        ('Review', {
-            'fields': (
-                'assigned_to', 'status', 'price_list', 'review_decision_note',
-                'rejection_reason', 'notes',
-            ),
-        }),
-        ('Timestamps', {
-            'fields': ('approved_at', 'created_at', 'updated_at'),
-            'classes': ('collapse',),
-        }),
+        (
+            'Organisation',
+            {
+                'fields': (
+                    'user',
+                    'registration_status',
+                    'company_name',
+                    'trading_name',
+                    'legal_structure',
+                    'business_type',
+                    'sector',
+                    'year_started',
+                    'website',
+                ),
+            },
+        ),
+        (
+            'Verification',
+            {
+                'fields': (
+                    'organization_tin',
+                    'business_registration',
+                    'verification_document_type',
+                    'verification_document_download',
+                    'registration_exemption_reason',
+                )
+            },
+        ),
+        (
+            'Authorised Contact',
+            {
+                'fields': (
+                    'contact_person',
+                    'contact_job_title',
+                    'business_phone',
+                    'alternative_phone',
+                    'business_email',
+                )
+            },
+        ),
+        (
+            'Delivery',
+            {
+                'fields': (
+                    'business_address',
+                    'delivery_region',
+                    'delivery_city',
+                    'delivery_district',
+                    'delivery_locality',
+                    'delivery_street',
+                    'ghana_post_gps',
+                    'delivery_landmark',
+                    'delivery_directions',
+                    'receiving_contact_name',
+                    'receiving_contact_phone',
+                    'receiving_hours',
+                    'access_restrictions',
+                )
+            },
+        ),
+        (
+            'Supply Requirements',
+            {
+                'fields': (
+                    'produce_categories',
+                    'order_frequency',
+                    'estimated_monthly_order',
+                    'preferred_start_date',
+                    'purchase_order_required',
+                    'invoice_requirements',
+                    'procurement_notes',
+                )
+            },
+        ),
+        (
+            'Declarations',
+            {
+                'fields': (
+                    'applicant_authorized',
+                    'information_confirmed',
+                    'privacy_acknowledged',
+                )
+            },
+        ),
+        (
+            'Review',
+            {
+                'fields': (
+                    'assigned_to',
+                    'status',
+                    'price_list',
+                    'review_decision_note',
+                    'rejection_reason',
+                    'notes',
+                ),
+            },
+        ),
+        (
+            'Timestamps',
+            {
+                'fields': ('approved_at', 'created_at', 'updated_at'),
+                'classes': ('collapse',),
+            },
+        ),
     )
 
     @admin.display(description='Email')
@@ -581,20 +762,29 @@ class B2BProfileAdmin(ModelAdmin):
         if previous_status != obj.status:
             decision_note = form.cleaned_data.get('review_decision_note', '').strip()
             B2BReviewEvent.objects.create(
-                profile=obj, from_status=previous_status or '', to_status=obj.status,
-                note=decision_note, reviewer=request.user,
+                profile=obj,
+                from_status=previous_status or '',
+                to_status=obj.status,
+                note=decision_note,
+                reviewer=request.user,
             )
             from security.audit import record_event
+
             record_event(
-                action='b2b.review_status_changed', request=request, target=obj,
-                before={'status': previous_status}, after={'status': obj.status},
+                action='b2b.review_status_changed',
+                request=request,
+                target=obj,
+                before={'status': previous_status},
+                after={'status': obj.status},
                 reason=decision_note,
             )
 
         from .emails import (
-            send_b2b_approval_email, send_b2b_rejection_email,
+            send_b2b_approval_email,
+            send_b2b_rejection_email,
             send_b2b_review_update_email,
         )
+
         if obj.status == 'approved' and previous_status != 'approved':
             try:
                 send_b2b_approval_email(obj, uid, token)

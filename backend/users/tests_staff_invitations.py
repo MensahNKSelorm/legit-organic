@@ -50,13 +50,15 @@ class StaffInvitationTests(TestCase):
         self.assertEqual(invitation.token_digest, StaffInvitation.digest_token(token))
 
     def test_admin_form_generates_company_email(self):
-        form = StaffInvitationAdminForm(data={
-            'first_name': 'Akosua',
-            'last_name': 'Boateng',
-            'company_email': '',
-            'delivery_email': 'akosua@example.com',
-            'role': self.role.name,
-        })
+        form = StaffInvitationAdminForm(
+            data={
+                'first_name': 'Akosua',
+                'last_name': 'Boateng',
+                'company_email': '',
+                'delivery_email': 'akosua@example.com',
+                'role': self.role.name,
+            }
+        )
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(
             form.cleaned_data['company_email'],
@@ -93,10 +95,13 @@ class StaffInvitationTests(TestCase):
             is_active=True,
         )
         staff.groups.add(self.role)
-        response = self.client.post(reverse('admin:login'), {
-            'username': staff.email,
-            'password': self.password,
-        })
+        response = self.client.post(
+            reverse('admin:login'),
+            {
+                'username': staff.email,
+                'password': self.password,
+            },
+        )
         self.assertRedirects(
             response,
             '/admin/',
@@ -106,7 +111,9 @@ class StaffInvitationTests(TestCase):
     def test_setup_link_cannot_be_reused(self):
         invitation, token = self.make_invitation()
         payload = {'new_password1': self.password, 'new_password2': self.password}
-        self.assertEqual(self.client.post(reverse('staff-setup', args=[token]), payload).status_code, 200)
+        self.assertEqual(
+            self.client.post(reverse('staff-setup', args=[token]), payload).status_code, 200
+        )
         response = self.client.post(reverse('staff-setup', args=[token]), payload)
         self.assertEqual(response.status_code, 410)
         self.assertEqual(User.objects.filter(email=invitation.company_email).count(), 1)
@@ -120,9 +127,7 @@ class StaffInvitationTests(TestCase):
             410,
         )
 
-        revoked, revoked_token = self.make_invitation(
-            company_email='revoked@legitorganic.com'
-        )
+        revoked, revoked_token = self.make_invitation(company_email='revoked@legitorganic.com')
         revoked.revoked_at = timezone.now()
         revoked.save(update_fields=['revoked_at'])
         self.assertEqual(
@@ -141,9 +146,7 @@ class StaffInvitationTests(TestCase):
         invitation, token = self.make_invitation()
         csrf_client = Client(enforce_csrf_checks=True)
         path = reverse('staff-setup', args=[token])
-        get_response = csrf_client.get(
-            path, secure=True, HTTP_HOST='localhost'
-        )
+        get_response = csrf_client.get(path, secure=True, HTTP_HOST='localhost')
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response['Referrer-Policy'], 'same-origin')
 
@@ -220,17 +223,20 @@ class StaffInvitationTests(TestCase):
     def test_owner_can_create_invitation_in_admin(self, _deliver):
         self.client.force_login(self.owner)
         with patch('security.auth.verify_staff_code', return_value=(True, False)):
-            response = self.client.post(reverse('admin:users_staffinvitation_add'), {
-                'first_name': 'Kojo',
-                'last_name': 'Asare',
-                'company_email': '',
-                'delivery_email': 'kojo@example.com',
-                'role': self.role.name,
-                'invitation_reason': 'New catalogue manager',
-                'owner_password': 'OwnerPass!2026',
-                'owner_otp_token': '123456',
-                '_save': 'Save',
-            })
+            response = self.client.post(
+                reverse('admin:users_staffinvitation_add'),
+                {
+                    'first_name': 'Kojo',
+                    'last_name': 'Asare',
+                    'company_email': '',
+                    'delivery_email': 'kojo@example.com',
+                    'role': self.role.name,
+                    'invitation_reason': 'New catalogue manager',
+                    'owner_password': 'OwnerPass!2026',
+                    'owner_otp_token': '123456',
+                    '_save': 'Save',
+                },
+            )
         self.assertEqual(response.status_code, 302)
         invitation = StaffInvitation.objects.get(delivery_email='kojo@example.com')
         self.assertEqual(invitation.company_email, 'kojo.asare@legitorganic.com')

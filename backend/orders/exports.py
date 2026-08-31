@@ -7,20 +7,18 @@ from collections import Counter
 
 # Brand colors
 FOREST_GREEN = '0D3B2A'
-GHANA_GOLD   = 'F4C430'
-LIGHT_GREEN  = 'E8F5E9'
-WHITE        = 'FFFFFF'
-GREY         = 'F5F5F5'
+GHANA_GOLD = 'F4C430'
+LIGHT_GREEN = 'E8F5E9'
+WHITE = 'FFFFFF'
+GREY = 'F5F5F5'
 
 
-def generate_orders_excel(
-    orders, date_from=None, date_to=None, status_filter=None, filters=None
-):
+def generate_orders_excel(orders, date_from=None, date_to=None, status_filter=None, filters=None):
     wb = openpyxl.Workbook()
 
     # ── Shared styles ────────────────────────────────────────────────────────
-    header_font  = Font(bold=True, color=WHITE, size=11)
-    header_fill  = PatternFill(fill_type='solid', fgColor=FOREST_GREEN)
+    header_font = Font(bold=True, color=WHITE, size=11)
+    header_fill = PatternFill(fill_type='solid', fgColor=FOREST_GREEN)
     header_align = Alignment(horizontal='center', vertical='center')
 
     # ── Sheet 1: Orders Summary ──────────────────────────────────────────────
@@ -60,9 +58,18 @@ def generate_orders_excel(
 
     # Column headers
     headers = [
-        'Reference', 'Date', 'Customer Name', 'Customer Email',
-        'Phone', 'Order Source', 'Status', 'Payment Status',
-        'Delivery Address', 'Promo Code', 'Discount (GH₵)', 'Total (GH₵)',
+        'Reference',
+        'Date',
+        'Customer Name',
+        'Customer Email',
+        'Phone',
+        'Order Source',
+        'Status',
+        'Payment Status',
+        'Delivery Address',
+        'Promo Code',
+        'Discount (GH₵)',
+        'Total (GH₵)',
     ]
     for col, header in enumerate(headers, 1):
         cell = ws1.cell(row=4, column=col, value=header)
@@ -73,7 +80,7 @@ def generate_orders_excel(
     ws1.row_dimensions[4].height = 25
 
     # Data rows
-    total_revenue  = 0
+    total_revenue = 0
     total_discount = 0
 
     for row_idx, order in enumerate(orders, 5):
@@ -83,17 +90,17 @@ def generate_orders_excel(
         )
 
         if order.user:
-            customer_name  = f'{order.user.first_name} {order.user.last_name}'.strip()
+            customer_name = f'{order.user.first_name} {order.user.last_name}'.strip()
             customer_email = order.user.email
             customer_phone = order.guest_phone or getattr(order.user, 'phone_number', None) or '-'
         else:
-            customer_name  = order.guest_name  or 'Guest'
+            customer_name = order.guest_name or 'Guest'
             customer_email = order.guest_email or '-'
             customer_phone = order.guest_phone or '-'
 
         discount = float(order.discount_amount or 0)
-        total    = float(order.total_amount or 0)
-        total_revenue  += total
+        total = float(order.total_amount or 0)
+        total_revenue += total
         total_discount += discount
 
         promo = order.promo_code.code if order.promo_code_id else '-'
@@ -146,8 +153,13 @@ def generate_orders_excel(
     ws2 = wb.create_sheet('Order Items')
 
     item_headers = [
-        'Order Reference', 'Date', 'Customer', 'Product Name',
-        'Quantity', 'Unit Price (GH₵)', 'Subtotal (GH₵)',
+        'Order Reference',
+        'Date',
+        'Customer',
+        'Product Name',
+        'Quantity',
+        'Unit Price (GH₵)',
+        'Subtotal (GH₵)',
     ]
     for col, header in enumerate(item_headers, 1):
         cell = ws2.cell(row=1, column=col, value=header)
@@ -165,8 +177,8 @@ def generate_orders_excel(
 
         for item in order.items.all():
             product_name = item.product.name if item.product else 'Deleted Product'
-            unit_price   = float(item.unit_price)
-            subtotal     = unit_price * item.quantity
+            unit_price = float(item.unit_price)
+            subtotal = unit_price * item.quantity
 
             row_data = [
                 order.reference,
@@ -200,30 +212,30 @@ def generate_orders_excel(
     stats_title = ws3.cell(row=1, column=1, value='ORDER STATISTICS')
     stats_title.font = Font(bold=True, size=14, color=FOREST_GREEN)
 
-    status_counts = Counter(o.status       for o in orders)
+    status_counts = Counter(o.status for o in orders)
     source_counts = Counter(o.order_source for o in orders)
 
     avg_order_value = round(total_revenue / len(orders), 2) if orders else 0
 
     stats = [
-        ('',                             ''),
-        ('OVERVIEW',                     ''),
-        ('Total Orders',                 len(orders)),
-        ('Total Revenue (GH₵)',          round(total_revenue, 2)),
-        ('Total Discounts Given (GH₵)',  round(total_discount, 2)),
-        ('Average Order Value (GH₵)',    avg_order_value),
-        ('',                             ''),
-        ('BY STATUS',                    ''),
-        ('WhatsApp Pending',             status_counts.get('whatsapp_pending', 0)),
-        ('Paid',                         status_counts.get('paid', 0)),
-        ('Processing',                   status_counts.get('processing', 0)),
-        ('Shipped',                      status_counts.get('shipped', 0)),
-        ('Delivered',                    status_counts.get('delivered', 0)),
-        ('Cancelled',                    status_counts.get('cancelled', 0)),
-        ('',                             ''),
-        ('BY SOURCE',                    ''),
-        ('WhatsApp Orders',              source_counts.get('whatsapp', 0)),
-        ('Paystack Orders',              source_counts.get('paystack', 0)),
+        ('', ''),
+        ('OVERVIEW', ''),
+        ('Total Orders', len(orders)),
+        ('Total Revenue (GH₵)', round(total_revenue, 2)),
+        ('Total Discounts Given (GH₵)', round(total_discount, 2)),
+        ('Average Order Value (GH₵)', avg_order_value),
+        ('', ''),
+        ('BY STATUS', ''),
+        ('WhatsApp Pending', status_counts.get('whatsapp_pending', 0)),
+        ('Paid', status_counts.get('paid', 0)),
+        ('Processing', status_counts.get('processing', 0)),
+        ('Shipped', status_counts.get('shipped', 0)),
+        ('Delivered', status_counts.get('delivered', 0)),
+        ('Cancelled', status_counts.get('cancelled', 0)),
+        ('', ''),
+        ('BY SOURCE', ''),
+        ('WhatsApp Orders', source_counts.get('whatsapp', 0)),
+        ('Paystack Orders', source_counts.get('paystack', 0)),
     ]
 
     for row_idx, (label, value) in enumerate(stats, 2):
@@ -243,7 +255,7 @@ def generate_orders_excel(
     ws3.column_dimensions['B'].width = 20
 
     # ── Build filename and return response ───────────────────────────────────
-    now      = timezone.now()
+    now = timezone.now()
     date_str = now.strftime('%Y-%m-%d')
     time_str = now.strftime('%H%M')
 
@@ -257,7 +269,7 @@ def generate_orders_excel(
         period = 'AllTime'
 
     status_str = status_filter.replace(' ', '') if status_filter else 'All'
-    filename   = f'LegitOrganic_Orders_{period}_{status_str}_{date_str}_{time_str}.xlsx'
+    filename = f'LegitOrganic_Orders_{period}_{status_str}_{date_str}_{time_str}.xlsx'
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

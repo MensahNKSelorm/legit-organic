@@ -13,6 +13,7 @@ Usage:
 Safety: if research is too thin, the run SKIPS (no post) rather than letting the
 model invent facts. Drafts are always is_published=False.
 """
+
 import logging
 import os
 import random
@@ -55,7 +56,10 @@ def _seed_topics_if_empty():
 
 
 def _recent_titles(limit=8):
-    return [t.lower() for t in BlogPost.objects.order_by('-created_at').values_list('title', flat=True)[:limit]]
+    return [
+        t.lower()
+        for t in BlogPost.objects.order_by('-created_at').values_list('title', flat=True)[:limit]
+    ]
 
 
 def _key(topic):
@@ -73,8 +77,7 @@ def _pick_topic():
         return None
     recent = _recent_titles()
     eligible = [
-        topic for topic in active
-        if not any(_key(topic.topic) in title for title in recent)
+        topic for topic in active if not any(_key(topic.topic) in title for title in recent)
     ] or active
 
     by_category = {}
@@ -95,7 +98,8 @@ def _pick_topic():
         key=lambda value: (value is not None, value or timezone.now()),
     )
     section_candidates = [
-        category_id for category_id, last_used in section_last_used.items()
+        category_id
+        for category_id, last_used in section_last_used.items()
         if last_used == oldest_section_use
     ]
     chosen_section = random.choice(section_candidates)
@@ -125,9 +129,15 @@ class Command(BaseCommand):
     help = 'Generate a grounded weekly blog draft (unpublished) for staff review.'
 
     def add_arguments(self, parser):
-        parser.add_argument('--dry-run', action='store_true', help='Do everything except save the post.')
-        parser.add_argument('--topic', type=str, default=None, help='Override the topic (not saved to the pool).')
-        parser.add_argument('--category', type=str, default=None, help='Journal section for an overridden topic.')
+        parser.add_argument(
+            '--dry-run', action='store_true', help='Do everything except save the post.'
+        )
+        parser.add_argument(
+            '--topic', type=str, default=None, help='Override the topic (not saved to the pool).'
+        )
+        parser.add_argument(
+            '--category', type=str, default=None, help='Journal section for an overridden topic.'
+        )
         parser.add_argument('--no-notify', action='store_true', help='Do not notify admins.')
 
     def handle(self, *args, **opts):
@@ -146,7 +156,9 @@ class Command(BaseCommand):
         sources, enough = gather_research(topic)
         self.stdout.write(f'Research: {len(sources)} sources (enough={enough})')
         if not enough:
-            msg = f'Skipped weekly blog: only {len(sources)} sources for "{topic}" (grounding guard).'
+            msg = (
+                f'Skipped weekly blog: only {len(sources)} sources for "{topic}" (grounding guard).'
+            )
             self.stdout.write(self.style.WARNING(msg))
             if not opts['no_notify']:
                 self._notify_skip(topic, len(sources))
@@ -167,7 +179,9 @@ class Command(BaseCommand):
             self.stdout.write(f"Title: {draft['title']}")
             self.stdout.write(f"Excerpt: {draft['excerpt']}")
             self.stdout.write(f"Tags: {draft['tags']}")
-            self.stdout.write(f"Content ({len(draft['content'])} chars):\n{draft['content'][:1500]}...")
+            self.stdout.write(
+                f"Content ({len(draft['content'])} chars):\n{draft['content'][:1500]}..."
+            )
             return
 
         category, _ = BlogCategory.objects.get_or_create(name=category_name, defaults={'slug': ''})
@@ -191,7 +205,9 @@ class Command(BaseCommand):
         if topic_obj is not None:
             topic_obj.last_used_at = timezone.now()
             topic_obj.save(update_fields=['last_used_at'])
-        self.stdout.write(self.style.SUCCESS(f'Draft created (unpublished): "{post.title}" [id={post.id}]'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Draft created (unpublished): "{post.title}" [id={post.id}]')
+        )
 
         if not opts['no_notify']:
             self._notify_ready(post)
@@ -206,6 +222,7 @@ class Command(BaseCommand):
     def _notify_ready(self, post):
         try:
             from notifications.utils import notify_admins
+
             notify_admins(
                 type='blog_draft',
                 title='New weekly blog draft',
@@ -218,6 +235,7 @@ class Command(BaseCommand):
     def _notify_skip(self, topic, count):
         try:
             from notifications.utils import notify_admins
+
             notify_admins(
                 type='blog_draft',
                 title='Weekly blog skipped',

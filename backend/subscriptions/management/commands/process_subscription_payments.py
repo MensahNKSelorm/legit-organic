@@ -10,6 +10,7 @@ from subscriptions.services import ensure_renewal_order, schedule_next_week
 def notify_expired(week):
     try:
         from subscriptions.emails import send_week_expired_email
+
         send_week_expired_email(week)
     except Exception as exc:
         return str(exc)
@@ -24,7 +25,8 @@ class Command(BaseCommand):
 
         expired = SubscriptionWeek.objects.select_related('order', 'subscription').filter(
             subscription__status__in=['draft', 'active'],
-            status='payment_due', cutoff_at__lte=now,
+            status='payment_due',
+            cutoff_at__lte=now,
         )
         for week in expired:
             week.status = 'expired'
@@ -41,7 +43,8 @@ class Command(BaseCommand):
             self.stdout.write(f'Expired renewal week {week.pk}')
 
         scheduled = SubscriptionWeek.objects.select_related('subscription').filter(
-            subscription__status='active', status__in=['scheduled', 'renewal_order'],
+            subscription__status='active',
+            status__in=['scheduled', 'renewal_order'],
             cutoff_at__gt=now,
         )
         for week in scheduled:

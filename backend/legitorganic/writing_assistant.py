@@ -91,10 +91,22 @@ def _context(payload):
 
 def _prompt(kind, task, instruction, context, products):
     requirements = {
-        ('product', 'description'): 'Return {"text":"25-70 useful words using only supplied flavour, texture and practical-use facts. Prefer a short truthful draft to padding sparse facts."}',
-        ('product', 'storage'): 'Return {"text":"concise storage and handling guidance using only known facts."}',
-        ('product', 'nutrition'): 'Return {"text":"careful general nutrition copy with no measurements or medical claims unless supplied in the form."}',
-        ('blog', 'titles'): 'Return {"titles":["...","...","..."]} with exactly three distinct editorial title ideas.',
+        (
+            'product',
+            'description',
+        ): 'Return {"text":"25-70 useful words using only supplied flavour, texture and practical-use facts. Prefer a short truthful draft to padding sparse facts."}',
+        (
+            'product',
+            'storage',
+        ): 'Return {"text":"concise storage and handling guidance using only known facts."}',
+        (
+            'product',
+            'nutrition',
+        ): 'Return {"text":"careful general nutrition copy with no measurements or medical claims unless supplied in the form."}',
+        (
+            'blog',
+            'titles',
+        ): 'Return {"titles":["...","...","..."]} with exactly three distinct editorial title ideas.',
         ('blog', 'excerpt'): 'Return {"text":"a 25-45 word excerpt."}',
         ('blog', 'outline'): 'Return {"html":"an HTML outline using h2 and ul/li only."}',
         ('blog', 'draft'): (
@@ -108,7 +120,10 @@ def _prompt(kind, task, instruction, context, products):
             'ideas, but you may not fill gaps with general culinary knowledge. Never pad the article or invent facts to reach the range; return a shorter complete '
             'draft when the supplied material cannot honestly support 900 words.'
         ),
-        ('recipe', 'description'): 'Return {"text":"a 35-65 word description of the dish, its flavour and place at the table."}',
+        (
+            'recipe',
+            'description',
+        ): 'Return {"text":"a 35-65 word description of the dish, its flavour and place at the table."}',
         ('recipe', 'method'): (
             'Return {"ingredients":[{"name":"...","quantity":"...","unit":"...","notes":"..."}],'
             '"steps":[{"instruction":"..."}]}. Use 3-15 ingredients and 2-12 clear steps. '
@@ -117,7 +132,8 @@ def _prompt(kind, task, instruction, context, products):
     }[(kind, task)]
     product_line = (
         f"\nAvailable shop products for ingredient matching only: {', '.join(products)}"
-        if kind == 'recipe' and task == 'method' and products else ''
+        if kind == 'recipe' and task == 'method' and products
+        else ''
     )
     grounding = (
         "\nUse only the factual anchors written in the staff instruction and current form. "
@@ -125,7 +141,8 @@ def _prompt(kind, task, instruction, context, products):
         "Do not add preparation steps or introduce other foods, ingredients, dish types, places, "
         "traditions, qualities or uses. Every factual claim in the answer must be traceable to words "
         "in the supplied anchors; when the anchors are sparse, make the answer shorter."
-        if kind in {'product', 'recipe'} and task != 'method' else ''
+        if kind in {'product', 'recipe'} and task != 'method'
+        else ''
     )
     return (
         f"Draft type: {kind}. Task: {task}.\n"
@@ -182,14 +199,16 @@ def _validate(kind, task, draft, product_lookup):
             if not name:
                 continue
             match = product_lookup.get(name.casefold())
-            ingredients.append({
-                'name': name,
-                'quantity': _plain(item.get('quantity'), 50),
-                'unit': _plain(item.get('unit'), 50),
-                'notes': _plain(item.get('notes'), 200),
-                'product_id': match['id'] if match else '',
-                'product_label': match['name'] if match else '',
-            })
+            ingredients.append(
+                {
+                    'name': name,
+                    'quantity': _plain(item.get('quantity'), 50),
+                    'unit': _plain(item.get('unit'), 50),
+                    'notes': _plain(item.get('notes'), 200),
+                    'product_id': match['id'] if match else '',
+                    'product_label': match['name'] if match else '',
+                }
+            )
         steps = [
             {'instruction': _plain(item.get('instruction'), 1200)}
             for item in draft.get('steps', [])[:12]
@@ -220,7 +239,9 @@ def writing_assistant(request):
     if kind not in TASKS or task not in TASKS[kind]:
         return JsonResponse({'detail': 'Unknown writing task.'}, status=400)
     if not request.user.has_perm(PERMISSIONS[kind]):
-        return JsonResponse({'detail': 'You do not have permission to edit this content.'}, status=403)
+        return JsonResponse(
+            {'detail': 'You do not have permission to edit this content.'}, status=403
+        )
 
     instruction_limit = 1600 if kind == 'blog' else 800
     instruction = _plain(payload.get('instruction'), instruction_limit)
@@ -237,7 +258,9 @@ def writing_assistant(request):
     if count > 20:
         return JsonResponse({'detail': 'Writing limit reached. Try again later.'}, status=429)
 
-    products = list(Product.objects.filter(is_available=True).order_by('name').values('id', 'name')[:150])
+    products = list(
+        Product.objects.filter(is_available=True).order_by('name').values('id', 'name')[:150]
+    )
     lookup = {product['name'].casefold(): product for product in products}
     prompt = _prompt(kind, task, instruction, _context(payload), [p['name'] for p in products])
     try:
@@ -247,8 +270,13 @@ def writing_assistant(request):
     except (requests.RequestException, KeyError, json.JSONDecodeError, ValueError) as exc:
         logger.warning(
             'Writing assistant failed for user=%s kind=%s task=%s error=%s',
-            request.user.pk, kind, task, exc.__class__.__name__,
+            request.user.pk,
+            kind,
+            task,
+            exc.__class__.__name__,
         )
-        return JsonResponse({'detail': 'The draft could not be generated. Nothing was changed.'}, status=502)
+        return JsonResponse(
+            {'detail': 'The draft could not be generated. Nothing was changed.'}, status=502
+        )
 
     return JsonResponse({'draft': draft})

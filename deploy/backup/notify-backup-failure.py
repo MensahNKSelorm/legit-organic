@@ -42,12 +42,14 @@ def main():
             'Check /var/log/legitorganic-backup.log on the production server.'
         )
 
-    response = resend.Emails.send({
-        'from': f'Legit Organic <{sender}>',
-        'to': [recipient],
-        'subject': subject,
-        'text': f'{message}\n\nServer: {hostname}\nTime: {timestamp}',
-    })
+    response = resend.Emails.send(
+        {
+            'from': f'Legit Organic <{sender}>',
+            'to': [recipient],
+            'subject': subject,
+            'text': f'{message}\n\nServer: {hostname}\nTime: {timestamp}',
+        }
+    )
     message_id = response.get('id') if isinstance(response, dict) else getattr(response, 'id', None)
     print(f'Backup alert accepted by Resend: {message_id or "id unavailable"}')
 

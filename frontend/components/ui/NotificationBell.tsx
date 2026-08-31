@@ -1,107 +1,116 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { api, API_BASE } from '@/lib/api'
-import type { AppNotification } from '@/types'
+import { useState, useEffect, useCallback, useRef } from "react";
+import { api, API_BASE } from "@/lib/api";
+import type { AppNotification } from "@/types";
 
 function timeAgo(dateString: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateString).getTime()) / 1000
-  )
-  if (seconds < 60) return 'just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
+  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
 }
 
 function BellIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2"
-      fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      stroke="currentColor"
+      strokeWidth="2"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
-  )
+  );
 }
 
 function urlBase64ToUint8Array(value: string): Uint8Array<ArrayBuffer> {
-  const padding = '='.repeat((4 - (value.length % 4)) % 4)
-  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const raw = window.atob(base64)
-  return Uint8Array.from(raw, (character) => character.charCodeAt(0))
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(base64);
+  return Uint8Array.from(raw, (character) => character.charCodeAt(0));
 }
 
 interface NotificationBellProps {
-  isTransparent: boolean
+  isTransparent: boolean;
 }
 
 export default function NotificationBell({ isTransparent }: NotificationBellProps) {
-  const [notifications, setNotifications] = useState<AppNotification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [pushSupported, setPushSupported] = useState(false)
-  const [pushConfigured, setPushConfigured] = useState(false)
-  const [pushEnabled, setPushEnabled] = useState(false)
-  const [pushBusy, setPushBusy] = useState(false)
-  const [pushError, setPushError] = useState('')
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushConfigured, setPushConfigured] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const data = await api.notifications.list()
-      setNotifications(data.results)
-      setUnreadCount(data.unread_count)
+      const data = await api.notifications.list();
+      setNotifications(data.results);
+      setUnreadCount(data.unread_count);
     } catch {
       // silently ignore — the 60s poll will retry
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   // Fetch on mount, then poll every 60s (no websockets yet)
   useEffect(() => {
-    Promise.resolve().then(fetchNotifications)
-    const interval = setInterval(fetchNotifications, 60000)
-    return () => clearInterval(interval)
-  }, [fetchNotifications])
+    Promise.resolve().then(fetchNotifications);
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   useEffect(() => {
-    const supported = 'serviceWorker' in navigator && 'PushManager' in window
-    if (!supported) return
+    const supported = "serviceWorker" in navigator && "PushManager" in window;
+    if (!supported) return;
     Promise.all([
       api.notifications.pushConfig(),
       navigator.serviceWorker.ready.then((registration) =>
         registration.pushManager.getSubscription()
       ),
-    ]).then(([config, subscription]) => {
-      setPushSupported(true)
-      setPushConfigured(config.enabled)
-      setPushEnabled(Boolean(subscription))
-    }).catch(() => setPushConfigured(false))
-  }, [])
+    ])
+      .then(([config, subscription]) => {
+        setPushSupported(true);
+        setPushConfigured(config.enabled);
+        setPushEnabled(Boolean(subscription));
+      })
+      .catch(() => setPushConfigured(false));
+  }, []);
 
   // Close dropdown when clicking outside — same pattern as the account
   // dropdown in Navbar.tsx
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
+        setOpen(false);
       }
     }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [])
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   const handleNotificationClick = useCallback(async (n: AppNotification) => {
-    setOpen(false)
+    setOpen(false);
     if (!n.is_read) {
       setNotifications((prev) =>
         prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item))
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
       try {
-        await api.notifications.markRead(n.id)
+        await api.notifications.markRead(n.id);
       } catch {
         // navigation below should still proceed even if marking read failed
       }
@@ -113,67 +122,69 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
       // own route tree, so it can neither reach a different origin nor resolve
       // a path Next has no matching page for. A full page navigation to the
       // absolute backend URL is required instead.
-      window.open(`${API_BASE}${n.link}`, '_self')
+      window.open(`${API_BASE}${n.link}`, "_self");
     }
-  }, [])
+  }, []);
 
   const handleMarkAllRead = useCallback(async () => {
     try {
-      await api.notifications.markAllRead()
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-      setUnreadCount(0)
+      await api.notifications.markAllRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
     } catch {
       // ignore — next poll will reconcile
     }
-  }, [])
+  }, []);
 
   const handleEnablePush = useCallback(async () => {
-    setPushBusy(true)
-    setPushError('')
+    setPushBusy(true);
+    setPushError("");
     try {
-      const config = await api.notifications.pushConfig()
+      const config = await api.notifications.pushConfig();
       if (!config.enabled || !config.public_key) {
-        throw new Error('Browser alerts are not configured yet.')
+        throw new Error("Browser alerts are not configured yet.");
       }
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        throw new Error('Notifications were not allowed in this browser.')
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        throw new Error("Notifications were not allowed in this browser.");
       }
-      const registration = await navigator.serviceWorker.ready
-      const existing = await registration.pushManager.getSubscription()
-      const subscription = existing || await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(config.public_key),
-      })
-      await api.notifications.subscribePush(subscription.toJSON())
-      setPushEnabled(true)
+      const registration = await navigator.serviceWorker.ready;
+      const existing = await registration.pushManager.getSubscription();
+      const subscription =
+        existing ||
+        (await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(config.public_key),
+        }));
+      await api.notifications.subscribePush(subscription.toJSON());
+      setPushEnabled(true);
     } catch (error) {
-      setPushError(error instanceof Error ? error.message : 'Browser alerts could not be enabled.')
+      setPushError(error instanceof Error ? error.message : "Browser alerts could not be enabled.");
     } finally {
-      setPushBusy(false)
+      setPushBusy(false);
     }
-  }, [])
+  }, []);
 
   return (
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+        aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
         className={[
-          'relative w-9 h-9 rounded-full flex items-center justify-center transition-colors',
+          "relative w-9 h-9 rounded-full flex items-center justify-center transition-colors",
           isTransparent
-            ? 'hover:bg-white/15'
-            : 'text-[#0D3B2A] dark:text-white hover:bg-[#F5F0E6] dark:hover:bg-gray-700',
-        ].join(' ')}
-        style={isTransparent ? { color: '#ffffff' } : undefined}
+            ? "hover:bg-white/15"
+            : "text-[#0D3B2A] dark:text-white hover:bg-[#F5F0E6] dark:hover:bg-gray-700",
+        ].join(" ")}
+        style={isTransparent ? { color: "#ffffff" } : undefined}
       >
         <BellIcon />
         {unreadCount > 0 && (
           <span
             className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1"
-            style={{ backgroundColor: '#F4C430', color: '#0D3B2A' }}
+            style={{ backgroundColor: "#F4C430", color: "#0D3B2A" }}
           >
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
@@ -181,14 +192,22 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
       {open && (
         <div
           className="absolute right-0 top-full mt-2 bg-mist-white border-[#E6D8BD] rounded-xl shadow-lg z-50 dark:bg-[#1f2937] dark:border-[#374151] overflow-hidden"
-          style={{ width: 320, maxHeight: 400, overflowY: 'auto', borderWidth: '0.5px', borderStyle: 'solid' }}
+          style={{
+            width: 320,
+            maxHeight: 400,
+            overflowY: "auto",
+            borderWidth: "0.5px",
+            borderStyle: "solid",
+          }}
         >
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#F5F0E6] dark:border-[#374151] sticky top-0 bg-mist-white dark:bg-[#1f2937]">
-            <span className="text-xs font-semibold text-[#0D3B2A] dark:text-white">Notifications</span>
+            <span className="text-xs font-semibold text-[#0D3B2A] dark:text-white">
+              Notifications
+            </span>
             <button
               onClick={handleMarkAllRead}
               className="text-xs font-medium"
-              style={{ color: '#2E7D32', border: 'none', background: 'none' }}
+              style={{ color: "#2E7D32", border: "none", background: "none" }}
             >
               Mark all read
             </button>
@@ -196,7 +215,9 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
 
           {pushSupported && pushConfigured && !pushEnabled && (
             <div className="px-4 py-3 border-b border-[#F5F0E6] dark:border-[#374151] bg-[#fffaf0] dark:bg-[#17211c]">
-              <p className="text-xs font-semibold text-[#0D3B2A] dark:text-white">Never miss a new order</p>
+              <p className="text-xs font-semibold text-[#0D3B2A] dark:text-white">
+                Never miss a new order
+              </p>
               <p className="mt-1 text-[11px] leading-4 text-[#68766f] dark:text-[#b8c3ba]">
                 Enable alerts on this browser or phone.
               </p>
@@ -206,9 +227,11 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
                 disabled={pushBusy}
                 className="mt-2 text-xs font-bold text-[#0D3B2A] bg-[#F4C430] px-3 py-2 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32]"
               >
-                {pushBusy ? 'Enabling…' : 'Enable browser alerts'}
+                {pushBusy ? "Enabling…" : "Enable browser alerts"}
               </button>
-              {pushError && <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">{pushError}</p>}
+              {pushError && (
+                <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">{pushError}</p>
+              )}
             </div>
           )}
 
@@ -218,49 +241,51 @@ export default function NotificationBell({ isTransparent }: NotificationBellProp
             </p>
           )}
 
-          {loading && (
-            <div className="p-8 text-center text-sm text-[#9ca3af]">Loading…</div>
-          )}
+          {loading && <div className="p-8 text-center text-sm text-[#9ca3af]">Loading…</div>}
 
           {!loading && notifications.length === 0 && (
             <div className="p-8 text-center text-sm text-[#9ca3af]">No notifications yet</div>
           )}
 
-          {!loading && notifications.map((n, idx) => (
-            <button
-              key={n.id}
-              onClick={() => handleNotificationClick(n)}
-              className={[
-                'w-full text-left px-4 py-3 transition-colors hover:bg-[#FAF7F0] dark:hover:bg-[#111827]',
-                !n.is_read ? 'bg-[#F5F0E6] dark:bg-[#111827]' : '',
-              ].join(' ')}
-              style={{
-                borderBottom: idx !== notifications.length - 1 ? '0.5px solid #F5F0E6' : undefined,
-                cursor: 'pointer',
-              }}
-            >
-              <div className="flex items-start gap-2.5">
-                <span
-                  className="mt-1.5 w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: n.is_read ? '#9ca3af' : '#F4C430' }}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className={[
-                    'text-sm',
-                    n.is_read
-                      ? 'font-normal text-[#0D3B2A] dark:text-[#d1d5db]'
-                      : 'font-bold text-[#0D3B2A] dark:text-white',
-                  ].join(' ')}>
-                    {n.title}
-                  </p>
-                  <p className="text-xs text-[#9ca3af] mt-0.5 line-clamp-2">{n.body}</p>
-                  <p className="text-[11px] text-[#9ca3af] mt-1">{timeAgo(n.created_at)}</p>
+          {!loading &&
+            notifications.map((n, idx) => (
+              <button
+                key={n.id}
+                onClick={() => handleNotificationClick(n)}
+                className={[
+                  "w-full text-left px-4 py-3 transition-colors hover:bg-[#FAF7F0] dark:hover:bg-[#111827]",
+                  !n.is_read ? "bg-[#F5F0E6] dark:bg-[#111827]" : "",
+                ].join(" ")}
+                style={{
+                  borderBottom:
+                    idx !== notifications.length - 1 ? "0.5px solid #F5F0E6" : undefined,
+                  cursor: "pointer",
+                }}
+              >
+                <div className="flex items-start gap-2.5">
+                  <span
+                    className="mt-1.5 w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: n.is_read ? "#9ca3af" : "#F4C430" }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={[
+                        "text-sm",
+                        n.is_read
+                          ? "font-normal text-[#0D3B2A] dark:text-[#d1d5db]"
+                          : "font-bold text-[#0D3B2A] dark:text-white",
+                      ].join(" ")}
+                    >
+                      {n.title}
+                    </p>
+                    <p className="text-xs text-[#9ca3af] mt-0.5 line-clamp-2">{n.body}</p>
+                    <p className="text-[11px] text-[#9ca3af] mt-1">{timeAgo(n.created_at)}</p>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))}
         </div>
       )}
     </div>
-  )
+  );
 }

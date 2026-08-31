@@ -9,8 +9,10 @@ from .models import AuditEvent
 
 def _staff_target(credentials):
     identity = (
-        credentials.get('email') or credentials.get('username')
-        or credentials.get(get_user_model().USERNAME_FIELD) or ''
+        credentials.get('email')
+        or credentials.get('username')
+        or credentials.get(get_user_model().USERNAME_FIELD)
+        or ''
     )
     if not identity:
         return None
@@ -21,7 +23,10 @@ def _staff_target(credentials):
 def audit_staff_login(sender, request, user, **kwargs):
     if user.is_staff:
         record_event(
-            action='security.login_succeeded', request=request, actor=user, target=user,
+            action='security.login_succeeded',
+            request=request,
+            actor=user,
+            target=user,
             severity=AuditEvent.Severity.SENSITIVE,
         )
 
@@ -30,7 +35,10 @@ def audit_staff_login(sender, request, user, **kwargs):
 def audit_staff_logout(sender, request, user, **kwargs):
     if user and user.is_staff:
         record_event(
-            action='security.logout', request=request, actor=user, target=user,
+            action='security.logout',
+            request=request,
+            actor=user,
+            target=user,
             severity=AuditEvent.Severity.INFO,
         )
 
@@ -40,7 +48,9 @@ def audit_staff_login_failure(sender, credentials, request, **kwargs):
     target = _staff_target(credentials)
     if target:
         record_event(
-            action='security.login_failed', request=request, target=target,
+            action='security.login_failed',
+            request=request,
+            target=target,
             severity=AuditEvent.Severity.WARNING,
         )
 
@@ -48,11 +58,18 @@ def audit_staff_login_failure(sender, credentials, request, **kwargs):
 @receiver(user_locked_out)
 def audit_staff_lockout(sender, request, username=None, **kwargs):
     identity = username or (getattr(request, 'POST', {}).get('username') if request else '')
-    target = get_user_model().objects.filter(
-        email__iexact=identity or '', is_staff=True,
-    ).first()
+    target = (
+        get_user_model()
+        .objects.filter(
+            email__iexact=identity or '',
+            is_staff=True,
+        )
+        .first()
+    )
     if target:
         record_event(
-            action='security.login_locked', request=request, target=target,
+            action='security.login_locked',
+            request=request,
+            target=target,
             severity=AuditEvent.Severity.CRITICAL,
         )

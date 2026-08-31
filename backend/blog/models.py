@@ -27,12 +27,14 @@ class BlogPost(models.Model):
     excerpt = models.TextField(blank=True)
     cover_image = models.ImageField(upload_to='blog/', blank=True, null=True)
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='blog_posts'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='blog_posts',
     )
     category = models.ForeignKey(
-        BlogCategory, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='posts'
+        BlogCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts'
     )
     tags = models.CharField(max_length=300, blank=True, help_text='Comma-separated tags')
     is_published = models.BooleanField(default=False)
@@ -45,6 +47,7 @@ class BlogPost(models.Model):
 
     def get_absolute_url(self):
         from django.conf import settings
+
         return f"{settings.FRONTEND_URL}/blog/{self.slug}"
 
     def save(self, *args, **kwargs):
@@ -56,6 +59,7 @@ class BlogPost(models.Model):
 class BlogTopic(models.Model):
     """Editable pool of subjects for the weekly auto-blog. Manage entirely in the
     Django admin — add, edit, or deactivate topics at any time, no code change."""
+
     topic = models.CharField(
         max_length=200,
         help_text='Subject + web-search query, e.g. "Soil health for smallholder farms in Ghana"',

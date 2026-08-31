@@ -150,13 +150,11 @@ class StaffInvitation(models.Model):
         self.company_email = self.company_email.strip().lower()
         self.delivery_email = self.delivery_email.strip().lower()
         if not self.company_email.endswith('@legitorganic.com'):
-            raise ValidationError({
-                'company_email': 'Staff login addresses must end in @legitorganic.com.'
-            })
+            raise ValidationError(
+                {'company_email': 'Staff login addresses must end in @legitorganic.com.'}
+            )
         if User.objects.filter(email__iexact=self.company_email).exists():
-            raise ValidationError({
-                'company_email': 'An account already uses this company email.'
-            })
+            raise ValidationError({'company_email': 'An account already uses this company email.'})
         duplicate = StaffInvitation.objects.filter(
             company_email__iexact=self.company_email,
             accepted_at__isnull=True,
@@ -166,9 +164,9 @@ class StaffInvitation(models.Model):
         if self.pk:
             duplicate = duplicate.exclude(pk=self.pk)
         if duplicate.exists():
-            raise ValidationError({
-                'company_email': 'A pending invitation already exists for this address.'
-            })
+            raise ValidationError(
+                {'company_email': 'A pending invitation already exists for this address.'}
+            )
 
     def issue_token(self):
         token = secrets.token_urlsafe(32)
@@ -266,8 +264,10 @@ class B2BProfile(models.Model):
         ('operating_site_evidence', 'Evidence of operating location'),
     ]
     ORDER_FREQUENCY_CHOICES = [
-        ('weekly', 'Weekly'), ('fortnightly', 'Every two weeks'),
-        ('monthly', 'Monthly'), ('ad_hoc', 'As needed'),
+        ('weekly', 'Weekly'),
+        ('fortnightly', 'Every two weeks'),
+        ('monthly', 'Monthly'),
+        ('ad_hoc', 'As needed'),
     ]
 
     user = models.OneToOneField(
@@ -282,7 +282,9 @@ class B2BProfile(models.Model):
         max_length=20, choices=REGISTRATION_STATUS_CHOICES, default='registered'
     )
     trading_name = models.CharField(max_length=200, blank=True)
-    legal_structure = models.CharField(max_length=40, choices=LEGAL_STRUCTURE_CHOICES, default='business_name')
+    legal_structure = models.CharField(
+        max_length=40, choices=LEGAL_STRUCTURE_CHOICES, default='business_name'
+    )
     business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES)
     sector = models.CharField(max_length=120, blank=True)
     year_started = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -293,8 +295,12 @@ class B2BProfile(models.Model):
     business_address = models.TextField()
     business_registration = models.CharField(max_length=100, blank=True)
     organization_tin = models.CharField(max_length=50, blank=True)
-    verification_document_type = models.CharField(max_length=30, choices=DOCUMENT_TYPE_CHOICES, blank=True)
-    verification_document = models.FileField(storage=private_b2b_storage, upload_to='%Y/%m/', blank=True)
+    verification_document_type = models.CharField(
+        max_length=30, choices=DOCUMENT_TYPE_CHOICES, blank=True
+    )
+    verification_document = models.FileField(
+        storage=private_b2b_storage, upload_to='%Y/%m/', blank=True
+    )
     registration_exemption_reason = models.TextField(blank=True)
     contact_job_title = models.CharField(max_length=120, blank=True)
     alternative_phone = models.CharField(max_length=20, blank=True)
@@ -321,7 +327,9 @@ class B2BProfile(models.Model):
     applicant_authorized = models.BooleanField(default=False)
     information_confirmed = models.BooleanField(default=False)
     privacy_acknowledged = models.BooleanField(default=False)
-    estimated_monthly_order = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    estimated_monthly_order = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     price_list = models.ForeignKey(
         BusinessPriceList,
@@ -333,8 +341,12 @@ class B2BProfile(models.Model):
     rejection_reason = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     assigned_to = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='assigned_b2b_reviews', limit_choices_to={'is_staff': True},
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_b2b_reviews',
+        limit_choices_to={'is_staff': True},
     )
     approved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

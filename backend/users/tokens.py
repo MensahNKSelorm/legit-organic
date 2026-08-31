@@ -3,6 +3,7 @@
 Only verified customer accounts can obtain a JWT. Staff use the separate,
 MFA-protected Django session in the staff portal.
 """
+
 from rest_framework import serializers
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -31,10 +32,12 @@ class VerifiedTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         user = self.user
         if user.is_staff:
-            raise serializers.ValidationError({
-                'detail': 'Staff accounts must sign in through the secure staff portal.',
-                'code': 'staff_portal_required',
-            })
+            raise serializers.ValidationError(
+                {
+                    'detail': 'Staff accounts must sign in through the secure staff portal.',
+                    'code': 'staff_portal_required',
+                }
+            )
         if not user.is_staff and not getattr(user, 'email_verified', False):
             raise serializers.ValidationError(
                 {
@@ -80,8 +83,10 @@ class ThrottledTokenRefreshView(TokenRefreshView):
 
 def set_refresh_cookie(response, token):
     from django.conf import settings
+
     response.set_cookie(
-        'refresh_token', token,
+        'refresh_token',
+        token,
         max_age=24 * 60 * 60,
         httponly=True,
         secure=not settings.DEBUG,

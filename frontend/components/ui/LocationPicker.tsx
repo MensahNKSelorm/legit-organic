@@ -1,36 +1,36 @@
-'use client'
+"use client";
 
-import { useEffect, useRef, useState } from 'react'
-import { Loader } from '@googlemaps/js-api-loader'
+import { useEffect, useRef, useState } from "react";
+import { Loader } from "@googlemaps/js-api-loader";
 
 interface LocationData {
-  street_address: string
-  house_number: string
-  city: string
-  delivery_region: string
-  latitude?: number
-  longitude?: number
-  ghana_post_gps?: string
+  street_address: string;
+  house_number: string;
+  city: string;
+  delivery_region: string;
+  latitude?: number;
+  longitude?: number;
+  ghana_post_gps?: string;
 }
 
 interface LocationPickerProps {
-  onLocationSelect: (data: LocationData) => void
-  initialAddress?: string
+  onLocationSelect: (data: LocationData) => void;
+  initialAddress?: string;
 }
 
 export default function LocationPicker({ onLocationSelect, initialAddress }: LocationPickerProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  const mapRef = useRef<HTMLDivElement>(null)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [marker, setMarker] = useState<google.maps.Marker | null>(null)
-  const [searchInput, setSearchInput] = useState(initialAddress || '')
-  const [isLoading, setIsLoading] = useState(Boolean(apiKey))
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
+  const [searchInput, setSearchInput] = useState(initialAddress || "");
+  const [isLoading, setIsLoading] = useState(Boolean(apiKey));
   const [error, setError] = useState(
-    apiKey ? '' : 'Map is temporarily unavailable. Please enter the delivery address manually.'
-  )
-  const [locating, setLocating] = useState(false)
-  const [locError, setLocError] = useState('')
-  const searchRef = useRef<HTMLInputElement>(null)
+    apiKey ? "" : "Map is temporarily unavailable. Please enter the delivery address manually."
+  );
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const extractAddressComponents = (
     components: google.maps.GeocoderAddressComponent[],
@@ -38,213 +38,218 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
     lng: number,
     formattedAddressFallback?: string
   ) => {
-    let streetNumber = ''
-    let route = ''
-    let city = ''
-    let region = ''
+    let streetNumber = "";
+    let route = "";
+    let city = "";
+    let region = "";
 
-    components.forEach(component => {
-      const types = component.types
-      if (types.includes('street_number')) streetNumber = component.long_name
-      if (types.includes('route')) route = component.long_name
-      if (types.includes('neighborhood') ||
-          types.includes('sublocality_level_2') ||
-          types.includes('sublocality_level_1')) {
-        if (!route) route = component.long_name
+    components.forEach((component) => {
+      const types = component.types;
+      if (types.includes("street_number")) streetNumber = component.long_name;
+      if (types.includes("route")) route = component.long_name;
+      if (
+        types.includes("neighborhood") ||
+        types.includes("sublocality_level_2") ||
+        types.includes("sublocality_level_1")
+      ) {
+        if (!route) route = component.long_name;
       }
-      if (types.includes('locality')) city = component.long_name
-      if (types.includes('sublocality_level_1') && !city) {
-        city = component.long_name
+      if (types.includes("locality")) city = component.long_name;
+      if (types.includes("sublocality_level_1") && !city) {
+        city = component.long_name;
       }
-      if (types.includes('administrative_area_level_1')) {
-        region = component.long_name
+      if (types.includes("administrative_area_level_1")) {
+        region = component.long_name;
       }
-      if (types.includes('premise') || types.includes('point_of_interest')) {
-        if (!streetNumber) streetNumber = component.long_name
+      if (types.includes("premise") || types.includes("point_of_interest")) {
+        if (!streetNumber) streetNumber = component.long_name;
       }
-    })
+    });
 
     const regionMap: Record<string, string> = {
-      'Greater Accra': 'Greater Accra',
-      'Ashanti': 'Ashanti',
-      'Western': 'Western',
-      'Eastern': 'Eastern',
-      'Central': 'Central',
-      'Northern': 'Northern',
-      'Upper East': 'Upper East',
-      'Upper West': 'Upper West',
-      'Volta': 'Volta',
-      'Brong-Ahafo': 'Brong-Ahafo',
-      'Oti': 'Oti',
-      'Bono': 'Bono',
-      'Bono East': 'Bono East',
-      'Ahafo': 'Ahafo',
-      'Savannah': 'Savannah',
-      'North East': 'North East',
-    }
+      "Greater Accra": "Greater Accra",
+      Ashanti: "Ashanti",
+      Western: "Western",
+      Eastern: "Eastern",
+      Central: "Central",
+      Northern: "Northern",
+      "Upper East": "Upper East",
+      "Upper West": "Upper West",
+      Volta: "Volta",
+      "Brong-Ahafo": "Brong-Ahafo",
+      Oti: "Oti",
+      Bono: "Bono",
+      "Bono East": "Bono East",
+      Ahafo: "Ahafo",
+      Savannah: "Savannah",
+      "North East": "North East",
+    };
 
-    let country = ''
-    components.forEach(component => {
-      if (component.types.includes('country')) {
-        country = component.short_name
+    let country = "";
+    components.forEach((component) => {
+      if (component.types.includes("country")) {
+        country = component.short_name;
       }
-    })
+    });
 
-    let finalRegion = ''
+    let finalRegion = "";
 
-    if (country !== 'GH') {
-      finalRegion = 'International'
+    if (country !== "GH") {
+      finalRegion = "International";
     } else {
-      finalRegion = Object.entries(regionMap).find(([key]) =>
-        region.includes(key)
-      )?.[1] || ''
+      finalRegion = Object.entries(regionMap).find(([key]) => region.includes(key))?.[1] || "";
     }
 
     onLocationSelect({
-      street_address: route || (formattedAddressFallback ? formattedAddressFallback.split(',')[0] : '') || '',
-      house_number: streetNumber || '',
-      city: city || '',
+      street_address:
+        route || (formattedAddressFallback ? formattedAddressFallback.split(",")[0] : "") || "",
+      house_number: streetNumber || "",
+      city: city || "",
       delivery_region: finalRegion,
       latitude: lat,
       longitude: lng,
-    })
-  }
+    });
+  };
 
   const reverseGeocode = (lat: number, lng: number) => {
-    const geocoder = new google.maps.Geocoder()
+    const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-      if (status === 'OK' && results?.[0]) {
-        const formatted = results[0].formatted_address
-        extractAddressComponents(results[0].address_components, lat, lng, formatted)
-        setSearchInput(formatted)
+      if (status === "OK" && results?.[0]) {
+        const formatted = results[0].formatted_address;
+        extractAddressComponents(results[0].address_components, lat, lng, formatted);
+        setSearchInput(formatted);
       }
-    })
-  }
+    });
+  };
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setLocError('Geolocation is not supported by your browser.')
-      return
+      setLocError("Geolocation is not supported by your browser.");
+      return;
     }
 
-    setLocating(true)
-    setLocError('')
+    setLocating(true);
+    setLocError("");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const loc = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        }
+        };
         if (map && marker) {
-          map.setCenter(loc)
-          map.setZoom(17)
-          marker.setPosition(loc)
-          reverseGeocode(loc.lat, loc.lng)
+          map.setCenter(loc);
+          map.setZoom(17);
+          marker.setPosition(loc);
+          reverseGeocode(loc.lat, loc.lng);
         }
-        setLocating(false)
+        setLocating(false);
       },
       (error) => {
-        setLocating(false)
+        setLocating(false);
         if (error.code === error.PERMISSION_DENIED) {
-          setLocError('Location access denied. Please enable location in your browser settings, or search for your address above.')
+          setLocError(
+            "Location access denied. Please enable location in your browser settings, or search for your address above."
+          );
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          setLocError('Location unavailable. Please search for your address.')
+          setLocError("Location unavailable. Please search for your address.");
         } else {
-          setLocError('Could not get your location. Please search manually.')
+          setLocError("Could not get your location. Please search manually.");
         }
       },
       { timeout: 10000, maximumAge: 60000 }
-    )
-  }
+    );
+  };
 
   useEffect(() => {
-    if (!apiKey) return
+    if (!apiKey) return;
 
     const loader = new Loader({
       apiKey,
-      version: 'weekly',
-      libraries: ['places', 'geocoding'],
-    })
+      version: "weekly",
+      libraries: ["places", "geocoding"],
+    });
 
-    loader.load().then(() => {
-      if (!mapRef.current) return
+    loader
+      .load()
+      .then(() => {
+        if (!mapRef.current) return;
 
-      const defaultCenter = { lat: 5.6037, lng: -0.1870 }
+        const defaultCenter = { lat: 5.6037, lng: -0.187 };
 
-      const mapInstance = new google.maps.Map(mapRef.current, {
-        center: defaultCenter,
-        zoom: 13,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }],
+        const mapInstance = new google.maps.Map(mapRef.current, {
+          center: defaultCenter,
+          zoom: 13,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          styles: [
+            {
+              featureType: "poi",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }],
+            },
+          ],
+        });
+
+        const markerInstance = new google.maps.Marker({
+          map: mapInstance,
+          draggable: true,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#0D3B2A",
+            fillOpacity: 1,
+            strokeColor: "#F4C430",
+            strokeWeight: 3,
           },
-        ],
+        });
+
+        if (searchRef.current) {
+          const autocomplete = new google.maps.places.Autocomplete(searchRef.current, {
+            componentRestrictions: { country: "gh" },
+            fields: ["address_components", "geometry", "name"],
+          });
+
+          autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry?.location) return;
+
+            const location = place.geometry.location;
+            mapInstance.setCenter(location);
+            mapInstance.setZoom(17);
+            markerInstance.setPosition(location);
+
+            extractAddressComponents(
+              place.address_components || [],
+              location.lat(),
+              location.lng()
+            );
+          });
+        }
+
+        mapInstance.addListener("click", (e: google.maps.MapMouseEvent) => {
+          if (!e.latLng) return;
+          markerInstance.setPosition(e.latLng);
+          reverseGeocode(e.latLng.lat(), e.latLng.lng());
+        });
+
+        markerInstance.addListener("dragend", () => {
+          const pos = markerInstance.getPosition();
+          if (pos) reverseGeocode(pos.lat(), pos.lng());
+        });
+
+        setMap(mapInstance);
+        setMarker(markerInstance);
+        setIsLoading(false);
       })
-
-      const markerInstance = new google.maps.Marker({
-        map: mapInstance,
-        draggable: true,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: '#0D3B2A',
-          fillOpacity: 1,
-          strokeColor: '#F4C430',
-          strokeWeight: 3,
-        },
-      })
-
-      if (searchRef.current) {
-        const autocomplete = new google.maps.places.Autocomplete(searchRef.current, {
-          componentRestrictions: { country: 'gh' },
-          fields: ['address_components', 'geometry', 'name'],
-        })
-
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace()
-          if (!place.geometry?.location) return
-
-          const location = place.geometry.location
-          mapInstance.setCenter(location)
-          mapInstance.setZoom(17)
-          markerInstance.setPosition(location)
-
-          extractAddressComponents(
-            place.address_components || [],
-            location.lat(),
-            location.lng()
-          )
-        })
-      }
-
-      mapInstance.addListener('click', (e: google.maps.MapMouseEvent) => {
-        if (!e.latLng) return
-        markerInstance.setPosition(e.latLng)
-        reverseGeocode(e.latLng.lat(), e.latLng.lng())
-      })
-
-      markerInstance.addListener('dragend', () => {
-        const pos = markerInstance.getPosition()
-        if (pos) reverseGeocode(pos.lat(), pos.lng())
-      })
-
-      setMap(mapInstance)
-      setMarker(markerInstance)
-      setIsLoading(false)
-
-    }).catch((loadError) => {
-      console.error('Google Maps failed to load', loadError)
-      setError('Map is temporarily unavailable. Please enter the delivery address manually.')
-      setIsLoading(false)
-    })
+      .catch((loadError) => {
+        console.error("Google Maps failed to load", loadError);
+        setError("Map is temporarily unavailable. Please enter the delivery address manually.");
+        setIsLoading(false);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -274,9 +279,7 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
 
       {/* Map */}
       {error ? (
-        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl">
-          {error}
-        </div>
+        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl">{error}</div>
       ) : (
         <div className="relative rounded-xl overflow-hidden border border-[#E6D8BD]">
           {isLoading && (
@@ -284,7 +287,7 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
               <div className="w-6 h-6 border-2 border-[#0D3B2A] border-t-transparent rounded-full animate-spin" />
             </div>
           )}
-          <div ref={mapRef} style={{ height: '250px', width: '100%' }} />
+          <div ref={mapRef} style={{ height: "250px", width: "100%" }} />
         </div>
       )}
 
@@ -301,8 +304,10 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
       >
         {locating ? (
           <>
-            <div className="w-4 h-4 border-2 border-[#0D3B2A]
-                            border-t-transparent rounded-full animate-spin"/>
+            <div
+              className="w-4 h-4 border-2 border-[#0D3B2A]
+                            border-t-transparent rounded-full animate-spin"
+            />
             Getting your location...
           </>
         ) : (
@@ -321,9 +326,7 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
           </>
         )}
       </button>
-      {locError && (
-        <p className="text-xs text-red-500 text-center mt-1">{locError}</p>
-      )}
+      {locError && <p className="text-xs text-red-500 text-center mt-1">{locError}</p>}
     </div>
-  )
+  );
 }

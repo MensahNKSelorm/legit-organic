@@ -12,8 +12,17 @@ def generate_audit_excel(events):
     sheet = workbook.active
     sheet.title = 'Security Audit'
     headers = [
-        'Timestamp', 'Severity', 'Action', 'Staff', 'Target type', 'Target',
-        'Reason', 'Before', 'After', 'IP address', 'User agent',
+        'Timestamp',
+        'Severity',
+        'Action',
+        'Staff',
+        'Target type',
+        'Target',
+        'Reason',
+        'Before',
+        'After',
+        'IP address',
+        'User agent',
     ]
     for column, value in enumerate(headers, 1):
         cell = sheet.cell(row=1, column=column, value=value)
@@ -23,11 +32,16 @@ def generate_audit_excel(events):
     for row, event in enumerate(events, 2):
         values = [
             timezone.localtime(event.created_at).strftime('%Y-%m-%d %H:%M:%S'),
-            event.get_severity_display(), event.action, event.actor_email,
-            event.target_type, event.target_label, event.reason,
+            event.get_severity_display(),
+            event.action,
+            event.actor_email,
+            event.target_type,
+            event.target_label,
+            event.reason,
             json.dumps(event.before, ensure_ascii=False),
             json.dumps(event.after, ensure_ascii=False),
-            str(event.ip_address or ''), event.user_agent,
+            str(event.ip_address or ''),
+            event.user_agent,
         ]
         for column, value in enumerate(values, 1):
             sheet.cell(row=row, column=column, value=value)

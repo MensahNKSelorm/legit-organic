@@ -38,9 +38,7 @@ class Badge(models.Model):
     name = models.CharField(max_length=50)
     slug = models.SlugField(unique=True)
     color = models.CharField(
-        max_length=7,
-        default='#0D3B2A',
-        help_text='Hex color code e.g. #0D3B2A'
+        max_length=7, default='#0D3B2A', help_text='Hex color code e.g. #0D3B2A'
     )
     is_active = models.BooleanField(default=True)
 
@@ -62,23 +60,14 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     unit = models.CharField(max_length=50, blank=True, help_text='e.g. 5kg bag')
     region = models.ForeignKey(
-        Region,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='products'
+        Region, on_delete=models.SET_NULL, null=True, blank=True, related_name='products'
     )
     category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='products'
+        Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products'
     )
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     badge = models.ForeignKey(
-        Badge,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='products'
+        Badge, on_delete=models.SET_NULL, null=True, blank=True, related_name='products'
     )
     is_featured = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
@@ -89,16 +78,17 @@ class Product(models.Model):
         help_text='Set only for products available through the B2B tomato and onion catalogue.',
     )
     storage_tips = CKEditor5Field(
-        blank=True, config_name='default',
-        help_text='Storage and handling instructions e.g. Keep refrigerated, use within 7 days'
+        blank=True,
+        config_name='default',
+        help_text='Storage and handling instructions e.g. Keep refrigerated, use within 7 days',
     )
     nutritional_info = CKEditor5Field(
-        blank=True, config_name='default',
-        help_text='Nutritional information e.g. Per 100g: Calories 350kcal, Protein 8g, Carbs 75g'
+        blank=True,
+        config_name='default',
+        help_text='Nutritional information e.g. Per 100g: Calories 350kcal, Protein 8g, Carbs 75g',
     )
     nutritional_score = models.PositiveSmallIntegerField(
-        default=0,
-        help_text='Nutritional score out of 100'
+        default=0, help_text='Nutritional score out of 100'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -108,6 +98,7 @@ class Product(models.Model):
 
     def get_absolute_url(self):
         from django.conf import settings
+
         return f"{settings.FRONTEND_URL}/products/{self.slug}"
 
     def save(self, *args, **kwargs):
@@ -117,24 +108,15 @@ class Product(models.Model):
 
 
 class ProductImage(models.Model):
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name='images'
-    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/gallery/')
     alt_text = models.CharField(
-        max_length=200, blank=True,
-        help_text='Describe the image for accessibility'
+        max_length=200, blank=True, help_text='Describe the image for accessibility'
     )
     order = models.PositiveSmallIntegerField(
-        default=0,
-        help_text='Display order — lower numbers show first'
+        default=0, help_text='Display order — lower numbers show first'
     )
-    is_primary = models.BooleanField(
-        default=False,
-        help_text='Use as the main product image'
-    )
+    is_primary = models.BooleanField(default=False, help_text='Use as the main product image')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

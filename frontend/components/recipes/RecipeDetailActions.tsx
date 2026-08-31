@@ -1,26 +1,26 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useAuth } from '@/lib/auth'
-import { api } from '@/lib/api'
-import type { RecipeWithPairings } from '@/types'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
+import type { RecipeWithPairings } from "@/types";
 
 export default function RecipeDetailActions({ recipe }: { recipe: RecipeWithPairings }) {
-  const { isAuthenticated } = useAuth()
-  const router = useRouter()
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSaveAsIs() {
     if (!isAuthenticated) {
-      router.push('/login')
-      return
+      router.push("/login");
+      return;
     }
-    setSaving(true)
-    setError(null)
+    setSaving(true);
+    setError(null);
     try {
       await api.recipes.myRecipes.create({
         name: recipe.title,
@@ -34,13 +34,13 @@ export default function RecipeDetailActions({ recipe }: { recipe: RecipeWithPair
           notes: ing.notes,
           order: i,
         })),
-      })
-      setSaved(true)
-      setTimeout(() => router.push('/my-recipes'), 1000)
+      });
+      setSaved(true);
+      setTimeout(() => router.push("/my-recipes"), 1000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save recipe')
+      setError(e instanceof Error ? e.message : "Failed to save recipe");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
@@ -58,12 +58,10 @@ export default function RecipeDetailActions({ recipe }: { recipe: RecipeWithPair
           disabled={saving || saved}
           className="inline-flex items-center gap-2 border-2 border-mist-white/60 text-mist-white font-semibold px-6 py-3 rounded-xl hover:border-mist-white hover:bg-white/10 transition-colors text-sm disabled:opacity-60"
         >
-          {saved ? 'Saved!' : saving ? 'Saving…' : 'Save As Is'}
+          {saved ? "Saved!" : saving ? "Saving…" : "Save As Is"}
         </button>
       </div>
-      {error && (
-        <p className="text-red-300 text-sm">{error}</p>
-      )}
+      {error && <p className="text-red-300 text-sm">{error}</p>}
     </div>
-  )
+  );
 }

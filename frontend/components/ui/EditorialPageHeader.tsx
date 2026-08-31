@@ -1,13 +1,18 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 interface EditorialPageHeaderProps {
-  index: string
-  title: ReactNode
-  description: string
-  action?: ReactNode
+  index: string;
+  title: ReactNode;
+  description: string;
+  action?: ReactNode;
 }
 
-export default function EditorialPageHeader({ index, title, description, action }: EditorialPageHeaderProps) {
+export default function EditorialPageHeader({
+  index,
+  title,
+  description,
+  action,
+}: EditorialPageHeaderProps) {
   return (
     <header className="bg-[#0D3B2A] pt-32 text-white md:pt-36">
       <div className="page-container">
@@ -23,5 +28,5 @@ export default function EditorialPageHeader({ index, title, description, action 
         </div>
       </div>
     </header>
-  )
+  );
 }

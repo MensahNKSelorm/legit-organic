@@ -36,9 +36,29 @@ CORE_NUTRIENT_MAP = {
 }
 
 PREPARATION_TERMS = (
-    'raw', 'boiled', 'cooked', 'fried', 'roasted', 'steamed', 'dried', 'dry',
-    'fermented', 'smoked', 'grilled', 'baked', 'toasted', 'peeled', 'unpeeled', 'with salt',
-    'without salt', 'drained', 'ripe', 'unripe', 'fresh', 'powder', 'flour',
+    'raw',
+    'boiled',
+    'cooked',
+    'fried',
+    'roasted',
+    'steamed',
+    'dried',
+    'dry',
+    'fermented',
+    'smoked',
+    'grilled',
+    'baked',
+    'toasted',
+    'peeled',
+    'unpeeled',
+    'with salt',
+    'without salt',
+    'drained',
+    'ripe',
+    'unripe',
+    'fresh',
+    'powder',
+    'flour',
 )
 
 
@@ -106,8 +126,10 @@ def inspect_components(workbook):
             individual_tag = individual_tag.strip('[] ')
             if individual_tag:
                 components[(individual_tag, unit)] = {
-                    'name': _clean(row[0]), 'unit': unit,
-                    'denominator': _clean(row[4]), 'definition': _clean(row[8]),
+                    'name': _clean(row[0]),
+                    'unit': unit,
+                    'denominator': _clean(row[4]),
+                    'definition': _clean(row[8]),
                 }
     return components
 
@@ -119,7 +141,9 @@ def iter_wafct_rows(path):
     components = inspect_components(workbook)
     sheet = workbook[DATA_SHEET]
     headers = [_clean(sheet.cell(1, col).value) for col in range(1, sheet.max_column + 1)]
-    tags = [_clean(sheet.cell(3, col).value).replace(' ', '') for col in range(1, sheet.max_column + 1)]
+    tags = [
+        _clean(sheet.cell(3, col).value).replace(' ', '') for col in range(1, sheet.max_column + 1)
+    ]
     for row_number, row in enumerate(sheet.iter_rows(min_row=5, values_only=True), 5):
         code = _clean(row[0])
         if not re.fullmatch(r'\d{2}_\d{3}', code):
@@ -135,8 +159,11 @@ def iter_wafct_rows(path):
             value, marker = _parse_number(row[index])
             key = f'{tag}:{unit}'
             nutrients[key] = {
-                'tag': tag, 'unit': unit, 'denominator': '/100g EP',
-                'value': value, 'raw_value': _clean(row[index]),
+                'tag': tag,
+                'unit': unit,
+                'denominator': '/100g EP',
+                'value': value,
+                'raw_value': _clean(row[index]),
                 'component': components.get((tag, unit), {}).get('name', headers[index]),
             }
             if marker:
@@ -157,10 +184,14 @@ def iter_wafct_rows(path):
 
 def profile_values_from_record(record):
     values = {
-        'calories_per_100g': None, 'protein_g_per_100g': None,
-        'carbohydrate_g_per_100g': None, 'fat_g_per_100g': None,
-        'saturated_fat_g_per_100g': None, 'fibre_g_per_100g': None,
-        'sugar_g_per_100g': None, 'sodium_mg_per_100g': None,
+        'calories_per_100g': None,
+        'protein_g_per_100g': None,
+        'carbohydrate_g_per_100g': None,
+        'fat_g_per_100g': None,
+        'saturated_fat_g_per_100g': None,
+        'fibre_g_per_100g': None,
+        'sugar_g_per_100g': None,
+        'sodium_mg_per_100g': None,
         'cholesterol_mg_per_100g': None,
     }
     micronutrients = {}
@@ -173,7 +204,8 @@ def profile_values_from_record(record):
             values[target] = Decimal(raw_value)
         else:
             micronutrients[nutrient['tag']] = {
-                'value': raw_value, 'unit': nutrient['unit'],
+                'value': raw_value,
+                'unit': nutrient['unit'],
                 'denominator': nutrient['denominator'],
             }
     values['micronutrients_json'] = micronutrients

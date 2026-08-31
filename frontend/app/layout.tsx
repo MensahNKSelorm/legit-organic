@@ -1,60 +1,61 @@
-import type { Metadata } from 'next'
-import { Suspense } from 'react'
-import './globals.css'
-import { AuthProvider } from '@/lib/auth'
-import { CartProvider } from '@/lib/cart'
-import Navbar from '@/components/layout/Navbar'
-import SiteFooter from '@/components/layout/SiteFooter'
-import VerificationBanner from '@/components/ui/VerificationBanner'
-import WhatsAppButton from '@/components/ui/WhatsAppButton'
-import { ReferralCapture } from '@/components/ReferralCapture'
-import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
-import JsonLd from '@/components/seo/JsonLd'
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import "./globals.css";
+import { AuthProvider } from "@/lib/auth";
+import { CartProvider } from "@/lib/cart";
+import Navbar from "@/components/layout/Navbar";
+import SiteFooter from "@/components/layout/SiteFooter";
+import VerificationBanner from "@/components/ui/VerificationBanner";
+import WhatsAppButton from "@/components/ui/WhatsAppButton";
+import { ReferralCapture } from "@/components/ReferralCapture";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://legitorganic.com'),
+  metadataBase: new URL("https://legitorganic.com"),
   title: {
-    default: 'Legit Organic | Fresh Organic Food in Ghana',
-    template: '%s | Legit Organic',
+    default: "Legit Organic | Fresh Organic Food in Ghana",
+    template: "%s | Legit Organic",
   },
-  description: "Fresh Ghanaian produce with clearer information about where it comes from, how it is handled and when it is available.",
+  description:
+    "Fresh Ghanaian produce with clearer information about where it comes from, how it is handled and when it is available.",
   keywords: [
-    'organic food Ghana',
-    'organic produce Accra',
-    'buy organic food Ghana',
-    'certified organic Ghana',
-    'fresh vegetables Accra',
-    'organic rice Ghana',
-    'farm to table Ghana',
-    'Ghanaian farmers organic',
-    'healthy food delivery Ghana',
-    'organic spices Ghana',
+    "organic food Ghana",
+    "organic produce Accra",
+    "buy organic food Ghana",
+    "certified organic Ghana",
+    "fresh vegetables Accra",
+    "organic rice Ghana",
+    "farm to table Ghana",
+    "Ghanaian farmers organic",
+    "healthy food delivery Ghana",
+    "organic spices Ghana",
   ],
-  authors: [{ name: 'Legit Organic Limited' }],
-  creator: 'Legit Organic Limited',
-  publisher: 'Legit Organic Limited',
+  authors: [{ name: "Legit Organic Limited" }],
+  creator: "Legit Organic Limited",
+  publisher: "Legit Organic Limited",
   openGraph: {
-    type: 'website',
-    locale: 'en_GH',
-    url: 'https://legitorganic.com',
-    siteName: 'Legit Organic',
-    title: 'Legit Organic | Fresh Organic Food in Ghana',
-    description: 'Fresh Ghanaian produce, seasonal availability and practical food stories.',
+    type: "website",
+    locale: "en_GH",
+    url: "https://legitorganic.com",
+    siteName: "Legit Organic",
+    title: "Legit Organic | Fresh Organic Food in Ghana",
+    description: "Fresh Ghanaian produce, seasonal availability and practical food stories.",
     images: [
       {
-        url: '/images/og-image.jpg',
+        url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: 'Legit Organic, fresh organic food in Ghana',
+        alt: "Legit Organic, fresh organic food in Ghana",
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Legit Organic | Fresh Organic Food in Ghana',
-    description: 'Fresh Ghanaian produce, seasonal availability and practical food stories.',
-    images: ['/images/og-image.jpg'],
-    creator: '@legitorganicltd',
+    card: "summary_large_image",
+    title: "Legit Organic | Fresh Organic Food in Ghana",
+    description: "Fresh Ghanaian produce, seasonal availability and practical food stories.",
+    images: ["/images/og-image.jpg"],
+    creator: "@legitorganicltd",
   },
   robots: {
     index: true,
@@ -62,25 +63,23 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
-  manifest: '/manifest.json',
+  manifest: "/manifest.json",
   verification: {
-    google: 'w-yk7o14_14SX7lNlF928YFcGI0MT5ltOWa3cY-8HJA',
+    google: "w-yk7o14_14SX7lNlF928YFcGI0MT5ltOWa3cY-8HJA",
   },
-}
+};
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
@@ -98,37 +97,37 @@ export default function RootLayout({
       <body className="antialiased">
         <JsonLd
           data={{
-            '@context': 'https://schema.org',
-            '@graph': [
+            "@context": "https://schema.org",
+            "@graph": [
               {
-                '@type': 'Organization',
-                '@id': 'https://legitorganic.com/#organization',
-                name: 'Legit Organic Limited',
-                alternateName: 'Legit Organic',
-                url: 'https://legitorganic.com/',
-                logo: 'https://legitorganic.com/images/email-logo.png',
-                email: 'hello@legitorganic.com',
-                telephone: '+233539569260',
+                "@type": "Organization",
+                "@id": "https://legitorganic.com/#organization",
+                name: "Legit Organic Limited",
+                alternateName: "Legit Organic",
+                url: "https://legitorganic.com/",
+                logo: "https://legitorganic.com/images/email-logo.png",
+                email: "hello@legitorganic.com",
+                telephone: "+233539569260",
                 address: {
-                  '@type': 'PostalAddress',
-                  streetAddress: '13 New Aplaku',
-                  addressLocality: 'Accra',
-                  addressCountry: 'GH',
+                  "@type": "PostalAddress",
+                  streetAddress: "13 New Aplaku",
+                  addressLocality: "Accra",
+                  addressCountry: "GH",
                 },
                 sameAs: [
-                  'https://x.com/legitorganicltd',
-                  'https://instagram.com/legitorganic_ltd',
-                  'https://facebook.com/legitorganic9',
-                  'https://tiktok.com/@legit.organic.ltd',
+                  "https://x.com/legitorganicltd",
+                  "https://instagram.com/legitorganic_ltd",
+                  "https://facebook.com/legitorganic9",
+                  "https://tiktok.com/@legit.organic.ltd",
                 ],
               },
               {
-                '@type': 'WebSite',
-                '@id': 'https://legitorganic.com/#website',
-                url: 'https://legitorganic.com/',
-                name: 'Legit Organic',
-                publisher: { '@id': 'https://legitorganic.com/#organization' },
-                inLanguage: 'en-GH',
+                "@type": "WebSite",
+                "@id": "https://legitorganic.com/#website",
+                url: "https://legitorganic.com/",
+                name: "Legit Organic",
+                publisher: { "@id": "https://legitorganic.com/#organization" },
+                inLanguage: "en-GH",
               },
             ],
           }}
@@ -140,7 +139,9 @@ export default function RootLayout({
           <CartProvider>
             <Navbar />
             <VerificationBanner />
-            <main id="main-content" tabIndex={-1}>{children}</main>
+            <main id="main-content" tabIndex={-1}>
+              {children}
+            </main>
             <SiteFooter />
           </CartProvider>
         </AuthProvider>
@@ -153,5 +154,5 @@ export default function RootLayout({
         </Suspense>
       </body>
     </html>
-  )
+  );
 }

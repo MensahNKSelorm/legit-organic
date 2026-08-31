@@ -1,4 +1,5 @@
 """Local-only settings for previewing the Django admin against db.sqlite3."""
+
 from .settings import *  # noqa: F401,F403
 
 DATABASES = {

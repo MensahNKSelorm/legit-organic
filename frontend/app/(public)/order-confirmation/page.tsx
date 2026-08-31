@@ -1,49 +1,53 @@
-'use client'
+"use client";
 
-import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { api } from '@/lib/api'
-import type { Order } from '@/types'
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import type { Order } from "@/types";
 
 function OrderConfirmationContent() {
-  const searchParams = useSearchParams()
-  const ref = searchParams.get('ref')
-  const [order, setOrder] = useState<Order | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
+  const [order, setOrder] = useState<Order | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!ref) {
       Promise.resolve().then(() => {
-        setError('No order reference found.')
-        setLoading(false)
-      })
-      return
+        setError("No order reference found.");
+        setLoading(false);
+      });
+      return;
     }
-    api.orders.detail(ref)
+    api.orders
+      .detail(ref)
       .then((o) => setOrder(o as Order))
-      .catch(() => setError('Could not load order details.'))
-      .finally(() => setLoading(false))
-  }, [ref])
+      .catch(() => setError("Could not load order details."))
+      .finally(() => setLoading(false));
+  }, [ref]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF7F0] dark:bg-[#111827]">
         <div className="w-8 h-8 border-4 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
       </div>
-    )
+    );
   }
 
   if (error || !order) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#FAF7F0] dark:bg-[#111827] px-4">
-        <p className="text-red-600 font-medium">{error || 'Order not found.'}</p>
-        <Link href="/products" className="px-5 py-2.5 bg-[#F4C430] text-[#0D3B2A] font-semibold rounded-xl hover:bg-[#C59F2C] transition-colors">
+        <p className="text-red-600 font-medium">{error || "Order not found."}</p>
+        <Link
+          href="/products"
+          className="px-5 py-2.5 bg-[#F4C430] text-[#0D3B2A] font-semibold rounded-xl hover:bg-[#C59F2C] transition-colors"
+        >
           Browse Products
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -52,7 +56,16 @@ function OrderConfirmationContent() {
         <div className="border-y editorial-rule bg-transparent p-8 text-center">
           {/* Checkmark */}
           <div className="w-20 h-20 rounded-full bg-[#F0F7F0] dark:bg-[#1a2e1a] flex items-center justify-center mx-auto mb-6">
-            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#2E7D32" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="40"
+              height="40"
+              fill="none"
+              stroke="#2E7D32"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
@@ -60,9 +73,7 @@ function OrderConfirmationContent() {
           <h1 className="display-organic mb-2 text-5xl text-[#0D3B2A] dark:text-[#faf7f0]">
             Your order is in.
           </h1>
-          <p className="text-[#5B3E31] dark:text-[#9ca3af] mb-1">
-            Thank you for your order.
-          </p>
+          <p className="text-[#5B3E31] dark:text-[#9ca3af] mb-1">Thank you for your order.</p>
           <p className="text-xs text-[#9ca3af] dark:text-[#6b7280] mb-6 font-mono">
             Ref: {order.reference}
           </p>
@@ -79,7 +90,7 @@ function OrderConfirmationContent() {
                 <li key={idx} className="flex items-center justify-between px-4 py-3">
                   <div>
                     <p className="text-sm font-medium text-[#0D3B2A] dark:text-[#faf7f0]">
-                      {item.product?.name ?? 'Product'}
+                      {item.product?.name ?? "Product"}
                     </p>
                     <p className="text-xs text-[#5B3E31] dark:text-[#9ca3af]">
                       {item.quantity} × GH₵{parseFloat(item.unit_price).toFixed(2)}
@@ -92,7 +103,9 @@ function OrderConfirmationContent() {
               ))}
             </ul>
             <div className="flex items-center justify-between px-4 py-3 bg-[#F5F0E6] dark:bg-[#374151]">
-              <span className="text-sm font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">Total Paid</span>
+              <span className="text-sm font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
+                Total Paid
+              </span>
               <span className="text-base font-bold text-[#2E7D32] dark:text-[#81C784]">
                 GH₵{parseFloat(order.total_amount).toFixed(2)}
               </span>
@@ -101,7 +114,17 @@ function OrderConfirmationContent() {
 
           {/* Delivery note */}
           <div className="flex items-center gap-3 p-4 bg-[#F0F7F0] dark:bg-[#1a2e1a] border border-[#C3E6CB] dark:border-[#2d4a2d] rounded-xl mb-6 text-left">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2E7D32" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="#2E7D32"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0"
+            >
               <rect x="1" y="3" width="15" height="13" rx="1" />
               <path d="m16 8 5 5-5 5" />
               <path d="M21 13H9" />
@@ -129,17 +152,19 @@ function OrderConfirmationContent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function OrderConfirmationPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF7F0] dark:bg-[#111827]">
-        <div className="w-8 h-8 border-4 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#FAF7F0] dark:bg-[#111827]">
+          <div className="w-8 h-8 border-4 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <OrderConfirmationContent />
     </Suspense>
-  )
+  );
 }

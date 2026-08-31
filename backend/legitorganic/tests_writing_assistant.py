@@ -43,8 +43,11 @@ class WritingAssistantTests(TestCase):
         self.assertIn('Never invent dish names, traditional uses', SYSTEM_PROMPT)
         self.assertIn('Avoid puffery', SYSTEM_PROMPT)
         product_prompt = _prompt(
-            'product', 'description', 'Describe garden eggs.',
-            {'name': 'Garden eggs'}, ['Tomatoes', 'Onions'],
+            'product',
+            'description',
+            'Describe garden eggs.',
+            {'name': 'Garden eggs'},
+            ['Tomatoes', 'Onions'],
         )
         self.assertNotIn('Tomatoes', product_prompt)
         self.assertNotIn('Onions', product_prompt)
@@ -53,9 +56,11 @@ class WritingAssistantTests(TestCase):
 
     def test_complete_blog_draft_is_long_form_without_padding(self):
         prompt = _prompt(
-            'blog', 'draft',
+            'blog',
+            'draft',
             'Explain how harvest timing affects freshness for customers in Accra.',
-            {'title': 'From harvest to kitchen'}, [],
+            {'title': 'From harvest to kitchen'},
+            [],
         )
         self.assertIn('900-1400 word first draft', prompt)
         self.assertIn('clear editorial through-line', prompt)
@@ -97,9 +102,15 @@ class WritingAssistantTests(TestCase):
             'html': '<h2>Storage</h2><script>alert(1)</script><p onclick="x">Keep leaves cool.</p>'
         }
         self.client.force_login(self.owner)
-        response = self.client.post(self.url, self.payload(
-            kind='blog', task='draft', instruction='Write a practical guide to storing leafy vegetables.'
-        ), content_type='application/json')
+        response = self.client.post(
+            self.url,
+            self.payload(
+                kind='blog',
+                task='draft',
+                instruction='Write a practical guide to storing leafy vegetables.',
+            ),
+            content_type='application/json',
+        )
         self.assertEqual(response.status_code, 200)
         html = response.json()['draft']['html']
         self.assertNotIn('<script', html)
@@ -117,9 +128,15 @@ class WritingAssistantTests(TestCase):
             'steps': [{'instruction': 'Wash and slice the leaves.'}],
         }
         self.client.force_login(self.owner)
-        response = self.client.post(self.url, self.payload(
-            kind='recipe', task='method', instruction='Draft a simple kontomire method for four people.'
-        ), content_type='application/json')
+        response = self.client.post(
+            self.url,
+            self.payload(
+                kind='recipe',
+                task='method',
+                instruction='Draft a simple kontomire method for four people.',
+            ),
+            content_type='application/json',
+        )
         self.assertEqual(response.status_code, 200)
         ingredients = response.json()['draft']['ingredients']
         self.assertEqual(ingredients[0]['product_id'], product.pk)

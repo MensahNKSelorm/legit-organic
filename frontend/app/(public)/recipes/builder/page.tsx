@@ -1,39 +1,52 @@
-'use client'
+"use client";
 
-import { useEffect, useRef, useState, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useAuth } from '@/lib/auth'
-import { api } from '@/lib/api'
-import type { Product, Recipe, RecipeWithPairings } from '@/types'
-import { getMediaUrl } from '@/lib/media'
+import { useEffect, useRef, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
+import type { Product, Recipe, RecipeWithPairings } from "@/types";
+import { getMediaUrl } from "@/lib/media";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-const UNITS = ['kg', 'g', 'pieces', 'cups', 'tablespoons', 'teaspoons', 'litres', 'ml', 'bunches', 'cloves']
+const UNITS = [
+  "kg",
+  "g",
+  "pieces",
+  "cups",
+  "tablespoons",
+  "teaspoons",
+  "litres",
+  "ml",
+  "bunches",
+  "cloves",
+];
 
-let nextId = 1
-function localId() { return nextId++ }
+let nextId = 1;
+function localId() {
+  return nextId++;
+}
 
 interface BuilderIngredient {
-  localId: number
-  name: string
-  quantity: string
-  unit: string
-  notes: string
-  order: number
-  productId: number | null
-  productName: string | null
-  productSlug: string | null
-  sourceRecipeId: number | null
+  localId: number;
+  name: string;
+  quantity: string;
+  unit: string;
+  notes: string;
+  order: number;
+  productId: number | null;
+  productName: string | null;
+  productSlug: string | null;
+  sourceRecipeId: number | null;
 }
 
 interface BaseRecipeEntry {
-  id: number
-  title: string
-  slug: string
+  id: number;
+  title: string;
+  slug: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,29 +58,29 @@ function ingredientsFromRecipe(recipe: RecipeWithPairings, startOrder = 0): Buil
     localId: localId(),
     name: ing.name,
     quantity: ing.quantity,
-    unit: ing.unit || 'pieces',
-    notes: ing.notes || '',
+    unit: ing.unit || "pieces",
+    notes: ing.notes || "",
     order: startOrder + i,
     productId: ing.product?.id ?? null,
     productName: ing.product?.name ?? null,
     productSlug: ing.product?.slug ?? null,
     sourceRecipeId: recipe.id,
-  }))
+  }));
 }
 
 function blankIngredient(): BuilderIngredient {
   return {
     localId: localId(),
-    name: '',
-    quantity: '1',
-    unit: 'pieces',
-    notes: '',
+    name: "",
+    quantity: "1",
+    unit: "pieces",
+    notes: "",
     order: 0,
     productId: null,
     productName: null,
     productSlug: null,
     sourceRecipeId: null,
-  }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -75,147 +88,152 @@ function blankIngredient(): BuilderIngredient {
 // ---------------------------------------------------------------------------
 
 function BuilderContent() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const baseSlug = searchParams.get('base')
-  const addSlug = searchParams.get('add')
-  const editId = searchParams.get('edit') ? Number(searchParams.get('edit')) : null
+  const baseSlug = searchParams.get("base");
+  const addSlug = searchParams.get("add");
+  const editId = searchParams.get("edit") ? Number(searchParams.get("edit")) : null;
 
-  const [recipeName, setRecipeName] = useState('My Custom Recipe')
-  const [ingredients, setIngredients] = useState<BuilderIngredient[]>([])
-  const [baseRecipes, setBaseRecipes] = useState<BaseRecipeEntry[]>([])
-  const [allDefaultRecipes, setAllDefaultRecipes] = useState<Recipe[]>([])
-  const [recipeSearch, setRecipeSearch] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const nameRef = useRef<HTMLInputElement>(null)
+  const [recipeName, setRecipeName] = useState("My Custom Recipe");
+  const [ingredients, setIngredients] = useState<BuilderIngredient[]>([]);
+  const [baseRecipes, setBaseRecipes] = useState<BaseRecipeEntry[]>([]);
+  const [allDefaultRecipes, setAllDefaultRecipes] = useState<Recipe[]>([]);
+  const [recipeSearch, setRecipeSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   // ---------------------------------------------------------------------------
   // Auth guard
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      const dest = window.location.pathname + window.location.search
-      router.push('/login?next=' + encodeURIComponent(dest))
+      const dest = window.location.pathname + window.location.search;
+      router.push("/login?next=" + encodeURIComponent(dest));
     }
-  }, [authLoading, isAuthenticated, router])
+  }, [authLoading, isAuthenticated, router]);
 
   // ---------------------------------------------------------------------------
   // Load initial data
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (authLoading || !isAuthenticated) return
+    if (authLoading || !isAuthenticated) return;
 
     async function load() {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const allRecipes = await api.recipes.list()
-        setAllDefaultRecipes(allRecipes)
+        const allRecipes = await api.recipes.list();
+        setAllDefaultRecipes(allRecipes);
 
         if (editId) {
           // Edit mode: load existing user recipe
-          const userRecipe = await api.recipes.myRecipes.get(editId)
-          setEditingId(editId)
-          setRecipeName(userRecipe.name)
-          setBaseRecipes(userRecipe.base_recipes.map((r) => ({ id: r.id, title: r.title, slug: r.slug })))
+          const userRecipe = await api.recipes.myRecipes.get(editId);
+          setEditingId(editId);
+          setRecipeName(userRecipe.name);
+          setBaseRecipes(
+            userRecipe.base_recipes.map((r) => ({ id: r.id, title: r.title, slug: r.slug }))
+          );
           setIngredients(
             userRecipe.ingredients.map((ing) => ({
               localId: localId(),
               name: ing.name,
               quantity: String(ing.quantity),
               unit: ing.unit,
-              notes: ing.notes || '',
+              notes: ing.notes || "",
               order: ing.order,
               productId: ing.product?.id ?? null,
               productName: ing.product?.name ?? null,
               productSlug: ing.product?.slug ?? null,
               sourceRecipeId: null,
             }))
-          )
+          );
         } else {
           // Create mode: load base recipe(s)
-          const fetches: Promise<RecipeWithPairings>[] = []
-          if (baseSlug) fetches.push(api.recipes.detail(baseSlug))
-          if (addSlug) fetches.push(api.recipes.detail(addSlug))
+          const fetches: Promise<RecipeWithPairings>[] = [];
+          if (baseSlug) fetches.push(api.recipes.detail(baseSlug));
+          if (addSlug) fetches.push(api.recipes.detail(addSlug));
 
-          const results = await Promise.all(fetches)
-          const allIngredients: BuilderIngredient[] = []
-          const bases: BaseRecipeEntry[] = []
-          let orderOffset = 0
+          const results = await Promise.all(fetches);
+          const allIngredients: BuilderIngredient[] = [];
+          const bases: BaseRecipeEntry[] = [];
+          let orderOffset = 0;
 
           for (const recipe of results) {
-            bases.push({ id: recipe.id, title: recipe.title, slug: recipe.slug })
-            const ings = ingredientsFromRecipe(recipe, orderOffset)
-            allIngredients.push(...ings)
-            orderOffset += ings.length
+            bases.push({ id: recipe.id, title: recipe.title, slug: recipe.slug });
+            const ings = ingredientsFromRecipe(recipe, orderOffset);
+            allIngredients.push(...ings);
+            orderOffset += ings.length;
           }
 
           if (results.length > 0) {
-            setRecipeName(results.length === 1 ? results[0].title : 'My Combined Recipe')
-            setBaseRecipes(bases)
-            setIngredients(allIngredients)
+            setRecipeName(results.length === 1 ? results[0].title : "My Combined Recipe");
+            setBaseRecipes(bases);
+            setIngredients(allIngredients);
           } else {
-            setIngredients([blankIngredient()])
+            setIngredients([blankIngredient()]);
           }
         }
       } catch (e) {
-        console.error('Builder load error:', e)
-        setIngredients([blankIngredient()])
+        console.error("Builder load error:", e);
+        setIngredients([blankIngredient()]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    load()
-  }, [authLoading, isAuthenticated, baseSlug, addSlug, editId])
+    load();
+  }, [authLoading, isAuthenticated, baseSlug, addSlug, editId]);
 
   // ---------------------------------------------------------------------------
   // Ingredient operations
   // ---------------------------------------------------------------------------
   function updateIngredient(localId: number, field: keyof BuilderIngredient, value: string) {
     setIngredients((prev) =>
-      prev.map((ing) => ing.localId === localId ? { ...ing, [field]: value } : ing)
-    )
+      prev.map((ing) => (ing.localId === localId ? { ...ing, [field]: value } : ing))
+    );
   }
 
   function removeIngredient(localId: number) {
-    setIngredients((prev) => prev.filter((ing) => ing.localId !== localId))
+    setIngredients((prev) => prev.filter((ing) => ing.localId !== localId));
   }
 
   function addIngredient() {
-    setIngredients((prev) => [...prev, { ...blankIngredient(), order: prev.length }])
+    setIngredients((prev) => [...prev, { ...blankIngredient(), order: prev.length }]);
   }
 
   function moveIngredient(localId: number, dir: -1 | 1) {
     setIngredients((prev) => {
-      const idx = prev.findIndex((i) => i.localId === localId)
-      if (idx < 0) return prev
-      const next = idx + dir
-      if (next < 0 || next >= prev.length) return prev
-      const arr = [...prev]
-      ;[arr[idx], arr[next]] = [arr[next], arr[idx]]
-      return arr.map((ing, i) => ({ ...ing, order: i }))
-    })
+      const idx = prev.findIndex((i) => i.localId === localId);
+      if (idx < 0) return prev;
+      const next = idx + dir;
+      if (next < 0 || next >= prev.length) return prev;
+      const arr = [...prev];
+      [arr[idx], arr[next]] = [arr[next], arr[idx]];
+      return arr.map((ing, i) => ({ ...ing, order: i }));
+    });
   }
 
   function removeBaseRecipe(id: number) {
-    setBaseRecipes((prev) => prev.filter((r) => r.id !== id))
-    setIngredients((prev) => prev.filter((ing) => ing.sourceRecipeId !== id))
+    setBaseRecipes((prev) => prev.filter((r) => r.id !== id));
+    setIngredients((prev) => prev.filter((ing) => ing.sourceRecipeId !== id));
   }
 
-  function linkProduct(localId: number, productId: number, productName: string, productSlug: string) {
+  function linkProduct(
+    localId: number,
+    productId: number,
+    productName: string,
+    productSlug: string
+  ) {
     setIngredients((prev) =>
       prev.map((ing) =>
-        ing.localId === localId
-          ? { ...ing, productId, productName, productSlug }
-          : ing
+        ing.localId === localId ? { ...ing, productId, productName, productSlug } : ing
       )
-    )
+    );
   }
 
   function unlinkProduct(localId: number) {
@@ -225,21 +243,24 @@ function BuilderContent() {
           ? { ...ing, productId: null, productName: null, productSlug: null }
           : ing
       )
-    )
+    );
   }
 
   async function addRecipeToBuilder(slug: string) {
-    if (baseRecipes.some((r) => r.slug === slug)) return
+    if (baseRecipes.some((r) => r.slug === slug)) return;
     try {
-      const recipe = await api.recipes.detail(slug)
-      setBaseRecipes((prev) => [...prev, { id: recipe.id, title: recipe.title, slug: recipe.slug }])
+      const recipe = await api.recipes.detail(slug);
+      setBaseRecipes((prev) => [
+        ...prev,
+        { id: recipe.id, title: recipe.title, slug: recipe.slug },
+      ]);
       setIngredients((prev) => {
-        const ings = ingredientsFromRecipe(recipe, prev.length)
-        return [...prev, ...ings]
-      })
-      setRecipeSearch('')
+        const ings = ingredientsFromRecipe(recipe, prev.length);
+        return [...prev, ...ings];
+      });
+      setRecipeSearch("");
     } catch (e) {
-      console.error('Failed to add recipe:', e)
+      console.error("Failed to add recipe:", e);
     }
   }
 
@@ -247,17 +268,17 @@ function BuilderContent() {
   // Save
   // ---------------------------------------------------------------------------
   async function handleSave() {
-    setSaveError(null)
+    setSaveError(null);
     if (!recipeName.trim()) {
-      setSaveError('Please give your recipe a name.')
-      nameRef.current?.focus()
-      return
+      setSaveError("Please give your recipe a name.");
+      nameRef.current?.focus();
+      return;
     }
     if (ingredients.length === 0) {
-      setSaveError('Add at least one ingredient.')
-      return
+      setSaveError("Add at least one ingredient.");
+      return;
     }
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       const data = {
         name: recipeName.trim(),
@@ -265,25 +286,25 @@ function BuilderContent() {
         ingredients: ingredients.map((ing, i) => ({
           name: ing.name,
           product_id: ing.productId ?? undefined,
-          quantity: ing.quantity || '1',
+          quantity: ing.quantity || "1",
           unit: ing.unit,
           notes: ing.notes,
           order: i,
         })),
-      }
+      };
 
       if (editingId) {
-        await api.recipes.myRecipes.update(editingId, data)
+        await api.recipes.myRecipes.update(editingId, data);
       } else {
-        await api.recipes.myRecipes.create(data)
+        await api.recipes.myRecipes.create(data);
       }
 
-      setSaveSuccess(true)
-      setTimeout(() => router.push('/my-recipes'), 1200)
+      setSaveSuccess(true);
+      setTimeout(() => router.push("/my-recipes"), 1200);
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Failed to save recipe')
+      setSaveError(e instanceof Error ? e.message : "Failed to save recipe");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
@@ -291,33 +312,37 @@ function BuilderContent() {
   // Filtered recipe search
   // ---------------------------------------------------------------------------
   const searchResults = recipeSearch.trim()
-    ? allDefaultRecipes.filter(
-        (r) =>
-          r.title.toLowerCase().includes(recipeSearch.toLowerCase()) &&
-          !baseRecipes.some((b) => b.id === r.id)
-      ).slice(0, 5)
-    : []
+    ? allDefaultRecipes
+        .filter(
+          (r) =>
+            r.title.toLowerCase().includes(recipeSearch.toLowerCase()) &&
+            !baseRecipes.some((b) => b.id === r.id)
+        )
+        .slice(0, 5)
+    : [];
 
   // ---------------------------------------------------------------------------
   // Order all linked ingredients via WhatsApp
   // ---------------------------------------------------------------------------
   function handleOrderAllIngredients() {
-    const linked = ingredients.filter((i) => i.productSlug)
+    const linked = ingredients.filter((i) => i.productSlug);
     if (linked.length === 0) {
-      alert('Please link at least one ingredient to a product first by searching in the ingredient name field.')
-      return
+      alert(
+        "Please link at least one ingredient to a product first by searching in the ingredient name field."
+      );
+      return;
     }
     const itemsList = linked
-      .map((i) => `• ${i.name}${i.quantity ? `: ${i.quantity} ${i.unit}` : ''}`)
-      .join('\n')
-    const message = `Hello Legit Organic! 🌿\n\nI'd like to order ingredients for a recipe:\n\n${itemsList}\n\nPlease send me the total and MoMo payment details. Thank you!`
-    const a = document.createElement('a')
-    a.href = `https://wa.me/233539569260?text=${encodeURIComponent(message)}`
-    a.target = '_blank'
-    a.rel = 'noopener noreferrer'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+      .map((i) => `• ${i.name}${i.quantity ? `: ${i.quantity} ${i.unit}` : ""}`)
+      .join("\n");
+    const message = `Hello Legit Organic! 🌿\n\nI'd like to order ingredients for a recipe:\n\n${itemsList}\n\nPlease send me the total and MoMo payment details. Thank you!`;
+    const a = document.createElement("a");
+    a.href = `https://wa.me/233539569260?text=${encodeURIComponent(message)}`;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   // ---------------------------------------------------------------------------
@@ -328,16 +353,15 @@ function BuilderContent() {
       <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#111827] flex items-center justify-center">
         <div className="text-charcoal/40 dark:text-[#9ca3af]">Loading builder…</div>
       </div>
-    )
+    );
   }
 
-  if (!isAuthenticated) return null
+  if (!isAuthenticated) return null;
 
   return (
     <div className="account-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
-
       {/* ── Header ───────────────────────────────────────────── */}
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '1.5rem' }}>
+      <div style={{ backgroundColor: "#0D3B2A", paddingTop: "5.5rem", paddingBottom: "1.5rem" }}>
         <div className="page-container max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="flex-1 min-w-0">
@@ -358,7 +382,13 @@ function BuilderContent() {
               disabled={isSaving || saveSuccess}
               className="shrink-0 bg-[#F4C430] text-[#0D3B2A] font-semibold px-6 py-3 rounded-xl hover:bg-[#c59f2c] transition-colors text-sm disabled:opacity-60 mt-6"
             >
-              {saveSuccess ? 'Saved!' : isSaving ? 'Saving…' : editingId ? 'Update Recipe' : 'Save Recipe'}
+              {saveSuccess
+                ? "Saved!"
+                : isSaving
+                  ? "Saving…"
+                  : editingId
+                    ? "Update Recipe"
+                    : "Save Recipe"}
             </button>
           </div>
 
@@ -384,16 +414,13 @@ function BuilderContent() {
             </div>
           )}
 
-          {saveError && (
-            <p className="mt-3 text-red-300 text-sm">{saveError}</p>
-          )}
+          {saveError && <p className="mt-3 text-red-300 text-sm">{saveError}</p>}
         </div>
       </div>
 
       {/* ── Main ─────────────────────────────────────────────── */}
       <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 items-start">
-
           {/* ── Ingredients editor ───────────────────────────── */}
           <div>
             <h2 className="font-display text-xl font-bold text-forest-green dark:text-[#faf7f0] mb-6">
@@ -432,7 +459,16 @@ function BuilderContent() {
               onClick={addIngredient}
               className="flex items-center gap-2 text-sm font-semibold text-[#2E7D32] dark:text-[#81C784] hover:text-[#0D3B2A] dark:hover:text-[#faf7f0] transition-colors"
             >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M12 5v14M5 12h14" />
               </svg>
               Add Ingredient
@@ -441,7 +477,6 @@ function BuilderContent() {
 
           {/* ── Sidebar ──────────────────────────────────────── */}
           <div className="space-y-6 lg:sticky lg:top-24">
-
             {/* Add another recipe */}
             <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-2xl p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-charcoal/40 dark:text-[#9ca3af] mb-3">
@@ -471,24 +506,28 @@ function BuilderContent() {
                 </ul>
               )}
               {recipeSearch && searchResults.length === 0 && (
-                <p className="mt-2 text-xs text-charcoal/40 dark:text-[#9ca3af]">No matching recipes found.</p>
+                <p className="mt-2 text-xs text-charcoal/40 dark:text-[#9ca3af]">
+                  No matching recipes found.
+                </p>
               )}
-              {!recipeSearch && allDefaultRecipes.filter((r) => !baseRecipes.some((b) => b.id === r.id)).length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {allDefaultRecipes
-                    .filter((r) => !baseRecipes.some((b) => b.id === r.id))
-                    .map((r) => (
-                      <li key={r.id}>
-                        <button
-                          onClick={() => addRecipeToBuilder(r.slug)}
-                          className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-[#F5F0E6] dark:hover:bg-[#374151] text-charcoal/70 dark:text-[#d1d5db] transition-colors"
-                        >
-                          {r.title}
-                        </button>
-                      </li>
-                    ))}
-                </ul>
-              )}
+              {!recipeSearch &&
+                allDefaultRecipes.filter((r) => !baseRecipes.some((b) => b.id === r.id)).length >
+                  0 && (
+                  <ul className="mt-2 space-y-1">
+                    {allDefaultRecipes
+                      .filter((r) => !baseRecipes.some((b) => b.id === r.id))
+                      .map((r) => (
+                        <li key={r.id}>
+                          <button
+                            onClick={() => addRecipeToBuilder(r.slug)}
+                            className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-[#F5F0E6] dark:hover:bg-[#374151] text-charcoal/70 dark:text-[#d1d5db] transition-colors"
+                          >
+                            {r.title}
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                )}
             </div>
 
             {/* Shopping summary */}
@@ -497,7 +536,7 @@ function BuilderContent() {
                 Shopping Summary
               </p>
               <p className="text-sm text-charcoal/70 dark:text-[#d1d5db] mb-1">
-                {ingredients.length} ingredient{ingredients.length !== 1 ? 's' : ''}
+                {ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""}
               </p>
               {ingredients.filter((i) => i.productId).length > 0 && (
                 <p className="text-xs text-[#2E7D32] dark:text-[#81C784] mb-4">
@@ -525,7 +564,7 @@ function BuilderContent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -533,64 +572,75 @@ function BuilderContent() {
 // ---------------------------------------------------------------------------
 
 interface IngredientRowProps {
-  ing: BuilderIngredient
-  isFirst: boolean
-  isLast: boolean
-  onChange: (field: keyof BuilderIngredient, value: string) => void
-  onRemove: () => void
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onLinkProduct: (productId: number, productName: string, productSlug: string) => void
-  onUnlinkProduct: () => void
+  ing: BuilderIngredient;
+  isFirst: boolean;
+  isLast: boolean;
+  onChange: (field: keyof BuilderIngredient, value: string) => void;
+  onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onLinkProduct: (productId: number, productName: string, productSlug: string) => void;
+  onUnlinkProduct: () => void;
 }
 
-function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onMoveDown, onLinkProduct, onUnlinkProduct }: IngredientRowProps) {
-  const [showNotes, setShowNotes] = useState(!!ing.notes)
-  const [searchResults, setSearchResults] = useState<Product[]>([])
-  const [showDropdown, setShowDropdown] = useState(false)
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+function IngredientRow({
+  ing,
+  isFirst,
+  isLast,
+  onChange,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  onLinkProduct,
+  onUnlinkProduct,
+}: IngredientRowProps) {
+  const [showNotes, setShowNotes] = useState(!!ing.notes);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const inputBase = 'bg-[#F5F0E6] dark:bg-gray-700 text-charcoal dark:text-white rounded-lg px-3 py-2 text-sm outline-none border border-transparent dark:border-gray-600 focus:ring-2 focus:ring-[#F4C430]/50 placeholder:text-gray-400 dark:placeholder:text-gray-500'
+  const inputBase =
+    "bg-[#F5F0E6] dark:bg-gray-700 text-charcoal dark:text-white rounded-lg px-3 py-2 text-sm outline-none border border-transparent dark:border-gray-600 focus:ring-2 focus:ring-[#F4C430]/50 placeholder:text-gray-400 dark:placeholder:text-gray-500";
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setShowDropdown(false)
+        setShowDropdown(false);
       }
     }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [])
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   function handleNameChange(value: string) {
-    onChange('name', value)
-    if (searchTimer.current) clearTimeout(searchTimer.current)
+    onChange("name", value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
     // Don't search when a product is already linked
-    if (ing.productId) return
+    if (ing.productId) return;
     if (!value.trim() || value.length < 2) {
-      setSearchResults([])
-      setShowDropdown(false)
-      return
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
     }
     searchTimer.current = setTimeout(async () => {
       try {
-        const data = await api.products.search(value)
-        const results = data.results.slice(0, 5)
-        setSearchResults(results)
-        setShowDropdown(results.length > 0)
+        const data = await api.products.search(value);
+        const results = data.results.slice(0, 5);
+        setSearchResults(results);
+        setShowDropdown(results.length > 0);
       } catch {
-        setSearchResults([])
-        setShowDropdown(false)
+        setSearchResults([]);
+        setShowDropdown(false);
       }
-    }, 300)
+    }, 300);
   }
 
   function handleSelectProduct(product: Product) {
-    onChange('name', product.name)
-    onLinkProduct(product.id, product.name, product.slug)
-    setShowDropdown(false)
-    setSearchResults([])
+    onChange("name", product.name);
+    onLinkProduct(product.id, product.name, product.slug);
+    setShowDropdown(false);
+    setSearchResults([]);
   }
 
   return (
@@ -631,19 +681,27 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
           {showDropdown && searchResults.length > 0 && (
             <ul className="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 border border-[#E6D8BD] dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
               {searchResults.map((product) => {
-                const imgSrc = product.images && product.images.length > 0
-                  ? getMediaUrl(product.images[0].image)
-                  : getMediaUrl(product.image)
+                const imgSrc =
+                  product.images && product.images.length > 0
+                    ? getMediaUrl(product.images[0].image)
+                    : getMediaUrl(product.image);
                 return (
                   <li key={product.id}>
                     <button
                       type="button"
-                      onMouseDown={(e) => { e.preventDefault(); handleSelectProduct(product) }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectProduct(product);
+                      }}
                       className="w-full flex items-center gap-2 p-2 hover:bg-[#F5F0E6] dark:hover:bg-gray-700 cursor-pointer text-left transition-colors"
                     >
                       {imgSrc ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={imgSrc} alt={product.name} className="w-8 h-8 rounded object-cover shrink-0" />
+                        <img
+                          src={imgSrc}
+                          alt={product.name}
+                          className="w-8 h-8 rounded object-cover shrink-0"
+                        />
                       ) : (
                         <div className="w-8 h-8 rounded bg-[#F5F0E6] dark:bg-gray-600 shrink-0" />
                       )}
@@ -657,7 +715,7 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
                       </div>
                     </button>
                   </li>
-                )
+                );
               })}
             </ul>
           )}
@@ -668,7 +726,7 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
           type="text"
           inputMode="decimal"
           value={ing.quantity}
-          onChange={(e) => onChange('quantity', e.target.value)}
+          onChange={(e) => onChange("quantity", e.target.value)}
           placeholder="Qty"
           className={`${inputBase} w-20 shrink-0 text-center`}
         />
@@ -676,11 +734,13 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
         {/* Unit */}
         <select
           value={ing.unit}
-          onChange={(e) => onChange('unit', e.target.value)}
+          onChange={(e) => onChange("unit", e.target.value)}
           className={`${inputBase} w-24 shrink-0`}
         >
           {UNITS.map((u) => (
-            <option key={u} value={u}>{u}</option>
+            <option key={u} value={u}>
+              {u}
+            </option>
           ))}
         </select>
 
@@ -690,7 +750,7 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
           className="text-xs text-charcoal/40 dark:text-[#9ca3af] hover:text-charcoal/70 dark:hover:text-[#d1d5db] transition-colors shrink-0 hidden sm:block"
           title="Toggle notes"
         >
-          {showNotes ? 'hide notes' : 'notes'}
+          {showNotes ? "hide notes" : "notes"}
         </button>
 
         {/* Delete */}
@@ -737,14 +797,14 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
           <input
             type="text"
             value={ing.notes}
-            onChange={(e) => onChange('notes', e.target.value)}
+            onChange={(e) => onChange("notes", e.target.value)}
             placeholder="Optional notes (e.g. finely chopped)"
             className={`${inputBase} w-full`}
           />
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -753,12 +813,14 @@ function IngredientRow({ ing, isFirst, isLast, onChange, onRemove, onMoveUp, onM
 
 export default function RecipeBuilderPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#111827] flex items-center justify-center">
-        <span className="text-charcoal/40 dark:text-[#9ca3af]">Loading builder…</span>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#111827] flex items-center justify-center">
+          <span className="text-charcoal/40 dark:text-[#9ca3af]">Loading builder…</span>
+        </div>
+      }
+    >
       <BuilderContent />
     </Suspense>
-  )
+  );
 }

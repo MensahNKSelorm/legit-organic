@@ -10,28 +10,27 @@ class Command(BaseCommand):
         staff = get_user_model().objects.filter(is_staff=True, is_active=True)
         enrolled_ids = set(
             TOTPDevice.objects.filter(
-                user__in=staff, confirmed=True,
+                user__in=staff,
+                confirmed=True,
             ).values_list('user_id', flat=True)
         )
-        missing = list(
-            staff.exclude(pk__in=enrolled_ids).values_list('email', flat=True)
-        )
+        missing = list(staff.exclude(pk__in=enrolled_ids).values_list('email', flat=True))
         owners_missing = list(
-            staff.filter(is_superuser=True).exclude(pk__in=enrolled_ids).values_list(
-                'email', flat=True
-            )
+            staff.filter(is_superuser=True)
+            .exclude(pk__in=enrolled_ids)
+            .values_list('email', flat=True)
         )
         self.stdout.write(
             f'Active staff: {staff.count()} · Enrolled: {len(enrolled_ids)} · Missing: {len(missing)}'
         )
         if owners_missing:
-            raise CommandError(
-                'Owner 2FA is not ready: ' + ', '.join(owners_missing)
-            )
+            raise CommandError('Owner 2FA is not ready: ' + ', '.join(owners_missing))
         if missing:
             raise CommandError(
                 'Do not enable STAFF_2FA_MODE=enforce yet. Missing: ' + ', '.join(missing)
             )
-        self.stdout.write(self.style.SUCCESS(
-            'All active staff are enrolled. STAFF_2FA_MODE=enforce is safe to enable.'
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                'All active staff are enrolled. STAFF_2FA_MODE=enforce is safe to enable.'
+            )
+        )

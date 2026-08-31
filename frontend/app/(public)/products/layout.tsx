@@ -1,5 +1,5 @@
-import { WishlistProvider } from '@/lib/wishlist'
+import { WishlistProvider } from "@/lib/wishlist";
 
 export default function ProductsLayout({ children }: { children: React.ReactNode }) {
-  return <WishlistProvider>{children}</WishlistProvider>
+  return <WishlistProvider>{children}</WishlistProvider>;
 }

@@ -1,159 +1,164 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
-import { api } from '@/lib/api'
-import LocationPicker from '@/components/ui/LocationPicker'
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
+import LocationPicker from "@/components/ui/LocationPicker";
 
 export interface AddressData {
-  house_number: string
-  street_address: string
-  city: string
-  delivery_region: string
-  phone_number: string
-  latitude?: number
-  longitude?: number
+  house_number: string;
+  street_address: string;
+  city: string;
+  delivery_region: string;
+  phone_number: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface AddressModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSave: (address: AddressData) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (address: AddressData) => void;
 }
 
 const GHANA_REGIONS = [
-  'Ahafo',
-  'Ashanti',
-  'Bono',
-  'Bono East',
-  'Central',
-  'Eastern',
-  'Greater Accra',
-  'North East',
-  'Northern',
-  'Oti',
-  'Savannah',
-  'Upper East',
-  'Upper West',
-  'Volta',
-  'Western',
-  'Western North',
-  'International',
-]
+  "Ahafo",
+  "Ashanti",
+  "Bono",
+  "Bono East",
+  "Central",
+  "Eastern",
+  "Greater Accra",
+  "North East",
+  "Northern",
+  "Oti",
+  "Savannah",
+  "Upper East",
+  "Upper West",
+  "Volta",
+  "Western",
+  "Western North",
+  "International",
+];
 
-const PHONE_RE = /^(\+233|0)[0-9]{9}$/
+const PHONE_RE = /^(\+233|0)[0-9]{9}$/;
 
 export default function AddressModal({ isOpen, onClose, onSave }: AddressModalProps) {
-  const { user, updateUser } = useAuth()
+  const { user, updateUser } = useAuth();
 
-  const [houseNumber, setHouseNumber] = useState('')
-  const [streetAddress, setStreetAddress] = useState('')
-  const [city, setCity] = useState('')
-  const [deliveryRegion, setDeliveryRegion] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [houseNumber, setHouseNumber] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [deliveryRegion, setDeliveryRegion] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
-  const [showMap, setShowMap] = useState(false)
-  const [latitude, setLatitude] = useState<number | null>(null)
-  const [longitude, setLongitude] = useState<number | null>(null)
+  const [showMap, setShowMap] = useState(false);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
-  const [errors, setErrors] = useState<Partial<AddressData>>({})
-  const [saving, setSaving] = useState(false)
-  const [apiError, setApiError] = useState('')
+  const [errors, setErrors] = useState<Partial<AddressData>>({});
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   // Pre-fill from existing user data
   useEffect(() => {
     if (user && isOpen) {
       Promise.resolve().then(() => {
-        setHouseNumber(user.house_number ?? '')
-        setStreetAddress(user.street_address ?? '')
-        setCity(user.city ?? '')
-        setDeliveryRegion(user.delivery_region ?? '')
-        setPhoneNumber(user.phone_number ?? '')
-        setLatitude(null)
-        setLongitude(null)
-        setErrors({})
-        setApiError('')
-      })
+        setHouseNumber(user.house_number ?? "");
+        setStreetAddress(user.street_address ?? "");
+        setCity(user.city ?? "");
+        setDeliveryRegion(user.delivery_region ?? "");
+        setPhoneNumber(user.phone_number ?? "");
+        setLatitude(null);
+        setLongitude(null);
+        setErrors({});
+        setApiError("");
+      });
     }
-  }, [user, isOpen])
+  }, [user, isOpen]);
 
   // Close on Escape
   useEffect(() => {
-    if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [isOpen, onClose])
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
 
   const validate = (): boolean => {
-    const next: Partial<AddressData> = {}
+    const next: Partial<AddressData> = {};
 
-    if (!streetAddress.trim()) next.street_address = 'Street address is required.'
-    if (!city.trim()) next.city = 'City is required.'
-    if (!deliveryRegion) next.delivery_region = 'Please select a region.'
+    if (!streetAddress.trim()) next.street_address = "Street address is required.";
+    if (!city.trim()) next.city = "City is required.";
+    if (!deliveryRegion) next.delivery_region = "Please select a region.";
 
     if (!phoneNumber.trim()) {
-      next.phone_number = 'Phone number is required.'
-    } else if (!PHONE_RE.test(phoneNumber.replace(/\s/g, ''))) {
-      next.phone_number = 'Enter a valid Ghana number e.g. +233244123456 or 0244123456'
+      next.phone_number = "Phone number is required.";
+    } else if (!PHONE_RE.test(phoneNumber.replace(/\s/g, ""))) {
+      next.phone_number = "Enter a valid Ghana number e.g. +233244123456 or 0244123456";
     }
 
-    setErrors(next)
-    return Object.keys(next).length === 0
-  }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
+    e.preventDefault();
+    if (!validate()) return;
 
-    setSaving(true)
-    setApiError('')
+    setSaving(true);
+    setApiError("");
 
     const formData: AddressData = {
       house_number: houseNumber.trim(),
       street_address: streetAddress.trim(),
       city: city.trim(),
       delivery_region: deliveryRegion,
-      phone_number: phoneNumber.replace(/\s/g, ''),
-    }
+      phone_number: phoneNumber.replace(/\s/g, ""),
+    };
 
     try {
-      console.log('AddressModal payload:', JSON.stringify({
-        email: user?.email,
-        house_number: formData.house_number,
-        street_address: formData.street_address,
-        city: formData.city,
-        delivery_region: formData.delivery_region,
-        phone_number: formData.phone_number,
-      }))
+      console.log(
+        "AddressModal payload:",
+        JSON.stringify({
+          email: user?.email,
+          house_number: formData.house_number,
+          street_address: formData.street_address,
+          city: formData.city,
+          delivery_region: formData.delivery_region,
+          phone_number: formData.phone_number,
+        })
+      );
       await api.users.updateProfile({
         ...formData,
         email: user?.email,
-        first_name: user?.first_name || '',
-        last_name: user?.last_name || '',
-      })
+        first_name: user?.first_name || "",
+        last_name: user?.last_name || "",
+      });
       updateUser({
         street_address: formData.street_address,
         house_number: formData.house_number,
         city: formData.city,
         delivery_region: formData.delivery_region,
         phone_number: formData.phone_number,
-      })
-      onSave({ ...formData, latitude: latitude ?? undefined, longitude: longitude ?? undefined })
-      onClose()
+      });
+      onSave({ ...formData, latitude: latitude ?? undefined, longitude: longitude ?? undefined });
+      onClose();
     } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Failed to save address.')
+      setApiError(err instanceof Error ? err.message : "Failed to save address.");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const inputBase =
-    'w-full px-4 py-2.5 rounded-xl border bg-[#FAF7F0] text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 transition-colors'
-  const inputOk = `${inputBase} border-[#E6D8BD] focus:border-[#2E7D32] focus:ring-[#2E7D32]`
-  const inputErr = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-400`
+    "w-full px-4 py-2.5 rounded-xl border bg-[#FAF7F0] text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 transition-colors";
+  const inputOk = `${inputBase} border-[#E6D8BD] focus:border-[#2E7D32] focus:ring-[#2E7D32]`;
+  const inputErr = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-400`;
 
   return (
     <>
@@ -209,24 +214,30 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                            text-[#2E7D32] font-semibold text-sm
                            hover:bg-[#2E7D32]/5 transition-colors"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                     className="w-4 h-4">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-4 h-4"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
-                {showMap ? 'Hide Map' : 'Pick Location on Map'}
+                {showMap ? "Hide Map" : "Pick Location on Map"}
               </button>
 
               {showMap && (
                 <LocationPicker
                   onLocationSelect={(data) => {
-                    if (data.street_address) setStreetAddress(data.street_address)
-                    setHouseNumber(data.house_number || '')
-                    if (data.city) setCity(data.city)
-                    if (data.delivery_region) setDeliveryRegion(data.delivery_region)
-                    if (data.latitude) setLatitude(data.latitude)
-                    if (data.longitude) setLongitude(data.longitude)
+                    if (data.street_address) setStreetAddress(data.street_address);
+                    setHouseNumber(data.house_number || "");
+                    if (data.city) setCity(data.city);
+                    if (data.delivery_region) setDeliveryRegion(data.delivery_region);
+                    if (data.latitude) setLatitude(data.latitude);
+                    if (data.longitude) setLongitude(data.longitude);
                   }}
                 />
               )}
@@ -253,7 +264,10 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                 <input
                   type="text"
                   value={streetAddress}
-                  onChange={(e) => { setStreetAddress(e.target.value); setErrors((p) => ({ ...p, street_address: undefined })) }}
+                  onChange={(e) => {
+                    setStreetAddress(e.target.value);
+                    setErrors((p) => ({ ...p, street_address: undefined }));
+                  }}
                   placeholder="e.g. 12 Independence Ave"
                   className={errors.street_address ? inputErr : inputOk}
                 />
@@ -270,13 +284,14 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                 <input
                   type="text"
                   value={city}
-                  onChange={(e) => { setCity(e.target.value); setErrors((p) => ({ ...p, city: undefined })) }}
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                    setErrors((p) => ({ ...p, city: undefined }));
+                  }}
                   placeholder="e.g. Accra"
                   className={errors.city ? inputErr : inputOk}
                 />
-                {errors.city && (
-                  <p className="mt-1 text-xs text-red-500">{errors.city}</p>
-                )}
+                {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
               </div>
 
               {/* Region */}
@@ -286,12 +301,17 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                 </label>
                 <select
                   value={deliveryRegion}
-                  onChange={(e) => { setDeliveryRegion(e.target.value); setErrors((p) => ({ ...p, delivery_region: undefined })) }}
+                  onChange={(e) => {
+                    setDeliveryRegion(e.target.value);
+                    setErrors((p) => ({ ...p, delivery_region: undefined }));
+                  }}
                   className={errors.delivery_region ? inputErr : inputOk}
                 >
                   <option value="">Select region…</option>
                   {GHANA_REGIONS.map((r) => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
                   ))}
                 </select>
                 {errors.delivery_region && (
@@ -307,7 +327,10 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                 <input
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) => { setPhoneNumber(e.target.value); setErrors((p) => ({ ...p, phone_number: undefined })) }}
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value);
+                    setErrors((p) => ({ ...p, phone_number: undefined }));
+                  }}
                   placeholder="+233244123456 or 0244123456"
                   className={errors.phone_number ? inputErr : inputOk}
                 />
@@ -333,12 +356,12 @@ export default function AddressModal({ isOpen, onClose, onSave }: AddressModalPr
                 disabled={saving}
                 className="flex-1 py-3 rounded-xl bg-[#0D3B2A] text-[#F4C430] font-semibold text-sm hover:bg-[#0a2e20] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {saving ? 'Saving…' : 'Save & Continue'}
+                {saving ? "Saving…" : "Save & Continue"}
               </button>
             </div>
           </form>
         </div>
       </div>
     </>
-  )
+  );
 }

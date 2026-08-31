@@ -2,6 +2,7 @@
 Development superuser creation script.
 Run with: venv/bin/python create_superuser.py
 """
+
 import os
 import sys
 import django

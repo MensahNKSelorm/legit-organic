@@ -175,7 +175,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
               {/* First / Last name row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="guest-first-name" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                  <label
+                    htmlFor="guest-first-name"
+                    className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                  >
                     First Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -194,7 +197,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
                   )}
                 </div>
                 <div>
-                  <label htmlFor="guest-last-name" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                  <label
+                    htmlFor="guest-last-name"
+                    className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                  >
                     Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -215,7 +221,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
               </div>
 
               <div>
-                <label htmlFor="guest-email" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                <label
+                  htmlFor="guest-email"
+                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                >
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -234,7 +243,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
 
               {/* Phone */}
               <div>
-                <label htmlFor="guest-phone" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                <label
+                  htmlFor="guest-phone"
+                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                >
                   Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -291,7 +303,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
 
               {/* House number */}
               <div>
-                <label htmlFor="guest-house-number" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                <label
+                  htmlFor="guest-house-number"
+                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                >
                   House / Apartment Number
                 </label>
                 <input
@@ -306,7 +321,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
 
               {/* Street address */}
               <div>
-                <label htmlFor="guest-street-address" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                <label
+                  htmlFor="guest-street-address"
+                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                >
                   Street Address <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -327,7 +345,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
 
               {/* City */}
               <div>
-                <label htmlFor="guest-city" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                <label
+                  htmlFor="guest-city"
+                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                >
                   City <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -346,7 +367,10 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
 
               {/* Region */}
               <div>
-                <label htmlFor="guest-region" className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]">
+                <label
+                  htmlFor="guest-region"
+                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
+                >
                   Region <span className="text-red-500">*</span>
                 </label>
                 <select

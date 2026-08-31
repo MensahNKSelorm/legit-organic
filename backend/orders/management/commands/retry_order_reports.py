@@ -11,26 +11,38 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         max_attempts = getattr(settings, 'ORDER_REPORT_MAX_ATTEMPTS', 10)
-        candidates = Order.objects.filter(is_test=False).filter(
-            Q(
-                order_source='whatsapp', status='whatsapp_pending',
-                submission_report_sent_at__isnull=True,
-                submission_report_attempts__lt=max_attempts,
+        candidates = (
+            Order.objects.filter(is_test=False)
+            .filter(
+                Q(
+                    order_source='whatsapp',
+                    status='whatsapp_pending',
+                    submission_report_sent_at__isnull=True,
+                    submission_report_attempts__lt=max_attempts,
+                )
+                | Q(
+                    payment_status='success',
+                    payment_report_sent_at__isnull=True,
+                    payment_report_attempts__lt=max_attempts,
+                )
+                | Q(
+                    status='delivered',
+                    delivery_report_sent_at__isnull=True,
+                    delivery_report_attempts__lt=max_attempts,
+                )
             )
-            | Q(
-                payment_status='success', payment_report_sent_at__isnull=True,
-                payment_report_attempts__lt=max_attempts,
+            .only(
+                'id',
+                'order_source',
+                'payment_status',
+                'status',
+                'submission_report_sent_at',
+                'submission_report_attempts',
+                'payment_report_sent_at',
+                'delivery_report_sent_at',
+                'payment_report_attempts',
+                'delivery_report_attempts',
             )
-            | Q(
-                status='delivered', delivery_report_sent_at__isnull=True,
-                delivery_report_attempts__lt=max_attempts,
-            )
-        ).only(
-            'id', 'order_source', 'payment_status', 'status',
-            'submission_report_sent_at', 'submission_report_attempts',
-            'payment_report_sent_at',
-            'delivery_report_sent_at', 'payment_report_attempts',
-            'delivery_report_attempts',
         )
 
         sent = 0

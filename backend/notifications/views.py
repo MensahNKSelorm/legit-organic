@@ -25,10 +25,12 @@ class NotificationListView(APIView):
         ).order_by('-created_at')
         unread_count = queryset.filter(is_read=False).count()
 
-        return Response({
-            'unread_count': unread_count,
-            'results': NotificationSerializer(queryset[:50], many=True).data,
-        })
+        return Response(
+            {
+                'unread_count': unread_count,
+                'results': NotificationSerializer(queryset[:50], many=True).data,
+            }
+        )
 
 
 class NotificationMarkReadView(APIView):
@@ -43,7 +45,9 @@ class NotificationMarkReadView(APIView):
             )
 
         notification = get_object_or_404(
-            Notification, pk=pk, recipient=request.user,
+            Notification,
+            pk=pk,
+            recipient=request.user,
         )
         notification.is_read = True
         notification.save(update_fields=['is_read'])
@@ -62,7 +66,8 @@ class NotificationMarkAllReadView(APIView):
             )
 
         marked = Notification.objects.filter(
-            recipient=request.user, is_read=False,
+            recipient=request.user,
+            is_read=False,
         ).update(is_read=True)
         return Response({'marked': marked})
 
@@ -74,13 +79,14 @@ class PushConfigView(APIView):
     def get(self, request):
         if not request.user.is_staff:
             return Response({'error': 'Staff access required'}, status=403)
-        return Response({
-            'enabled': bool(
-                settings.WEB_PUSH_VAPID_PUBLIC_KEY
-                and settings.WEB_PUSH_VAPID_PRIVATE_KEY
-            ),
-            'public_key': settings.WEB_PUSH_VAPID_PUBLIC_KEY,
-        })
+        return Response(
+            {
+                'enabled': bool(
+                    settings.WEB_PUSH_VAPID_PUBLIC_KEY and settings.WEB_PUSH_VAPID_PRIVATE_KEY
+                ),
+                'public_key': settings.WEB_PUSH_VAPID_PUBLIC_KEY,
+            }
+        )
 
 
 class PushSubscriptionView(APIView):

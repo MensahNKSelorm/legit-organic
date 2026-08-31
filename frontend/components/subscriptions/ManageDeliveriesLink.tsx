@@ -1,14 +1,18 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useAuth } from '@/lib/auth'
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
 
 export default function ManageDeliveriesLink() {
-  const { isAuthenticated, isLoading } = useAuth()
-  const href = isAuthenticated ? '/subscriptions/manage' : '/login?next=/subscriptions/manage'
+  const { isAuthenticated, isLoading } = useAuth();
+  const href = isAuthenticated ? "/subscriptions/manage" : "/login?next=/subscriptions/manage";
 
   if (isLoading) {
-    return <span className="mt-6 inline-flex border-b border-current pb-1 text-sm font-bold opacity-45">Manage my deliveries</span>
+    return (
+      <span className="mt-6 inline-flex border-b border-current pb-1 text-sm font-bold opacity-45">
+        Manage my deliveries
+      </span>
+    );
   }
 
   return (
@@ -18,5 +22,5 @@ export default function ManageDeliveriesLink() {
     >
       Manage my deliveries
     </Link>
-  )
+  );
 }

@@ -43,10 +43,12 @@ export default async function RecipesPage({ searchParams }: Props) {
         )
       )
     : allRecipes;
-  const suggestions = allRecipes.map((recipe) => ({ title: recipe.title })).filter(
-    (recipe, index, all) =>
-      all.findIndex((item) => item.title.toLowerCase() === recipe.title.toLowerCase()) === index
-  );
+  const suggestions = allRecipes
+    .map((recipe) => ({ title: recipe.title }))
+    .filter(
+      (recipe, index, all) =>
+        all.findIndex((item) => item.title.toLowerCase() === recipe.title.toLowerCase()) === index
+    );
 
   return (
     <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">

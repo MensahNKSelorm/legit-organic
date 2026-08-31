@@ -38,8 +38,15 @@ class ProductAdmin(ModelAdmin):
     show_full_result_count = True
     inlines = [ProductImageInline]
     list_display = [
-        'name', 'category', 'price', 'unit', 'region',
-        'business_supply_category', 'is_featured', 'is_available', 'created_at',
+        'name',
+        'category',
+        'price',
+        'unit',
+        'region',
+        'business_supply_category',
+        'is_featured',
+        'is_available',
+        'created_at',
     ]
     list_filter = ['category', 'business_supply_category', 'is_featured', 'is_available', 'region']
     search_fields = ['name', 'description']
@@ -47,26 +54,44 @@ class ProductAdmin(ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at', 'image']
     fieldsets = (
-        ('Product identity', {
-            'fields': ('name', 'slug', 'description', 'category'),
-        }),
-        ('Price & pack', {
-            'fields': ('price', 'unit'),
-        }),
-        ('Farm & provenance', {
-            'fields': ('region', 'badge'),
-        }),
-        ('Storefront state', {
-            'fields': ('is_featured', 'is_available', 'business_supply_category'),
-        }),
-        ('Nutrition, care & storage', {
-            'fields': ('nutritional_score', 'nutritional_info', 'storage_tips'),
-            'classes': ('collapse',),
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
-        }),
+        (
+            'Product identity',
+            {
+                'fields': ('name', 'slug', 'description', 'category'),
+            },
+        ),
+        (
+            'Price & pack',
+            {
+                'fields': ('price', 'unit'),
+            },
+        ),
+        (
+            'Farm & provenance',
+            {
+                'fields': ('region', 'badge'),
+            },
+        ),
+        (
+            'Storefront state',
+            {
+                'fields': ('is_featured', 'is_available', 'business_supply_category'),
+            },
+        ),
+        (
+            'Nutrition, care & storage',
+            {
+                'fields': ('nutritional_score', 'nutritional_info', 'storage_tips'),
+                'classes': ('collapse',),
+            },
+        ),
+        (
+            'Timestamps',
+            {
+                'fields': ('created_at', 'updated_at'),
+                'classes': ('collapse',),
+            },
+        ),
     )
 
     def has_delete_permission(self, request, obj=None):
@@ -77,8 +102,12 @@ class ProductAdmin(ModelAdmin):
         super().save_model(request, obj, form, change)
         if change:
             from security.audit import record_boolean_state_change
+
             record_boolean_state_change(
-                request=request, target=obj, field='is_available',
-                old_value=old_available, new_value=obj.is_available,
+                request=request,
+                target=obj,
+                field='is_available',
+                old_value=old_available,
+                new_value=obj.is_available,
                 action='product.availability_changed',
             )

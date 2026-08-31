@@ -25,7 +25,12 @@ class BlogPostAdmin(ModelAdmin):
     change_form_before_template = 'admin/includes/writing_assistant.html'
     view_on_site = True
     list_display = [
-        'title', 'author', 'category', 'is_published', 'published_at', 'created_at',
+        'title',
+        'author',
+        'category',
+        'is_published',
+        'published_at',
+        'created_at',
     ]
     list_filter = ['is_published', 'category', 'author']
     search_fields = ['title', 'content', 'excerpt']
@@ -34,22 +39,37 @@ class BlogPostAdmin(ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'permanent_delete_control']
     date_hierarchy = 'published_at'
     fieldsets = (
-        ('The story', {
-            'fields': ('title', 'slug', 'excerpt', 'content'),
-        }),
-        ('Lead image', {
-            'fields': ('cover_image',),
-        }),
-        ('Byline & filing', {
-            'fields': ('author', 'category', 'tags'),
-        }),
-        ('Publication', {
-            'fields': ('is_published', 'published_at'),
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at', 'permanent_delete_control'),
-            'classes': ('collapse',),
-        }),
+        (
+            'The story',
+            {
+                'fields': ('title', 'slug', 'excerpt', 'content'),
+            },
+        ),
+        (
+            'Lead image',
+            {
+                'fields': ('cover_image',),
+            },
+        ),
+        (
+            'Byline & filing',
+            {
+                'fields': ('author', 'category', 'tags'),
+            },
+        ),
+        (
+            'Publication',
+            {
+                'fields': ('is_published', 'published_at'),
+            },
+        ),
+        (
+            'Timestamps',
+            {
+                'fields': ('created_at', 'updated_at', 'permanent_delete_control'),
+                'classes': ('collapse',),
+            },
+        ),
     )
 
     def has_delete_permission(self, request, obj=None):
@@ -70,8 +90,12 @@ class BlogPostAdmin(ModelAdmin):
         super().save_model(request, obj, form, change)
         if change:
             from security.audit import record_boolean_state_change
+
             record_boolean_state_change(
-                request=request, target=obj, field='is_published',
-                old_value=old_published, new_value=obj.is_published,
+                request=request,
+                target=obj,
+                field='is_published',
+                old_value=old_published,
+                new_value=obj.is_published,
                 action='blog.publication_changed',
             )

@@ -1,27 +1,27 @@
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import RecipeDetailActions from "@/components/recipes/RecipeDetailActions";
+import { getMediaUrl } from "@/lib/media";
+import CombinedRecipeEditor, {
+  type EditableMealIngredient,
+} from "@/components/recipes/CombinedRecipeEditor";
+import AddDishSearch from "@/components/recipes/AddDishSearch";
+import RecipeShopIngredients from "@/components/recipes/RecipeShopIngredients";
+import JsonLd from "@/components/seo/JsonLd";
+import { absoluteUrl, DEFAULT_SOCIAL_IMAGE, plainText } from "@/lib/seo";
 
-import { notFound } from 'next/navigation'
-import type { Metadata } from 'next'
-import Image from 'next/image'
-import Link from 'next/link'
-import { api } from '@/lib/api'
-import RecipeDetailActions from '@/components/recipes/RecipeDetailActions'
-import { getMediaUrl } from '@/lib/media'
-import CombinedRecipeEditor, { type EditableMealIngredient } from '@/components/recipes/CombinedRecipeEditor'
-import AddDishSearch from '@/components/recipes/AddDishSearch'
-import RecipeShopIngredients from '@/components/recipes/RecipeShopIngredients'
-import JsonLd from '@/components/seo/JsonLd'
-import { absoluteUrl, DEFAULT_SOCIAL_IMAGE, plainText } from '@/lib/seo'
-
-
-type Props = { params: Promise<{ slug: string }> }
+type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const { slug } = await params
-    const recipe = await api.recipes.detail(slug)
+    const { slug } = await params;
+    const recipe = await api.recipes.detail(slug);
     const description = recipe.description
-      ? recipe.description.replace(/<[^>]*>/g, '').slice(0, 160)
-      : `Learn how to make ${recipe.title} using fresh organic ingredients from Ghana.`
+      ? recipe.description.replace(/<[^>]*>/g, "").slice(0, 160)
+      : `Learn how to make ${recipe.title} using fresh organic ingredients from Ghana.`;
 
     return {
       title: recipe.title,
@@ -30,87 +30,91 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       keywords: [
         recipe.title,
         `${recipe.title} recipe`,
-        'Ghana recipe',
-        'Ghanaian cuisine',
-        'organic ingredients Ghana',
-        'healthy Ghanaian food',
-        'traditional Ghana cooking',
+        "Ghana recipe",
+        "Ghanaian cuisine",
+        "organic ingredients Ghana",
+        "healthy Ghanaian food",
+        "traditional Ghana cooking",
       ],
       openGraph: {
         title: recipe.title,
         description,
         url: `/recipes/${recipe.slug}`,
         images: [{ url: getMediaUrl(recipe.cover_image, DEFAULT_SOCIAL_IMAGE), alt: recipe.title }],
-        type: 'website',
+        type: "website",
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title: recipe.title,
         description,
         images: [getMediaUrl(recipe.cover_image, DEFAULT_SOCIAL_IMAGE)],
       },
-    }
+    };
   } catch {
-    return { title: 'Recipe | Legit Organic' }
+    return { title: "Recipe | Legit Organic" };
   }
 }
 
 const difficultyConfig: Record<string, { label: string; color: string }> = {
-  easy:   { label: 'Easy',     color: '#2E7D32' },
-  medium: { label: 'Medium',   color: '#F4C430' },
-  hard:   { label: 'Advanced', color: '#dc2626' },
-}
+  easy: { label: "Easy", color: "#2E7D32" },
+  medium: { label: "Medium", color: "#F4C430" },
+  hard: { label: "Advanced", color: "#dc2626" },
+};
 
 function formatTime(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m ? `${h}h ${m}m` : `${h}h`
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
 }
 
 function duration(minutes: number): string | undefined {
-  return minutes > 0 ? `PT${minutes}M` : undefined
+  return minutes > 0 ? `PT${minutes}M` : undefined;
 }
 
 function getEmbedUrl(url: string): string {
-  const watchMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/)
-  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`
-  const shortMatch = url.match(/youtu\.be\/([^?]+)/)
-  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`
-  return url
+  const watchMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/);
+  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`;
+  const shortMatch = url.match(/youtu\.be\/([^?]+)/);
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+  return url;
 }
 
-
 export default async function RecipeDetailPage({ params }: Props) {
-  const { slug } = await params
-  const recipe = await api.recipes.detail(slug).catch(() => notFound())
-  const catalogue = await api.recipes.default().catch(() => [])
-  const diff = difficultyConfig[recipe.difficulty] ?? { label: recipe.difficulty, color: '#6b7280' }
-  const coverSrc = getMediaUrl(recipe.cover_image)
-  const recipeUrl = `https://legitorganic.com/recipes/${recipe.slug}`
-  const recipeImage = absoluteUrl(getMediaUrl(recipe.cover_image, DEFAULT_SOCIAL_IMAGE))
-  const editableIngredients: EditableMealIngredient[] = recipe.ingredients.map((ingredient, index) => {
-    const matchedProduct = ingredient.product || ingredient.matched_products[0] || null
-    return {
-      key: `${recipe.slug}-${index}`,
-      group: recipe.title,
-      name: ingredient.name,
-      quantity: ingredient.quantity,
-      unit: ingredient.unit,
-      notes: ingredient.notes,
-      productId: matchedProduct?.id ?? null,
-      productName: matchedProduct?.name ?? null,
-      productSlug: matchedProduct?.slug ?? null,
+  const { slug } = await params;
+  const recipe = await api.recipes.detail(slug).catch(() => notFound());
+  const catalogue = await api.recipes.default().catch(() => []);
+  const diff = difficultyConfig[recipe.difficulty] ?? {
+    label: recipe.difficulty,
+    color: "#6b7280",
+  };
+  const coverSrc = getMediaUrl(recipe.cover_image);
+  const recipeUrl = `https://legitorganic.com/recipes/${recipe.slug}`;
+  const recipeImage = absoluteUrl(getMediaUrl(recipe.cover_image, DEFAULT_SOCIAL_IMAGE));
+  const editableIngredients: EditableMealIngredient[] = recipe.ingredients.map(
+    (ingredient, index) => {
+      const matchedProduct = ingredient.product || ingredient.matched_products[0] || null;
+      return {
+        key: `${recipe.slug}-${index}`,
+        group: recipe.title,
+        name: ingredient.name,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+        notes: ingredient.notes,
+        productId: matchedProduct?.id ?? null,
+        productName: matchedProduct?.name ?? null,
+        productSlug: matchedProduct?.slug ?? null,
+      };
     }
-  })
+  );
 
   return (
     <div className="story-page min-h-screen bg-[#FAF7F0] dark:bg-[#171B18]">
       <JsonLd
         data={{
-          '@context': 'https://schema.org',
-          '@type': 'Recipe',
-          '@id': `${recipeUrl}#recipe`,
+          "@context": "https://schema.org",
+          "@type": "Recipe",
+          "@id": `${recipeUrl}#recipe`,
           name: recipe.title,
           alternateName: recipe.local_name || undefined,
           description: plainText(recipe.description, 500),
@@ -120,54 +124,73 @@ export default async function RecipeDetailPage({ params }: Props) {
           totalTime: duration(recipe.total_time || recipe.prep_time + recipe.cook_time),
           recipeYield: recipe.servings ? `${recipe.servings} servings` : undefined,
           recipeCategory: recipe.recipe_category || recipe.meal_type || undefined,
-          recipeCuisine: recipe.cuisine || recipe.country || 'Ghanaian',
-          keywords: recipe.keywords?.join(', ') || undefined,
+          recipeCuisine: recipe.cuisine || recipe.country || "Ghanaian",
+          keywords: recipe.keywords?.join(", ") || undefined,
           recipeIngredient: recipe.ingredients.length
-            ? recipe.ingredients.map(ingredient =>
-                ingredient.raw_text || [ingredient.quantity, ingredient.unit, ingredient.name].filter(Boolean).join(' ')
+            ? recipe.ingredients.map(
+                (ingredient) =>
+                  ingredient.raw_text ||
+                  [ingredient.quantity, ingredient.unit, ingredient.name].filter(Boolean).join(" ")
               )
             : undefined,
           recipeInstructions: recipe.steps.length
-            ? recipe.steps.map(step => ({
-                '@type': 'HowToStep',
+            ? recipe.steps.map((step) => ({
+                "@type": "HowToStep",
                 position: step.step_number,
                 name: step.section || `Step ${step.step_number}`,
                 text: plainText(step.instruction, 1000),
               }))
             : undefined,
-          author: { '@id': 'https://legitorganic.com/#organization' },
+          author: { "@id": "https://legitorganic.com/#organization" },
           datePublished: recipe.published_at || recipe.created_at,
           dateModified: recipe.updated_at || recipe.published_at || recipe.created_at,
           mainEntityOfPage: recipeUrl,
-          inLanguage: 'en-GH',
+          inLanguage: "en-GH",
         }}
       />
       <JsonLd
         data={{
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Recipes', item: 'https://legitorganic.com/recipes' },
-            { '@type': 'ListItem', position: 2, name: recipe.title, item: recipeUrl },
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Recipes",
+              item: "https://legitorganic.com/recipes",
+            },
+            { "@type": "ListItem", position: 2, name: recipe.title, item: recipeUrl },
           ],
         }}
       />
 
       {/* ── Breadcrumb ─────────────────────────────────────────── */}
-      <div style={{ backgroundColor: '#0D3B2A', paddingTop: '5.5rem', paddingBottom: '1rem' }}>
+      <div style={{ backgroundColor: "#0D3B2A", paddingTop: "5.5rem", paddingBottom: "1rem" }}>
         <div className="page-container max-w-7xl mx-auto px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-sm text-light-leaf flex-wrap" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-mist-white transition-colors">Home</Link>
+          <nav
+            className="flex items-center gap-2 text-sm text-light-leaf flex-wrap"
+            aria-label="Breadcrumb"
+          >
+            <Link href="/" className="hover:text-mist-white transition-colors">
+              Home
+            </Link>
             <span className="opacity-50">/</span>
-            <Link href="/recipes" className="hover:text-mist-white transition-colors">Recipes</Link>
+            <Link href="/recipes" className="hover:text-mist-white transition-colors">
+              Recipes
+            </Link>
             <span className="opacity-50">/</span>
-            <span className="text-ghana-gold font-medium truncate max-w-[240px]">{recipe.title}</span>
+            <span className="text-ghana-gold font-medium truncate max-w-[240px]">
+              {recipe.title}
+            </span>
           </nav>
         </div>
       </div>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden" style={{ backgroundColor: '#0D3B2A', minHeight: '280px' }}>
+      <div
+        className="relative overflow-hidden"
+        style={{ backgroundColor: "#0D3B2A", minHeight: "280px" }}
+      >
         {coverSrc && (
           <Image
             src={coverSrc}
@@ -182,7 +205,7 @@ export default async function RecipeDetailPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-3 mb-5">
             <span
               className="text-xs font-semibold px-3 py-1 rounded-full"
-              style={{ backgroundColor: diff.color + '22', color: diff.color }}
+              style={{ backgroundColor: diff.color + "22", color: diff.color }}
             >
               {diff.label}
             </span>
@@ -193,14 +216,18 @@ export default async function RecipeDetailPage({ params }: Props) {
           {recipe.local_name && recipe.local_name.toLowerCase() !== recipe.title.toLowerCase() && (
             <p className="-mt-2 mb-5 text-lg text-[#F4C430]">{recipe.local_name}</p>
           )}
-          <AddDishSearch currentTitles={[recipe.title]} catalogue={catalogue.map(item => item.title)} />
+          <AddDishSearch
+            currentTitles={[recipe.title]}
+            catalogue={catalogue.map((item) => item.title)}
+          />
           <div className="flex flex-wrap items-center gap-4 text-light-leaf text-sm mb-8">
             {(recipe.region || recipe.cuisine) && (
-              <><span>{[recipe.region, recipe.cuisine].filter(Boolean).join(' · ')}</span><span className="opacity-40">·</span></>
+              <>
+                <span>{[recipe.region, recipe.cuisine].filter(Boolean).join(" · ")}</span>
+                <span className="opacity-40">·</span>
+              </>
             )}
-            {recipe.prep_time > 0 && (
-              <span>{formatTime(recipe.prep_time)} prep</span>
-            )}
+            {recipe.prep_time > 0 && <span>{formatTime(recipe.prep_time)} prep</span>}
             {recipe.cook_time > 0 && (
               <>
                 <span className="opacity-40">·</span>
@@ -217,7 +244,10 @@ export default async function RecipeDetailPage({ params }: Props) {
       {recipe.description && (
         <div className="bg-[#F1E8D5] dark:bg-[#223027]">
           <div className="page-container mx-auto max-w-4xl px-6 py-7 lg:px-8">
-            <div className="prose prose-lg prose-green max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: recipe.description }} />
+            <div
+              className="prose prose-lg prose-green max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: recipe.description }}
+            />
           </div>
         </div>
       )}
@@ -254,10 +284,8 @@ export default async function RecipeDetailPage({ params }: Props) {
       {/* ── Content + Sidebar ──────────────────────────────────── */}
       <div className="page-container max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12 lg:gap-16 items-start">
-
           {/* Left: ingredients + steps */}
           <div className="space-y-12">
-
             {/* Nutritional score */}
             {recipe.nutritional_score && recipe.nutritional_score > 0 ? (
               <div className="p-4 bg-[#F5F0E6] dark:bg-gray-800 rounded-xl">
@@ -268,9 +296,12 @@ export default async function RecipeDetailPage({ params }: Props) {
                   <span
                     className="text-sm font-bold"
                     style={{
-                      color: recipe.nutritional_score >= 80 ? '#2E7D32'
-                           : recipe.nutritional_score >= 60 ? '#F4C430'
-                           : '#E65100',
+                      color:
+                        recipe.nutritional_score >= 80
+                          ? "#2E7D32"
+                          : recipe.nutritional_score >= 60
+                            ? "#F4C430"
+                            : "#E65100",
                     }}
                   >
                     {recipe.nutritional_score}/100
@@ -281,9 +312,12 @@ export default async function RecipeDetailPage({ params }: Props) {
                     className="h-3 rounded-full transition-all duration-500"
                     style={{
                       width: `${recipe.nutritional_score}%`,
-                      backgroundColor: recipe.nutritional_score >= 80 ? '#2E7D32'
-                                     : recipe.nutritional_score >= 60 ? '#F4C430'
-                                     : '#E65100',
+                      backgroundColor:
+                        recipe.nutritional_score >= 80
+                          ? "#2E7D32"
+                          : recipe.nutritional_score >= 60
+                            ? "#F4C430"
+                            : "#E65100",
                     }}
                   />
                 </div>
@@ -315,11 +349,17 @@ export default async function RecipeDetailPage({ params }: Props) {
 
             {/* Ingredients */}
             <section>
-                <h2 className="display-organic text-4xl text-forest-green dark:text-[#faf7f0]">
-                  Ingredients
-                </h2>
-                <CombinedRecipeEditor key={recipe.slug} title={recipe.title} baseRecipeIds={[recipe.id]} initialIngredients={editableIngredients} returnTo={`/recipes/${recipe.slug}`} />
-              </section>
+              <h2 className="display-organic text-4xl text-forest-green dark:text-[#faf7f0]">
+                Ingredients
+              </h2>
+              <CombinedRecipeEditor
+                key={recipe.slug}
+                title={recipe.title}
+                baseRecipeIds={[recipe.id]}
+                initialIngredients={editableIngredients}
+                returnTo={`/recipes/${recipe.slug}`}
+              />
+            </section>
 
             {recipe.ingredients.length > 0 && (
               <RecipeShopIngredients ingredients={recipe.ingredients} />
@@ -327,27 +367,42 @@ export default async function RecipeDetailPage({ params }: Props) {
 
             {recipe.nutrition && (
               <section className="bg-[#F1E8D5] p-6 dark:bg-[#223027]">
-                <p className="text-xs font-bold uppercase tracking-[.18em] text-[#2E7D32] dark:text-[#9FC5A4]">Nutrition estimate</p>
-                <h2 className="display-organic mt-2 text-3xl text-[#0D3B2A] dark:text-white">Per serving</h2>
+                <p className="text-xs font-bold uppercase tracking-[.18em] text-[#2E7D32] dark:text-[#9FC5A4]">
+                  Nutrition estimate
+                </p>
+                <h2 className="display-organic mt-2 text-3xl text-[#0D3B2A] dark:text-white">
+                  Per serving
+                </h2>
                 <dl className="mt-5 grid grid-cols-2 gap-x-7 gap-y-4 sm:grid-cols-4">
                   {[
-                    ['Energy', recipe.nutrition.calories, 'kcal'],
-                    ['Protein', recipe.nutrition.protein_g, 'g'],
-                    ['Carbohydrate', recipe.nutrition.carbohydrate_g, 'g'],
-                    ['Fat', recipe.nutrition.fat_g, 'g'],
-                    ['Fibre', recipe.nutrition.fibre_g, 'g'],
-                    ['Sugar', recipe.nutrition.sugar_g, 'g'],
-                    ['Sodium', recipe.nutrition.sodium_mg, 'mg'],
-                  ].map(([label, value, unit]) => value !== null && (
-                    <div key={label as string} className="border-t border-[#0D3B2A]/20 pt-3 dark:border-white/15">
-                      <dt className="text-xs text-[#5B3E31] dark:text-[#B8D4BD]">{label}</dt>
-                      <dd className="mt-1 text-lg font-bold text-[#0D3B2A] dark:text-white">{Math.round(Number(value))} {unit}</dd>
-                    </div>
-                  ))}
+                    ["Energy", recipe.nutrition.calories, "kcal"],
+                    ["Protein", recipe.nutrition.protein_g, "g"],
+                    ["Carbohydrate", recipe.nutrition.carbohydrate_g, "g"],
+                    ["Fat", recipe.nutrition.fat_g, "g"],
+                    ["Fibre", recipe.nutrition.fibre_g, "g"],
+                    ["Sugar", recipe.nutrition.sugar_g, "g"],
+                    ["Sodium", recipe.nutrition.sodium_mg, "mg"],
+                  ].map(
+                    ([label, value, unit]) =>
+                      value !== null && (
+                        <div
+                          key={label as string}
+                          className="border-t border-[#0D3B2A]/20 pt-3 dark:border-white/15"
+                        >
+                          <dt className="text-xs text-[#5B3E31] dark:text-[#B8D4BD]">{label}</dt>
+                          <dd className="mt-1 text-lg font-bold text-[#0D3B2A] dark:text-white">
+                            {Math.round(Number(value))} {unit}
+                          </dd>
+                        </div>
+                      )
+                  )}
                 </dl>
                 <p className="mt-5 text-xs leading-5 text-[#5B3E31] dark:text-[#B8D4BD]">
-                  Estimated from verified food-composition data. Values vary with ingredients and preparation.
-                  {!recipe.nutrition.is_complete ? ' Some ingredients could not be calculated reliably.' : ''}
+                  Estimated from verified food-composition data. Values vary with ingredients and
+                  preparation.
+                  {!recipe.nutrition.is_complete
+                    ? " Some ingredients could not be calculated reliably."
+                    : ""}
                 </p>
               </section>
             )}
@@ -365,8 +420,15 @@ export default async function RecipeDetailPage({ params }: Props) {
                         {step.step_number}
                       </span>
                       <div className="pt-1.5">
-                        {step.section && <p className="mb-1 text-xs font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:text-[#9FC5A4]">{step.section}</p>}
-                        <div className="prose prose-green max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: step.instruction }} />
+                        {step.section && (
+                          <p className="mb-1 text-xs font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:text-[#9FC5A4]">
+                            {step.section}
+                          </p>
+                        )}
+                        <div
+                          className="prose prose-green max-w-none dark:prose-invert"
+                          dangerouslySetInnerHTML={{ __html: step.instruction }}
+                        />
                       </div>
                     </li>
                   ))}
@@ -382,20 +444,26 @@ export default async function RecipeDetailPage({ params }: Props) {
 
             {recipe.source_attribution && (
               <p className="border-t border-[#0D3B2A]/15 pt-5 text-xs leading-5 text-[#5B3E31] dark:border-white/15 dark:text-[#B8D4BD]">
-                Source: {recipe.source_attribution.url ? (
-                  <a href={recipe.source_attribution.url} rel="noopener noreferrer" className="underline underline-offset-2">
+                Source:{" "}
+                {recipe.source_attribution.url ? (
+                  <a
+                    href={recipe.source_attribution.url}
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2"
+                  >
                     {recipe.source_attribution.name || recipe.source_attribution.url}
                   </a>
-                ) : recipe.source_attribution.name}
-                {recipe.source_attribution.author ? ` · ${recipe.source_attribution.author}` : ''}
-                {recipe.source_attribution.license ? ` · ${recipe.source_attribution.license}` : ''}
+                ) : (
+                  recipe.source_attribution.name
+                )}
+                {recipe.source_attribution.author ? ` · ${recipe.source_attribution.author}` : ""}
+                {recipe.source_attribution.license ? ` · ${recipe.source_attribution.license}` : ""}
               </p>
             )}
           </div>
 
           {/* Right: sticky sidebar */}
           <div className="space-y-5 lg:sticky lg:top-24">
-
             {/* Build with this recipe */}
             <div className="bg-mist-white dark:bg-[#1f2937] border border-sand dark:border-[#374151] rounded-2xl p-6">
               <p className="text-xs font-bold uppercase tracking-wide text-charcoal/40 dark:text-[#9ca3af] mb-3">
@@ -445,22 +513,30 @@ export default async function RecipeDetailPage({ params }: Props) {
                 {recipe.prep_time > 0 && (
                   <div className="flex justify-between">
                     <dt className="text-charcoal/60 dark:text-[#9ca3af]">Prep time</dt>
-                    <dd className="font-semibold text-forest-green dark:text-[#faf7f0]">{formatTime(recipe.prep_time)}</dd>
+                    <dd className="font-semibold text-forest-green dark:text-[#faf7f0]">
+                      {formatTime(recipe.prep_time)}
+                    </dd>
                   </div>
                 )}
                 {recipe.cook_time > 0 && (
                   <div className="flex justify-between">
                     <dt className="text-charcoal/60 dark:text-[#9ca3af]">Cook time</dt>
-                    <dd className="font-semibold text-forest-green dark:text-[#faf7f0]">{formatTime(recipe.cook_time)}</dd>
+                    <dd className="font-semibold text-forest-green dark:text-[#faf7f0]">
+                      {formatTime(recipe.cook_time)}
+                    </dd>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <dt className="text-charcoal/60 dark:text-[#9ca3af]">Servings</dt>
-                  <dd className="font-semibold text-forest-green dark:text-[#faf7f0]">{recipe.servings}</dd>
+                  <dd className="font-semibold text-forest-green dark:text-[#faf7f0]">
+                    {recipe.servings}
+                  </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-charcoal/60 dark:text-[#9ca3af]">Difficulty</dt>
-                  <dd className="font-semibold" style={{ color: diff.color }}>{diff.label}</dd>
+                  <dd className="font-semibold" style={{ color: diff.color }}>
+                    {diff.label}
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -468,5 +544,5 @@ export default async function RecipeDetailPage({ params }: Props) {
         </div>
       </div>
     </div>
-  )
+  );
 }

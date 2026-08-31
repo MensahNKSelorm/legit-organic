@@ -21,11 +21,16 @@ def _secure_response(response):
 
 
 def _render_setup(request, invitation=None, form=None, state='ready', status=200):
-    response = render(request, 'staff/setup.html', {
-        'invitation': invitation,
-        'form': form,
-        'state': state,
-    }, status=status)
+    response = render(
+        request,
+        'staff/setup.html',
+        {
+            'invitation': invitation,
+            'form': form,
+            'state': state,
+        },
+        status=status,
+    )
     return _secure_response(response)
 
 

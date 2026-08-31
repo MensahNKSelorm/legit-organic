@@ -4,6 +4,7 @@ Turnstile is only enforced when a secret key is configured (settings.TURNSTILE_E
 Until keys are provisioned, verify_turnstile() is a no-op that returns True, so dev and
 the current production signup flow are unchanged. When enabled, it fails closed.
 """
+
 import requests
 from django.conf import settings
 

@@ -1,47 +1,52 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Image from 'next/image'
-import type { ProductImage } from '@/types'
-import { getMediaUrl } from '@/lib/media'
-import { PRODUCT_BLUR_DATA_URL } from '@/lib/image-placeholders'
+import { useState } from "react";
+import Image from "next/image";
+import type { ProductImage } from "@/types";
+import { getMediaUrl } from "@/lib/media";
+import { PRODUCT_BLUR_DATA_URL } from "@/lib/image-placeholders";
 
 const PLACEHOLDERS = [
-  '/images/products/p1.webp',
-  '/images/products/p2.webp',
-  '/images/products/p3.webp',
-  '/images/products/p4.webp',
-]
+  "/images/products/p1.webp",
+  "/images/products/p2.webp",
+  "/images/products/p3.webp",
+  "/images/products/p4.webp",
+];
 
-const MIN_SWIPE = 50
+const MIN_SWIPE = 50;
 
 interface Props {
-  images: ProductImage[]
-  productName: string
-  mainImage: string | null
+  images: ProductImage[];
+  productName: string;
+  mainImage: string | null;
 }
 
 function LeafPlaceholder() {
   return (
     <div className="w-full h-full bg-gradient-to-br from-[#0D3B2A] to-[#2E7D32] flex items-center justify-center">
       <svg
-        viewBox="0 0 24 24" width="72" height="72"
-        fill="none" stroke="white" strokeWidth="1.5"
-        strokeLinecap="round" strokeLinejoin="round"
+        viewBox="0 0 24 24"
+        width="72"
+        height="72"
+        fill="none"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         className="opacity-30"
       >
         <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
         <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
       </svg>
     </div>
-  )
+  );
 }
 
 export default function ProductImageGallery({ images, productName, mainImage }: Props) {
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const [touchStart, setTouchStart]       = useState<number | null>(null)
-  const [touchEnd, setTouchEnd]           = useState<number | null>(null)
-  const [dragStart, setDragStart]         = useState<number | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [dragStart, setDragStart] = useState<number | null>(null);
 
   // Gallery images take priority. Fall back to mainImage, then empty.
   const allImages: { src: string; alt: string }[] =
@@ -51,53 +56,52 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
           alt: img.alt_text || productName,
         }))
       : mainImage
-      ? [{ src: getMediaUrl(mainImage, PLACEHOLDERS[0]), alt: productName }]
-      : []
+        ? [{ src: getMediaUrl(mainImage, PLACEHOLDERS[0]), alt: productName }]
+        : [];
 
-  const current      = allImages[selectedIndex] ?? null
-  const hasMultiple  = allImages.length > 1
-  const total        = allImages.length
+  const current = allImages[selectedIndex] ?? null;
+  const hasMultiple = allImages.length > 1;
+  const total = allImages.length;
 
   // ── Touch handlers ──────────────────────────────────────────────────────
   const onTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX)
-    setTouchEnd(null)
-  }
+    setTouchStart(e.targetTouches[0].clientX);
+    setTouchEnd(null);
+  };
   const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX)
-  }
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
-    const distance = touchStart - touchEnd
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
     if (Math.abs(distance) >= MIN_SWIPE) {
       if (distance > 0) {
-        setSelectedIndex((prev) => (prev + 1) % total)
+        setSelectedIndex((prev) => (prev + 1) % total);
       } else {
-        setSelectedIndex((prev) => (prev - 1 + total) % total)
+        setSelectedIndex((prev) => (prev - 1 + total) % total);
       }
     }
-  }
+  };
 
   // ── Mouse drag handlers ─────────────────────────────────────────────────
   const onMouseDown = (e: React.MouseEvent) => {
-    setDragStart(e.clientX)
-  }
+    setDragStart(e.clientX);
+  };
   const onMouseUp = (e: React.MouseEvent) => {
-    if (dragStart === null) return
-    const distance = dragStart - e.clientX
+    if (dragStart === null) return;
+    const distance = dragStart - e.clientX;
     if (Math.abs(distance) >= MIN_SWIPE) {
       if (distance > 0) {
-        setSelectedIndex((prev) => (prev + 1) % total)
+        setSelectedIndex((prev) => (prev + 1) % total);
       } else {
-        setSelectedIndex((prev) => (prev - 1 + total) % total)
+        setSelectedIndex((prev) => (prev - 1 + total) % total);
       }
     }
-    setDragStart(null)
-  }
+    setDragStart(null);
+  };
 
   return (
     <div className="flex flex-col gap-3">
-
       {/* ── Main image ── */}
       <div
         className="relative aspect-[4/5] overflow-hidden bg-beige dark:bg-[#273029]"
@@ -106,7 +110,7 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
         onTouchEnd={onTouchEnd}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
-        style={{ cursor: 'grab' }}
+        style={{ cursor: "grab" }}
       >
         {current ? (
           <Image
@@ -139,9 +143,16 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
               className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/85 dark:bg-[#202621]/90 hover:bg-[#F4C430] flex items-center justify-center transition-colors text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
               aria-label="Previous image"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5"
-                strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
@@ -150,9 +161,16 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
               className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/85 dark:bg-[#202621]/90 hover:bg-[#F4C430] flex items-center justify-center transition-colors text-[#0D3B2A] dark:text-white font-bold text-lg select-none"
               aria-label="Next image"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5"
-                strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
@@ -169,11 +187,11 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
               onClick={() => setSelectedIndex(idx)}
               aria-label={`View image ${idx + 1} of ${total}`}
               className={[
-                'relative shrink-0 w-20 h-20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]',
+                "relative shrink-0 w-20 h-20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]",
                 idx === selectedIndex
-                  ? 'ring-2 ring-[#F4C430] ring-offset-2 opacity-100'
-                  : 'opacity-70 hover:opacity-100',
-              ].join(' ')}
+                  ? "ring-2 ring-[#F4C430] ring-offset-2 opacity-100"
+                  : "opacity-70 hover:opacity-100",
+              ].join(" ")}
             >
               <Image
                 src={img.src}
@@ -189,5 +207,5 @@ export default function ProductImageGallery({ images, productName, mainImage }: 
         </div>
       )}
     </div>
-  )
+  );
 }

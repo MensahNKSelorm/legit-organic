@@ -68,7 +68,8 @@ export default function ManageSubscriptionsPage() {
     }
   }
 
-  if (isLoading || isB2B) return <div className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />;
+  if (isLoading || isB2B)
+    return <div className="min-h-screen bg-[#F4EFE4] pt-32 dark:bg-[#171B18]" />;
   if (!user)
     return (
       <div className="min-h-screen bg-[#F4EFE4] px-6 pt-40 text-center dark:bg-[#171B18]">

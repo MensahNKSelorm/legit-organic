@@ -2,26 +2,54 @@
 
 {% block content %}
 <div style="max-width:680px;margin:24px auto;padding:0 16px;">
-  <section style="background:#102d22;color:#f8f4e9;border-top:6px solid #f4c430;padding:28px;box-shadow:8px 8px 0 rgba(244,196,48,.35);">
-    <p style="margin:0 0 8px;color:#f4c430;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;">Delivery verification</p>
+  <section
+    style="background:#102d22;color:#f8f4e9;border-top:6px solid #f4c430;padding:28px;box-shadow:8px 8px 0 rgba(244,196,48,.35);"
+  >
+    <p
+      style="margin:0 0 8px;color:#f4c430;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;"
+    >Delivery verification</p>
     <h1 style="margin:0;color:#fff;font-size:30px;">Confirm handover</h1>
     <p style="margin:12px 0 0;color:#cbdcd0;">{{ order.reference }} · {{ order.delivery_address }}</p>
   </section>
 
-  <form method="post" style="margin-top:24px;border:1px solid rgba(13,59,42,.18);background:var(--body-bg,#fff);padding:24px;">
+  <form
+    method="post"
+    style="margin-top:24px;border:1px solid rgba(13,59,42,.18);background:var(--body-bg,#fff);padding:24px;"
+  >
     {% csrf_token %}
     <label for="id_pin" style="display:block;font-weight:700;margin-bottom:8px;">Customer delivery PIN</label>
-    <input id="id_pin" name="pin" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required autofocus
-      style="box-sizing:border-box;width:100%;min-height:56px;padding:12px 16px;font-size:24px;letter-spacing:.3em;text-align:center;border:1px solid #7d9184;background:var(--darkened-bg,#f7f3ea);color:var(--body-fg,#102d22);" />
+    <input
+      id="id_pin"
+      name="pin"
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]{6}"
+      maxlength="6"
+      autocomplete="one-time-code"
+      required
+      autofocus
+      style="box-sizing:border-box;width:100%;min-height:56px;padding:12px 16px;font-size:24px;letter-spacing:.3em;text-align:center;border:1px solid #7d9184;background:var(--darkened-bg,#f7f3ea);color:var(--body-fg,#102d22);"
+    />
     <p style="margin:8px 0 20px;color:var(--body-quiet-color,#66756c);font-size:13px;">Ask the customer for the six-digit PIN only after the package has been handed over.</p>
 
     <label for="id_note" style="display:block;font-weight:700;margin-bottom:8px;">Delivery note <span style="font-weight:400;opacity:.7;">(optional)</span></label>
-    <textarea id="id_note" name="note" rows="3" maxlength="300"
-      style="box-sizing:border-box;width:100%;padding:12px 16px;border:1px solid #7d9184;background:var(--darkened-bg,#f7f3ea);color:var(--body-fg,#102d22);"></textarea>
+    <textarea
+      id="id_note"
+      name="note"
+      rows="3"
+      maxlength="300"
+      style="box-sizing:border-box;width:100%;padding:12px 16px;border:1px solid #7d9184;background:var(--darkened-bg,#f7f3ea);color:var(--body-fg,#102d22);"
+    ></textarea>
 
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:22px;">
-      <button type="submit" style="min-height:46px;border:0;background:#f4c430;color:#0d3b2a;padding:12px 22px;font-weight:800;cursor:pointer;">Confirm delivery</button>
-      <a href="{% url 'admin:orders_order_change' order.pk %}" style="display:inline-flex;min-height:46px;align-items:center;padding:0 18px;color:inherit;">Return to order</a>
+      <button
+        type="submit"
+        style="min-height:46px;border:0;background:#f4c430;color:#0d3b2a;padding:12px 22px;font-weight:800;cursor:pointer;"
+      >Confirm delivery</button>
+      <a
+        href="{% url 'admin:orders_order_change' order.pk %}"
+        style="display:inline-flex;min-height:46px;align-items:center;padding:0 18px;color:inherit;"
+      >Return to order</a>
     </div>
   </form>
 </div>

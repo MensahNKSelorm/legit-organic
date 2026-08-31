@@ -6,8 +6,11 @@ from django.utils import timezone
 from django.db import transaction
 
 from .models import (
-    BusinessSupplyAgreement, BusinessSupplyCycle,
-    SubscriptionPlanPriceChange, SubscriptionPriceNotice, SubscriptionWeek,
+    BusinessSupplyAgreement,
+    BusinessSupplyCycle,
+    SubscriptionPlanPriceChange,
+    SubscriptionPriceNotice,
+    SubscriptionWeek,
 )
 
 logger = logging.getLogger(__name__)
@@ -16,6 +19,7 @@ logger = logging.getLogger(__name__)
 def _send_week_email(week_id, function_name):
     try:
         from . import emails
+
         week = SubscriptionWeek.objects.select_related('subscription__user').get(pk=week_id)
         getattr(emails, function_name)(week)
     except Exception:
@@ -25,9 +29,10 @@ def _send_week_email(week_id, function_name):
 def _send_business_cycle_email(cycle_id, event):
     try:
         from .emails import send_business_cycle_email
-        cycle = BusinessSupplyCycle.objects.select_related(
-            'agreement__business__user'
-        ).get(pk=cycle_id)
+
+        cycle = BusinessSupplyCycle.objects.select_related('agreement__business__user').get(
+            pk=cycle_id
+        )
         send_business_cycle_email(cycle, event)
     except Exception:
         logger.exception('Business cycle email %s failed for cycle %s', event, cycle_id)
@@ -53,10 +58,13 @@ def schedule_business_cycle(agreement, delivery_date=None):
         hours=agreement.delivery_zone.cutoff_hours
     )
     cycle, _ = BusinessSupplyCycle.objects.get_or_create(
-        agreement=agreement, delivery_date=delivery_date,
+        agreement=agreement,
+        delivery_date=delivery_date,
         defaults={
-            'payment_due_at': due_at, 'status': 'renewal_order',
-            'subtotal': agreement.subtotal, 'delivery_fee': agreement.delivery_fee,
+            'payment_due_at': due_at,
+            'status': 'renewal_order',
+            'subtotal': agreement.subtotal,
+            'delivery_fee': agreement.delivery_fee,
         },
     )
     agreement.next_delivery_date = delivery_date
@@ -68,9 +76,11 @@ def schedule_business_cycle(agreement, delivery_date=None):
 def ensure_business_supply_order(cycle_id):
     from orders.models import Order, OrderItem
 
-    cycle = BusinessSupplyCycle.objects.select_for_update().select_related(
-        'agreement__business__user'
-    ).get(pk=cycle_id)
+    cycle = (
+        BusinessSupplyCycle.objects.select_for_update()
+        .select_related('agreement__business__user')
+        .get(pk=cycle_id)
+    )
     if cycle.order_id:
         return cycle.order
     agreement = cycle.agreement
@@ -79,22 +89,30 @@ def ensure_business_supply_order(cycle_id):
     order, created = Order.objects.get_or_create(
         reference=reference,
         defaults={
-            'user': user, 'status': 'pending', 'payment_status': 'pending',
-            'total_amount': cycle.total, 'delivery_address': agreement.delivery_address,
+            'user': user,
+            'status': 'pending',
+            'payment_status': 'pending',
+            'total_amount': cycle.total,
+            'delivery_address': agreement.delivery_address,
             'guest_name': agreement.receiving_contact_name,
             'guest_email': user.email,
             'guest_phone': agreement.receiving_contact_phone,
-            'order_source': 'business_supply', 'payment_provider': 'seevcash',
+            'order_source': 'business_supply',
+            'payment_provider': 'seevcash',
         },
     )
     if created:
-        OrderItem.objects.bulk_create([
-            OrderItem(
-                order=order, product=item.product, quantity=item.quantity,
-                unit_price=item.unit_price,
-            )
-            for item in agreement.items.select_related('product')
-        ])
+        OrderItem.objects.bulk_create(
+            [
+                OrderItem(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    unit_price=item.unit_price,
+                )
+                for item in agreement.items.select_related('product')
+            ]
+        )
     cycle.order = order
     cycle.status = 'payment_due'
     cycle.save(update_fields=['order', 'status', 'updated_at'])
@@ -104,9 +122,9 @@ def ensure_business_supply_order(cycle_id):
 
 @transaction.atomic
 def finalize_paid_business_cycle(cycle_id, payment_data):
-    cycle = BusinessSupplyCycle.objects.select_for_update().select_related(
-        'agreement'
-    ).get(pk=cycle_id)
+    cycle = (
+        BusinessSupplyCycle.objects.select_for_update().select_related('agreement').get(pk=cycle_id)
+    )
     if cycle.status == 'paid':
         return cycle
     order = ensure_business_supply_order(cycle.pk)
@@ -126,7 +144,9 @@ def finalize_paid_business_cycle(cycle_id, payment_data):
 
 
 def schedule_next_week(subscription, after_date=None):
-    delivery_date = (after_date or subscription.next_delivery_date or timezone.localdate()) + timedelta(days=7)
+    delivery_date = (
+        after_date or subscription.next_delivery_date or timezone.localdate()
+    ) + timedelta(days=7)
     cutoff_at = timezone.make_aware(datetime.combine(delivery_date, time.min)) - timedelta(
         hours=subscription.delivery_zone.cutoff_hours
     )
@@ -134,7 +154,8 @@ def schedule_next_week(subscription, after_date=None):
         subscription=subscription,
         delivery_date=delivery_date,
         defaults={
-            'cutoff_at': cutoff_at, 'status': 'scheduled',
+            'cutoff_at': cutoff_at,
+            'status': 'scheduled',
             'subtotal': subscription.weekly_subtotal,
             'delivery_fee': subscription.weekly_delivery_fee,
         },
@@ -149,9 +170,11 @@ def ensure_renewal_order(week_id, *, notify=True):
     """Create exactly one unpaid order for a subscription delivery cycle."""
     from orders.models import Order, OrderItem
 
-    week = SubscriptionWeek.objects.select_for_update().select_related(
-        'subscription', 'subscription__user'
-    ).get(pk=week_id)
+    week = (
+        SubscriptionWeek.objects.select_for_update()
+        .select_related('subscription', 'subscription__user')
+        .get(pk=week_id)
+    )
     if week.order_id:
         return week.order
     subscription = week.subscription
@@ -159,23 +182,30 @@ def ensure_renewal_order(week_id, *, notify=True):
     order, created = Order.objects.get_or_create(
         reference=reference,
         defaults={
-            'user': subscription.user, 'status': 'pending',
-            'payment_status': 'pending', 'total_amount': week.total,
+            'user': subscription.user,
+            'status': 'pending',
+            'payment_status': 'pending',
+            'total_amount': week.total,
             'delivery_address': subscription.delivery_address,
             'guest_name': subscription.user.get_full_name() or subscription.user.email,
             'guest_email': subscription.user.email,
             'guest_phone': subscription.contact_phone,
-            'order_source': 'subscription', 'payment_provider': 'seevcash',
+            'order_source': 'subscription',
+            'payment_provider': 'seevcash',
         },
     )
     if created:
-        OrderItem.objects.bulk_create([
-            OrderItem(
-                order=order, product=item.product, quantity=item.quantity,
-                unit_price=item.unit_price,
-            )
-            for item in subscription.items.select_related('product')
-        ])
+        OrderItem.objects.bulk_create(
+            [
+                OrderItem(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    unit_price=item.unit_price,
+                )
+                for item in subscription.items.select_related('product')
+            ]
+        )
     week.order = order
     week.payment_reference = reference
     week.status = 'payment_due'
@@ -187,9 +217,11 @@ def ensure_renewal_order(week_id, *, notify=True):
 
 @transaction.atomic
 def finalize_paid_week(week_id, payment_data):
-    week = SubscriptionWeek.objects.select_for_update().select_related(
-        'subscription', 'subscription__user'
-    ).get(pk=week_id)
+    week = (
+        SubscriptionWeek.objects.select_for_update()
+        .select_related('subscription', 'subscription__user')
+        .get(pk=week_id)
+    )
     if week.status == 'paid':
         return week
     subscription = week.subscription
@@ -201,38 +233,45 @@ def finalize_paid_week(week_id, payment_data):
 
     subscription.status = 'active'
     subscription.started_at = subscription.started_at or timezone.now()
-    subscription.save(update_fields=[
-        'status', 'started_at', 'updated_at',
-    ])
+    subscription.save(
+        update_fields=[
+            'status',
+            'started_at',
+            'updated_at',
+        ]
+    )
     week.status = 'paid'
     week.payment_error = ''
     week.paid_at = timezone.now()
     week.order = order
-    week.save(update_fields=[
-        'status', 'payment_error', 'paid_at', 'order', 'updated_at'
-    ])
+    week.save(update_fields=['status', 'payment_error', 'paid_at', 'order', 'updated_at'])
     return week
 
 
 @transaction.atomic
 def prepare_price_change(change_id):
     """Create the fixed recipient ledger before any notices are sent."""
-    change = SubscriptionPlanPriceChange.objects.select_for_update().select_related('plan').get(
-        pk=change_id
+    change = (
+        SubscriptionPlanPriceChange.objects.select_for_update()
+        .select_related('plan')
+        .get(pk=change_id)
     )
     if change.status != 'scheduled' or change.recipients_prepared_at:
         return change
     subscriptions = change.plan.subscriptions.filter(
         status__in=['draft', 'active', 'paused']
     ).select_related('user')
-    SubscriptionPriceNotice.objects.bulk_create([
-        SubscriptionPriceNotice(
-            price_change=change,
-            subscription=subscription,
-            recipient_email=subscription.user.email,
-        )
-        for subscription in subscriptions
-    ], ignore_conflicts=True)
+    SubscriptionPriceNotice.objects.bulk_create(
+        [
+            SubscriptionPriceNotice(
+                price_change=change,
+                subscription=subscription,
+                recipient_email=subscription.user.email,
+            )
+            for subscription in subscriptions
+        ],
+        ignore_conflicts=True,
+    )
     change.recipients_prepared_at = timezone.now()
     change.save(update_fields=['recipients_prepared_at', 'updated_at'])
     return change
@@ -255,17 +294,26 @@ def deliver_price_notice(notice_id):
     except Exception as exc:
         notice.status = 'failed'
         notice.last_error = str(exc)[:500]
-    notice.save(update_fields=[
-        'attempts', 'delivery_id', 'status', 'sent_at', 'last_error', 'updated_at',
-    ])
+    notice.save(
+        update_fields=[
+            'attempts',
+            'delivery_id',
+            'status',
+            'sent_at',
+            'last_error',
+            'updated_at',
+        ]
+    )
     return notice
 
 
 @transaction.atomic
 def apply_price_change(change_id):
     """Apply only to subscribers with a successfully recorded notice."""
-    change = SubscriptionPlanPriceChange.objects.select_for_update().select_related('plan').get(
-        pk=change_id
+    change = (
+        SubscriptionPlanPriceChange.objects.select_for_update()
+        .select_related('plan')
+        .get(pk=change_id)
     )
     if change.status != 'scheduled' or change.effective_at > timezone.now():
         return change
@@ -289,6 +337,7 @@ def apply_price_change(change_id):
     change.applied_at = now
     change.save(update_fields=['status', 'applied_at', 'updated_at'])
     from security.audit import record_event
+
     record_event(
         action='subscription.price_change_applied',
         target=change,

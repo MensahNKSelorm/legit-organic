@@ -300,7 +300,8 @@ function StartSubscriptionContent() {
     else void continueToPayment();
   }
 
-  if (authLoading || isB2B) return <div className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />;
+  if (authLoading || isB2B)
+    return <div className="min-h-screen bg-[#F4EFE4] pt-36 dark:bg-[#171B18]" />;
 
   return (
     <div className="min-h-screen bg-[#F4EFE4] pt-28 pb-24 text-[#173C2A] md:pt-36 dark:bg-[#171B18] dark:text-white">
@@ -318,8 +319,8 @@ function StartSubscriptionContent() {
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-[#625B51] dark:text-[#B8C0B9]">
             Pick the food that suits your week, confirm where it should go, then approve the first
-            delivery through secure checkout. Future weeks wait for you to approve payment. Nothing is
-            charged automatically.
+            delivery through secure checkout. Future weeks wait for you to approve payment. Nothing
+            is charged automatically.
           </p>
         </header>
 
@@ -372,7 +373,12 @@ function StartSubscriptionContent() {
                 <section aria-labelledby="basket-heading">
                   <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                      <h2 ref={stageHeadingRef} tabIndex={-1} id="basket-heading" className="text-2xl font-semibold md:text-3xl">
+                      <h2
+                        ref={stageHeadingRef}
+                        tabIndex={-1}
+                        id="basket-heading"
+                        className="text-2xl font-semibold md:text-3xl"
+                      >
                         Choose the shape of your week
                       </h2>
                       <p className="mt-2 text-sm text-[#625B51] dark:text-[#B8C0B9]">
@@ -548,7 +554,12 @@ function StartSubscriptionContent() {
 
               {stage === "delivery" && (
                 <section aria-labelledby="delivery-heading">
-                  <h2 ref={stageHeadingRef} tabIndex={-1} id="delivery-heading" className="text-2xl font-semibold md:text-3xl">
+                  <h2
+                    ref={stageHeadingRef}
+                    tabIndex={-1}
+                    id="delivery-heading"
+                    className="text-2xl font-semibold md:text-3xl"
+                  >
                     Where should the basket meet you?
                   </h2>
                   <p className="mt-2 text-sm text-[#625B51] dark:text-[#B8C0B9]">
@@ -579,7 +590,11 @@ function StartSubscriptionContent() {
                         ))}
                       </select>
                       {fieldErrors.zone && (
-                        <p id="delivery-zone-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p
+                          id="delivery-zone-error"
+                          role="alert"
+                          className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]"
+                        >
                           {fieldErrors.zone}
                         </p>
                       )}
@@ -602,7 +617,11 @@ function StartSubscriptionContent() {
                         aria-describedby={fieldErrors.phone ? "delivery-phone-error" : undefined}
                       />
                       {fieldErrors.phone && (
-                        <p id="delivery-phone-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p
+                          id="delivery-phone-error"
+                          role="alert"
+                          className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]"
+                        >
                           {fieldErrors.phone}
                         </p>
                       )}
@@ -641,7 +660,11 @@ function StartSubscriptionContent() {
                         aria-describedby={fieldErrors.street ? "delivery-street-error" : undefined}
                       />
                       {fieldErrors.street && (
-                        <p id="delivery-street-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p
+                          id="delivery-street-error"
+                          role="alert"
+                          className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]"
+                        >
                           {fieldErrors.street}
                         </p>
                       )}
@@ -662,7 +685,11 @@ function StartSubscriptionContent() {
                         aria-describedby={fieldErrors.city ? "delivery-city-error" : undefined}
                       />
                       {fieldErrors.city && (
-                        <p id="delivery-city-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p
+                          id="delivery-city-error"
+                          role="alert"
+                          className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]"
+                        >
                           {fieldErrors.city}
                         </p>
                       )}
@@ -683,7 +710,11 @@ function StartSubscriptionContent() {
                         aria-describedby={fieldErrors.region ? "delivery-region-error" : undefined}
                       />
                       {fieldErrors.region && (
-                        <p id="delivery-region-error" role="alert" className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]">
+                        <p
+                          id="delivery-region-error"
+                          role="alert"
+                          className="mt-1 text-xs text-[#B42318] dark:text-[#FFB4A8]"
+                        >
                           {fieldErrors.region}
                         </p>
                       )}
@@ -748,7 +779,12 @@ function StartSubscriptionContent() {
 
               {stage === "review" && (
                 <section aria-labelledby="review-heading">
-                  <h2 ref={stageHeadingRef} tabIndex={-1} id="review-heading" className="text-2xl font-semibold md:text-3xl">
+                  <h2
+                    ref={stageHeadingRef}
+                    tabIndex={-1}
+                    id="review-heading"
+                    className="text-2xl font-semibold md:text-3xl"
+                  >
                     Ready for your first week
                   </h2>
                   <p className="mt-2 text-sm text-[#625B51] dark:text-[#B8C0B9]">

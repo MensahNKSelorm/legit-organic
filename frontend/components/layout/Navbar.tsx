@@ -476,153 +476,155 @@ export default function Navbar() {
             menuOpen ? "max-h-[80vh] overflow-y-auto opacity-100" : "max-h-0 opacity-0",
           ].join(" ")}
         >
-          {menuOpen && <ul className="flex flex-col gap-1 px-6 py-5 pb-6" style={{ listStyle: "none" }}>
-            {visibleNavLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+          {menuOpen && (
+            <ul className="flex flex-col gap-1 px-6 py-5 pb-6" style={{ listStyle: "none" }}>
+              {visibleNavLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
 
-            {/* Theme toggle */}
-            <li>
-              <button
-                onClick={toggleTheme}
-                className="hover:bg-beige flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
-              >
-                {darkMode ? <SunIcon /> : <MoonIcon />}
-                {darkMode ? "Light mode" : "Dark mode"}
-              </button>
-            </li>
-
-            {!isMarketPage && (
+              {/* Theme toggle */}
               <li>
                 <button
-                  onClick={() => {
-                    setSearchOpen(true);
-                    setMenuOpen(false);
-                  }}
+                  onClick={toggleTheme}
                   className="hover:bg-beige flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    width="18"
-                    height="18"
-                    aria-hidden
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
-                  </svg>
-                  Search products
+                  {darkMode ? <SunIcon /> : <MoonIcon />}
+                  {darkMode ? "Light mode" : "Dark mode"}
                 </button>
               </li>
-            )}
 
-            {/* Auth section */}
-            {isAuthenticated && user ? (
-              <>
-                <li>
-                  <div className="border-sand mt-3 flex items-center gap-3 border-t px-4 py-3 pt-4 dark:border-[#333]">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F4C430] font-sans text-xs font-bold tracking-wide text-[#0D3B2A] ring-2 ring-[#0D3B2A] ring-offset-1">
-                      {initials}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[#0D3B2A] dark:text-[#F9FAFB]">
-                        {user.first_name} {user.last_name}
-                      </p>
-                      <p className="text-charcoal/50 text-xs dark:text-[#9ca3af]">{user.email}</p>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <Link
-                    href="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className="block border-b border-[#0D3B2A]/10 py-4 font-medium text-[#0D3B2A] transition-colors hover:text-[#2E7D32] dark:text-[#F9FAFB]"
-                  >
-                    Profile
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/my-recipes"
-                    onClick={() => setMenuOpen(false)}
-                    className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
-                  >
-                    My Recipes
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href={isB2B ? "/b2b/supply/manage" : "/subscriptions/manage"}
-                    onClick={() => setMenuOpen(false)}
-                    className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
-                  >
-                    {isB2B ? "Supply Agreements" : "Weekly Deliveries"}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href={isB2B ? "/b2b/dashboard" : "/b2b/apply"}
-                    onClick={() => setMenuOpen(false)}
-                    className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
-                  >
-                    {isB2B ? "🏢 B2B Dashboard" : "B2B Portal"}
-                  </Link>
-                </li>
-                {isSalesRep && (
-                  <li>
-                    <Link
-                      href="/sales/dashboard"
-                      onClick={() => setMenuOpen(false)}
-                      className="hover:bg-beige flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
-                    >
-                      <SalesIcon />
-                      Sales Dashboard
-                    </Link>
-                  </li>
-                )}
+              {!isMarketPage && (
                 <li>
                   <button
                     onClick={() => {
-                      logout();
+                      setSearchOpen(true);
                       setMenuOpen(false);
                     }}
-                    className="w-full rounded-xl px-4 py-3 text-left font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="hover:bg-beige flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
                   >
-                    Logout
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      width="18"
+                      height="18"
+                      aria-hidden
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    Search products
                   </button>
                 </li>
-              </>
-            ) : (
-              <li className="border-sand mt-3 flex gap-3 border-t pt-4 dark:border-[#333]">
-                <Link
-                  href="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex-1 rounded-lg px-4 py-2 text-center text-sm font-semibold text-[#0D3B2A] transition-opacity hover:opacity-70 dark:text-[#F9FAFB]"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex-1 bg-[#F4C430] px-4 py-2 text-center text-sm font-semibold text-[#0D3B2A] transition-colors hover:bg-[#c59f2c]"
-                >
-                  Sign Up
-                </Link>
-              </li>
-            )}
-          </ul>}
+              )}
+
+              {/* Auth section */}
+              {isAuthenticated && user ? (
+                <>
+                  <li>
+                    <div className="border-sand mt-3 flex items-center gap-3 border-t px-4 py-3 pt-4 dark:border-[#333]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F4C430] font-sans text-xs font-bold tracking-wide text-[#0D3B2A] ring-2 ring-[#0D3B2A] ring-offset-1">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[#0D3B2A] dark:text-[#F9FAFB]">
+                          {user.first_name} {user.last_name}
+                        </p>
+                        <p className="text-charcoal/50 text-xs dark:text-[#9ca3af]">{user.email}</p>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="block border-b border-[#0D3B2A]/10 py-4 font-medium text-[#0D3B2A] transition-colors hover:text-[#2E7D32] dark:text-[#F9FAFB]"
+                    >
+                      Profile
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/my-recipes"
+                      onClick={() => setMenuOpen(false)}
+                      className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
+                    >
+                      My Recipes
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href={isB2B ? "/b2b/supply/manage" : "/subscriptions/manage"}
+                      onClick={() => setMenuOpen(false)}
+                      className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
+                    >
+                      {isB2B ? "Supply Agreements" : "Weekly Deliveries"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href={isB2B ? "/b2b/dashboard" : "/b2b/apply"}
+                      onClick={() => setMenuOpen(false)}
+                      className="hover:bg-beige block rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
+                    >
+                      {isB2B ? "🏢 B2B Dashboard" : "B2B Portal"}
+                    </Link>
+                  </li>
+                  {isSalesRep && (
+                    <li>
+                      <Link
+                        href="/sales/dashboard"
+                        onClick={() => setMenuOpen(false)}
+                        className="hover:bg-beige flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-[#0D3B2A] transition-colors dark:text-[#F9FAFB] dark:hover:bg-[#2a2a2a]"
+                      >
+                        <SalesIcon />
+                        Sales Dashboard
+                      </Link>
+                    </li>
+                  )}
+                  <li>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMenuOpen(false);
+                      }}
+                      className="w-full rounded-xl px-4 py-3 text-left font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <li className="border-sand mt-3 flex gap-3 border-t pt-4 dark:border-[#333]">
+                  <Link
+                    href="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex-1 rounded-lg px-4 py-2 text-center text-sm font-semibold text-[#0D3B2A] transition-opacity hover:opacity-70 dark:text-[#F9FAFB]"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex-1 bg-[#F4C430] px-4 py-2 text-center text-sm font-semibold text-[#0D3B2A] transition-colors hover:bg-[#c59f2c]"
+                  >
+                    Sign Up
+                  </Link>
+                </li>
+              )}
+            </ul>
+          )}
         </div>
       </header>
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />

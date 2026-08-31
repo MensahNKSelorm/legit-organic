@@ -12,6 +12,7 @@ DATABASES = {
 DEBUG = True
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 MIDDLEWARE = [
-    middleware for middleware in MIDDLEWARE
+    middleware
+    for middleware in MIDDLEWARE
     if middleware != 'security.middleware.StaffSecurityMiddleware'
 ]

@@ -13,9 +13,16 @@ class SalesRepSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesRep
         fields = [
-            'id', 'email', 'first_name', 'last_name', 'referral_code',
-            'phone', 'status', 'commission_rate_registration',
-            'commission_rate_first_purchase', 'commission_rate_repeat_purchase',
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'referral_code',
+            'phone',
+            'status',
+            'commission_rate_registration',
+            'commission_rate_first_purchase',
+            'commission_rate_repeat_purchase',
             'created_at',
         ]
         read_only_fields = ['referral_code', 'created_at']
@@ -29,8 +36,14 @@ class ReferredCustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReferredCustomer
         fields = [
-            'id', 'customer_name', 'customer_email', 'source', 'status',
-            'commission_expires_at', 'days_remaining', 'created_at',
+            'id',
+            'customer_name',
+            'customer_email',
+            'source',
+            'status',
+            'commission_expires_at',
+            'days_remaining',
+            'created_at',
         ]
 
     def get_customer_name(self, obj):
@@ -38,21 +51,25 @@ class ReferredCustomerSerializer(serializers.ModelSerializer):
 
     def get_days_remaining(self, obj):
         from django.utils import timezone
+
         delta = obj.commission_expires_at - timezone.now()
         return max(delta.days, 0)
 
 
 class CommissionSerializer(serializers.ModelSerializer):
     customer_name = serializers.SerializerMethodField()
-    order_reference = serializers.CharField(
-        source='order.reference', read_only=True, default=None
-    )
+    order_reference = serializers.CharField(source='order.reference', read_only=True, default=None)
 
     class Meta:
         model = Commission
         fields = [
-            'id', 'customer_name', 'order_reference', 'type', 'amount',
-            'status', 'created_at',
+            'id',
+            'customer_name',
+            'order_reference',
+            'type',
+            'amount',
+            'status',
+            'created_at',
         ]
 
     def get_customer_name(self, obj):
@@ -75,7 +92,5 @@ class AddCustomerSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         if value and User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                'A customer with this email already has an account.'
-            )
+            raise serializers.ValidationError('A customer with this email already has an account.')
         return value

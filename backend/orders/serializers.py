@@ -18,9 +18,20 @@ class CartProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 'description', 'price', 'unit', 'image',
-            'category', 'region', 'badge', 'is_featured', 'is_available',
-            'created_at', 'updated_at',
+            'id',
+            'name',
+            'slug',
+            'description',
+            'price',
+            'unit',
+            'image',
+            'category',
+            'region',
+            'badge',
+            'is_featured',
+            'is_available',
+            'created_at',
+            'updated_at',
         ]
 
     def get_image(self, obj):
@@ -111,10 +122,20 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'reference', 'status', 'payment_status', 'order_source',
-            'total_amount', 'discount_amount', 'promo_code', 'delivery_address',
-            'guest_name', 'guest_phone',
-            'items', 'created_at', 'updated_at',
+            'id',
+            'reference',
+            'status',
+            'payment_status',
+            'order_source',
+            'total_amount',
+            'discount_amount',
+            'promo_code',
+            'delivery_address',
+            'guest_name',
+            'guest_phone',
+            'items',
+            'created_at',
+            'updated_at',
         ]
         read_only_fields = ['id', 'reference', 'created_at', 'updated_at']
 
@@ -135,7 +156,9 @@ class CreateOrderSerializer(serializers.Serializer):
     guest_phone = serializers.CharField(required=False, allow_blank=True, default='')
     guest_email = serializers.CharField(required=False, allow_blank=True, default='')
     order_source = serializers.ChoiceField(
-        choices=('seevcash', 'whatsapp'), required=False, default='whatsapp',
+        choices=('seevcash', 'whatsapp'),
+        required=False,
+        default='whatsapp',
     )
     phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
     house_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
@@ -164,18 +187,22 @@ class CreateOrderSerializer(serializers.Serializer):
         if not phone:
             raise serializers.ValidationError({'guest_phone': 'A phone number is required.'})
         if not re.fullmatch(r'(?:\+233|0)[0-9]{9}', phone):
-            raise serializers.ValidationError({
-                'guest_phone': 'Enter a valid Ghana phone number, for example 0244123456.'
-            })
+            raise serializers.ValidationError(
+                {'guest_phone': 'Enter a valid Ghana phone number, for example 0244123456.'}
+            )
         missing = [
-            label for label, value in (
-                ('street_address', street), ('city', city), ('delivery_region', region)
-            ) if not value
+            label
+            for label, value in (
+                ('street_address', street),
+                ('city', city),
+                ('delivery_region', region),
+            )
+            if not value
         ]
         if missing:
-            raise serializers.ValidationError({
-                field: 'This delivery field is required.' for field in missing
-            })
+            raise serializers.ValidationError(
+                {field: 'This delivery field is required.' for field in missing}
+            )
 
         attrs['phone_number'] = phone
         attrs['house_number'] = house
@@ -226,14 +253,21 @@ class CreateOrderSerializer(serializers.Serializer):
                 user.street_address = street_address
                 user.city = city
                 user.delivery_region = delivery_region
-                user.save(update_fields=[
-                    'phone_number', 'house_number', 'street_address',
-                    'city', 'delivery_region',
-                ])
+                user.save(
+                    update_fields=[
+                        'phone_number',
+                        'house_number',
+                        'street_address',
+                        'city',
+                        'delivery_region',
+                    ]
+                )
             product_ids = [item['product_id'] for item in items_data]
             products = {
-                p.id: p for p in Product.objects.filter(
-                    id__in=product_ids, is_available=True,
+                p.id: p
+                for p in Product.objects.filter(
+                    id__in=product_ids,
+                    is_available=True,
                 )
             }
             missing = [pid for pid in product_ids if pid not in products]
@@ -282,9 +316,7 @@ class CreateOrderSerializer(serializers.Serializer):
                         order.promo_code = promo
                         order.discount_amount = discount
                         # Concurrency-safe increment (avoids a read-modify-write race).
-                        PromoCode.objects.filter(pk=promo.pk).update(
-                            times_used=F('times_used') + 1
-                        )
+                        PromoCode.objects.filter(pk=promo.pk).update(times_used=F('times_used') + 1)
                         update_fields.append('promo_code')
                 except PromoCode.DoesNotExist:
                     pass
@@ -293,13 +325,12 @@ class CreateOrderSerializer(serializers.Serializer):
 
             if order_source == 'whatsapp' and not order.is_test:
                 order_id = order.pk
-                transaction.on_commit(
-                    lambda: _send_whatsapp_order_report(order_id)
-                )
+                transaction.on_commit(lambda: _send_whatsapp_order_report(order_id))
 
         return order
 
 
 def _send_whatsapp_order_report(order_id):
     from .reporting import send_owner_report_once
+
     send_owner_report_once(order_id, 'whatsapp_submitted')

@@ -4,6 +4,7 @@ Reuses the environment config (GROQ_API_KEY / GROQ_MODEL) and HTML sanitiser of
 legitorganic.writing_assistant. The model is instructed to write ONLY from the
 supplied research snippets. It must not invent statistics, medical claims or quotes.
 """
+
 import json
 import logging
 import os
@@ -33,7 +34,9 @@ content_html uses only <p>, <h2>, <h3>, <ul>, <ol>, <li>, <strong>, <em>, <block
 def _research_block(sources):
     lines = []
     for i, s in enumerate(sources, 1):
-        lines.append(f"[{i}] {s.get('title', '')}\n{s.get('snippet', '')}\n(source: {s.get('url', '')})")
+        lines.append(
+            f"[{i}] {s.get('title', '')}\n{s.get('snippet', '')}\n(source: {s.get('url', '')})"
+        )
     return '\n\n'.join(lines)
 
 
@@ -90,7 +93,9 @@ def call_groq(prompt):
         resp = requests.post(GROQ_URL, headers=headers, json=payload, timeout=60)
         if resp.status_code == 429 and attempt < 2:
             wait = _retry_after(resp, default=20 * (attempt + 1))
-            logger.warning('Groq rate-limited (429); waiting %ss then retrying (%s/3)', wait, attempt + 2)
+            logger.warning(
+                'Groq rate-limited (429); waiting %ss then retrying (%s/3)', wait, attempt + 2
+            )
             time.sleep(wait)
             continue
         resp.raise_for_status()
@@ -105,7 +110,8 @@ def _sources_html(sources):
         url = str(source.get('url') or '').strip()
         parsed = urlparse(url)
         if (
-            parsed.scheme not in {'http', 'https'} or not parsed.netloc
+            parsed.scheme not in {'http', 'https'}
+            or not parsed.netloc
             or any(char in url for char in '\"\'<>\r\n\t ')
         ):
             continue

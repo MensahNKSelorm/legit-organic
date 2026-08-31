@@ -20,12 +20,9 @@ def send_sms(phone_number: str, message: str) -> bool:
     try:
         post_data = {
             'senderid': settings.WIGAL_SENDER_ID,
-            'destinations': [{
-                'destination': phone,
-                'msgid': str(uuid.uuid4())[:8].upper()
-            }],
+            'destinations': [{'destination': phone, 'msgid': str(uuid.uuid4())[:8].upper()}],
             'message': message,
-            'smstype': 'text'
+            'smstype': 'text',
         }
 
         headers = {
@@ -35,10 +32,7 @@ def send_sms(phone_number: str, message: str) -> bool:
         }
 
         response = requests.post(
-            WIGAL_SMS_URL,
-            headers=headers,
-            data=json.dumps(post_data),
-            timeout=10
+            WIGAL_SMS_URL, headers=headers, data=json.dumps(post_data), timeout=10
         )
 
         data = response.json()

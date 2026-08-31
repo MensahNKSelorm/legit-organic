@@ -11,8 +11,13 @@ from django.utils.text import slugify
 
 class DeliveryZone(models.Model):
     WEEKDAYS = [
-        (0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'), (3, 'Thursday'),
-        (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday'),
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
     ]
 
     name = models.CharField(max_length=120, unique=True)
@@ -45,7 +50,9 @@ class SubscriptionPlan(models.Model):
     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, default='curated')
     short_description = models.CharField(max_length=180, blank=True)
     weekly_price = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0,
+        max_digits=10,
+        decimal_places=2,
+        default=0,
         validators=[MinValueValidator(Decimal('0.00'))],
     )
     household_size = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -69,9 +76,7 @@ class SubscriptionPlan(models.Model):
 
 
 class SubscriptionPlanItem(models.Model):
-    plan = models.ForeignKey(
-        SubscriptionPlan, on_delete=models.CASCADE, related_name='items'
-    )
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(
         'products.Product', on_delete=models.PROTECT, related_name='subscription_plan_items'
     )
@@ -93,8 +98,10 @@ class SubscriptionPlanItem(models.Model):
 
 class SubscriptionPlanPriceChange(models.Model):
     STATUSES = [
-        ('draft', 'Draft'), ('scheduled', 'Scheduled'),
-        ('applied', 'Applied'), ('cancelled', 'Cancelled'),
+        ('draft', 'Draft'),
+        ('scheduled', 'Scheduled'),
+        ('applied', 'Applied'),
+        ('cancelled', 'Cancelled'),
     ]
 
     plan = models.ForeignKey(
@@ -102,15 +109,18 @@ class SubscriptionPlanPriceChange(models.Model):
     )
     old_price = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
     new_price = models.DecimalField(
-        max_digits=10, decimal_places=2,
+        max_digits=10,
+        decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))],
     )
     effective_at = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUSES, default='draft')
     reason = models.CharField(max_length=300)
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
-        related_name='created_subscription_price_changes', editable=False,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='created_subscription_price_changes',
+        editable=False,
     )
     applied_at = models.DateTimeField(null=True, blank=True, editable=False)
     recipients_prepared_at = models.DateTimeField(null=True, blank=True, editable=False)
@@ -121,7 +131,8 @@ class SubscriptionPlanPriceChange(models.Model):
         ordering = ['-effective_at']
         constraints = [
             models.UniqueConstraint(
-                fields=['plan'], condition=models.Q(status='scheduled'),
+                fields=['plan'],
+                condition=models.Q(status='scheduled'),
                 name='one_scheduled_price_change_per_plan',
             ),
         ]
@@ -132,7 +143,9 @@ class SubscriptionPlanPriceChange(models.Model):
             raise ValidationError({'new_price': 'Enter a price different from the current price.'})
         minimum = timezone.now() + timedelta(days=14)
         if self.status == 'scheduled' and self.effective_at < minimum:
-            raise ValidationError({'effective_at': 'Existing customers require at least 14 days notice.'})
+            raise ValidationError(
+                {'effective_at': 'Existing customers require at least 14 days notice.'}
+            )
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -145,8 +158,11 @@ class SubscriptionPlanPriceChange(models.Model):
 
 class SubscriptionPriceNotice(models.Model):
     STATUSES = [
-        ('pending', 'Pending'), ('sent', 'Sent'), ('failed', 'Failed'),
-        ('applied', 'Applied'), ('cancelled', 'Cancelled'),
+        ('pending', 'Pending'),
+        ('sent', 'Sent'),
+        ('failed', 'Failed'),
+        ('applied', 'Applied'),
+        ('cancelled', 'Cancelled'),
     ]
 
     price_change = models.ForeignKey(
@@ -180,8 +196,10 @@ class SubscriptionPriceNotice(models.Model):
 
 class Subscription(models.Model):
     STATUSES = [
-        ('draft', 'Draft'), ('active', 'Active'),
-        ('paused', 'Paused'), ('cancelled', 'Cancelled'),
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('cancelled', 'Cancelled'),
     ]
     AUDIENCES = SubscriptionPlan.AUDIENCES
     PAYMENT_METHODS = [('card', 'Card'), ('mobile_money', 'Mobile Money')]
@@ -190,11 +208,17 @@ class Subscription(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='subscriptions'
     )
     business_profile = models.ForeignKey(
-        'users.B2BProfile', on_delete=models.PROTECT, null=True, blank=True,
+        'users.B2BProfile',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name='subscriptions',
     )
     plan = models.ForeignKey(
-        SubscriptionPlan, on_delete=models.PROTECT, null=True, blank=True,
+        SubscriptionPlan,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name='subscriptions',
     )
     name = models.CharField(max_length=120, blank=True)
@@ -233,9 +257,7 @@ class Subscription(models.Model):
 
 
 class SubscriptionItem(models.Model):
-    subscription = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, related_name='items'
-    )
+    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(
         'products.Product', on_delete=models.PROTECT, related_name='subscription_items'
     )
@@ -260,17 +282,20 @@ class SubscriptionItem(models.Model):
 
 class SubscriptionWeek(models.Model):
     STATUSES = [
-        ('scheduled', 'Scheduled'), ('renewal_order', 'Renewal order'),
+        ('scheduled', 'Scheduled'),
+        ('renewal_order', 'Renewal order'),
         ('payment_due', 'Payment due'),
-        ('paid', 'Paid'), ('skipped', 'Skipped'), ('packing', 'Packing'),
-        ('out_for_delivery', 'Out for delivery'), ('delivered', 'Delivered'),
-        ('payment_failed', 'Payment failed'), ('expired', 'Expired'),
+        ('paid', 'Paid'),
+        ('skipped', 'Skipped'),
+        ('packing', 'Packing'),
+        ('out_for_delivery', 'Out for delivery'),
+        ('delivered', 'Delivered'),
+        ('payment_failed', 'Payment failed'),
+        ('expired', 'Expired'),
         ('cancelled', 'Cancelled'),
     ]
 
-    subscription = models.ForeignKey(
-        Subscription, on_delete=models.PROTECT, related_name='weeks'
-    )
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT, related_name='weeks')
     delivery_date = models.DateField()
     cutoff_at = models.DateTimeField()
     status = models.CharField(max_length=30, choices=STATUSES, default='scheduled')
@@ -281,7 +306,10 @@ class SubscriptionWeek(models.Model):
     payment_error = models.CharField(max_length=500, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     order = models.OneToOneField(
-        'orders.Order', on_delete=models.SET_NULL, null=True, blank=True,
+        'orders.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='subscription_week',
     )
     customer_note = models.CharField(max_length=300, blank=True)
@@ -307,9 +335,14 @@ class SubscriptionWeek(models.Model):
 
 class WholesaleQuote(models.Model):
     STATUSES = [
-        ('draft', 'Draft'), ('submitted', 'Submitted'), ('reviewing', 'Reviewing'),
-        ('quoted', 'Quoted'), ('accepted', 'Accepted'), ('declined', 'Declined'),
-        ('expired', 'Expired'), ('converted', 'Converted to order'),
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('reviewing', 'Reviewing'),
+        ('quoted', 'Quoted'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+        ('expired', 'Expired'),
+        ('converted', 'Converted to order'),
     ]
 
     business = models.ForeignKey(
@@ -323,7 +356,10 @@ class WholesaleQuote(models.Model):
     quoted_subtotal = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     valid_until = models.DateField(null=True, blank=True)
     converted_order = models.OneToOneField(
-        'orders.Order', on_delete=models.SET_NULL, null=True, blank=True,
+        'orders.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='source_quote',
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -337,17 +373,13 @@ class WholesaleQuote(models.Model):
 
 
 class WholesaleQuoteItem(models.Model):
-    quote = models.ForeignKey(
-        WholesaleQuote, on_delete=models.CASCADE, related_name='items'
-    )
+    quote = models.ForeignKey(WholesaleQuote, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(
         'products.Product', on_delete=models.PROTECT, related_name='quote_items'
     )
     quantity = models.PositiveIntegerField()
     requested_unit = models.CharField(max_length=80, blank=True)
-    quoted_unit_price = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True
-    )
+    quoted_unit_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     note = models.CharField(max_length=200, blank=True)
 
     @property
@@ -359,12 +391,16 @@ class WholesaleQuoteItem(models.Model):
 
 class BusinessSupplyAgreement(models.Model):
     STATUSES = [
-        ('draft', 'Draft'), ('under_review', 'Under review'),
-        ('approved', 'Approved'), ('active', 'Active'),
-        ('paused', 'Paused'), ('cancelled', 'Cancelled'),
+        ('draft', 'Draft'),
+        ('under_review', 'Under review'),
+        ('approved', 'Approved'),
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('cancelled', 'Cancelled'),
     ]
     FREQUENCIES = [
-        ('weekly', 'Weekly'), ('fortnightly', 'Every two weeks'),
+        ('weekly', 'Weekly'),
+        ('fortnightly', 'Every two weeks'),
         ('monthly', 'Monthly'),
     ]
 
@@ -391,7 +427,10 @@ class BusinessSupplyAgreement(models.Model):
     cancelled_at = models.DateTimeField(null=True, blank=True)
     staff_note = models.TextField(blank=True)
     legacy_subscription = models.OneToOneField(
-        Subscription, on_delete=models.SET_NULL, null=True, blank=True,
+        Subscription,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='migrated_business_supply',
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -413,7 +452,8 @@ class BusinessSupplyItem(models.Model):
         BusinessSupplyAgreement, on_delete=models.CASCADE, related_name='items'
     )
     product = models.ForeignKey(
-        'products.Product', on_delete=models.PROTECT,
+        'products.Product',
+        on_delete=models.PROTECT,
         related_name='business_supply_items',
     )
     quantity = models.PositiveIntegerField()
@@ -437,15 +477,18 @@ class BusinessSupplyItem(models.Model):
 
 class BusinessSupplyRevision(models.Model):
     STATUSES = [
-        ('submitted', 'Submitted'), ('approved', 'Approved'),
-        ('rejected', 'Rejected'), ('withdrawn', 'Withdrawn'),
+        ('submitted', 'Submitted'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('withdrawn', 'Withdrawn'),
     ]
 
     agreement = models.ForeignKey(
         BusinessSupplyAgreement, on_delete=models.PROTECT, related_name='revisions'
     )
     requested_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
         related_name='business_supply_revisions',
     )
     status = models.CharField(max_length=20, choices=STATUSES, default='submitted')
@@ -453,7 +496,10 @@ class BusinessSupplyRevision(models.Model):
     customer_note = models.TextField(blank=True)
     staff_note = models.TextField(blank=True)
     reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name='reviewed_business_supply_revisions',
     )
     reviewed_at = models.DateTimeField(null=True, blank=True)
@@ -466,11 +512,16 @@ class BusinessSupplyRevision(models.Model):
 
 class BusinessSupplyCycle(models.Model):
     STATUSES = [
-        ('renewal_order', 'Renewal order'), ('payment_due', 'Payment due'),
-        ('paid', 'Paid'), ('skipped', 'Skipped'),
-        ('payment_failed', 'Payment failed'), ('expired', 'Expired'),
-        ('cancelled', 'Cancelled'), ('packing', 'Packing'),
-        ('out_for_delivery', 'Out for delivery'), ('delivered', 'Delivered'),
+        ('renewal_order', 'Renewal order'),
+        ('payment_due', 'Payment due'),
+        ('paid', 'Paid'),
+        ('skipped', 'Skipped'),
+        ('payment_failed', 'Payment failed'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+        ('packing', 'Packing'),
+        ('out_for_delivery', 'Out for delivery'),
+        ('delivered', 'Delivered'),
     ]
 
     agreement = models.ForeignKey(
@@ -486,7 +537,10 @@ class BusinessSupplyCycle(models.Model):
     payment_error = models.CharField(max_length=500, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     order = models.OneToOneField(
-        'orders.Order', on_delete=models.SET_NULL, null=True, blank=True,
+        'orders.Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='business_supply_cycle',
     )
     created_at = models.DateTimeField(auto_now_add=True)

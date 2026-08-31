@@ -12,13 +12,25 @@ from unittest.mock import Mock, patch
 from openpyxl import Workbook
 
 from .models import (
-    IngredientAlias, IngredientMeasurementConversion, IngredientNutritionProfile,
-    NutritionSourceDataset, NutritionSourceRecord, Recipe, RecipeCombinationNote,
-    RecipeIngredient, RecipeStep, RecipeIngredientProductMatch, RegionalNutritionCandidate,
+    IngredientAlias,
+    IngredientMeasurementConversion,
+    IngredientNutritionProfile,
+    NutritionSourceDataset,
+    NutritionSourceRecord,
+    Recipe,
+    RecipeCombinationNote,
+    RecipeIngredient,
+    RecipeStep,
+    RecipeIngredientProductMatch,
+    RegionalNutritionCandidate,
 )
 from .services import (
-    calculate_nutrition, confirm_regional_candidate, normalize_ingredient,
-    parse_quantity, search_regional_candidates, search_usda_candidates,
+    calculate_nutrition,
+    confirm_regional_candidate,
+    normalize_ingredient,
+    parse_quantity,
+    search_regional_candidates,
+    search_usda_candidates,
 )
 from .wafct import DATA_SHEET, iter_wafct_rows
 
@@ -26,11 +38,18 @@ from .wafct import DATA_SHEET, iter_wafct_rows
 class DefaultRecipeSearchTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.fufu = Recipe.objects.create(title='Fufu', is_default=True, status='approved', is_published=True)
-        self.light_soup = Recipe.objects.create(title='Light Soup', is_default=True, status='approved', is_published=True)
+        self.fufu = Recipe.objects.create(
+            title='Fufu', is_default=True, status='approved', is_published=True
+        )
+        self.light_soup = Recipe.objects.create(
+            title='Light Soup', is_default=True, status='approved', is_published=True
+        )
         self.groundnut = Recipe.objects.create(
-            title='Groundnut Soup', description='A rich peanut-based soup', is_default=True,
-            status='approved', is_published=True,
+            title='Groundnut Soup',
+            description='A rich peanut-based soup',
+            is_default=True,
+            status='approved',
+            is_published=True,
         )
         self.private_recipe = Recipe.objects.create(title='Test Kitchen Draft', is_default=False)
         RecipeIngredient.objects.create(
@@ -81,12 +100,18 @@ class RecipeShoppingMatchTests(TestCase):
         suggested = Product.objects.create(name='Tomatoes', price='10.00', unit='basket')
         verified = Product.objects.create(name='Fresh tomatoes', price='12.00', unit='basket')
         RecipeIngredientProductMatch.objects.create(
-            recipe_ingredient=ingredient, product=suggested,
-            match_type='alias', confidence='0.750', manually_verified=False,
+            recipe_ingredient=ingredient,
+            product=suggested,
+            match_type='alias',
+            confidence='0.750',
+            manually_verified=False,
         )
         RecipeIngredientProductMatch.objects.create(
-            recipe_ingredient=ingredient, product=verified,
-            match_type='manual', confidence='1.000', manually_verified=True,
+            recipe_ingredient=ingredient,
+            product=verified,
+            match_type='manual',
+            confidence='1.000',
+            manually_verified=True,
         )
         response = client.get(f'/api/recipes/{recipe.slug}/')
         matches = response.json()['ingredients'][0]['matched_products']
@@ -116,11 +141,19 @@ class RecipeCombinationNoteTests(TestCase):
         Recipe.objects.create(title='Light Soup', is_default=True)
         Recipe.objects.create(title='Secret Draft', is_default=False)
 
-    @patch('recipes.views._groq_note', return_value=('Peppery light soup lifts the mellow, springy fufu for a balanced spoonful.', 'test-model'))
+    @patch(
+        'recipes.views._groq_note',
+        return_value=(
+            'Peppery light soup lifts the mellow, springy fufu for a balanced spoonful.',
+            'test-model',
+        ),
+    )
     def test_generates_and_caches_note_for_known_dishes(self, generate):
         payload = {'titles': ['Fufu', 'Light Soup']}
         first = self.client.post('/api/recipes/combination-note/', payload, format='json')
-        second = self.client.post('/api/recipes/combination-note/', {'titles': ['Light Soup', 'Fufu']}, format='json')
+        second = self.client.post(
+            '/api/recipes/combination-note/', {'titles': ['Light Soup', 'Fufu']}, format='json'
+        )
 
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json()['source'], 'generated')
@@ -146,12 +179,19 @@ class RecipeCombinationNoteTests(TestCase):
             ['Fufu', 'Secret Draft'],
             ['Fufu', 'fufu'],
         ):
-            response = self.client.post('/api/recipes/combination-note/', {'titles': titles}, format='json')
+            response = self.client.post(
+                '/api/recipes/combination-note/', {'titles': titles}, format='json'
+            )
             self.assertEqual(response.status_code, 400)
 
     def test_requires_between_two_and_four_dishes(self):
-        for titles in (['Fufu'], ['Fufu', 'Light Soup', 'Groundnut soup', 'Plain rice', 'Kontomire stew']):
-            response = self.client.post('/api/recipes/combination-note/', {'titles': titles}, format='json')
+        for titles in (
+            ['Fufu'],
+            ['Fufu', 'Light Soup', 'Groundnut soup', 'Plain rice', 'Kontomire stew'],
+        ):
+            response = self.client.post(
+                '/api/recipes/combination-note/', {'titles': titles}, format='json'
+            )
             self.assertEqual(response.status_code, 400)
 
 
@@ -164,8 +204,11 @@ class IngredientNormalisationTests(TestCase):
     def test_reuses_verified_local_alias_profile(self):
         IngredientAlias.objects.create(alias='kontomire', canonical_name='cocoyam leaves')
         profile = IngredientNutritionProfile.objects.create(
-            ingredient_name='Cocoyam leaves', normalized_name='cocoyam leaves',
-            source='ghanaian_food_composition', source_reference='Test source', verified=True,
+            ingredient_name='Cocoyam leaves',
+            normalized_name='cocoyam leaves',
+            source='ghanaian_food_composition',
+            source_reference='Test source',
+            verified=True,
         )
         recipe = Recipe.objects.create(title='Palava sauce')
         ingredient = RecipeIngredient.objects.create(
@@ -183,14 +226,22 @@ class NutritionCalculationTests(TestCase):
         self.recipe = Recipe.objects.create(title='Rice test', servings=2)
         RecipeStep.objects.create(recipe=self.recipe, step_number=1, instruction='Cook.')
         self.profile = IngredientNutritionProfile.objects.create(
-            ingredient_name='Rice', normalized_name='rice', source='usda',
-            source_reference='USDA FDC test', fdc_id=123, verified=True,
-            calories_per_100g=Decimal('360'), protein_g_per_100g=Decimal('7'),
+            ingredient_name='Rice',
+            normalized_name='rice',
+            source='usda',
+            source_reference='USDA FDC test',
+            fdc_id=123,
+            verified=True,
+            calories_per_100g=Decimal('360'),
+            protein_g_per_100g=Decimal('7'),
         )
 
     def test_calculates_whole_recipe_and_per_serving(self):
         RecipeIngredient.objects.create(
-            recipe=self.recipe, name='Rice', quantity='200', unit='g',
+            recipe=self.recipe,
+            name='Rice',
+            quantity='200',
+            unit='g',
             nutrition_profile=self.profile,
         )
         result = calculate_nutrition(self.recipe)
@@ -200,7 +251,10 @@ class NutritionCalculationTests(TestCase):
 
     def test_unknown_conversion_is_incomplete_not_guessed(self):
         RecipeIngredient.objects.create(
-            recipe=self.recipe, name='Rice', quantity='1', unit='cup',
+            recipe=self.recipe,
+            name='Rice',
+            quantity='1',
+            unit='cup',
             nutrition_profile=self.profile,
         )
         result = calculate_nutrition(self.recipe)
@@ -209,11 +263,19 @@ class NutritionCalculationTests(TestCase):
 
     def test_verified_ingredient_specific_conversion_is_used(self):
         IngredientMeasurementConversion.objects.create(
-            profile=self.profile, unit='cup', quantity=1, grams=180,
-            source_reference='Measured test portion', confidence=1, verified=True,
+            profile=self.profile,
+            unit='cup',
+            quantity=1,
+            grams=180,
+            source_reference='Measured test portion',
+            confidence=1,
+            verified=True,
         )
         RecipeIngredient.objects.create(
-            recipe=self.recipe, name='Rice', quantity='1', unit='cup',
+            recipe=self.recipe,
+            name='Rice',
+            quantity='1',
+            unit='cup',
             nutrition_profile=self.profile,
         )
         result = calculate_nutrition(self.recipe)
@@ -222,7 +284,10 @@ class NutritionCalculationTests(TestCase):
 
     def test_unchanged_fingerprint_reuses_calculation(self):
         RecipeIngredient.objects.create(
-            recipe=self.recipe, name='Rice', quantity='100', unit='g',
+            recipe=self.recipe,
+            name='Rice',
+            quantity='100',
+            unit='g',
             nutrition_profile=self.profile,
         )
         first = calculate_nutrition(self.recipe)
@@ -231,7 +296,10 @@ class NutritionCalculationTests(TestCase):
 
     def test_ingredient_change_marks_nutrition_stale(self):
         ingredient = RecipeIngredient.objects.create(
-            recipe=self.recipe, name='Rice', quantity='100', unit='g',
+            recipe=self.recipe,
+            name='Rice',
+            quantity='100',
+            unit='g',
             nutrition_profile=self.profile,
         )
         calculate_nutrition(self.recipe)
@@ -245,10 +313,16 @@ class USDACandidateTests(TestCase):
     @patch('recipes.services.requests.post')
     def test_search_saves_candidates_without_silently_selecting_one(self, post):
         response = Mock()
-        response.json.return_value = {'foods': [{
-            'fdcId': 99, 'description': 'Peas, black-eyed, dry',
-            'dataType': 'Foundation', 'score': 98.2,
-        }]}
+        response.json.return_value = {
+            'foods': [
+                {
+                    'fdcId': 99,
+                    'description': 'Peas, black-eyed, dry',
+                    'dataType': 'Foundation',
+                    'score': 98.2,
+                }
+            ]
+        }
         response.raise_for_status.return_value = None
         post.return_value = response
         recipe = Recipe.objects.create(title='Beans')
@@ -267,25 +341,46 @@ def make_wafct_fixture():
     introduction = workbook.active
     introduction.title = '01 Introduction'
     components = workbook.create_sheet('02 Components')
-    components.append([
-        'Component in English', 'Component in French', 'INFOODS tagname', 'Unit',
-        'Denominator', 'Significant figures', 'Maximal decimal places', 'Datasheet',
-        'Analytical/determination method/definition in English',
-    ])
+    components.append(
+        [
+            'Component in English',
+            'Component in French',
+            'INFOODS tagname',
+            'Unit',
+            'Denominator',
+            'Significant figures',
+            'Maximal decimal places',
+            'Datasheet',
+            'Analytical/determination method/definition in English',
+        ]
+    )
     components.append(['Composant', '', 'INFOODS tagname', 'Unité'])
     components.append(['Energy', '', 'ENERC', 'kcal', '/100g EP', 3, 0, '03-06', 'Calculated'])
     components.append(['Protein, total', '', 'PROTCNT', 'g', '/100g EP', 3, 1, '03-06', 'Measured'])
     sheet = workbook.create_sheet(DATA_SHEET)
-    headers = ['Code', 'Food name in English', 'Food name in French', 'Scientific name', 'BiblioID/Source']
+    headers = [
+        'Code',
+        'Food name in English',
+        'Food name in French',
+        'Scientific name',
+        'BiblioID/Source',
+    ]
     headers.extend(['Energy\n(kcal)', 'Protein, total\n(g)'])
     sheet.append(headers)
     sheet.append(['Code', 'Nom', 'Nom FR', 'Nom scientifique', 'Source'])
     sheet.append(['', '', '', '', '', 'ENERC ', 'PROTCNT '])
     sheet.append(['Roots and tubers'])
-    sheet.append([
-        '02_039', 'Cassava, grated, from fermented white cassava, toasted without oil (white gari)',
-        'Gari blanc', 'Manihot esculenta', '2P(12)', 357, '[1.2]',
-    ])
+    sheet.append(
+        [
+            '02_039',
+            'Cassava, grated, from fermented white cassava, toasted without oil (white gari)',
+            'Gari blanc',
+            'Manihot esculenta',
+            '2P(12)',
+            357,
+            '[1.2]',
+        ]
+    )
     handle = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
     handle.close()
     workbook.save(handle.name)
@@ -327,33 +422,56 @@ class WAFCTParserTests(TestCase):
 class RegionalNutritionReviewTests(TestCase):
     def setUp(self):
         self.dataset = NutritionSourceDataset.objects.create(
-            code='wafct-2019', name='WAFCT', version='2019', publisher='FAO',
-            source_url='https://www.fao.org/', citation='WAFCT citation',
+            code='wafct-2019',
+            name='WAFCT',
+            version='2019',
+            publisher='FAO',
+            source_url='https://www.fao.org/',
+            citation='WAFCT citation',
             reuse_terms='Commercial permission required.',
             commercial_permission_status='granted',
-            commercial_permission_reference='FAO approval ref', workbook_sha256='a' * 64,
+            commercial_permission_reference='FAO approval ref',
+            workbook_sha256='a' * 64,
         )
         self.record = NutritionSourceRecord.objects.create(
-            dataset=self.dataset, food_code='02_039',
+            dataset=self.dataset,
+            food_code='02_039',
             original_food_name='Cassava, fermented and toasted (white gari)',
-            canonical_name='gari', preparation_state='fermented, toasted',
+            canonical_name='gari',
+            preparation_state='fermented, toasted',
             source_identifiers={'biblio_id_source': '2P(12)'},
             nutrient_values={
-                'ENERC:kcal': {'tag': 'ENERC', 'unit': 'kcal', 'denominator': '/100g EP', 'value': '357'},
-                'PROTCNT:g': {'tag': 'PROTCNT', 'unit': 'g', 'denominator': '/100g EP', 'value': '1.2'},
+                'ENERC:kcal': {
+                    'tag': 'ENERC',
+                    'unit': 'kcal',
+                    'denominator': '/100g EP',
+                    'value': '357',
+                },
+                'PROTCNT:g': {
+                    'tag': 'PROTCNT',
+                    'unit': 'g',
+                    'denominator': '/100g EP',
+                    'value': '1.2',
+                },
             },
-            quality_indicators={}, source_sheet=DATA_SHEET, source_row=5,
+            quality_indicators={},
+            source_sheet=DATA_SHEET,
+            source_row=5,
         )
         self.recipe = Recipe.objects.create(title='Gari test')
         self.ingredient = RecipeIngredient.objects.create(
-            recipe=self.recipe, name='Gari', quantity='100', unit='g',
+            recipe=self.recipe,
+            name='Gari',
+            quantity='100',
+            unit='g',
             normalized_ingredient_name='gari',
         )
 
     @override_settings(DEBUG=False)
     def test_human_confirmation_creates_verified_profile_with_provenance(self):
         candidate = RegionalNutritionCandidate.objects.create(
-            recipe_ingredient=self.ingredient, source_record=self.record,
+            recipe_ingredient=self.ingredient,
+            source_record=self.record,
         )
         profile = confirm_regional_candidate(candidate, None)
         self.assertTrue(profile.verified)
@@ -365,19 +483,28 @@ class RegionalNutritionReviewTests(TestCase):
 
     def test_source_priority_prefers_manual_then_wafct_then_usda(self):
         IngredientNutritionProfile.objects.create(
-            ingredient_name='USDA gari', normalized_name='gari', source='usda',
-            source_reference='USDA', verified=True,
+            ingredient_name='USDA gari',
+            normalized_name='gari',
+            source='usda',
+            source_reference='USDA',
+            verified=True,
         )
         wafct = IngredientNutritionProfile.objects.create(
-            ingredient_name='WAFCT gari', normalized_name='gari', source='wafct_2019',
-            source_reference='WAFCT', verified=True,
+            ingredient_name='WAFCT gari',
+            normalized_name='gari',
+            source='wafct_2019',
+            source_reference='WAFCT',
+            verified=True,
         )
         normalize_ingredient(self.ingredient)
         self.ingredient.refresh_from_db()
         self.assertEqual(self.ingredient.nutrition_profile, wafct)
         manual = IngredientNutritionProfile.objects.create(
-            ingredient_name='Verified local gari', normalized_name='gari',
-            source='manual_verified', source_reference='Local laboratory', verified=True,
+            ingredient_name='Verified local gari',
+            normalized_name='gari',
+            source='manual_verified',
+            source_reference='Local laboratory',
+            verified=True,
         )
         self.ingredient.nutrition_profile = None
         self.ingredient.save(update_fields=['nutrition_profile'])
@@ -387,7 +514,8 @@ class RegionalNutritionReviewTests(TestCase):
 
     def test_alias_search_creates_candidates_but_never_selects_them(self):
         IngredientAlias.objects.create(
-            alias='dawadawa', canonical_name='fermented African locust bean',
+            alias='dawadawa',
+            canonical_name='fermented African locust bean',
             lookup_name='fermented African locust bean',
         )
         self.ingredient.name = 'Dawadawa'

@@ -20,8 +20,11 @@ class Recipe(models.Model):
         ('rejected', 'Rejected'),
     ]
     NUTRITION_STATUS_CHOICES = [
-        ('not_requested', 'Not requested'), ('pending', 'Pending'),
-        ('ready', 'Ready'), ('partial', 'Partial'), ('stale', 'Stale'),
+        ('not_requested', 'Not requested'),
+        ('pending', 'Pending'),
+        ('ready', 'Ready'),
+        ('partial', 'Partial'),
+        ('stale', 'Stale'),
         ('failed', 'Failed'),
     ]
     DIFFICULTY_CHOICES = [
@@ -46,12 +49,10 @@ class Recipe(models.Model):
     keywords = models.JSONField(default=list, blank=True)
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='easy')
     nutritional_score = models.PositiveSmallIntegerField(
-        default=0,
-        help_text='Nutritional score out of 100'
+        default=0, help_text='Nutritional score out of 100'
     )
     video_url = models.URLField(
-        blank=True,
-        help_text='YouTube or video URL for recipe preparation video'
+        blank=True, help_text='YouTube or video URL for recipe preparation video'
     )
     is_default = models.BooleanField(default=False, help_text='Curated by Legit Organic')
     is_published = models.BooleanField(
@@ -60,7 +61,10 @@ class Recipe(models.Model):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='needs_review')
     review_warnings = models.JSONField(default=list, blank=True)
     reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='recipes_reviewed',
     )
     reviewed_at = models.DateTimeField(null=True, blank=True)
@@ -78,10 +82,15 @@ class Recipe(models.Model):
     source_retrieved_at = models.DateTimeField(null=True, blank=True)
     source_content_hash = models.CharField(max_length=64, blank=True)
     extraction_method = models.CharField(max_length=30, blank=True)
-    extraction_confidence = models.DecimalField(max_digits=4, decimal_places=3, null=True, blank=True)
+    extraction_confidence = models.DecimalField(
+        max_digits=4, decimal_places=3, null=True, blank=True
+    )
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='recipes'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recipes',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -91,12 +100,15 @@ class Recipe(models.Model):
 
     def get_absolute_url(self):
         from django.conf import settings
+
         return f"{settings.FRONTEND_URL}/recipes/{self.slug}"
 
     def save(self, *args, **kwargs):
         previous_servings = None
         if self.pk:
-            previous_servings = Recipe.objects.filter(pk=self.pk).values_list('servings', flat=True).first()
+            previous_servings = (
+                Recipe.objects.filter(pk=self.pk).values_list('servings', flat=True).first()
+            )
         if not self.slug:
             self.slug = slugify(self.title)
         if self.is_published and self.status in {'approved', 'ready', 'published'}:
@@ -109,30 +121,40 @@ class Recipe(models.Model):
             self.status = 'ready'
         super().save(*args, **kwargs)
         if previous_servings is not None and previous_servings != self.servings:
-            Recipe.objects.filter(pk=self.pk, nutrition__isnull=False).update(nutrition_status='stale')
+            Recipe.objects.filter(pk=self.pk, nutrition__isnull=False).update(
+                nutrition_status='stale'
+            )
 
     def current_ingredients_hash(self):
         payload = {
             'servings': self.servings,
-            'ingredients': list(self.ingredients.order_by('position', 'id').values(
-                'quantity', 'quantity_max', 'normalized_unit', 'normalized_ingredient_name',
-                'nutrition_profile_id', 'grams_estimate',
-            )),
+            'ingredients': list(
+                self.ingredients.order_by('position', 'id').values(
+                    'quantity',
+                    'quantity_max',
+                    'normalized_unit',
+                    'normalized_ingredient_name',
+                    'nutrition_profile_id',
+                    'grams_estimate',
+                )
+            ),
         }
         return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
 
 
 class RecipeIngredient(models.Model):
     NUTRITION_MATCH_CHOICES = [
-        ('exact', 'Exact'), ('normalized', 'Normalized'), ('wafct_verified', 'WAFCT verified'),
+        ('exact', 'Exact'),
+        ('normalized', 'Normalized'),
+        ('wafct_verified', 'WAFCT verified'),
         ('usda_verified', 'USDA verified'),
-        ('local_verified', 'Local verified'), ('estimated', 'Estimated'),
+        ('local_verified', 'Local verified'),
+        ('estimated', 'Estimated'),
         ('unresolved', 'Unresolved'),
     ]
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='ingredients')
     product = models.ForeignKey(
-        'products.Product', on_delete=models.SET_NULL,
-        null=True, blank=True
+        'products.Product', on_delete=models.SET_NULL, null=True, blank=True
     )
     name = models.CharField(max_length=200)
     raw_text = models.CharField(max_length=500, blank=True)
@@ -148,7 +170,10 @@ class RecipeIngredient(models.Model):
     grams_source = models.CharField(max_length=200, blank=True)
     grams_confidence = models.DecimalField(max_digits=4, decimal_places=3, null=True, blank=True)
     nutrition_profile = models.ForeignKey(
-        'IngredientNutritionProfile', on_delete=models.SET_NULL, null=True, blank=True,
+        'IngredientNutritionProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='recipe_ingredients',
     )
     nutrition_match_status = models.CharField(
@@ -164,8 +189,13 @@ class RecipeIngredient(models.Model):
 
     def save(self, *args, **kwargs):
         tracked = (
-            'name', 'quantity', 'unit', 'normalized_unit', 'normalized_ingredient_name',
-            'nutrition_profile_id', 'grams_estimate',
+            'name',
+            'quantity',
+            'unit',
+            'normalized_unit',
+            'normalized_ingredient_name',
+            'nutrition_profile_id',
+            'grams_estimate',
         )
         previous = None
         if self.pk:
@@ -192,7 +222,8 @@ class IngredientAlias(models.Model):
     alias = models.CharField(max_length=200, unique=True)
     canonical_name = models.CharField(max_length=200)
     lookup_name = models.CharField(
-        max_length=200, blank=True,
+        max_length=200,
+        blank=True,
         help_text='Optional scientific or common name used when searching nutrition sources.',
     )
     notes = models.TextField(blank=True)
@@ -212,8 +243,10 @@ class IngredientNutritionProfile(models.Model):
         ('fao_infoods', 'Other FAO/INFOODS data'),
         ('ghana_csir', 'Ghana CSIR food composition data'),
         ('ghanaian_food_composition', 'Ghanaian food composition data'),
-        ('manufacturer', 'Manufacturer'), ('laboratory', 'Laboratory'),
-        ('academic_source', 'Academic source'), ('manual_verified', 'Manual verified'),
+        ('manufacturer', 'Manufacturer'),
+        ('laboratory', 'Laboratory'),
+        ('academic_source', 'Academic source'),
+        ('manual_verified', 'Manual verified'),
         ('other', 'Other'),
     ]
     ingredient_name = models.CharField(max_length=200)
@@ -224,17 +257,26 @@ class IngredientNutritionProfile(models.Model):
     fdc_id = models.PositiveBigIntegerField(null=True, blank=True, unique=True)
     calories_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
     protein_g_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
-    carbohydrate_g_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    carbohydrate_g_per_100g = models.DecimalField(
+        max_digits=10, decimal_places=3, null=True, blank=True
+    )
     fat_g_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
-    saturated_fat_g_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    saturated_fat_g_per_100g = models.DecimalField(
+        max_digits=10, decimal_places=3, null=True, blank=True
+    )
     fibre_g_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
     sugar_g_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
     sodium_mg_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
-    cholesterol_mg_per_100g = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    cholesterol_mg_per_100g = models.DecimalField(
+        max_digits=10, decimal_places=3, null=True, blank=True
+    )
     micronutrients_json = models.JSONField(default=dict, blank=True)
     verified = models.BooleanField(default=False)
     verified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='verified_nutrition_profiles',
     )
     verified_at = models.DateTimeField(null=True, blank=True)
@@ -257,9 +299,9 @@ class IngredientNutritionProfile(models.Model):
                 kwargs['update_fields'] = set(kwargs['update_fields']) | {'version'}
         super().save(*args, **kwargs)
         if changed:
-            Recipe.objects.filter(
-                ingredients__nutrition_profile=self
-            ).distinct().update(nutrition_status='stale')
+            Recipe.objects.filter(ingredients__nutrition_profile=self).distinct().update(
+                nutrition_status='stale'
+            )
 
 
 class NutritionSourceDataset(models.Model):
@@ -283,7 +325,10 @@ class NutritionSourceDataset(models.Model):
     workbook_sha256 = models.CharField(max_length=64)
     imported_at = models.DateTimeField(null=True, blank=True)
     imported_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='nutrition_datasets_imported',
     )
 
@@ -295,15 +340,18 @@ class NutritionSourceDataset(models.Model):
             self.commercial_permission_status == 'granted'
             and not self.commercial_permission_reference.strip()
         ):
-            raise ValidationError({
-                'commercial_permission_reference':
-                    'Record the FAO permission reference before marking permission granted.'
-            })
+            raise ValidationError(
+                {
+                    'commercial_permission_reference': 'Record the FAO permission reference before marking permission granted.'
+                }
+            )
 
 
 class NutritionSourceRecord(models.Model):
     STATUS_CHOICES = [
-        ('unverified', 'Unverified'), ('verified', 'Verified'), ('rejected', 'Rejected'),
+        ('unverified', 'Unverified'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected'),
     ]
     dataset = models.ForeignKey(
         NutritionSourceDataset, on_delete=models.PROTECT, related_name='records'
@@ -321,12 +369,18 @@ class NutritionSourceRecord(models.Model):
     source_row = models.PositiveIntegerField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unverified')
     verified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='verified_nutrition_source_records',
     )
     verified_at = models.DateTimeField(null=True, blank=True)
     nutrition_profile = models.OneToOneField(
-        IngredientNutritionProfile, on_delete=models.SET_NULL, null=True, blank=True,
+        IngredientNutritionProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='source_record',
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -334,9 +388,11 @@ class NutritionSourceRecord(models.Model):
 
     class Meta:
         ordering = ['original_food_name', 'food_code']
-        constraints = [models.UniqueConstraint(
-            fields=['dataset', 'food_code'], name='unique_dataset_food_code'
-        )]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['dataset', 'food_code'], name='unique_dataset_food_code'
+            )
+        ]
 
     def __str__(self):
         return f'{self.food_code} — {self.original_food_name}'
@@ -349,16 +405,24 @@ class RegionalNutritionCandidate(models.Model):
     source_record = models.ForeignKey(
         NutritionSourceRecord, on_delete=models.CASCADE, related_name='ingredient_candidates'
     )
-    status = models.CharField(max_length=20, choices=[
-        ('candidate', 'Candidate'), ('accepted', 'Accepted'), ('rejected', 'Rejected'),
-    ], default='candidate')
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('candidate', 'Candidate'),
+            ('accepted', 'Accepted'),
+            ('rejected', 'Rejected'),
+        ],
+        default='candidate',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(
-            fields=['recipe_ingredient', 'source_record'],
-            name='unique_ingredient_regional_candidate',
-        )]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe_ingredient', 'source_record'],
+                name='unique_ingredient_regional_candidate',
+            )
+        ]
 
 
 class IngredientMeasurementConversion(models.Model):
@@ -372,7 +436,10 @@ class IngredientMeasurementConversion(models.Model):
     confidence = models.DecimalField(max_digits=4, decimal_places=3)
     verified = models.BooleanField(default=False)
     verified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='verified_measurement_conversions',
     )
     verified_at = models.DateTimeField(null=True, blank=True)
@@ -380,15 +447,17 @@ class IngredientMeasurementConversion(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(
-            fields=['profile', 'unit', 'quantity'], name='unique_profile_measurement_conversion'
-        )]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['profile', 'unit', 'quantity'], name='unique_profile_measurement_conversion'
+            )
+        ]
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        Recipe.objects.filter(
-            ingredients__nutrition_profile=self.profile
-        ).distinct().update(nutrition_status='stale')
+        Recipe.objects.filter(ingredients__nutrition_profile=self.profile).distinct().update(
+            nutrition_status='stale'
+        )
 
 
 class USDANutritionCandidate(models.Model):
@@ -400,15 +469,23 @@ class USDANutritionCandidate(models.Model):
     data_type = models.CharField(max_length=80, blank=True)
     score = models.DecimalField(max_digits=7, decimal_places=3, null=True, blank=True)
     payload = models.JSONField(default=dict, blank=True)
-    status = models.CharField(max_length=20, choices=[
-        ('candidate', 'Candidate'), ('accepted', 'Accepted'), ('rejected', 'Rejected'),
-    ], default='candidate')
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('candidate', 'Candidate'),
+            ('accepted', 'Accepted'),
+            ('rejected', 'Rejected'),
+        ],
+        default='candidate',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(
-            fields=['recipe_ingredient', 'fdc_id'], name='unique_ingredient_usda_candidate'
-        )]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe_ingredient', 'fdc_id'], name='unique_ingredient_usda_candidate'
+            )
+        ]
 
 
 class RecipeNutrition(models.Model):
@@ -436,8 +513,11 @@ class RecipeNutrition(models.Model):
 
 class RecipeIngredientProductMatch(models.Model):
     MATCH_TYPE_CHOICES = [
-        ('exact', 'Exact'), ('alias', 'Alias'), ('category', 'Category'),
-        ('manual', 'Manual'), ('none', 'No match'),
+        ('exact', 'Exact'),
+        ('alias', 'Alias'),
+        ('category', 'Category'),
+        ('manual', 'Manual'),
+        ('none', 'No match'),
     ]
     recipe_ingredient = models.ForeignKey(
         RecipeIngredient, on_delete=models.CASCADE, related_name='product_matches'
@@ -451,9 +531,12 @@ class RecipeIngredientProductMatch(models.Model):
 
     class Meta:
         ordering = ['-manually_verified', '-confidence', 'id']
-        constraints = [models.UniqueConstraint(
-            fields=['recipe_ingredient', 'product'], name='unique_recipe_ingredient_product_match'
-        )]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe_ingredient', 'product'],
+                name='unique_recipe_ingredient_product_match',
+            )
+        ]
 
 
 class RecipeStep(models.Model):
@@ -472,9 +555,7 @@ class RecipeStep(models.Model):
 
 
 class RecipePairing(models.Model):
-    base_recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='pairings'
-    )
+    base_recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='pairings')
     suggested_recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name='pairing_suggestions'
     )

@@ -20,7 +20,10 @@ from rest_framework.test import APIClient
 from users.models import User
 from products.models import Product
 from .models import (
-    Order, OrderItem, OrderNotificationDelivery, OrderStatusEvent,
+    Order,
+    OrderItem,
+    OrderNotificationDelivery,
+    OrderStatusEvent,
     SeevCashWebhookEvent,
 )
 from .promo_models import PromoCode
@@ -32,8 +35,12 @@ VERIFY_URL = '/api/orders/verify-payment/'
 
 def seevcash_ok(reference='SEEV-SESSION', amount=5000, currency='GHS', txn_id='txn-99'):
     return {
-        'status': 'completed', 'reference': reference, 'currency': currency,
-        'amount': amount, 'final_amount': amount, 'id': txn_id,
+        'status': 'completed',
+        'reference': reference,
+        'currency': currency,
+        'amount': amount,
+        'final_amount': amount,
+        'id': txn_id,
     }
 
 
@@ -41,30 +48,43 @@ class PaymentVerificationTests(TestCase):
     def setUp(self):
         cache.clear()
         self.user = User.objects.create_user(
-            email='c@example.com', password='x', first_name='C', last_name='U',
+            email='c@example.com',
+            password='x',
+            first_name='C',
+            last_name='U',
             email_verified=True,
         )
         self.client = APIClient()
         self.client.force_authenticate(self.user)
         self.order = Order.objects.create(
-            user=self.user, reference='LO-PAYTEST', delivery_address='Accra',
-            total_amount=Decimal('50.00'), discount_amount=Decimal('0.00'),
-            payment_status='pending', status='pending', order_source='seevcash',
-            payment_provider='seevcash', checkout_reference='SEEV-SESSION',
+            user=self.user,
+            reference='LO-PAYTEST',
+            delivery_address='Accra',
+            total_amount=Decimal('50.00'),
+            discount_amount=Decimal('0.00'),
+            payment_status='pending',
+            status='pending',
+            order_source='seevcash',
+            payment_provider='seevcash',
+            checkout_reference='SEEV-SESSION',
         )
 
     @override_settings(SEEVCASH_SECRET_KEY='sandbox-key')
     @patch('orders.views.create_checkout')
     def test_checkout_initialization_uses_stable_order_idempotency_key(self, mock_create):
         from legitorganic.seevcash import CheckoutSession
+
         mock_create.return_value = CheckoutSession(
-            reference='SEEV-NEW', checkout_url='https://pay.seevplus.com/SEEV-NEW',
+            reference='SEEV-NEW',
+            checkout_url='https://pay.seevplus.com/SEEV-NEW',
             status='pending',
         )
         response = self.client.post('/api/orders/LO-PAYTEST/checkout/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['checkout_url'], 'https://pay.seevplus.com/SEEV-NEW')
-        self.assertEqual(mock_create.call_args.kwargs['idempotency_key'], f'order-{self.order.pk}-checkout')
+        self.assertEqual(
+            mock_create.call_args.kwargs['idempotency_key'], f'order-{self.order.pk}-checkout'
+        )
         self.order.refresh_from_db()
         self.assertEqual(self.order.checkout_reference, 'SEEV-NEW')
 
@@ -79,6 +99,7 @@ class PaymentVerificationTests(TestCase):
     @patch('orders.views.verify_checkout')
     def test_fails_closed_when_seevcash_times_out(self, mock_verify):
         from legitorganic.seevcash import SeevCashError
+
         mock_verify.side_effect = SeevCashError('timeout')
         resp = self.client.post(VERIFY_URL, {'reference': 'SEEV-SESSION'}, format='json')
         self.assertEqual(resp.status_code, 502)
@@ -133,7 +154,9 @@ class PaymentVerificationTests(TestCase):
     @patch('users.sms.send_order_status_sms')
     @patch('users.emails.resend.Emails.send')
     @patch('orders.views.verify_checkout')
-    def test_repeated_verification_transitions_exactly_once(self, mock_verify, mock_email, mock_sms):
+    def test_repeated_verification_transitions_exactly_once(
+        self, mock_verify, mock_email, mock_sms
+    ):
         # Guards the transition side effects (confirmation/status emails, commissions)
         # against firing twice. True parallelism needs Postgres + threads; here we
         # assert the idempotent recheck: a second completion does no extra work.
@@ -166,18 +189,30 @@ class SeevCashWebhookTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.order = Order.objects.create(
-            reference='LO-WEBHOOK', delivery_address='Accra',
-            total_amount=Decimal('50.00'), payment_status='pending',
-            status='pending', order_source='seevcash', payment_provider='seevcash',
+            reference='LO-WEBHOOK',
+            delivery_address='Accra',
+            total_amount=Decimal('50.00'),
+            payment_status='pending',
+            status='pending',
+            order_source='seevcash',
+            payment_provider='seevcash',
             checkout_reference='SEEV-WEBHOOK',
         )
 
-    def post_event(self, event_id='evt-1', event_type='payment.succeeded', timestamp=None,
-                   signature_secret='whsec_test', payload=None):
+    def post_event(
+        self,
+        event_id='evt-1',
+        event_type='payment.succeeded',
+        timestamp=None,
+        signature_secret='whsec_test',
+        payload=None,
+    ):
         payload = payload or {
             'data': {
-                'reference': 'SEEV-WEBHOOK', 'amount': 5000,
-                'currency': 'GHS', 'paymentId': 'txn-webhook',
+                'reference': 'SEEV-WEBHOOK',
+                'amount': 5000,
+                'currency': 'GHS',
+                'paymentId': 'txn-webhook',
             }
         }
         raw = json.dumps(payload, separators=(',', ':')).encode()
@@ -186,7 +221,10 @@ class SeevCashWebhookTests(TestCase):
             signature_secret.encode(), timestamp.encode() + b'.' + raw, hashlib.sha256
         ).hexdigest()
         return self.client.generic(
-            'POST', self.url, raw, content_type='application/json',
+            'POST',
+            self.url,
+            raw,
+            content_type='application/json',
             HTTP_X_SEEV_EVENT_ID=event_id,
             HTTP_X_SEEV_EVENT_TYPE=event_type,
             HTTP_X_SEEV_TIMESTAMP=timestamp,
@@ -214,16 +252,18 @@ class SeevCashWebhookTests(TestCase):
     def test_signed_success_accepts_nested_checkout_reference(self):
         self.order.checkout_reference = 'PAY-SEEV-WEBHOOK'
         self.order.save(update_fields=['checkout_reference'])
-        response = self.post_event(payload={
-            'data': {
-                'transaction': {
-                    'checkoutReference': 'PAY-SEEV-WEBHOOK',
-                    'amount': 5000,
-                    'currency': 'GHS',
-                    'paymentId': 'txn-nested',
+        response = self.post_event(
+            payload={
+                'data': {
+                    'transaction': {
+                        'checkoutReference': 'PAY-SEEV-WEBHOOK',
+                        'amount': 5000,
+                        'currency': 'GHS',
+                        'paymentId': 'txn-nested',
+                    }
                 }
             }
-        })
+        )
         self.assertEqual(response.status_code, 200)
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'success')
@@ -232,13 +272,15 @@ class SeevCashWebhookTests(TestCase):
     def test_signed_success_accepts_webhook_amount_in_major_units(self):
         self.order.checkout_reference = 'PAY-MAJOR-UNITS'
         self.order.save(update_fields=['checkout_reference'])
-        response = self.post_event(payload={
-            'data': {
-                'checkoutReference': 'PAY-MAJOR-UNITS',
-                'amount': '50.00',
-                'currency': 'GHS',
+        response = self.post_event(
+            payload={
+                'data': {
+                    'checkoutReference': 'PAY-MAJOR-UNITS',
+                    'amount': '50.00',
+                    'currency': 'GHS',
+                }
             }
-        })
+        )
         self.assertEqual(response.status_code, 200)
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'success')
@@ -255,7 +297,8 @@ class SeevCashWebhookTests(TestCase):
             event_id='evt-conflict',
             payload={
                 'data': {
-                    'reference': 'SEEV-WEBHOOK', 'amount': 5100,
+                    'reference': 'SEEV-WEBHOOK',
+                    'amount': 5100,
                     'currency': 'GHS',
                 }
             },
@@ -281,11 +324,17 @@ class GuestPaymentAccessTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.order = Order.objects.create(
-            reference='LO-GUEST-SECURE', delivery_address='Accra',
-            guest_name='Guest', guest_email='guest@example.com',
-            guest_phone='0244123456', total_amount=Decimal('50.00'),
-            payment_status='pending', status='pending', order_source='seevcash',
-            payment_provider='seevcash', checkout_reference='SEEV-GUEST',
+            reference='LO-GUEST-SECURE',
+            delivery_address='Accra',
+            guest_name='Guest',
+            guest_email='guest@example.com',
+            guest_phone='0244123456',
+            total_amount=Decimal('50.00'),
+            payment_status='pending',
+            status='pending',
+            order_source='seevcash',
+            payment_provider='seevcash',
+            checkout_reference='SEEV-GUEST',
         )
 
     def test_guest_reference_alone_cannot_access_payment(self):
@@ -296,8 +345,10 @@ class GuestPaymentAccessTests(TestCase):
     @patch('orders.views.create_checkout')
     def test_signed_guest_token_allows_checkout(self, mock_create):
         from legitorganic.seevcash import CheckoutSession
+
         mock_create.return_value = CheckoutSession(
-            reference='SEEV-GUEST-NEW', checkout_url='https://pay.seevplus.com/test',
+            reference='SEEV-GUEST-NEW',
+            checkout_url='https://pay.seevplus.com/test',
             status='pending',
         )
         response = self.client.post(
@@ -307,21 +358,32 @@ class GuestPaymentAccessTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+
 class ReceiptAuthTests(TestCase):
     def setUp(self):
         cache.clear()
         self.owner = User.objects.create_user(
-            email='own@example.com', password='x', first_name='O', last_name='W',
+            email='own@example.com',
+            password='x',
+            first_name='O',
+            last_name='W',
             email_verified=True,
         )
         self.other = User.objects.create_user(
-            email='oth@example.com', password='x', first_name='O', last_name='T',
+            email='oth@example.com',
+            password='x',
+            first_name='O',
+            last_name='T',
             email_verified=True,
         )
         self.order = Order.objects.create(
-            user=self.owner, reference='LO-RCPT1', delivery_address='Accra',
-            total_amount=Decimal('20.00'), payment_status='success',
-            status='processing', order_source='paystack',
+            user=self.owner,
+            reference='LO-RCPT1',
+            delivery_address='Accra',
+            total_amount=Decimal('20.00'),
+            payment_status='success',
+            status='processing',
+            order_source='paystack',
         )
 
     def test_anonymous_cannot_download_receipt(self):
@@ -376,7 +438,10 @@ class AtomicOrderCreationTests(TestCase):
 
     def test_authenticated_checkout_updates_customer_delivery_profile(self):
         user = User.objects.create_user(
-            email='buyer@example.com', password='x', first_name='Ama', last_name='Mensah',
+            email='buyer@example.com',
+            password='x',
+            first_name='Ama',
+            last_name='Mensah',
             email_verified=True,
         )
         self.client.force_authenticate(user)
@@ -409,23 +474,36 @@ class AtomicOrderCreationTests(TestCase):
         self.assertIn('Tomatoes', payload['html'])
 
         from .reporting import send_owner_report_once
+
         self.assertFalse(send_owner_report_once(order.pk, 'whatsapp_submitted'))
         self.assertEqual(mock_send.call_count, 1)
 
     def test_invalid_product_leaves_no_orphan_order(self):
         before = Order.objects.count()
-        resp = self.client.post(CREATE_URL, self._payload([
-            {'product_id': self.product.id, 'quantity': 2},
-            {'product_id': 999999, 'quantity': 1},
-        ]), format='json')
+        resp = self.client.post(
+            CREATE_URL,
+            self._payload(
+                [
+                    {'product_id': self.product.id, 'quantity': 2},
+                    {'product_id': 999999, 'quantity': 1},
+                ]
+            ),
+            format='json',
+        )
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(Order.objects.count(), before)
         self.assertEqual(OrderItem.objects.count(), 0)
 
     def test_valid_order_created_with_correct_total(self):
-        resp = self.client.post(CREATE_URL, self._payload([
-            {'product_id': self.product.id, 'quantity': 3},
-        ]), format='json')
+        resp = self.client.post(
+            CREATE_URL,
+            self._payload(
+                [
+                    {'product_id': self.product.id, 'quantity': 3},
+                ]
+            ),
+            format='json',
+        )
         self.assertEqual(resp.status_code, 201)
         order = Order.objects.get(reference=resp.data['reference'])
         self.assertEqual(order.total_amount, Decimal('30.00'))
@@ -433,12 +511,21 @@ class AtomicOrderCreationTests(TestCase):
 
     def test_valid_promo_increments_usage_once(self):
         promo = PromoCode.objects.create(
-            code='SAVE10', discount_type=PromoCode.DISCOUNT_FIXED,
-            discount_value=Decimal('10.00'), is_active=True,
+            code='SAVE10',
+            discount_type=PromoCode.DISCOUNT_FIXED,
+            discount_value=Decimal('10.00'),
+            is_active=True,
         )
-        resp = self.client.post(CREATE_URL, self._payload([
-            {'product_id': self.product.id, 'quantity': 2},
-        ], promo_code='SAVE10'), format='json')
+        resp = self.client.post(
+            CREATE_URL,
+            self._payload(
+                [
+                    {'product_id': self.product.id, 'quantity': 2},
+                ],
+                promo_code='SAVE10',
+            ),
+            format='json',
+        )
         self.assertEqual(resp.status_code, 201)
         promo.refresh_from_db()
         self.assertEqual(promo.times_used, 1)
@@ -449,14 +536,22 @@ class AtomicOrderCreationTests(TestCase):
 class OwnerOrderReportTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            email='report-buyer@example.com', password='x', first_name='Esi',
-            last_name='Owusu', phone_number='0244000000', email_verified=True,
+            email='report-buyer@example.com',
+            password='x',
+            first_name='Esi',
+            last_name='Owusu',
+            phone_number='0244000000',
+            email_verified=True,
         )
         self.order = Order.objects.create(
-            user=self.user, reference='LO-REPORT1',
+            user=self.user,
+            reference='LO-REPORT1',
             delivery_address='10 Farm Road, Accra, Greater Accra',
-            guest_phone='0244000000', total_amount=Decimal('25.00'),
-            status='pending', payment_status='pending', order_source='paystack',
+            guest_phone='0244000000',
+            total_amount=Decimal('25.00'),
+            status='pending',
+            payment_status='pending',
+            order_source='paystack',
         )
 
     @override_settings(ORDER_REPORT_EMAIL='legitorganic9@gmail.com')
@@ -511,14 +606,24 @@ class OrderExportAdminTests(TestCase):
         )
         self.client.force_login(self.staff)
         self.match = Order.objects.create(
-            reference='LO-EXPORT-MATCH', delivery_address='Accra', guest_name='Ama Match',
-            guest_phone='0244000000', total_amount=Decimal('30.00'),
-            status='delivered', payment_status='success', order_source='whatsapp',
+            reference='LO-EXPORT-MATCH',
+            delivery_address='Accra',
+            guest_name='Ama Match',
+            guest_phone='0244000000',
+            total_amount=Decimal('30.00'),
+            status='delivered',
+            payment_status='success',
+            order_source='whatsapp',
         )
         Order.objects.create(
-            reference='LO-EXPORT-OTHER', delivery_address='Kumasi', guest_name='Kojo Other',
-            guest_phone='0200000000', total_amount=Decimal('15.00'),
-            status='pending', payment_status='pending', order_source='paystack',
+            reference='LO-EXPORT-OTHER',
+            delivery_address='Kumasi',
+            guest_name='Kojo Other',
+            guest_phone='0200000000',
+            total_amount=Decimal('15.00'),
+            status='pending',
+            payment_status='pending',
+            order_source='paystack',
         )
 
     def test_orders_page_shows_visible_export_workspace(self):
@@ -528,10 +633,15 @@ class OrderExportAdminTests(TestCase):
         self.assertContains(response, 'Download Excel')
 
     def test_export_filters_customer_status_payment_and_channel(self):
-        response = self.client.get(reverse('admin:orders-export-all'), {
-            'customer': 'Ama Match', 'status': 'delivered',
-            'payment_status': 'success', 'source': 'whatsapp',
-        })
+        response = self.client.get(
+            reverse('admin:orders-export-all'),
+            {
+                'customer': 'Ama Match',
+                'status': 'delivered',
+                'payment_status': 'success',
+                'source': 'whatsapp',
+            },
+        )
         self.assertEqual(response.status_code, 200)
         workbook = load_workbook(BytesIO(response.content), read_only=True)
         sheet = workbook['Orders Summary']
@@ -550,25 +660,38 @@ class OrderAdminSecurityTests(TestCase):
     def setUp(self):
         call_command('setup_groups', verbosity=0)
         self.owner = User.objects.create_superuser(
-            email='secure-owner@example.com', password='StrongPass123!',
-            first_name='Secure', last_name='Owner',
+            email='secure-owner@example.com',
+            password='StrongPass123!',
+            first_name='Secure',
+            last_name='Owner',
         )
         self.device = TOTPDevice.objects.create(
-            user=self.owner, name='Authenticator', confirmed=True,
+            user=self.owner,
+            name='Authenticator',
+            confirmed=True,
         )
         self.order = Order.objects.create(
-            reference='LO-MANUAL-SECURE', delivery_address='Accra',
-            guest_name='Customer', guest_phone='0244000000',
-            total_amount=Decimal('40.00'), status='pending',
-            payment_status='pending', order_source='whatsapp',
+            reference='LO-MANUAL-SECURE',
+            delivery_address='Accra',
+            guest_name='Customer',
+            guest_phone='0244000000',
+            total_amount=Decimal('40.00'),
+            status='pending',
+            payment_status='pending',
+            order_source='whatsapp',
         )
 
     def _token(self, device=None):
         device = device or self.device
-        return str(totp(
-            device.bin_key, step=device.step, t0=device.t0,
-            digits=device.digits, drift=device.drift,
-        )).zfill(device.digits)
+        return str(
+            totp(
+                device.bin_key,
+                step=device.step,
+                t0=device.t0,
+                digits=device.digits,
+                drift=device.drift,
+            )
+        ).zfill(device.digits)
 
     @staticmethod
     def _inline_management():
@@ -592,8 +715,11 @@ class OrderAdminSecurityTests(TestCase):
         self.client.force_login(self.owner)
         url = reverse('admin:orders_order_change', args=[self.order.pk])
         denied_payload = {
-            'status': 'pending', 'payment_status': 'success',
-            'payment_change_reason': '', 'current_password': 'wrong', 'otp_token': '000000',
+            'status': 'pending',
+            'payment_status': 'success',
+            'payment_change_reason': '',
+            'current_password': 'wrong',
+            'otp_token': '000000',
             '_save': 'Save',
             **self._inline_management(),
         }
@@ -602,32 +728,47 @@ class OrderAdminSecurityTests(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'pending')
 
-        allowed = self.client.post(url, {
-            'status': 'pending', 'payment_status': 'success',
-            'payment_change_reason': 'MoMo receipt matched',
-            'current_password': 'StrongPass123!', 'otp_token': self._token(),
-            '_save': 'Save',
-            **self._inline_management(),
-        })
+        allowed = self.client.post(
+            url,
+            {
+                'status': 'pending',
+                'payment_status': 'success',
+                'payment_change_reason': 'MoMo receipt matched',
+                'current_password': 'StrongPass123!',
+                'otp_token': self._token(),
+                '_save': 'Save',
+                **self._inline_management(),
+            },
+        )
         self.assertEqual(allowed.status_code, 302)
         self.order.refresh_from_db()
         self.assertEqual(self.order.payment_status, 'success')
         from security.models import AuditEvent
+
         event = AuditEvent.objects.get(action='order.payment_corrected')
         self.assertEqual(event.reason, 'MoMo receipt matched')
 
     def test_operations_cannot_fulfil_an_unpaid_order_or_change_payment(self):
         operator = User.objects.create_user(
-            email='ops@legitorganic.com', password='StrongPass123!', first_name='Op',
-            last_name='User', is_staff=True, email_verified=True,
+            email='ops@legitorganic.com',
+            password='StrongPass123!',
+            first_name='Op',
+            last_name='User',
+            is_staff=True,
+            email_verified=True,
         )
         operator.groups.add(Group.objects.get(name='Operations'))
         self.client.force_login(operator)
         url = reverse('admin:orders_order_change', args=[self.order.pk])
-        response = self.client.post(url, {
-            'status': 'processing', 'payment_status': 'success', '_save': 'Save',
-            **self._inline_management(),
-        })
+        response = self.client.post(
+            url,
+            {
+                'status': 'processing',
+                'payment_status': 'success',
+                '_save': 'Save',
+                **self._inline_management(),
+            },
+        )
         self.assertEqual(response.status_code, 200)
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, 'pending')
@@ -640,10 +781,15 @@ class OrderFulfilmentWorkflowTests(TestCase):
             email='workflow-owner@example.com', password='StrongPass123!'
         )
         self.order = Order.objects.create(
-            reference='LO-WORKFLOW', delivery_address='Accra',
-            guest_name='Customer', guest_phone='0244000000', guest_email='c@example.com',
-            total_amount=Decimal('40.00'), status='processing',
-            payment_status='success', order_source='seevcash',
+            reference='LO-WORKFLOW',
+            delivery_address='Accra',
+            guest_name='Customer',
+            guest_phone='0244000000',
+            guest_email='c@example.com',
+            total_amount=Decimal('40.00'),
+            status='processing',
+            payment_status='success',
+            order_source='seevcash',
         )
 
     @patch('users.sms.send_order_status_sms')
@@ -652,18 +798,14 @@ class OrderFulfilmentWorkflowTests(TestCase):
         from .services import transition_order
 
         transition_order(self.order.pk, 'ready_for_dispatch', actor=self.owner)
-        dispatched, changed = transition_order(
-            self.order.pk, 'out_for_delivery', actor=self.owner
-        )
+        dispatched, changed = transition_order(self.order.pk, 'out_for_delivery', actor=self.owner)
         self.assertTrue(changed)
         pin = dispatched._delivery_pin_plaintext
         self.assertEqual(len(pin), 6)
         self.assertNotEqual(dispatched.delivery_pin_hash, pin)
 
         with self.assertRaises(ValidationError):
-            transition_order(
-                self.order.pk, 'delivered', actor=self.owner, delivery_pin='000000'
-            )
+            transition_order(self.order.pk, 'delivered', actor=self.owner, delivery_pin='000000')
         self.order.refresh_from_db()
         self.assertEqual(self.order.delivery_pin_attempts, 1)
         self.assertEqual(self.order.status, 'out_for_delivery')
@@ -675,12 +817,17 @@ class OrderFulfilmentWorkflowTests(TestCase):
         self.assertEqual(delivered.status, 'delivered')
         self.assertIsNotNone(delivered.delivery_confirmed_at)
         self.assertEqual(
-            list(OrderStatusEvent.objects.filter(order=self.order).values_list('to_status', flat=True)),
+            list(
+                OrderStatusEvent.objects.filter(order=self.order).values_list(
+                    'to_status', flat=True
+                )
+            ),
             ['delivered', 'out_for_delivery', 'ready_for_dispatch'],
         )
 
     def test_invalid_jump_is_rejected(self):
         from .services import transition_order
+
         with self.assertRaises(ValidationError):
             transition_order(self.order.pk, 'delivered', actor=self.owner, delivery_pin='123456')
 
@@ -700,15 +847,15 @@ class OrderFulfilmentWorkflowTests(TestCase):
     @patch('users.sms.send_order_status_sms', return_value=False)
     @patch('users.emails.send_order_status_email')
     def test_notification_failure_is_persisted_and_dispatch_retry_rotates_pin(
-        self, _email, _sms,
+        self,
+        _email,
+        _sms,
     ):
         from .notifications import retry_failed_order_notifications
         from .services import transition_order
 
         transition_order(self.order.pk, 'ready_for_dispatch', actor=self.owner)
-        dispatched, _ = transition_order(
-            self.order.pk, 'out_for_delivery', actor=self.owner
-        )
+        dispatched, _ = transition_order(self.order.pk, 'out_for_delivery', actor=self.owner)
         old_hash = dispatched.delivery_pin_hash
         failed = OrderNotificationDelivery.objects.get(
             order=self.order, event='out_for_delivery', channel='sms'
@@ -717,9 +864,7 @@ class OrderFulfilmentWorkflowTests(TestCase):
         self.assertIn('did not accept', failed.error)
 
         with patch('users.sms.send_order_status_sms', return_value=True):
-            result = retry_failed_order_notifications(
-                self.order.pk, 'out_for_delivery'
-            )
+            result = retry_failed_order_notifications(self.order.pk, 'out_for_delivery')
         self.assertTrue(result['email'])
         self.assertTrue(result['sms'])
         self.order.refresh_from_db()

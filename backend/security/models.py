@@ -11,13 +11,19 @@ class AuditEvent(models.Model):
         CRITICAL = 'critical', 'Critical'
 
     actor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True,
-        on_delete=models.SET_NULL, related_name='security_audit_events',
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='security_audit_events',
     )
     actor_email = models.EmailField(blank=True)
     action = models.CharField(max_length=100, db_index=True)
     severity = models.CharField(
-        max_length=20, choices=Severity.choices, default=Severity.INFO, db_index=True,
+        max_length=20,
+        choices=Severity.choices,
+        default=Severity.INFO,
+        db_index=True,
     )
     target_type = models.CharField(max_length=100, blank=True, db_index=True)
     target_id = models.CharField(max_length=100, blank=True)
@@ -52,8 +58,10 @@ class AuditEvent(models.Model):
 
 class StaffSecurityProfile(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name='staff_security', limit_choices_to={'is_staff': True},
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='staff_security',
+        limit_choices_to={'is_staff': True},
     )
     enrolled_at = models.DateTimeField(null=True, blank=True)
     security_version = models.PositiveIntegerField(default=1)

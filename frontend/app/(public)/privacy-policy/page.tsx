@@ -14,24 +14,31 @@ export default function PrivacyPolicyPage() {
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <div id="top" className="bg-[#0D3B2A] pb-14 pt-36 text-white md:pb-20">
         <div className="page-container grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
-          <div><p className="editorial-label text-[#F4C430]">Your information</p><h1 className="display-organic mt-4 text-6xl md:text-8xl">Privacy policy.</h1></div>
-          <p className="border-l border-white/25 pl-5 text-sm text-[#B8D4BD]">Effective August 2026<br />Written for customers in Ghana</p>
+          <div>
+            <p className="editorial-label text-[#F4C430]">Your information</p>
+            <h1 className="display-organic mt-4 text-6xl md:text-8xl">Privacy policy.</h1>
+          </div>
+          <p className="border-l border-white/25 pl-5 text-sm text-[#B8D4BD]">
+            Effective August 2026
+            <br />
+            Written for customers in Ghana
+          </p>
         </div>
       </div>
 
       {/* ── Content ──────────────────────────────────────────────── */}
       <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
         <div className="legal-document mx-auto max-w-5xl px-6 py-12 md:py-16">
-
           {/* 1. Introduction */}
           <section>
             <h2 className="text-xl font-semibold text-[#0D3B2A] dark:text-white mb-3 mt-10">
               1. Introduction
             </h2>
             <p className="text-[#333333] dark:text-gray-300 leading-relaxed mb-4">
-              Legit Organic Limited (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;us&rdquo;) is committed to protecting your
-              personal information. This policy explains how we collect, use, and protect your data
-              when you use our website and services at legitorganic.com.
+              Legit Organic Limited (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;us&rdquo;) is
+              committed to protecting your personal information. This policy explains how we
+              collect, use, and protect your data when you use our website and services at
+              legitorganic.com.
             </p>
             <p className="text-[#333333] dark:text-gray-300 leading-relaxed mb-4">
               We are registered in Ghana and operate under applicable Ghanaian data protection laws.
@@ -49,14 +56,22 @@ export default function PrivacyPolicyPage() {
               We collect the following types of personal information:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-[#333333] dark:text-gray-300 mb-4">
-              <li><strong>Account information:</strong> name, email address, phone number</li>
-              <li><strong>Delivery information:</strong> delivery address</li>
-              <li><strong>Order information:</strong> products ordered, quantities, order history</li>
+              <li>
+                <strong>Account information:</strong> name, email address, phone number
+              </li>
+              <li>
+                <strong>Delivery information:</strong> delivery address
+              </li>
+              <li>
+                <strong>Order information:</strong> products ordered, quantities, order history
+              </li>
               <li>
                 <strong>Payment information:</strong> payment references and transaction status.
                 Payment credentials are handled by SeevCash and are not stored by us
               </li>
-              <li><strong>Usage data:</strong> pages visited, time spent, device type</li>
+              <li>
+                <strong>Usage data:</strong> pages visited, time spent, device type
+              </li>
               <li>
                 <strong>Communications:</strong> messages sent to us via contact form or email
               </li>
@@ -99,9 +114,15 @@ export default function PrivacyPolicyPage() {
               We do not sell your personal data. We share data only with:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-[#333333] dark:text-gray-300 mb-4">
-              <li><strong>SeevCash:</strong> payment processing and payment-status confirmation</li>
-              <li><strong>Delivery partners:</strong> name and address only, for delivery</li>
-              <li><strong>Legal authorities:</strong> if required by Ghanaian law</li>
+              <li>
+                <strong>SeevCash:</strong> payment processing and payment-status confirmation
+              </li>
+              <li>
+                <strong>Delivery partners:</strong> name and address only, for delivery
+              </li>
+              <li>
+                <strong>Legal authorities:</strong> if required by Ghanaian law
+              </li>
             </ul>
             <p className="text-[#333333] dark:text-gray-300 leading-relaxed mb-4">
               We do not share your data with advertisers or third-party marketers.
@@ -131,8 +152,8 @@ export default function PrivacyPolicyPage() {
             <p className="text-[#333333] dark:text-gray-300 leading-relaxed mb-4">
               Your data is stored securely. Passwords are hashed and never stored in plain text.
               Payment credentials are handled by SeevCash and are not stored on our servers.
-              Business verification documents are kept in private storage and are available only
-              to authorised reviewers.
+              Business verification documents are kept in private storage and are available only to
+              authorised reviewers.
             </p>
           </section>
 

@@ -28,15 +28,19 @@ class AuditEventTests(TestCase):
             email='owner@example.com', password='x', first_name='Owner', last_name='User'
         )
         self.request = RequestFactory().post(
-            '/admin/orders/order/1/change/', HTTP_USER_AGENT='Test Browser',
+            '/admin/orders/order/1/change/',
+            HTTP_USER_AGENT='Test Browser',
             HTTP_X_FORWARDED_FOR='203.0.113.9, 127.0.0.1',
         )
         self.request.user = self.owner
 
     def test_records_actor_target_network_and_redacts_secrets(self):
         event = record_event(
-            action='payment.corrected', request=self.request, target=self.owner,
-            reason='Verified manual payment', before={'status': 'pending', 'token': 'secret'},
+            action='payment.corrected',
+            request=self.request,
+            target=self.owner,
+            reason='Verified manual payment',
+            before={'status': 'pending', 'token': 'secret'},
             after={'status': 'success', 'password': 'never-store-this'},
         )
         self.assertEqual(event.actor, self.owner)
@@ -56,8 +60,11 @@ class AuditEventTests(TestCase):
 class StaffTwoFactorTests(TestCase):
     def setUp(self):
         self.staff = User.objects.create_user(
-            email='staff@legitorganic.com', password='StrongPass123!',
-            first_name='Staff', last_name='Member', is_staff=True,
+            email='staff@legitorganic.com',
+            password='StrongPass123!',
+            first_name='Staff',
+            last_name='Member',
+            is_staff=True,
         )
         self.client.force_login(self.staff)
 
@@ -67,13 +74,22 @@ class StaffTwoFactorTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Connect your authenticator')
         device = TOTPDevice.objects.get(user=self.staff, confirmed=False)
-        token = str(totp(
-            device.bin_key, step=device.step, t0=device.t0,
-            digits=device.digits, drift=device.drift,
-        )).zfill(device.digits)
-        response = self.client.post(url, {
-            'current_password': 'StrongPass123!', 'token': token,
-        })
+        token = str(
+            totp(
+                device.bin_key,
+                step=device.step,
+                t0=device.t0,
+                digits=device.digits,
+                drift=device.drift,
+            )
+        ).zfill(device.digits)
+        response = self.client.post(
+            url,
+            {
+                'current_password': 'StrongPass123!',
+                'token': token,
+            },
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'RECOVERY CODES')
         device.refresh_from_db()
@@ -91,15 +107,18 @@ class StaffTwoFactorTests(TestCase):
     @modify_settings(MIDDLEWARE={'append': 'security.middleware.StaffSecurityMiddleware'})
     def test_enrollment_phase_requires_owner_to_enroll_first(self):
         owner = User.objects.create_superuser(
-            email='owner@legitorganic.com', password='OwnerPass123!',
-            first_name='Owner', last_name='User',
+            email='owner@legitorganic.com',
+            password='OwnerPass123!',
+            first_name='Owner',
+            last_name='User',
         )
         self.client.force_login(owner)
         response = self.client.get('/admin/')
         self.assertRedirects(response, reverse('staff-security:setup'))
 
     @override_settings(
-        STAFF_2FA_MODE='enroll', STAFF_IDLE_TIMEOUT_SECONDS=30,
+        STAFF_2FA_MODE='enroll',
+        STAFF_IDLE_TIMEOUT_SECONDS=30,
         STAFF_ABSOLUTE_SESSION_SECONDS=3600,
     )
     @modify_settings(MIDDLEWARE={'append': 'security.middleware.StaffSecurityMiddleware'})
@@ -115,12 +134,19 @@ class StaffTwoFactorTests(TestCase):
 
     def test_verify_rejects_external_next_redirect(self):
         device = TOTPDevice.objects.create(
-            user=self.staff, name='Authenticator', confirmed=True,
+            user=self.staff,
+            name='Authenticator',
+            confirmed=True,
         )
-        token = str(totp(
-            device.bin_key, step=device.step, t0=device.t0,
-            digits=device.digits, drift=device.drift,
-        )).zfill(device.digits)
+        token = str(
+            totp(
+                device.bin_key,
+                step=device.step,
+                t0=device.t0,
+                digits=device.digits,
+                drift=device.drift,
+            )
+        ).zfill(device.digits)
         response = self.client.post(
             reverse('staff-security:verify') + '?next=https://evil.example/steal',
             {'token': token},
@@ -131,43 +157,65 @@ class StaffTwoFactorTests(TestCase):
 class StaffSecurityResetTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_superuser(
-            email='owner@legitorganic.com', password='OwnerPass123!',
-            first_name='Owner', last_name='User',
+            email='owner@legitorganic.com',
+            password='OwnerPass123!',
+            first_name='Owner',
+            last_name='User',
         )
         self.owner_device = TOTPDevice.objects.create(
-            user=self.owner, name='Owner authenticator', confirmed=True,
+            user=self.owner,
+            name='Owner authenticator',
+            confirmed=True,
         )
         self.staff = User.objects.create_user(
-            email='staff@legitorganic.com', password='StaffPass123!',
-            first_name='Staff', last_name='Member', is_staff=True,
+            email='staff@legitorganic.com',
+            password='StaffPass123!',
+            first_name='Staff',
+            last_name='Member',
+            is_staff=True,
         )
         TOTPDevice.objects.create(
-            user=self.staff, name='Staff authenticator', confirmed=True,
+            user=self.staff,
+            name='Staff authenticator',
+            confirmed=True,
         )
         StaffSecurityProfile.objects.create(user=self.staff, enrolled_at=self.owner.date_joined)
         self.client.force_login(self.owner)
 
     def _owner_token(self):
         device = self.owner_device
-        return str(totp(
-            device.bin_key, step=device.step, t0=device.t0,
-            digits=device.digits, drift=device.drift,
-        )).zfill(device.digits)
+        return str(
+            totp(
+                device.bin_key,
+                step=device.step,
+                t0=device.t0,
+                digits=device.digits,
+                drift=device.drift,
+            )
+        ).zfill(device.digits)
 
     @patch('security.views.verify_staff_code', return_value=(True, False))
     def test_owner_reset_requires_reason_password_and_2fa_then_audits(self, _verify):
         url = reverse('staff-security:reset-staff', args=[self.staff.pk])
-        denied = self.client.post(url, {
-            'reason': '', 'current_password': 'wrong', 'otp_token': '000000',
-        })
+        denied = self.client.post(
+            url,
+            {
+                'reason': '',
+                'current_password': 'wrong',
+                'otp_token': '000000',
+            },
+        )
         self.assertEqual(denied.status_code, 200)
         self.assertTrue(TOTPDevice.objects.filter(user=self.staff, confirmed=True).exists())
 
-        allowed = self.client.post(url, {
-            'reason': 'Staff replaced their phone',
-            'current_password': 'OwnerPass123!',
-            'otp_token': '123456',
-        })
+        allowed = self.client.post(
+            url,
+            {
+                'reason': 'Staff replaced their phone',
+                'current_password': 'OwnerPass123!',
+                'otp_token': '123456',
+            },
+        )
         self.assertEqual(allowed.status_code, 200)
         self.assertFalse(TOTPDevice.objects.filter(user=self.staff).exists())
         event = AuditEvent.objects.get(action='security.2fa_reset')
@@ -177,9 +225,7 @@ class StaffSecurityResetTests(TestCase):
 
     def test_non_owner_cannot_reset_staff_2fa(self):
         self.client.force_login(self.staff)
-        response = self.client.get(
-            reverse('staff-security:reset-staff', args=[self.staff.pk])
-        )
+        response = self.client.get(reverse('staff-security:reset-staff', args=[self.staff.pk]))
         self.assertEqual(response.status_code, 403)
 
 
@@ -189,8 +235,11 @@ class AuditAdminTests(TestCase):
             email='owner@example.com', password='x', first_name='Owner', last_name='User'
         )
         self.staff = User.objects.create_user(
-            email='staff@example.com', password='x', first_name='Staff',
-            last_name='User', is_staff=True,
+            email='staff@example.com',
+            password='x',
+            first_name='Staff',
+            last_name='User',
+            is_staff=True,
         )
         self.owner_event = record_event(action='owner.action', actor=self.owner)
         self.staff_event = record_event(action='staff.action', actor=self.staff)
@@ -205,24 +254,23 @@ class AuditAdminTests(TestCase):
     def test_owner_export_is_an_excel_workbook(self):
         request = RequestFactory().post('/admin/security/auditevent/')
         request.user = self.owner
-        response = export_audit_events(
-            None, request, AuditEvent.objects.order_by('created_at')
-        )
+        response = export_audit_events(None, request, AuditEvent.objects.order_by('created_at'))
         workbook = load_workbook(BytesIO(response.content), read_only=True)
         sheet = workbook['Security Audit']
         self.assertEqual(sheet['A1'].value, 'Timestamp')
         self.assertEqual(sheet.max_row, 4)
-        self.assertTrue(
-            AuditEvent.objects.filter(action='security.audit_exported').exists()
-        )
+        self.assertTrue(AuditEvent.objects.filter(action='security.audit_exported').exists())
 
 
 class StaffLoginLockoutTests(TestCase):
     def setUp(self):
         reset_axes()
         self.staff = User.objects.create_user(
-            email='locked@legitorganic.com', password='CorrectPass123!',
-            first_name='Locked', last_name='Staff', is_staff=True,
+            email='locked@legitorganic.com',
+            password='CorrectPass123!',
+            first_name='Locked',
+            last_name='Staff',
+            is_staff=True,
         )
 
     def tearDown(self):
@@ -243,21 +291,23 @@ class StaffLoginLockoutTests(TestCase):
             REMOTE_ADDR='203.0.113.44',
         )
         self.assertNotIn('_auth_user_id', self.client.session)
-        self.assertTrue(
-            AuditEvent.objects.filter(action='security.login_locked').exists()
-        )
+        self.assertTrue(AuditEvent.objects.filter(action='security.login_locked').exists())
 
 
 class StaffTwoFactorReadinessCommandTests(TestCase):
     def test_command_blocks_enforcement_until_every_active_staff_is_enrolled(self):
         owner = User.objects.create_superuser(
-            email='owner@legitorganic.com', password='x',
-            first_name='Owner', last_name='User',
+            email='owner@legitorganic.com',
+            password='x',
+            first_name='Owner',
+            last_name='User',
         )
         with self.assertRaises(CommandError):
             call_command('check_staff_2fa_readiness', stdout=StringIO())
         TOTPDevice.objects.create(
-            user=owner, name='Owner authenticator', confirmed=True,
+            user=owner,
+            name='Owner authenticator',
+            confirmed=True,
         )
         output = StringIO()
         call_command('check_staff_2fa_readiness', stdout=output)
@@ -267,17 +317,27 @@ class StaffTwoFactorReadinessCommandTests(TestCase):
 class ExceptionalDataActionTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_superuser(
-            email='owner@legitorganic.com', password='OwnerPass123!',
-            first_name='Owner', last_name='User',
+            email='owner@legitorganic.com',
+            password='OwnerPass123!',
+            first_name='Owner',
+            last_name='User',
         )
         self.customer = User.objects.create_user(
-            email='customer@example.com', password='CustomerPass123!',
-            first_name='Ama', last_name='Mensah', phone_number='0244000000',
-            city='Accra', street_address='Market Road', email_verified=True,
+            email='customer@example.com',
+            password='CustomerPass123!',
+            first_name='Ama',
+            last_name='Mensah',
+            phone_number='0244000000',
+            city='Accra',
+            street_address='Market Road',
+            email_verified=True,
         )
         self.order = Order.objects.create(
-            user=self.customer, reference='LO-KEEP-HISTORY', delivery_address='Accra',
-            total_amount='25.00', order_source='whatsapp',
+            user=self.customer,
+            reference='LO-KEEP-HISTORY',
+            delivery_address='Accra',
+            total_amount='25.00',
+            order_source='whatsapp',
         )
         self.client.force_login(self.owner)
 
@@ -287,7 +347,8 @@ class ExceptionalDataActionTests(TestCase):
             reverse('staff-security:anonymize-customer', args=[self.customer.pk]),
             {
                 'reason': 'Approved privacy request',
-                'current_password': 'OwnerPass123!', 'otp_token': '123456',
+                'current_password': 'OwnerPass123!',
+                'otp_token': '123456',
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -310,7 +371,8 @@ class ExceptionalDataActionTests(TestCase):
             ),
             {
                 'reason': 'Duplicate draft approved for permanent deletion',
-                'current_password': 'OwnerPass123!', 'otp_token': '123456',
+                'current_password': 'OwnerPass123!',
+                'otp_token': '123456',
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -321,9 +383,11 @@ class ExceptionalDataActionTests(TestCase):
 
     def test_products_cannot_be_permanently_deleted_because_orders_need_history(self):
         product = Product.objects.create(name='Historical product', price='10.00')
-        response = self.client.get(reverse(
-            'staff-security:exceptional-delete',
-            args=['products', 'product', product.pk],
-        ))
+        response = self.client.get(
+            reverse(
+                'staff-security:exceptional-delete',
+                args=['products', 'product', product.pk],
+            )
+        )
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Product.objects.filter(pk=product.pk).exists())

@@ -47,10 +47,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         type: "article",
         publishedTime: post.published_at,
         modifiedTime: post.updated_at,
-        authors: [post.author_name || 'Legit Organic'],
+        authors: [post.author_name || "Legit Organic"],
       },
       twitter: {
-        card: 'summary_large_image',
+        card: "summary_large_image",
         title: post.title,
         description,
         images: [getMediaUrl(post.cover_image, DEFAULT_SOCIAL_IMAGE)],
@@ -104,29 +104,34 @@ export default async function BlogPostPage({ params }: Props) {
     <div className="story-page journal-paper min-h-screen">
       <JsonLd
         data={{
-          '@context': 'https://schema.org',
-          '@type': 'BlogPosting',
-          '@id': `${articleUrl}#article`,
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "@id": `${articleUrl}#article`,
           headline: post.title,
           description: plainText(post.excerpt, 500),
           image: articleImage ? [articleImage] : undefined,
           datePublished: post.published_at || post.created_at,
           dateModified: post.updated_at || post.published_at || post.created_at,
-          author: { '@type': 'Person', name: post.author_name || 'Legit Organic Editor' },
-          publisher: { '@id': 'https://legitorganic.com/#organization' },
+          author: { "@type": "Person", name: post.author_name || "Legit Organic Editor" },
+          publisher: { "@id": "https://legitorganic.com/#organization" },
           mainEntityOfPage: articleUrl,
           articleSection: post.category?.name,
           keywords: post.tags || undefined,
-          inLanguage: 'en-GH',
+          inLanguage: "en-GH",
         }}
       />
       <JsonLd
         data={{
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Journal', item: 'https://legitorganic.com/blog' },
-            { '@type': 'ListItem', position: 2, name: post.title, item: articleUrl },
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Journal",
+              item: "https://legitorganic.com/blog",
+            },
+            { "@type": "ListItem", position: 2, name: post.title, item: articleUrl },
           ],
         }}
       />

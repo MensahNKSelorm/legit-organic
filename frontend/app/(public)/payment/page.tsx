@@ -26,7 +26,7 @@ function PaymentResult() {
         orderReference,
         orderReference
           ? sessionStorage.getItem(`guest_order_${orderReference}`) || undefined
-          : undefined,
+          : undefined
       )
       .then(() => setMessage("Payment confirmed. Your order is now being processed."))
       .catch((reason) => {

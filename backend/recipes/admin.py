@@ -4,16 +4,34 @@ from django.urls import reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from .models import (
-    IngredientAlias, IngredientMeasurementConversion, IngredientNutritionProfile,
-    NutritionSourceDataset, NutritionSourceRecord, Recipe, RecipeIngredient,
-    RecipeIngredientProductMatch, RecipeNutrition, RecipeStep, RecipePairing,
-    RegionalNutritionCandidate, USDANutritionCandidate, UserRecipe, UserRecipeIngredient,
+    IngredientAlias,
+    IngredientMeasurementConversion,
+    IngredientNutritionProfile,
+    NutritionSourceDataset,
+    NutritionSourceRecord,
+    Recipe,
+    RecipeIngredient,
+    RecipeIngredientProductMatch,
+    RecipeNutrition,
+    RecipeStep,
+    RecipePairing,
+    RegionalNutritionCandidate,
+    USDANutritionCandidate,
+    UserRecipe,
+    UserRecipeIngredient,
 )
 from .forms import RecipeStepForm
 from .services import (
-    NutritionConfigurationError, NutritionProviderError, calculate_nutrition,
-    confirm_regional_candidate, confirm_usda_candidate, match_products, normalize_recipe,
-    review_warnings, search_regional_candidates, search_usda_candidates,
+    NutritionConfigurationError,
+    NutritionProviderError,
+    calculate_nutrition,
+    confirm_regional_candidate,
+    confirm_usda_candidate,
+    match_products,
+    normalize_recipe,
+    review_warnings,
+    search_regional_candidates,
+    search_usda_candidates,
 )
 
 
@@ -21,10 +39,23 @@ class RecipeIngredientInline(TabularInline):
     model = RecipeIngredient
     extra = 1
     fields = [
-        'position', 'raw_text', 'name', 'quantity', 'quantity_max', 'unit',
-        'normalized_unit', 'normalized_ingredient_name', 'preparation',
-        'optional', 'product', 'nutrition_profile', 'nutrition_match_status',
-        'grams_estimate', 'grams_source', 'grams_confidence', 'notes',
+        'position',
+        'raw_text',
+        'name',
+        'quantity',
+        'quantity_max',
+        'unit',
+        'normalized_unit',
+        'normalized_ingredient_name',
+        'preparation',
+        'optional',
+        'product',
+        'nutrition_profile',
+        'nutrition_match_status',
+        'grams_estimate',
+        'grams_source',
+        'grams_confidence',
+        'notes',
     ]
     readonly_fields = ['normalized_unit', 'normalized_ingredient_name', 'nutrition_match_status']
 
@@ -49,57 +80,122 @@ class RecipeAdmin(ModelAdmin):
     change_form_before_template = 'admin/includes/writing_assistant.html'
     view_on_site = True
     list_display = [
-        'title', 'status', 'nutrition_status', 'is_published', 'is_default',
-        'cuisine', 'region', 'reviewed_by', 'updated_at',
+        'title',
+        'status',
+        'nutrition_status',
+        'is_published',
+        'is_default',
+        'cuisine',
+        'region',
+        'reviewed_by',
+        'updated_at',
     ]
     list_filter = ['status', 'nutrition_status', 'is_published', 'is_default', 'cuisine', 'region']
     search_fields = ['title', 'local_name', 'description', 'ingredients__name']
     list_editable = ['is_default']
     actions = [
-        'prepare_for_review', 'approve_recipes', 'find_regional_candidates',
-        'find_usda_candidates', 'calculate_nutrition', 'match_store_products',
-        'publish_recipes', 'unpublish_recipes', 'reject_recipes',
+        'prepare_for_review',
+        'approve_recipes',
+        'find_regional_candidates',
+        'find_usda_candidates',
+        'calculate_nutrition',
+        'match_store_products',
+        'publish_recipes',
+        'unpublish_recipes',
+        'reject_recipes',
     ]
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = [
-        'created_at', 'updated_at', 'reviewed_at', 'published_at',
-        'nutrition_calculated_at', 'ingredients_hash', 'permanent_delete_control',
+        'created_at',
+        'updated_at',
+        'reviewed_at',
+        'published_at',
+        'nutrition_calculated_at',
+        'ingredients_hash',
+        'permanent_delete_control',
     ]
     inlines = [RecipeIngredientInline, RecipeStepInline, RecipePairingInline]
     fieldsets = (
-        ('The dish', {
-            'fields': ('title', 'local_name', 'slug', 'description'),
-        }),
-        ('Recipe identity', {
-            'fields': ('cuisine', 'country', 'region', 'recipe_category', 'meal_type', 'keywords'),
-        }),
-        ('Photography & film', {
-            'fields': ('cover_image', 'video_url'),
-        }),
-        ('Time at the stove', {
-            'fields': ('prep_time', 'cook_time', 'servings', 'difficulty'),
-        }),
-        ('Nutrition note', {
-            'fields': ('nutrition_status', 'nutrition_calculated_at', 'ingredients_hash', 'nutritional_score'),
-        }),
-        ('Review & publication', {
-            'fields': (
-                'status', 'review_warnings', 'reviewed_by', 'reviewed_at',
-                'is_published', 'published_at', 'is_default', 'created_by',
-            ),
-        }),
-        ('Source & provenance', {
-            'fields': (
-                'source_name', 'source_url', 'source_author', 'source_license',
-                'source_retrieved_at', 'source_content_hash', 'extraction_method',
-                'extraction_confidence',
-            ),
-            'classes': ('collapse',),
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at', 'permanent_delete_control'),
-            'classes': ('collapse',),
-        }),
+        (
+            'The dish',
+            {
+                'fields': ('title', 'local_name', 'slug', 'description'),
+            },
+        ),
+        (
+            'Recipe identity',
+            {
+                'fields': (
+                    'cuisine',
+                    'country',
+                    'region',
+                    'recipe_category',
+                    'meal_type',
+                    'keywords',
+                ),
+            },
+        ),
+        (
+            'Photography & film',
+            {
+                'fields': ('cover_image', 'video_url'),
+            },
+        ),
+        (
+            'Time at the stove',
+            {
+                'fields': ('prep_time', 'cook_time', 'servings', 'difficulty'),
+            },
+        ),
+        (
+            'Nutrition note',
+            {
+                'fields': (
+                    'nutrition_status',
+                    'nutrition_calculated_at',
+                    'ingredients_hash',
+                    'nutritional_score',
+                ),
+            },
+        ),
+        (
+            'Review & publication',
+            {
+                'fields': (
+                    'status',
+                    'review_warnings',
+                    'reviewed_by',
+                    'reviewed_at',
+                    'is_published',
+                    'published_at',
+                    'is_default',
+                    'created_by',
+                ),
+            },
+        ),
+        (
+            'Source & provenance',
+            {
+                'fields': (
+                    'source_name',
+                    'source_url',
+                    'source_author',
+                    'source_license',
+                    'source_retrieved_at',
+                    'source_content_hash',
+                    'extraction_method',
+                    'extraction_confidence',
+                ),
+                'classes': ('collapse',),
+            },
+        ),
+        (
+            'Timestamps',
+            {
+                'fields': ('created_at', 'updated_at', 'permanent_delete_control'),
+                'classes': ('collapse',),
+            },
+        ),
     )
 
     def has_delete_permission(self, request, obj=None):
@@ -125,9 +221,13 @@ class RecipeAdmin(ModelAdmin):
         super().save_model(request, obj, form, change)
         if change:
             from security.audit import record_boolean_state_change
+
             record_boolean_state_change(
-                request=request, target=obj, field='is_published',
-                old_value=old_published, new_value=obj.is_published,
+                request=request,
+                target=obj,
+                field='is_published',
+                old_value=old_published,
+                new_value=obj.is_published,
                 action='recipe.publication_changed',
             )
 
@@ -144,25 +244,38 @@ class RecipeAdmin(ModelAdmin):
     @admin.action(description='Approve selected recipes')
     def approve_recipes(self, request, queryset):
         from security.audit import record_event
+
         approved = 0
         for recipe in queryset:
             previous_status = recipe.status
             normalize_recipe(recipe)
             warnings = review_warnings(recipe)
-            blocking = {'No ingredients', 'No instructions', 'Missing servings', 'Ingredient quantity missing'}
+            blocking = {
+                'No ingredients',
+                'No instructions',
+                'Missing servings',
+                'Ingredient quantity missing',
+            }
             if blocking.intersection(warnings):
                 continue
             recipe.status = 'approved'
             recipe.reviewed_by = request.user
             recipe.reviewed_at = timezone.now()
             recipe.is_published = False
-            recipe.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'is_published', 'updated_at'])
+            recipe.save(
+                update_fields=['status', 'reviewed_by', 'reviewed_at', 'is_published', 'updated_at']
+            )
             record_event(
-                action='recipe.approved', request=request, target=recipe,
-                before={'status': previous_status}, after={'status': 'approved'},
+                action='recipe.approved',
+                request=request,
+                target=recipe,
+                before={'status': previous_status},
+                after={'status': 'approved'},
             )
             approved += 1
-        self.message_user(request, f'{approved} recipe(s) approved; incomplete recipes were left for review.')
+        self.message_user(
+            request, f'{approved} recipe(s) approved; incomplete recipes were left for review.'
+        )
 
     @admin.action(description='Search USDA candidates for unresolved ingredients')
     def find_usda_candidates(self, request, queryset):
@@ -208,6 +321,7 @@ class RecipeAdmin(ModelAdmin):
     @admin.action(description='Publish approved recipes')
     def publish_recipes(self, request, queryset):
         from security.audit import record_boolean_state_change
+
         eligible = queryset.filter(status__in=['approved', 'ready', 'published'])
         updated = 0
         for recipe in eligible:
@@ -216,8 +330,11 @@ class RecipeAdmin(ModelAdmin):
             recipe.published_at = recipe.published_at or timezone.now()
             recipe.save()
             record_boolean_state_change(
-                request=request, target=recipe, field='is_published',
-                old_value=old_published, new_value=True,
+                request=request,
+                target=recipe,
+                field='is_published',
+                old_value=old_published,
+                new_value=True,
                 action='recipe.publication_changed',
             )
             updated += 1
@@ -226,6 +343,7 @@ class RecipeAdmin(ModelAdmin):
     @admin.action(description='Unpublish selected recipes')
     def unpublish_recipes(self, request, queryset):
         from security.audit import record_boolean_state_change
+
         updated = 0
         for recipe in queryset:
             old_published = recipe.is_published
@@ -233,8 +351,11 @@ class RecipeAdmin(ModelAdmin):
             recipe.status = 'ready'
             recipe.save()
             record_boolean_state_change(
-                request=request, target=recipe, field='is_published',
-                old_value=old_published, new_value=False,
+                request=request,
+                target=recipe,
+                field='is_published',
+                old_value=old_published,
+                new_value=False,
                 action='recipe.publication_changed',
             )
             updated += 1
@@ -243,6 +364,7 @@ class RecipeAdmin(ModelAdmin):
     @admin.action(description='Reject selected recipes')
     def reject_recipes(self, request, queryset):
         from security.audit import record_event
+
         updated = 0
         for recipe in queryset:
             before = recipe.status
@@ -250,8 +372,11 @@ class RecipeAdmin(ModelAdmin):
             recipe.is_published = False
             recipe.save()
             record_event(
-                action='recipe.rejected', request=request, target=recipe,
-                before={'status': before}, after={'status': 'rejected'},
+                action='recipe.rejected',
+                request=request,
+                target=recipe,
+                before={'status': before},
+                after={'status': 'rejected'},
             )
             updated += 1
         self.message_user(request, f'{updated} recipe(s) rejected.')
@@ -267,14 +392,27 @@ class IngredientMeasurementConversionInline(TabularInline):
     model = IngredientMeasurementConversion
     extra = 1
     fields = [
-        'unit', 'quantity', 'grams', 'source_reference', 'confidence',
-        'verified', 'verified_by', 'verified_at',
+        'unit',
+        'quantity',
+        'grams',
+        'source_reference',
+        'confidence',
+        'verified',
+        'verified_by',
+        'verified_at',
     ]
 
 
 @admin.register(IngredientNutritionProfile)
 class IngredientNutritionProfileAdmin(ModelAdmin):
-    list_display = ['ingredient_name', 'normalized_name', 'source', 'fdc_id', 'verified', 'updated_at']
+    list_display = [
+        'ingredient_name',
+        'normalized_name',
+        'source',
+        'fdc_id',
+        'verified',
+        'updated_at',
+    ]
     list_filter = ['source', 'verified']
     search_fields = ['ingredient_name', 'normalized_name', 'fdc_id', 'source_reference']
     inlines = [IngredientMeasurementConversionInline]
@@ -303,7 +441,11 @@ class IngredientNutritionProfileAdmin(ModelAdmin):
 @admin.register(NutritionSourceDataset)
 class NutritionSourceDatasetAdmin(ModelAdmin):
     list_display = [
-        'code', 'version', 'publisher', 'commercial_permission_status', 'imported_at',
+        'code',
+        'version',
+        'publisher',
+        'commercial_permission_status',
+        'imported_at',
     ]
     list_filter = ['commercial_permission_status', 'publisher']
     search_fields = ['code', 'name', 'version', 'citation']
@@ -313,26 +455,49 @@ class NutritionSourceDatasetAdmin(ModelAdmin):
 @admin.register(NutritionSourceRecord)
 class NutritionSourceRecordAdmin(ModelAdmin):
     list_display = [
-        'food_code', 'original_food_name', 'preparation_state', 'dataset', 'status',
+        'food_code',
+        'original_food_name',
+        'preparation_state',
+        'dataset',
+        'status',
     ]
     list_filter = ['dataset', 'status']
     search_fields = [
-        'food_code', 'original_food_name', 'food_name_french', 'scientific_name',
+        'food_code',
+        'original_food_name',
+        'food_name_french',
+        'scientific_name',
         'canonical_name',
     ]
     readonly_fields = [
-        'dataset', 'food_code', 'original_food_name', 'food_name_french',
-        'scientific_name', 'preparation_state', 'source_identifiers',
-        'nutrient_values', 'quality_indicators', 'source_sheet', 'source_row',
-        'status', 'verified_by', 'verified_at', 'nutrition_profile',
-        'created_at', 'updated_at',
+        'dataset',
+        'food_code',
+        'original_food_name',
+        'food_name_french',
+        'scientific_name',
+        'preparation_state',
+        'source_identifiers',
+        'nutrient_values',
+        'quality_indicators',
+        'source_sheet',
+        'source_row',
+        'status',
+        'verified_by',
+        'verified_at',
+        'nutrition_profile',
+        'created_at',
+        'updated_at',
     ]
 
 
 @admin.register(RegionalNutritionCandidate)
 class RegionalNutritionCandidateAdmin(ModelAdmin):
     list_display = [
-        'source_record', 'recipe_ingredient', 'dataset_name', 'preparation_state', 'status',
+        'source_record',
+        'recipe_ingredient',
+        'dataset_name',
+        'preparation_state',
+        'status',
     ]
     list_filter = ['status', 'source_record__dataset']
     search_fields = ['source_record__original_food_name', 'recipe_ingredient__name']
@@ -349,9 +514,7 @@ class RegionalNutritionCandidateAdmin(ModelAdmin):
     @admin.action(description='Confirm selected regional mappings')
     def confirm_selected(self, request, queryset):
         confirmed = 0
-        for candidate in queryset.select_related(
-            'source_record__dataset', 'recipe_ingredient'
-        ):
+        for candidate in queryset.select_related('source_record__dataset', 'recipe_ingredient'):
             try:
                 confirm_regional_candidate(candidate, request.user)
                 confirmed += 1
@@ -392,11 +555,26 @@ class RecipeNutritionAdmin(ModelAdmin):
     list_display = ['recipe', 'source', 'is_complete', 'calories', 'protein_g', 'calculated_at']
     search_fields = ['recipe__title']
     readonly_fields = [
-        'recipe', 'source', 'is_complete', 'calculation_warnings', 'calories',
-        'protein_g', 'carbohydrate_g', 'fat_g', 'saturated_fat_g', 'fibre_g',
-        'sugar_g', 'sodium_mg', 'cholesterol_mg', 'micronutrients_json',
-        'total_recipe_values_json', 'per_serving_values_json', 'ingredients_hash',
-        'provider_payload_hash', 'provider_response_metadata', 'calculated_at',
+        'recipe',
+        'source',
+        'is_complete',
+        'calculation_warnings',
+        'calories',
+        'protein_g',
+        'carbohydrate_g',
+        'fat_g',
+        'saturated_fat_g',
+        'fibre_g',
+        'sugar_g',
+        'sodium_mg',
+        'cholesterol_mg',
+        'micronutrients_json',
+        'total_recipe_values_json',
+        'per_serving_values_json',
+        'ingredients_hash',
+        'provider_payload_hash',
+        'provider_response_metadata',
+        'calculated_at',
     ]
 
 

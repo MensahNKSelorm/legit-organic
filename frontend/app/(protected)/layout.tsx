@@ -1,32 +1,32 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth'
-import { WishlistProvider } from '@/lib/wishlist'
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import { WishlistProvider } from "@/lib/wishlist";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
-  const router = useRouter()
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login')
+      router.push("/login");
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream">
         <span className="w-10 h-10 border-2 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
     // Prevents a flash of content while the redirect effect fires
-    return null
+    return null;
   }
 
-  return <WishlistProvider>{children}</WishlistProvider>
+  return <WishlistProvider>{children}</WishlistProvider>;
 }

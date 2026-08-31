@@ -63,6 +63,7 @@ class StaffInvitationAdminForm(forms.ModelForm):
                 self.add_error('owner_password', 'Enter your current password.')
             else:
                 from security.auth import verify_staff_code
+
                 verified, recovery_used = verify_staff_code(
                     self.request.user, cleaned.get('owner_otp_token') or ''
                 )
@@ -128,9 +129,7 @@ class StaffAccessAdminForm(forms.ModelForm):
         if email and User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
             self.add_error('email', 'Another account already uses this email address.')
         old_groups = set(old.groups.values_list('pk', flat=True))
-        new_groups = set(
-            cleaned.get('groups', old.groups.none()).values_list('pk', flat=True)
-        )
+        new_groups = set(cleaned.get('groups', old.groups.none()).values_list('pk', flat=True))
         access_changed = (
             old.email.lower() != email
             or old.is_active != cleaned.get('is_active')
@@ -147,6 +146,7 @@ class StaffAccessAdminForm(forms.ModelForm):
             self.add_error('owner_password', 'Enter your current password.')
         else:
             from security.auth import verify_staff_code
+
             verified, recovery_used = verify_staff_code(
                 self.request.user, cleaned.get('owner_otp_token') or ''
             )

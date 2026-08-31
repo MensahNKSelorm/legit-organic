@@ -18,28 +18,28 @@ class SalesRep(models.Model):
     ]
 
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='sales_rep_profile'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sales_rep_profile'
     )
-    referral_code = models.CharField(
-        max_length=10, unique=True, default=generate_referral_code
-    )
+    referral_code = models.CharField(max_length=10, unique=True, default=generate_referral_code)
     phone = models.CharField(max_length=20)
-    status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default='active'
-    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
     commission_rate_registration = models.DecimalField(
-        max_digits=8, decimal_places=2, default=5.00,
-        help_text='Flat amount in GHS paid when a referred customer registers'
+        max_digits=8,
+        decimal_places=2,
+        default=5.00,
+        help_text='Flat amount in GHS paid when a referred customer registers',
     )
     commission_rate_first_purchase = models.DecimalField(
-        max_digits=5, decimal_places=2, default=10.00,
-        help_text='Percentage of order total on customer first purchase'
+        max_digits=5,
+        decimal_places=2,
+        default=10.00,
+        help_text='Percentage of order total on customer first purchase',
     )
     commission_rate_repeat_purchase = models.DecimalField(
-        max_digits=5, decimal_places=2, default=3.00,
-        help_text='Percentage of order total on repeat purchases'
+        max_digits=5,
+        decimal_places=2,
+        default=3.00,
+        help_text='Percentage of order total on repeat purchases',
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -61,14 +61,10 @@ class ReferredCustomer(models.Model):
         SalesRep, on_delete=models.CASCADE, related_name='referred_customers'
     )
     customer = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='referral_record'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='referral_record'
     )
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='registered'
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='registered')
     commission_expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -93,21 +89,16 @@ class Commission(models.Model):
         ('paid', 'Paid'),
     ]
 
-    sales_rep = models.ForeignKey(
-        SalesRep, on_delete=models.CASCADE, related_name='commissions'
-    )
+    sales_rep = models.ForeignKey(SalesRep, on_delete=models.CASCADE, related_name='commissions')
     referred_customer = models.ForeignKey(
         ReferredCustomer, on_delete=models.CASCADE, related_name='commissions'
     )
     order = models.ForeignKey(
-        'orders.Order', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='commissions'
+        'orders.Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='commissions'
     )
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default='pending'
-    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

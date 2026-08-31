@@ -46,10 +46,25 @@ class ProductSerializer(SafeHTMLRepresentationMixin, serializers.ModelSerializer
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'slug', 'description', 'price', 'unit',
-                  'region', 'category', 'image', 'badge',
-                  'is_featured', 'is_available', 'created_at', 'updated_at',
-                  'business_supply_category',
-                  'storage_tips', 'nutritional_info', 'nutritional_score',
-                  'images']
+        fields = [
+            'id',
+            'name',
+            'slug',
+            'description',
+            'price',
+            'unit',
+            'region',
+            'category',
+            'image',
+            'badge',
+            'is_featured',
+            'is_available',
+            'created_at',
+            'updated_at',
+            'business_supply_category',
+            'storage_tips',
+            'nutritional_info',
+            'nutritional_score',
+            'images',
+        ]
         read_only_fields = ['id', 'slug', 'created_at', 'updated_at']

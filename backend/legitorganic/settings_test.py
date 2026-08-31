@@ -6,6 +6,7 @@ network/email calls. Import with:
 
     python manage.py test --settings=legitorganic.settings_test
 """
+
 from .settings import *  # noqa: F401,F403
 
 DATABASES = {
