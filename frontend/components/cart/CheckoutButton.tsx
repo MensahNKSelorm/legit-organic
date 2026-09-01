@@ -388,6 +388,7 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
         isOpen={showGuestModal}
         onClose={() => setShowGuestModal(false)}
         onSubmit={handleGuestSubmit}
+        checkoutMode={checkoutMode}
       />
     </>
   );

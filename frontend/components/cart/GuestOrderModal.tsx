@@ -21,6 +21,7 @@ interface GuestOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (guestData: GuestData) => void;
+  checkoutMode: "seevcash" | "whatsapp";
 }
 
 const GHANA_REGIONS = [
@@ -48,7 +49,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type FormErrors = Partial<Record<keyof GuestData, string>>;
 
-export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrderModalProps) {
+export default function GuestOrderModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  checkoutMode,
+}: GuestOrderModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -128,302 +134,357 @@ export default function GuestOrderModal({ isOpen, onClose, onSubmit }: GuestOrde
   if (!isOpen) return null;
 
   const inputBase =
-    "w-full px-4 py-2.5 rounded-xl border bg-[#FAF7F0] text-[#0D3B2A] text-sm focus:outline-none focus:ring-1 transition-colors";
-  const inputOk = `${inputBase} border-[#E6D8BD] focus:border-[#2E7D32] focus:ring-[#2E7D32]`;
-  const inputErr = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-400`;
+    "min-h-11 w-full border bg-[#F5F0E6] px-3.5 py-2.5 text-sm text-[#0D3B2A] outline-2 outline-transparent placeholder:text-[#5B3E31]/55 transition-[border-color,background-color] hover:border-[#0D3B2A]/40 focus:border-[#2E7D32] focus:bg-[#FEFCF7] focus:outline-none focus-visible:outline-[#F4C430] focus-visible:outline-offset-2 dark:bg-[#222A24] dark:text-[#FAF7F0] dark:placeholder:text-[#B8D4BD]/55 dark:hover:border-white/30 dark:focus:border-[#F4C430] dark:focus:bg-[#273029]";
+  const inputOk = `${inputBase} border-[#0D3B2A]/20 dark:border-white/15`;
+  const inputErr = `${inputBase} border-red-500 dark:border-red-400`;
+  const labelClass = "mb-1.5 block text-sm font-semibold text-[#0D3B2A] dark:text-[#FAF7F0]";
+  const errorClass = "mt-1.5 text-xs font-medium text-red-700 dark:text-red-300";
+  const isWhatsApp = checkoutMode === "whatsapp";
 
   return (
     <>
-      {/* Overlay */}
       <div
-        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+        className="fixed inset-0 z-[60] bg-[#071E15]/65 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden
       />
 
-      {/* Modal */}
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Quick order details"
-        className="pointer-events-none fixed inset-0 z-[61] flex items-center justify-center p-4"
+        aria-labelledby="guest-order-title"
+        aria-describedby="guest-order-description"
+        className="pointer-events-none fixed inset-0 z-[61] flex items-end justify-center sm:items-center sm:p-5"
       >
         <div
-          className="pointer-events-auto flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl bg-[#FAF7F0] shadow-2xl"
+          className="pointer-events-auto flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden border border-[#0D3B2A]/20 bg-[#FAF7F0] shadow-[0_24px_80px_rgba(7,30,21,.28)] sm:max-h-[90dvh] dark:border-white/15 dark:bg-[#171B18] dark:shadow-[0_24px_80px_rgba(0,0,0,.5)]"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex shrink-0 items-center justify-between border-b border-[#E6D8BD] px-6 py-5">
-            <div>
-              <h2 className="font-display text-lg font-bold text-[#0D3B2A]">Quick Order Details</h2>
-              <p className="mt-0.5 text-xs text-[#5B3E31]">
-                No account needed. Enter your delivery and payment details.
+          <div className="flex shrink-0 items-start justify-between bg-[#0D3B2A] px-5 py-5 text-white sm:px-7 sm:py-6">
+            <div className="min-w-0 pr-4">
+              <h2
+                id="guest-order-title"
+                className="display-organic text-3xl text-white sm:text-4xl"
+              >
+                Order details
+              </h2>
+              <p id="guest-order-description" className="mt-1.5 text-sm text-[#D8E7DB]">
+                Checkout without creating an account.
               </p>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              aria-label="Close"
-              className="ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xl leading-none text-[#0D3B2A] transition-colors hover:bg-[#F5F0E6]"
+              aria-label="Close order details"
+              className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/25 text-2xl leading-none text-white transition-colors hover:border-[#F4C430] hover:bg-[#F4C430] hover:text-[#0D3B2A] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0D3B2A] focus-visible:outline-none active:bg-[#E2B426]"
             >
               ×
             </button>
           </div>
 
-          {/* Body — scrollable */}
           <form onSubmit={handleSubmit} noValidate className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
-              {/* First / Last name row */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    htmlFor="guest-first-name"
-                    className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                  >
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="guest-first-name"
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => {
-                      setFirstName(e.target.value);
-                      setErrors((p) => ({ ...p, first_name: undefined }));
-                    }}
-                    placeholder="Kofi"
-                    className={errors.first_name ? inputErr : inputOk}
-                  />
-                  {errors.first_name && (
-                    <p className="mt-1 text-xs text-red-500">{errors.first_name}</p>
-                  )}
+            <div className="flex-1 space-y-8 overflow-y-auto px-5 py-6 sm:px-7">
+              <fieldset>
+                <legend className="mb-4 flex w-full items-center gap-3 text-sm font-bold text-[#0D3B2A] dark:text-[#FAF7F0]">
+                  <span>Your details</span>
+                  <span className="h-px flex-1 bg-[#0D3B2A]/15 dark:bg-white/15" aria-hidden />
+                </legend>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="guest-first-name" className={labelClass}>
+                      First name <span className="text-red-600 dark:text-red-300">*</span>
+                    </label>
+                    <input
+                      id="guest-first-name"
+                      name="given-name"
+                      type="text"
+                      autoComplete="given-name"
+                      value={firstName}
+                      onChange={(e) => {
+                        setFirstName(e.target.value);
+                        setErrors((p) => ({ ...p, first_name: undefined }));
+                      }}
+                      placeholder="Kofi"
+                      className={errors.first_name ? inputErr : inputOk}
+                      aria-invalid={Boolean(errors.first_name)}
+                      aria-describedby={errors.first_name ? "guest-first-name-error" : undefined}
+                    />
+                    {errors.first_name && (
+                      <p id="guest-first-name-error" className={errorClass}>
+                        {errors.first_name}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="guest-last-name" className={labelClass}>
+                      Last name <span className="text-red-600 dark:text-red-300">*</span>
+                    </label>
+                    <input
+                      id="guest-last-name"
+                      name="family-name"
+                      type="text"
+                      autoComplete="family-name"
+                      value={lastName}
+                      onChange={(e) => {
+                        setLastName(e.target.value);
+                        setErrors((p) => ({ ...p, last_name: undefined }));
+                      }}
+                      placeholder="Mensah"
+                      className={errors.last_name ? inputErr : inputOk}
+                      aria-invalid={Boolean(errors.last_name)}
+                      aria-describedby={errors.last_name ? "guest-last-name-error" : undefined}
+                    />
+                    {errors.last_name && (
+                      <p id="guest-last-name-error" className={errorClass}>
+                        {errors.last_name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-email" className={labelClass}>
+                      Email <span className="text-red-600 dark:text-red-300">*</span>
+                    </label>
+                    <input
+                      id="guest-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrors((p) => ({ ...p, email: undefined }));
+                      }}
+                      placeholder="you@example.com"
+                      className={errors.email ? inputErr : inputOk}
+                      aria-invalid={Boolean(errors.email)}
+                      aria-describedby={errors.email ? "guest-email-error" : undefined}
+                    />
+                    {errors.email && (
+                      <p id="guest-email-error" className={errorClass}>
+                        {errors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-phone" className={labelClass}>
+                      Phone number <span className="text-red-600 dark:text-red-300">*</span>
+                    </label>
+                    <input
+                      id="guest-phone"
+                      name="tel"
+                      type="tel"
+                      autoComplete="tel"
+                      inputMode="tel"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        setPhoneNumber(e.target.value);
+                        setErrors((p) => ({ ...p, phone_number: undefined }));
+                      }}
+                      placeholder="024 412 3456"
+                      className={errors.phone_number ? inputErr : inputOk}
+                      aria-invalid={Boolean(errors.phone_number)}
+                      aria-describedby="guest-phone-help"
+                    />
+                    {errors.phone_number ? (
+                      <p id="guest-phone-help" className={errorClass}>
+                        {errors.phone_number}
+                      </p>
+                    ) : (
+                      <p
+                        id="guest-phone-help"
+                        className="mt-1.5 text-xs text-[#5B3E31]/70 dark:text-[#B8D4BD]/70"
+                      >
+                        Ghana number, with or without +233.
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <label
-                    htmlFor="guest-last-name"
-                    className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                  >
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="guest-last-name"
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => {
-                      setLastName(e.target.value);
-                      setErrors((p) => ({ ...p, last_name: undefined }));
-                    }}
-                    placeholder="Mensah"
-                    className={errors.last_name ? inputErr : inputOk}
-                  />
-                  {errors.last_name && (
-                    <p className="mt-1 text-xs text-red-500">{errors.last_name}</p>
-                  )}
+              </fieldset>
+
+              <fieldset>
+                <legend className="mb-4 flex w-full items-center gap-3 text-sm font-bold text-[#0D3B2A] dark:text-[#FAF7F0]">
+                  <span>Delivery</span>
+                  <span className="h-px flex-1 bg-[#0D3B2A]/15 dark:bg-white/15" aria-hidden />
+                </legend>
+
+                <button
+                  type="button"
+                  onClick={() => setShowMap(!showMap)}
+                  aria-expanded={showMap}
+                  className="mb-5 flex min-h-11 w-full items-center justify-between gap-3 border border-[#2E7D32]/45 bg-[#2E7D32]/5 px-4 py-3 text-left text-sm font-semibold text-[#146C38] transition-[border-color,background-color] hover:border-[#2E7D32] hover:bg-[#2E7D32]/10 focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:outline-none active:bg-[#2E7D32]/15 dark:border-[#81C784]/35 dark:bg-[#81C784]/10 dark:text-[#A9DCAD] dark:hover:border-[#81C784]/70 dark:hover:bg-[#81C784]/15 dark:active:bg-[#81C784]/20"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-5 w-5 shrink-0"
+                      aria-hidden
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    {showMap ? "Map location is open" : "Use the map to fill your address"}
+                  </span>
+                  <span className="shrink-0 text-xs underline underline-offset-4">
+                    {showMap ? "Hide map" : "Open map"}
+                  </span>
+                </button>
+
+                {showMap && (
+                  <div className="mb-5 overflow-hidden border border-[#0D3B2A]/15 dark:border-white/15">
+                    <LocationPicker
+                      appearance="embedded"
+                      onLocationSelect={(data) => {
+                        if (data.street_address) setStreetAddress(data.street_address);
+                        setHouseNumber(data.house_number || "");
+                        if (data.city) setCity(data.city);
+                        if (data.delivery_region) setDeliveryRegion(data.delivery_region);
+                        if (data.latitude) setLatitude(data.latitude);
+                        if (data.longitude) setLongitude(data.longitude);
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="guest-house-number" className={labelClass}>
+                      House or apartment
+                    </label>
+                    <input
+                      id="guest-house-number"
+                      name="address-line1"
+                      type="text"
+                      autoComplete="address-line1"
+                      value={houseNumber}
+                      onChange={(e) => setHouseNumber(e.target.value)}
+                      placeholder="A14, Flat 3"
+                      className={inputOk}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-street-address" className={labelClass}>
+                      Street address <span className="text-red-600 dark:text-red-300">*</span>
+                    </label>
+                    <input
+                      id="guest-street-address"
+                      name="address-line2"
+                      type="text"
+                      autoComplete="address-line2"
+                      value={streetAddress}
+                      onChange={(e) => {
+                        setStreetAddress(e.target.value);
+                        setErrors((p) => ({ ...p, street_address: undefined }));
+                      }}
+                      placeholder="12 Independence Avenue"
+                      className={errors.street_address ? inputErr : inputOk}
+                      aria-invalid={Boolean(errors.street_address)}
+                      aria-describedby={errors.street_address ? "guest-street-error" : undefined}
+                    />
+                    {errors.street_address && (
+                      <p id="guest-street-error" className={errorClass}>
+                        {errors.street_address}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-city" className={labelClass}>
+                      Town or city <span className="text-red-600 dark:text-red-300">*</span>
+                    </label>
+                    <input
+                      id="guest-city"
+                      name="address-level2"
+                      type="text"
+                      autoComplete="address-level2"
+                      value={city}
+                      onChange={(e) => {
+                        setCity(e.target.value);
+                        setErrors((p) => ({ ...p, city: undefined }));
+                      }}
+                      placeholder="Accra"
+                      className={errors.city ? inputErr : inputOk}
+                      aria-invalid={Boolean(errors.city)}
+                      aria-describedby={errors.city ? "guest-city-error" : undefined}
+                    />
+                    {errors.city && (
+                      <p id="guest-city-error" className={errorClass}>
+                        {errors.city}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-region" className={labelClass}>
+                      Region <span className="text-red-600 dark:text-red-300">*</span>
+                    </label>
+                    <select
+                      id="guest-region"
+                      name="address-level1"
+                      autoComplete="address-level1"
+                      value={deliveryRegion}
+                      onChange={(e) => {
+                        setDeliveryRegion(e.target.value);
+                        setErrors((p) => ({ ...p, delivery_region: undefined }));
+                      }}
+                      className={errors.delivery_region ? inputErr : inputOk}
+                      aria-invalid={Boolean(errors.delivery_region)}
+                      aria-describedby={errors.delivery_region ? "guest-region-error" : undefined}
+                    >
+                      <option value="">Select region…</option>
+                      {GHANA_REGIONS.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.delivery_region && (
+                      <p id="guest-region-error" className={errorClass}>
+                        {errors.delivery_region}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </fieldset>
 
-              <div>
-                <label
-                  htmlFor="guest-email"
-                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                >
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="guest-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setErrors((p) => ({ ...p, email: undefined }));
-                  }}
-                  placeholder="you@example.com"
-                  className={errors.email ? inputErr : inputOk}
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label
-                  htmlFor="guest-phone"
-                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                >
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="guest-phone"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    setPhoneNumber(e.target.value);
-                    setErrors((p) => ({ ...p, phone_number: undefined }));
-                  }}
-                  placeholder="+233244123456 or 0244123456"
-                  className={errors.phone_number ? inputErr : inputOk}
-                />
-                {errors.phone_number ? (
-                  <p className="mt-1 text-xs text-red-500">{errors.phone_number}</p>
-                ) : (
-                  <p className="mt-1 text-xs text-[#9ca3af]">Format: +233244123456 or 0244123456</p>
-                )}
-              </div>
-
-              {/* Map toggle */}
-              <button
-                type="button"
-                onClick={() => setShowMap(!showMap)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#2E7D32] py-2.5 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#2E7D32]/5"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {showMap ? "Hide Map" : "Pick Location on Map"}
-              </button>
-
-              {showMap && (
-                <LocationPicker
-                  onLocationSelect={(data) => {
-                    if (data.street_address) setStreetAddress(data.street_address);
-                    setHouseNumber(data.house_number || "");
-                    if (data.city) setCity(data.city);
-                    if (data.delivery_region) setDeliveryRegion(data.delivery_region);
-                    if (data.latitude) setLatitude(data.latitude);
-                    if (data.longitude) setLongitude(data.longitude);
-                  }}
-                />
-              )}
-
-              {/* House number */}
-              <div>
-                <label
-                  htmlFor="guest-house-number"
-                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                >
-                  House / Apartment Number
-                </label>
-                <input
-                  id="guest-house-number"
-                  type="text"
-                  value={houseNumber}
-                  onChange={(e) => setHouseNumber(e.target.value)}
-                  placeholder="e.g. A14, Flat 3"
-                  className={inputOk}
-                />
-              </div>
-
-              {/* Street address */}
-              <div>
-                <label
-                  htmlFor="guest-street-address"
-                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                >
-                  Street Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="guest-street-address"
-                  type="text"
-                  value={streetAddress}
-                  onChange={(e) => {
-                    setStreetAddress(e.target.value);
-                    setErrors((p) => ({ ...p, street_address: undefined }));
-                  }}
-                  placeholder="e.g. 12 Independence Ave"
-                  className={errors.street_address ? inputErr : inputOk}
-                />
-                {errors.street_address && (
-                  <p className="mt-1 text-xs text-red-500">{errors.street_address}</p>
-                )}
-              </div>
-
-              {/* City */}
-              <div>
-                <label
-                  htmlFor="guest-city"
-                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                >
-                  City <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="guest-city"
-                  type="text"
-                  value={city}
-                  onChange={(e) => {
-                    setCity(e.target.value);
-                    setErrors((p) => ({ ...p, city: undefined }));
-                  }}
-                  placeholder="e.g. Accra"
-                  className={errors.city ? inputErr : inputOk}
-                />
-                {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
-              </div>
-
-              {/* Region */}
-              <div>
-                <label
-                  htmlFor="guest-region"
-                  className="mb-1.5 block text-sm font-semibold text-[#0D3B2A]"
-                >
-                  Region <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="guest-region"
-                  value={deliveryRegion}
-                  onChange={(e) => {
-                    setDeliveryRegion(e.target.value);
-                    setErrors((p) => ({ ...p, delivery_region: undefined }));
-                  }}
-                  className={errors.delivery_region ? inputErr : inputOk}
-                >
-                  <option value="">Select region…</option>
-                  {GHANA_REGIONS.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-                {errors.delivery_region && (
-                  <p className="mt-1 text-xs text-red-500">{errors.delivery_region}</p>
-                )}
+              <div className="border-l-2 border-[#F4C430] pl-4 text-sm text-[#5B3E31] dark:text-[#B8D4BD]">
+                Your contact and address are used to confirm this order and arrange delivery.
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="shrink-0 space-y-3 px-6 pt-4 pb-6">
-              <div className="mt-6 flex gap-3">
+            <div className="shrink-0 border-t border-[#0D3B2A]/15 bg-[#F5F0E6] px-5 py-4 sm:px-7 sm:py-5 dark:border-white/15 dark:bg-[#1D231F]">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 rounded-xl border-2 border-[#0D3B2A] px-4 py-3 font-semibold text-[#0D3B2A] transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="min-h-11 border border-[#0D3B2A]/30 px-5 py-3 text-sm font-semibold text-[#0D3B2A] transition-colors hover:border-[#0D3B2A] hover:bg-[#FAF7F0] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:outline-none active:bg-[#E6D8BD]/55 dark:border-white/25 dark:text-[#FAF7F0] dark:hover:border-white/50 dark:hover:bg-white/5 dark:active:bg-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 font-semibold text-white transition-colors hover:bg-[#1ebe5d] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-11 flex-1 bg-[#0D3B2A] px-6 py-3 text-sm font-bold whitespace-nowrap text-white transition-colors hover:bg-[#174F3A] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:outline-none active:bg-[#071E15] disabled:cursor-not-allowed disabled:opacity-60 sm:max-w-xs dark:bg-[#F4C430] dark:text-[#0D3B2A] dark:hover:bg-[#E2B426] dark:active:bg-[#C59F2C]"
                 >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 shrink-0">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                  </svg>
-                  <span>Continue to payment</span>
+                  {isWhatsApp ? "Continue in WhatsApp" : "Continue to secure payment"}
                 </button>
               </div>
 
-              <p className="text-center text-xs text-[#9ca3af]">
+              <p className="mt-3 text-center text-xs text-[#5B3E31]/75 sm:text-right dark:text-[#B8D4BD]/75">
                 Already have an account?{" "}
                 <Link
                   href="/login"
                   onClick={onClose}
-                  className="font-semibold text-[#2E7D32] hover:underline"
+                  className="font-semibold text-[#146C38] underline-offset-4 hover:underline dark:text-[#A9DCAD]"
                 >
-                  Sign in / Create account
+                  Sign in
                 </Link>
               </p>
             </div>

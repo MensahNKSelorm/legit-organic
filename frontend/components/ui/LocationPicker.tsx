@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 
 interface LocationData {
@@ -16,10 +16,16 @@ interface LocationData {
 interface LocationPickerProps {
   onLocationSelect: (data: LocationData) => void;
   initialAddress?: string;
+  appearance?: "default" | "embedded";
 }
 
-export default function LocationPicker({ onLocationSelect, initialAddress }: LocationPickerProps) {
+export default function LocationPicker({
+  onLocationSelect,
+  initialAddress,
+  appearance = "default",
+}: LocationPickerProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const searchInputId = useId();
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
@@ -251,62 +257,81 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const isEmbedded = appearance === "embedded";
+  const searchClass = isEmbedded
+    ? "min-h-11 w-full border border-[#0D3B2A]/20 bg-[#FAF7F0] px-3.5 py-2.5 pr-10 text-sm text-[#0D3B2A] outline-2 outline-transparent placeholder:text-[#5B3E31]/55 transition-[border-color,background-color] hover:border-[#0D3B2A]/40 focus:border-[#2E7D32] focus:outline-none focus-visible:outline-[#F4C430] focus-visible:outline-offset-2 dark:border-white/15 dark:bg-[#222A24] dark:text-[#FAF7F0] dark:placeholder:text-[#B8D4BD]/55 dark:hover:border-white/30 dark:focus:border-[#F4C430]"
+    : "w-full rounded-xl border border-[#E6D8BD] bg-white px-4 py-3 pr-10 text-sm text-[#0D3B2A] focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] focus:outline-none";
+  const locationButtonClass = isEmbedded
+    ? "flex min-h-11 w-full items-center justify-center gap-2 border border-[#0D3B2A]/30 px-4 py-2.5 text-sm font-semibold text-[#0D3B2A] transition-colors hover:border-[#0D3B2A] hover:bg-[#F5F0E6] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:outline-none active:bg-[#E6D8BD]/55 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/25 dark:text-[#FAF7F0] dark:hover:border-white/45 dark:hover:bg-white/5 dark:active:bg-white/10"
+    : "flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#0D3B2A] py-2.5 text-sm font-semibold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A]/5 disabled:cursor-not-allowed disabled:opacity-60";
+
   return (
-    <div className="space-y-3">
-      {/* Search input */}
+    <div className={isEmbedded ? "space-y-3 bg-[#FEFCF7] p-4 dark:bg-[#1D231F]" : "space-y-3"}>
       <div className="relative">
+        <label htmlFor={searchInputId} className="sr-only">
+          Search for your delivery location
+        </label>
         <input
+          id={searchInputId}
           ref={searchRef}
           type="text"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search for your location..."
-          className="w-full px-4 py-3 pr-10 rounded-xl border border-[#E6D8BD]
-                     bg-white text-[#0D3B2A] text-sm focus:outline-none
-                     focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32]"
+          className={searchClass}
         />
         <svg
-          className="absolute right-3 top-3.5 w-4 h-4 text-gray-400"
+          className="absolute top-3.5 right-3 h-4 w-4 text-[#5B3E31]/55 dark:text-[#B8D4BD]/55"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
+          aria-hidden
         >
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" />
         </svg>
       </div>
 
-      {/* Map */}
       {error ? (
-        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl">{error}</div>
+        <div
+          role="status"
+          className={
+            isEmbedded
+              ? "border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-200"
+              : "rounded-xl bg-red-50 p-3 text-sm text-red-600"
+          }
+        >
+          {error}
+        </div>
       ) : (
-        <div className="relative rounded-xl overflow-hidden border border-[#E6D8BD]">
+        <div
+          className={`relative overflow-hidden border border-[#E6D8BD] dark:border-white/15 ${isEmbedded ? "" : "rounded-xl"}`}
+        >
           {isLoading && (
-            <div className="absolute inset-0 bg-[#FAF7F0] flex items-center justify-center z-10">
-              <div className="w-6 h-6 border-2 border-[#0D3B2A] border-t-transparent rounded-full animate-spin" />
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#FAF7F0] dark:bg-[#222A24]">
+              <div
+                className="h-6 w-6 animate-spin rounded-full border-2 border-[#0D3B2A] border-t-transparent dark:border-[#F4C430] dark:border-t-transparent"
+                role="status"
+                aria-label="Loading map"
+              />
             </div>
           )}
           <div ref={mapRef} style={{ height: "250px", width: "100%" }} />
         </div>
       )}
 
-      {/* Use current location button */}
       <button
         type="button"
         onClick={getCurrentLocation}
         disabled={locating}
-        className="w-full flex items-center justify-center gap-2 py-2.5
-                   rounded-xl border-2 border-[#0D3B2A] text-[#0D3B2A]
-                   font-semibold text-sm hover:bg-[#0D3B2A]/5
-                   transition-colors disabled:opacity-60
-                   disabled:cursor-not-allowed"
+        className={locationButtonClass}
       >
         {locating ? (
           <>
             <div
-              className="w-4 h-4 border-2 border-[#0D3B2A]
-                            border-t-transparent rounded-full animate-spin"
+              className="h-4 w-4 animate-spin rounded-full border-2 border-[#0D3B2A] border-t-transparent dark:border-[#F4C430] dark:border-t-transparent"
+              aria-hidden
             />
             Getting your location...
           </>
@@ -317,7 +342,8 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
-              className="w-4 h-4"
+              className="h-4 w-4"
+              aria-hidden
             >
               <circle cx="12" cy="12" r="3" />
               <path d="M12 1v4M12 19v4M1 12h4M19 12h4" />
@@ -326,7 +352,9 @@ export default function LocationPicker({ onLocationSelect, initialAddress }: Loc
           </>
         )}
       </button>
-      {locError && <p className="text-xs text-red-500 text-center mt-1">{locError}</p>}
+      {locError && (
+        <p className="mt-1 text-center text-xs text-red-700 dark:text-red-300">{locError}</p>
+      )}
     </div>
   );
 }
