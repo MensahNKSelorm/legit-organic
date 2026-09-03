@@ -251,12 +251,23 @@
         category: selectedText("id_category"),
         tags: value("id_tags"),
       };
-    const ingredientNames = Array.from(
+    const ingredientRows = Array.from(
       document.querySelectorAll('[name^="ingredients-"][name$="-name"]')
     )
-      .map((input) => input.value.trim())
-      .filter(Boolean)
-      .join(", ");
+      .map((input) => {
+        const prefix = input.name.replace(/-name$/, "");
+        const part = (name) =>
+          document.querySelector(`[name="${prefix}-${name}"]`)?.value?.trim() || "";
+        return [part("quantity"), part("unit"), input.value.trim(), part("preparation")]
+          .filter(Boolean)
+          .join(" ");
+      })
+      .filter(Boolean);
+    const existingSteps = Array.from(
+      document.querySelectorAll('[name^="steps-"][name$="-instruction"]')
+    )
+      .map((input) => value(input.id).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim())
+      .filter(Boolean);
     return {
       title: value("id_title"),
       description: value("id_description"),
@@ -264,7 +275,12 @@
       difficulty: selectedText("id_difficulty"),
       prep_time: value("id_prep_time"),
       cook_time: value("id_cook_time"),
-      existing_ingredients: ingredientNames,
+      existing_ingredients: ingredientRows.join("; "),
+      existing_steps: existingSteps.join(" | "),
+      source_name: value("id_source_name"),
+      source_url: value("id_source_url"),
+      source_author: value("id_source_author"),
+      source_license: value("id_source_license"),
     };
   };
 
@@ -336,12 +352,38 @@
   };
 
   const applyRecipeMethod = (draft) => {
+    const existing = ["ingredients", "steps"].some((prefix) =>
+      Array.from(document.querySelectorAll(`[name^="${prefix}-"][name$="-id"]`)).some(
+        (input) => {
+          const rowPrefix = input.name.replace(/-id$/, "");
+          const content = document.querySelector(
+            `[name="${rowPrefix}-${prefix === "ingredients" ? "name" : "instruction"}"]`
+          );
+          return content && value(content.id).replace(/<[^>]*>/g, "").trim();
+        }
+      )
+    );
+    if (
+      existing &&
+      !window.confirm("Replace the existing ingredients and instructions with this draft?")
+    )
+      return false;
+    if (existing) {
+      ["ingredients", "steps"].forEach((prefix) => {
+        document.querySelectorAll(`[name^="${prefix}-"][name$="-DELETE"]`).forEach((input) => {
+          input.checked = true;
+        });
+      });
+    }
     draft.ingredients.forEach((item) => {
       const index = inlineSlot("ingredients", "name");
       if (index === null) return;
       fillInput(`ingredients-${index}-name`, item.name);
       fillInput(`ingredients-${index}-quantity`, item.quantity);
       fillInput(`ingredients-${index}-unit`, item.unit);
+      fillInput(`ingredients-${index}-preparation`, item.preparation);
+      const optional = document.querySelector(`[name="ingredients-${index}-optional"]`);
+      if (optional) optional.checked = item.optional === true;
       fillInput(`ingredients-${index}-notes`, item.notes);
       if (item.product_id) fillInput(`ingredients-${index}-product`, String(item.product_id));
     });
@@ -355,6 +397,7 @@
       if (input) input.value = html;
       if (window.editors && window.editors[id]) window.editors[id].setData(html);
     });
+    return true;
   };
 
   ready(() => {
@@ -432,8 +475,8 @@
       } else if (draftTask === "description") {
         applied = setField("id_description", paragraph(draft.text), true);
       } else {
-        applyRecipeMethod(draft);
-        applied = true;
+        applied = applyRecipeMethod(draft);
+        if (applied) fillInput("extraction_method", "ai_assisted");
       }
       status.textContent = applied
         ? "Applied to the form. Review it, then save when ready."

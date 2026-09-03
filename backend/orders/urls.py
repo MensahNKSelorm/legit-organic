@@ -12,6 +12,7 @@ from .views import (
     OrderDetailView,
     ExportOrdersView,
     OrderReceiptView,
+    PublicOrderTrackingView,
 )
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path('validate-promo/', ValidatePromoView.as_view(), name='validate-promo'),
     path('my-orders/', UserOrderListView.as_view(), name='my-orders'),
     path('export/', ExportOrdersView.as_view(), name='export-orders'),
+    path('tracking/<str:token>/', PublicOrderTrackingView.as_view(), name='order-tracking'),
     path('<str:reference>/receipt/', OrderReceiptView.as_view(), name='order-receipt'),
     path('<str:reference>/', OrderDetailView.as_view(), name='order-detail'),
 ]

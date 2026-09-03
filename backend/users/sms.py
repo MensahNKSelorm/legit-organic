@@ -54,13 +54,18 @@ def send_order_status_sms(order):
         return False
 
     delivery_pin = getattr(order, '_delivery_pin_plaintext', '')
+    tracking_link = ''
+    if order.status == 'out_for_delivery':
+        from orders.tracking import tracking_url
+
+        tracking_link = tracking_url(order)
     STATUS_MESSAGES = {
         'paid': f'Legit Organic: Payment received for {order.reference}. We will notify you as your order progresses.',
         'processing': f'Legit Organic: We are preparing order {order.reference}. You will hear from us when it is ready for dispatch.',
         'ready_for_dispatch': f'Legit Organic: Order {order.reference} is packed and ready for dispatch. Your delivery details will follow.',
         'out_for_delivery': (
-            f'Legit Organic: Order {order.reference} is out for delivery. '
-            f'Delivery PIN: {delivery_pin}. Give this PIN to the driver only after receiving your order.'
+            f'Legit Organic: {order.reference} is on the way. Track: {tracking_link} '
+            f'PIN: {delivery_pin}. Share the PIN only after delivery.'
         ),
         'shipped': f'Legit Organic: Order {order.reference} has been dispatched. Please ensure someone is available to receive it.',
         'delivered': f'Legit Organic: Delivery completed for order {order.reference}. Thank you for choosing us.',

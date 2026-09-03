@@ -270,6 +270,12 @@ UNFOLD = {
                         "permission": admin_permission("orders.view_order"),
                     },
                     {
+                        "title": "Drivers",
+                        "icon": "local_shipping",
+                        "link": "/admin/orders/driver/",
+                        "permission": admin_permission("orders.view_driver"),
+                    },
+                    {
                         "title": "Carts",
                         "icon": "shopping_cart",
                         "link": "/admin/orders/cart/",
@@ -657,6 +663,7 @@ REST_FRAMEWORK = {
         "b2b_apply": "5/hour",
         "guest_order": "20/hour",
         "promo_validate": "30/hour",
+        "order_tracking": "30/min",
     },
 }
 

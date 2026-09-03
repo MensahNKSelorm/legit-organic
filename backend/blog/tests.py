@@ -1,6 +1,7 @@
 from unittest import mock
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 
 from blog.models import BlogCategory, BlogPost, BlogTopic
@@ -104,8 +105,39 @@ class WeeklyBlogCommandTests(TestCase):
             },
         )
 
+    @mock.patch(f'{CMD}.generate_post', side_effect=RuntimeError('groq_not_configured'))
+    @mock.patch(f'{CMD}.gather_research', return_value=(sources(), True))
+    def test_generation_failure_fails_the_scheduled_job(self, m_research, m_gen):
+        with self.assertRaises(CommandError):
+            call_command('generate_weekly_blog', '--no-notify', '--topic', 'Food safety')
+        self.assertFalse(BlogPost.objects.exists())
+
 
 class GenerationTests(TestCase):
+    @mock.patch('blog.generation.requests.post')
+    def test_retired_blog_model_is_replaced(self, post):
+        response = mock.Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            'choices': [{'message': {'content': '{"title":"T","content_html":"<p>x</p>"}'}}]
+        }
+        response.raise_for_status.return_value = None
+        post.return_value = response
+
+        from blog.generation import call_groq
+
+        with mock.patch.dict(
+            'os.environ',
+            {'GROQ_API_KEY': 'test', 'BLOG_GROQ_MODEL': 'llama-3.3-70b-versatile'},
+            clear=True,
+        ):
+            call_groq('prompt')
+
+        self.assertEqual(post.call_args.kwargs['json']['model'], 'openai/gpt-oss-120b')
+        response_format = post.call_args.kwargs['json']['response_format']
+        self.assertEqual(response_format['type'], 'json_schema')
+        self.assertTrue(response_format['json_schema']['strict'])
+
     @mock.patch('blog.generation.call_groq')
     def test_generate_post_sanitises_and_appends_sources(self, m_call):
         m_call.return_value = {

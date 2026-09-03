@@ -255,6 +255,25 @@ export interface Order {
   items: OrderItem[];
   created_at: string;
   updated_at: string;
+  tracking_url?: string | null;
+}
+
+export interface PublicOrderTracking {
+  reference: string;
+  status: Order["status"];
+  delivery_address: string;
+  dispatched_at: string | null;
+  delivery_confirmed_at: string | null;
+  driver: {
+    name: string;
+    phone_number: string;
+    vehicle: string;
+  } | null;
+  timeline: Array<{
+    status: Order["status"];
+    occurred_at: string;
+  }>;
+  updated_at: string;
 }
 
 export interface PromoCode {

@@ -24,12 +24,22 @@ def transition_order(order_id, to_status, *, actor=None, source='admin', note=''
 
         update_fields = ['status', 'updated_at']
         if to_status == 'out_for_delivery':
+            if not order.driver_id:
+                raise ValidationError('Assign an active driver before dispatching this order.')
+            if not order.driver.is_active:
+                raise ValidationError('The assigned driver is inactive. Choose an active driver.')
+            order.prepare_dispatch()
             order.issue_delivery_pin()
             update_fields.extend(
                 [
                     'delivery_pin_hash',
                     'delivery_pin_expires_at',
                     'delivery_pin_attempts',
+                    'dispatched_at',
+                    'driver_name_snapshot',
+                    'driver_phone_snapshot',
+                    'driver_vehicle_snapshot',
+                    'tracking_nonce',
                 ]
             )
         elif to_status == 'delivered':

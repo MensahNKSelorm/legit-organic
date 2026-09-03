@@ -514,6 +514,11 @@ export const api = {
     myOrders: () => fetchWithAuth<Order[]>("/api/orders/my-orders/"),
     detail: (reference: string) => fetchWithAuth<Order>(`/api/orders/${reference}/`),
     downloadReceipt: (reference: string) => fetchBlobWithAuth(`/api/orders/${reference}/receipt/`),
+    tracking: (token: string) =>
+      fetchAPI<import("@/types").PublicOrderTracking>(
+        `/api/orders/tracking/${encodeURIComponent(token)}/`,
+        { cache: "no-store" }
+      ),
   },
   notifications: {
     list: () => fetchWithAuth<NotificationResponse>("/api/notifications/"),

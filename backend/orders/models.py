@@ -1,5 +1,6 @@
 import logging
 import secrets
+import uuid
 from datetime import timedelta
 
 from django.db import models
@@ -44,6 +45,31 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} × {self.quantity}"
+
+
+class Driver(models.Model):
+    VEHICLE_CHOICES = [
+        ('motorbike', 'Motorbike'),
+        ('car', 'Car'),
+        ('van', 'Van'),
+        ('truck', 'Truck'),
+        ('other', 'Other'),
+    ]
+
+    name = models.CharField(max_length=160)
+    phone_number = models.CharField(max_length=20)
+    vehicle_type = models.CharField(max_length=20, choices=VEHICLE_CHOICES, default='motorbike')
+    vehicle_registration = models.CharField(max_length=30, blank=True)
+    is_active = models.BooleanField(default=True)
+    internal_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f'{self.name} — {self.phone_number}'
 
 
 class Order(models.Model):
@@ -114,6 +140,19 @@ class Order(models.Model):
     delivery_pin_expires_at = models.DateTimeField(null=True, blank=True, editable=False)
     delivery_pin_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
     delivery_confirmed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    driver = models.ForeignKey(
+        Driver,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name='orders',
+        limit_choices_to={'is_active': True},
+    )
+    dispatched_at = models.DateTimeField(null=True, blank=True, editable=False)
+    driver_name_snapshot = models.CharField(max_length=160, blank=True, editable=False)
+    driver_phone_snapshot = models.CharField(max_length=20, blank=True, editable=False)
+    driver_vehicle_snapshot = models.CharField(max_length=80, blank=True, editable=False)
+    tracking_nonce = models.UUIDField(default=uuid.uuid4, editable=False)
     order_source = models.CharField(
         max_length=20,
         choices=[
@@ -155,6 +194,26 @@ class Order(models.Model):
         self.delivery_pin_attempts = 0
         self._delivery_pin_plaintext = pin
         return pin
+
+    def prepare_dispatch(self):
+        if not self.driver_id:
+            raise ValueError('Assign an active driver before dispatching this order.')
+        self.dispatched_at = timezone.now()
+        self.driver_name_snapshot = self.driver.name
+        self.driver_phone_snapshot = self.driver.phone_number
+        vehicle = self.driver.get_vehicle_type_display()
+        if self.driver.vehicle_registration:
+            vehicle = f'{vehicle} · {self.driver.vehicle_registration}'
+        self.driver_vehicle_snapshot = vehicle
+        self.tracking_nonce = uuid.uuid4()
+
+    @property
+    def tracking_is_expired(self):
+        if self.status == 'delivered' and self.delivery_confirmed_at:
+            return timezone.now() > self.delivery_confirmed_at + timedelta(hours=24)
+        if self.status == 'cancelled':
+            return timezone.now() > self.updated_at + timedelta(hours=24)
+        return False
 
     def check_delivery_pin(self, pin):
         if not self.delivery_pin_hash or not self.delivery_pin_expires_at:

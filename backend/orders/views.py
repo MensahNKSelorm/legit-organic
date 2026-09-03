@@ -22,6 +22,7 @@ from .serializers import (
     CartItemSerializer,
     OrderSerializer,
     CreateOrderSerializer,
+    PublicOrderTrackingSerializer,
 )
 from products.models import Product
 from legitorganic.seevcash import SeevCashError, create_checkout, verify_checkout
@@ -515,6 +516,28 @@ class OrderDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+
+class PublicOrderTrackingView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    throttle_scope = 'order_tracking'
+
+    def get(self, request, token):
+        from .tracking import read_tracking_token
+
+        try:
+            payload = read_tracking_token(token)
+            order = Order.objects.prefetch_related('status_events').get(pk=payload['order_id'])
+        except (ValueError, KeyError, Order.DoesNotExist):
+            return Response({'error': 'This tracking link is invalid or has expired.'}, status=404)
+
+        if order.tracking_nonce.hex != str(payload.get('nonce')) or order.tracking_is_expired:
+            return Response({'error': 'This tracking link is invalid or has expired.'}, status=404)
+        if order.status not in {'out_for_delivery', 'delivered', 'cancelled'}:
+            return Response({'error': 'Tracking is not available for this order yet.'}, status=404)
+
+        return Response(PublicOrderTrackingSerializer(order).data)
 
 
 class ExportOrdersView(APIView):

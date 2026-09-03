@@ -18,6 +18,22 @@ Recipes begin private in `needs_review`.
 
 Only records with `is_published=True` are returned by public recipe APIs.
 
+## AI-assisted drafting
+
+The admin writing assistant is a drafting tool, not a recipe authority. Staff provide the
+ingredients, quantities, preparation details and method in a factual brief. An attributed
+source may also be recorded in the recipe provenance fields. The assistant structures those
+facts into three to fifteen distinct ingredients and two to twelve instructions.
+
+Generated methods are rejected when required quantities are missing, ingredient names repeat,
+or the output falls outside the supported structure. Applying a draft only fills the unsaved
+admin form and records `ai_assisted` as the extraction method. It does not approve, publish,
+calculate nutrition or verify a Market match. Staff must review the form and save it explicitly.
+
+The assistant may suggest an exact Market product only when its ingredient name matches an
+available catalogue item. It never substitutes a different food. Nutrition remains entirely
+outside the language model and follows the verified source priority below.
+
 ## Nutrition architecture
 
 Nutrition is calculated by LegitOrganic. USDA FoodData Central is an upstream public-domain source, not a runtime dependency for customer pages.

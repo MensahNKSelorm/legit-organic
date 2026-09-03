@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from products.models import Product
 from users.models import User
-from .writing_assistant import SYSTEM_PROMPT, _prompt
+from .writing_assistant import SYSTEM_PROMPT, _prompt, _response_schema
 
 
 @override_settings(STAFF_2FA_MODE='enroll', STAFF_OWNER_2FA_REQUIRED=False)
@@ -124,8 +124,19 @@ class WritingAssistantTests(TestCase):
             'ingredients': [
                 {'name': 'Kontomire', 'quantity': '2', 'unit': 'bunches', 'notes': 'washed'},
                 {'name': 'Salt', 'quantity': '1', 'unit': 'pinch', 'notes': ''},
+                {
+                    'name': 'Onion',
+                    'quantity': '1',
+                    'unit': 'whole',
+                    'preparation': 'sliced',
+                    'optional': False,
+                    'notes': '',
+                },
             ],
-            'steps': [{'instruction': 'Wash and slice the leaves.'}],
+            'steps': [
+                {'instruction': 'Wash and slice the leaves.'},
+                {'instruction': 'Cook them using the supplied method.'},
+            ],
         }
         self.client.force_login(self.owner)
         response = self.client.post(
@@ -141,6 +152,78 @@ class WritingAssistantTests(TestCase):
         ingredients = response.json()['draft']['ingredients']
         self.assertEqual(ingredients[0]['product_id'], product.pk)
         self.assertEqual(ingredients[1]['product_id'], '')
+        self.assertEqual(ingredients[2]['preparation'], 'sliced')
+
+    @patch('legitorganic.writing_assistant._call_groq')
+    def test_recipe_method_rejects_sparse_or_duplicate_output(self, groq):
+        groq.return_value = {
+            'ingredients': [
+                {'name': 'Tomato', 'quantity': '2'},
+                {'name': 'tomato', 'quantity': '1'},
+                {'name': 'Onion', 'quantity': '1'},
+            ],
+            'steps': [
+                {'instruction': 'Prepare the vegetables.'},
+                {'instruction': 'Cook them.'},
+            ],
+        }
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            self.url,
+            self.payload(
+                kind='recipe',
+                task='method',
+                instruction='Use two tomatoes and one onion. Prepare and cook the vegetables.',
+            ),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 502)
+        self.assertNotIn('draft', response.json())
+
+    def test_recipe_method_prompt_is_grounded_and_excludes_nutrition(self):
+        prompt = _prompt(
+            'recipe',
+            'method',
+            'Use tomatoes, onions and pepper. Chop them, then simmer them.',
+            {'source_name': 'Staff kitchen notes'},
+            ['Tomatoes', 'Onions'],
+        )
+        self.assertIn('complete factual boundary', prompt)
+        self.assertIn('Do not complete a familiar recipe from memory', prompt)
+        self.assertIn('Do not invent substitutions', prompt)
+        self.assertIn('Never invent', SYSTEM_PROMPT)
+
+    def test_recipe_method_uses_strict_structured_output(self):
+        response_format = _response_schema('recipe', 'method')
+        self.assertEqual(response_format['type'], 'json_schema')
+        definition = response_format['json_schema']
+        self.assertTrue(definition['strict'])
+        schema = definition['schema']
+        self.assertFalse(schema['additionalProperties'])
+        self.assertIn('ready', schema['required'])
+        self.assertEqual(schema['properties']['ingredients']['maxItems'], 15)
+        self.assertEqual(schema['properties']['steps']['maxItems'], 12)
+
+    @patch('legitorganic.writing_assistant._call_groq')
+    def test_incomplete_recipe_brief_returns_actionable_message(self, groq):
+        groq.return_value = {
+            'ready': False,
+            'detail': 'Add exact quantities and at least two preparation steps.',
+            'ingredients': [],
+            'steps': [],
+        }
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            self.url,
+            self.payload(
+                kind='recipe',
+                task='method',
+                instruction='I would like a tomato recipe but have no method yet.',
+            ),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertIn('exact quantities', response.json()['detail'])
 
     @patch('legitorganic.writing_assistant._call_groq')
     def test_provider_failure_does_not_return_partial_copy(self, groq):

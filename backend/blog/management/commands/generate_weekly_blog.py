@@ -19,7 +19,7 @@ import os
 import random
 
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -167,12 +167,14 @@ class Command(BaseCommand):
         try:
             draft = generate_post(topic, sources)
         except RuntimeError as e:
-            self.stdout.write(self.style.ERROR(f'Generation unavailable: {e}'))
-            return
+            if not opts['no_notify']:
+                self._notify_failure(topic, 'The writing service is not configured.')
+            raise CommandError(f'Generation unavailable: {e}') from e
         except Exception as e:
             logger.error('Weekly blog generation failed for %r: %s', topic, e, exc_info=True)
-            self.stdout.write(self.style.ERROR(f'Generation failed: {e}'))
-            return
+            if not opts['no_notify']:
+                self._notify_failure(topic, 'The writing service returned an error.')
+            raise CommandError(f'Generation failed: {e}') from e
 
         if opts['dry_run']:
             self.stdout.write(self.style.SUCCESS('DRY RUN — not saved'))
@@ -244,3 +246,16 @@ class Command(BaseCommand):
             )
         except Exception as e:
             logger.warning('blog_skip notification failed: %s', e)
+
+    def _notify_failure(self, topic, reason):
+        try:
+            from notifications.utils import notify_admins
+
+            notify_admins(
+                type='blog_draft',
+                title='Weekly blog needs attention',
+                body=f'{reason} No draft was created for "{topic}".',
+                link='/admin/blog/blogpost/',
+            )
+        except Exception as e:
+            logger.warning('blog_failure notification failed: %s', e)

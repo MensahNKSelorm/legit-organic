@@ -20,6 +20,7 @@ from rest_framework.test import APIClient
 from users.models import User
 from products.models import Product
 from .models import (
+    Driver,
     Order,
     OrderItem,
     OrderNotificationDelivery,
@@ -791,6 +792,12 @@ class OrderFulfilmentWorkflowTests(TestCase):
             payment_status='success',
             order_source='seevcash',
         )
+        self.order.driver = Driver.objects.create(
+            name='Test Driver',
+            phone_number='0244111111',
+            vehicle_type='motorbike',
+        )
+        self.order.save(update_fields=['driver', 'updated_at'])
 
     @patch('users.sms.send_order_status_sms')
     @patch('users.emails.send_order_status_email')

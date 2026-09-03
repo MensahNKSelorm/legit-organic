@@ -51,6 +51,7 @@ class Command(BaseCommand):
         ops_perms += list(get_perms('orders', 'orderitem', ['change', 'view']))
         ops_perms += list(get_perms('orders', 'cart', ['view']))
         ops_perms += list(get_perms('orders', 'cartitem', ['view']))
+        ops_perms += list(get_perms('orders', 'driver', ['add', 'change', 'view']))
 
         # Users - view only (no passwords, no deletion)
         ops_perms += list(get_perms('users', 'user', ['view']))
@@ -138,7 +139,7 @@ class Command(BaseCommand):
             'products': ['product', 'productimage', 'category', 'region', 'badge'],
             'blog': ['blogpost', 'blogcategory'],
             'recipes': ['recipe', 'recipeingredient', 'recipestep', 'recipepairing'],
-            'orders': ['order', 'orderitem', 'promocode'],
+            'orders': ['order', 'orderitem', 'promocode', 'driver'],
             'sales': ['salesrep', 'referredcustomer'],
             'users': [
                 'b2bprofile',

@@ -1052,6 +1052,16 @@ def send_order_status_email(order):
     if not config:
         return
     subject, title, message, note = config
+    action = ('View details', destination)
+    details = [('Reference', order.reference), ('Delivery address', order.delivery_address)]
+    if order.status == 'out_for_delivery':
+        from orders.tracking import tracking_url
+
+        action = ('Track delivery', tracking_url(order))
+        if order.driver_name_snapshot:
+            details.append(('Driver', order.driver_name_snapshot))
+        if order.driver_vehicle_snapshot:
+            details.append(('Vehicle', order.driver_vehicle_snapshot))
     resend.Emails.send(
         payload(
             to=recipient,
@@ -1061,10 +1071,10 @@ def send_order_status_email(order):
             title=title,
             greeting=customer,
             paragraphs=[message],
-            details=[('Reference', order.reference), ('Delivery address', order.delivery_address)],
+            details=details,
             items=_order_items(order),
             total=f'{order.final_amount:.2f}',
-            action=('View details', destination),
+            action=action,
             note=note,
         )
     )

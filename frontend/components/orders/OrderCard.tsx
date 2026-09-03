@@ -257,11 +257,11 @@ export default function OrderCard({ order }: { order: Order }) {
       <button
         onClick={() => setExpanded((e) => !e)}
         aria-expanded={expanded}
-        className="flex w-full items-center gap-4 px-6 py-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#2E7D32]"
+        className="flex w-full items-center gap-4 px-6 py-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-inset"
       >
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-[.14em] text-[#2E7D32] dark:text-[#F4C430]">
+            <span className="text-[11px] font-bold tracking-[.14em] text-[#2E7D32] uppercase dark:text-[#F4C430]">
               {isSubscription ? "Weekly delivery" : "Market order"}
             </span>
             <span className={`border px-2.5 py-1 text-[11px] font-semibold ${badge.cls}`}>
@@ -278,7 +278,7 @@ export default function OrderCard({ order }: { order: Order }) {
           </div>
         </div>
         <span className="hidden text-right sm:block">
-          <span className="block text-[10px] font-bold uppercase tracking-[.14em] text-[#81786C] dark:text-[#AAB4AB]">
+          <span className="block text-[10px] font-bold tracking-[.14em] text-[#81786C] uppercase dark:text-[#AAB4AB]">
             Order total
           </span>
           <span className="mt-1 block text-lg font-semibold text-[#0D3B2A] dark:text-white">
@@ -333,17 +333,17 @@ export default function OrderCard({ order }: { order: Order }) {
               )}
 
               {/* Desktop: horizontal stepper */}
-              <div className="hidden sm:flex items-start">
+              <div className="hidden items-start sm:flex">
                 {STEPS.map((step, idx) => {
                   const isCompleted = stepCompleted(idx);
                   const isCurrent = stepCurrent(idx);
                   const isLast = idx === STEPS.length - 1;
 
                   return (
-                    <div key={step.key} className="flex-1 flex flex-col items-center relative">
+                    <div key={step.key} className="relative flex flex-1 flex-col items-center">
                       {/* Connecting line — spans from center of this circle to center of next */}
                       {!isLast && (
-                        <div className="absolute top-[18px] left-1/2 right-[-50%] z-0 h-[2px] overflow-hidden bg-[#E6D8BD] dark:bg-white/15">
+                        <div className="absolute top-[18px] right-[-50%] left-1/2 z-0 h-[2px] overflow-hidden bg-[#E6D8BD] dark:bg-white/15">
                           <div
                             className="absolute inset-y-0 left-0 bg-[#2E7D32] transition-all duration-700"
                             style={{
@@ -371,7 +371,7 @@ export default function OrderCard({ order }: { order: Order }) {
                       {/* Label */}
                       <span
                         className={[
-                          "mt-2 text-xs text-center leading-snug px-1",
+                          "mt-2 px-1 text-center text-xs leading-snug",
                           isCompleted || isCurrent
                             ? "font-semibold text-[#0D3B2A] dark:text-white"
                             : "text-[#9CA3AF] dark:text-[#7F8A82]",
@@ -423,7 +423,7 @@ export default function OrderCard({ order }: { order: Order }) {
                       {/* Step label */}
                       <p
                         className={[
-                          "text-sm font-medium leading-snug mt-1 pb-5",
+                          "mt-1 pb-5 text-sm leading-snug font-medium",
                           isCompleted || isCurrent
                             ? "font-semibold text-[#0D3B2A] dark:text-white"
                             : "text-[#9CA3AF] dark:text-[#7F8A82]",
@@ -444,13 +444,13 @@ export default function OrderCard({ order }: { order: Order }) {
               <span className="grid size-8 place-items-center bg-red-100 text-red-700">
                 <CloseIcon />
               </span>
-              <span className="text-sm text-red-700 font-medium">This order was cancelled.</span>
+              <span className="text-sm font-medium text-red-700">This order was cancelled.</span>
             </div>
           )}
 
           {/* ── Order items ── */}
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#5B3E31] dark:text-[#C7CEC8]">
+            <p className="mb-3 text-xs font-semibold tracking-wider text-[#5B3E31] uppercase dark:text-[#C7CEC8]">
               Items
             </p>
             <ul className="space-y-3">
@@ -469,7 +469,7 @@ export default function OrderCard({ order }: { order: Order }) {
                         sizes="40px"
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-[#0D3B2A] dark:text-white">
                         {item.product.name}
                       </p>
@@ -508,7 +508,14 @@ export default function OrderCard({ order }: { order: Order }) {
 
           {/* ── Download Receipt ── */}
           <div className="mt-4 flex flex-col gap-3 border-t border-[#D9D0C0] pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/15">
-            {isSubscription ? (
+            {order.tracking_url ? (
+              <Link
+                href={order.tracking_url.replace(/^https?:\/\/[^/]+/, "")}
+                className="text-sm font-bold text-[#2E7D32] underline decoration-[#2E7D32]/30 underline-offset-4 outline-none hover:decoration-[#2E7D32] focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:text-[#F4C430]"
+              >
+                Track this delivery
+              </Link>
+            ) : isSubscription ? (
               <Link
                 href="/subscriptions/manage"
                 className="text-sm font-bold text-[#2E7D32] underline decoration-[#2E7D32]/30 underline-offset-4 outline-none hover:decoration-[#2E7D32] focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:text-[#F4C430]"
@@ -523,7 +530,7 @@ export default function OrderCard({ order }: { order: Order }) {
                 type="button"
                 onClick={handleDownloadReceipt}
                 disabled={receiptState === "loading"}
-                className="inline-flex items-center gap-2 bg-[#0D3B2A] px-4 py-2.5 text-sm font-semibold text-white outline-none transition-colors hover:bg-[#1a5c40] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex items-center gap-2 bg-[#0D3B2A] px-4 py-2.5 text-sm font-semibold text-white transition-colors outline-none hover:bg-[#1a5c40] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
               >
                 <svg
                   width="16"

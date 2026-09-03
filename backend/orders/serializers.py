@@ -118,6 +118,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     promo_code = serializers.SerializerMethodField()
+    tracking_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -136,11 +137,56 @@ class OrderSerializer(serializers.ModelSerializer):
             'items',
             'created_at',
             'updated_at',
+            'tracking_url',
         ]
         read_only_fields = ['id', 'reference', 'created_at', 'updated_at']
 
     def get_promo_code(self, obj):
         return obj.promo_code.code if obj.promo_code_id else None
+
+    def get_tracking_url(self, obj):
+        if obj.status not in {'out_for_delivery', 'delivered'} or obj.tracking_is_expired:
+            return None
+        from .tracking import tracking_url
+
+        return tracking_url(obj)
+
+
+class PublicOrderTrackingSerializer(serializers.ModelSerializer):
+    driver = serializers.SerializerMethodField()
+    timeline = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'reference',
+            'status',
+            'delivery_address',
+            'dispatched_at',
+            'delivery_confirmed_at',
+            'driver',
+            'timeline',
+            'updated_at',
+        ]
+
+    def get_driver(self, obj):
+        if not obj.driver_name_snapshot:
+            return None
+        return {
+            'name': obj.driver_name_snapshot,
+            'phone_number': obj.driver_phone_snapshot,
+            'vehicle': obj.driver_vehicle_snapshot,
+        }
+
+    def get_timeline(self, obj):
+        events = obj.status_events.order_by('created_at').values('to_status', 'created_at')
+        return [
+            {
+                'status': event['to_status'],
+                'occurred_at': event['created_at'],
+            }
+            for event in events
+        ]
 
 
 class CreateOrderItemSerializer(serializers.Serializer):

@@ -45,6 +45,7 @@ class OrderAdminForm(forms.ModelForm):
             return cleaned
         old = Order.objects.get(pk=self.instance.pk)
         new_status = cleaned.get('status', old.status)
+        driver = cleaned.get('driver')
         if new_status != old.status:
             if not old.can_transition_to(new_status):
                 self.add_error(
@@ -61,6 +62,11 @@ class OrderAdminForm(forms.ModelForm):
                 self.add_error(
                     'status', 'Use the delivery PIN confirmation action to mark an order delivered.'
                 )
+            if new_status == 'out_for_delivery':
+                if driver is None:
+                    self.add_error('driver', 'Assign a driver before dispatching this order.')
+                elif not driver.is_active:
+                    self.add_error('driver', 'Choose an active driver for this delivery.')
 
         new_is_test = cleaned.get('is_test', old.is_test)
         if new_is_test != old.is_test:

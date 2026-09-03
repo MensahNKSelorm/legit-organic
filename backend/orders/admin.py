@@ -10,6 +10,7 @@ from unfold.admin import ModelAdmin, TabularInline
 from .models import (
     Cart,
     CartItem,
+    Driver,
     Order,
     OrderItem,
     OrderNotificationDelivery,
@@ -80,6 +81,19 @@ class OrderItemInline(TabularInline):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(Driver)
+class DriverAdmin(ModelAdmin):
+    list_display = ['name', 'phone_number', 'vehicle_type', 'vehicle_registration', 'is_active']
+    list_filter = ['is_active', 'vehicle_type']
+    search_fields = ['name', 'phone_number', 'vehicle_registration']
+    ordering = ['name']
+    fieldsets = (
+        ('Driver', {'fields': ('name', 'phone_number', 'is_active')}),
+        ('Vehicle', {'fields': ('vehicle_type', 'vehicle_registration')}),
+        ('Operations notes', {'fields': ('internal_notes',)}),
+    )
 
 
 class OrderStatusEventInline(TabularInline):
@@ -174,6 +188,7 @@ class OrderAdmin(ModelAdmin):
     list_display = [
         'reference',
         'get_customer',
+        'driver',
         'status',
         'payment_status',
         'is_test',
@@ -191,6 +206,8 @@ class OrderAdmin(ModelAdmin):
         'guest_phone',
         'guest_email',
         'delivery_address',
+        'driver__name',
+        'driver__phone_number',
     ]
     list_editable = []
     ordering = ['-created_at']
@@ -213,6 +230,10 @@ class OrderAdmin(ModelAdmin):
         'promo_code',
         'delivery_address',
         'order_source',
+        'dispatched_at',
+        'driver_name_snapshot',
+        'driver_phone_snapshot',
+        'driver_vehicle_snapshot',
         'payment_report_sent_at',
         'delivery_report_sent_at',
         'payment_report_attempts',
@@ -240,6 +261,7 @@ class OrderAdmin(ModelAdmin):
                     'discount_amount',
                     'promo_code',
                     'delivery_address',
+                    'driver',
                     'is_test',
                     'test_order_reason',
                     'payment_report_sent_at',
@@ -258,6 +280,10 @@ class OrderAdmin(ModelAdmin):
                     'status',
                     'status_note',
                     'payment_status',
+                    'dispatched_at',
+                    'driver_name_snapshot',
+                    'driver_phone_snapshot',
+                    'driver_vehicle_snapshot',
                     'payment_change_reason',
                     'current_password',
                     'otp_token',
@@ -367,6 +393,11 @@ class OrderAdmin(ModelAdmin):
 
             raise PermissionDenied('You cannot change payment status.')
         if old and obj.status != old.status and obj.status == 'out_for_delivery':
+            if not obj.driver_id:
+                raise ValidationError('Assign an active driver before dispatching this order.')
+            if not obj.driver.is_active:
+                raise ValidationError('The assigned driver is inactive. Choose an active driver.')
+            obj.prepare_dispatch()
             obj.issue_delivery_pin()
         super().save_model(request, obj, form, change)
         if old and obj.status != old.status:

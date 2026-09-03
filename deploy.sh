@@ -45,6 +45,14 @@ install -m 0644 ../deploy/systemd/legitorganic-subscriptions.timer \
 systemctl daemon-reload
 systemctl enable --now legitorganic-subscriptions.timer
 
+# Keep the grounded weekly Journal draft generator installed and active.
+install -m 0644 ../deploy/systemd/legitorganic-weekly-blog.service \
+    /etc/systemd/system/legitorganic-weekly-blog.service
+install -m 0644 ../deploy/systemd/legitorganic-weekly-blog.timer \
+    /etc/systemd/system/legitorganic-weekly-blog.timer
+systemctl daemon-reload
+systemctl enable --now legitorganic-weekly-blog.timer
+
 # Frontend
 cd ../frontend
 npm ci
