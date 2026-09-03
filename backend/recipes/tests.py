@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from rest_framework.test import APIClient
 from products.models import Product
 from decimal import Decimal
@@ -23,7 +24,9 @@ from .models import (
     RecipeStep,
     RecipeIngredientProductMatch,
     RegionalNutritionCandidate,
+    RecipeSource,
 )
+from .importing import RecipeImportError, extract_recipe_json_ld, source_for_url, validate_public_url
 from .services import (
     calculate_nutrition,
     confirm_regional_candidate,
@@ -88,6 +91,44 @@ class DefaultRecipeSearchTests(TestCase):
         titles = {item['title'] for item in response.json()}
         self.assertNotIn('Test Kitchen Draft', titles)
         self.assertIn('Fufu', titles)
+
+
+class RecipeImportSafetyTests(TestCase):
+    @patch('recipes.importing._public_addresses', return_value={'93.184.216.34'})
+    def test_direct_import_requires_an_enabled_approved_source(self, _addresses):
+        RecipeSource.objects.create(
+            name='Reviewed publisher',
+            base_url='https://recipes.example.com',
+            enabled=True,
+            allows_recipe_reuse=True,
+            reuse_reviewed_at=timezone.now(),
+        )
+        source = source_for_url(validate_public_url('https://recipes.example.com/tomato-stew'))
+        self.assertEqual(source.name, 'Reviewed publisher')
+        with self.assertRaises(RecipeImportError):
+            source_for_url(validate_public_url('https://unreviewed.example/tomato-stew'))
+
+    @patch('recipes.importing.socket.getaddrinfo')
+    def test_private_network_urls_are_rejected(self, getaddrinfo):
+        getaddrinfo.return_value = [(None, None, None, None, ('127.0.0.1', 0))]
+        with self.assertRaises(RecipeImportError) as error:
+            validate_public_url('http://localhost/recipe')
+        self.assertEqual(error.exception.code, 'unsafe_url')
+
+    def test_extracts_nested_schema_recipe_before_ai_fallback(self):
+        html = '''
+        <script type="application/ld+json">
+        {"@graph":[{"@type":"Recipe","name":"Tomato stew","recipeYield":"4 servings",
+        "prepTime":"PT15M","cookTime":"PT1H","recipeCuisine":"Ghanaian",
+        "recipeIngredient":["6 tomatoes","2 onions","2 tbsp oil"],
+        "recipeInstructions":[{"@type":"HowToStep","text":"Chop the vegetables."},
+        {"@type":"HowToSection","name":"Cook","itemListElement":[{"@type":"HowToStep","text":"Simmer the stew."}]}]}]}
+        </script>'''
+        result = extract_recipe_json_ld(html)
+        self.assertEqual(result['title'], 'Tomato stew')
+        self.assertEqual(result['servings'], 4)
+        self.assertEqual(result['cook_time'], 60)
+        self.assertEqual(result['steps'][1]['section'], 'Cook')
 
 
 class RecipeShoppingMatchTests(TestCase):

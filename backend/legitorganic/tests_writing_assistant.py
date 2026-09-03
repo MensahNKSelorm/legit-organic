@@ -5,6 +5,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from products.models import Product
+from recipes.models import Recipe, RecipeImport
 from users.models import User
 from .writing_assistant import SYSTEM_PROMPT, _prompt, _response_schema
 
@@ -204,6 +205,76 @@ class WritingAssistantTests(TestCase):
         self.assertEqual(schema['properties']['ingredients']['maxItems'], 15)
         self.assertEqual(schema['properties']['steps']['maxItems'], 12)
 
+    @patch('legitorganic.writing_assistant.research_recipe')
+    @patch('legitorganic.writing_assistant._call_groq')
+    def test_researches_country_specific_recipe_as_private_review_draft(self, groq, research):
+        research.return_value = [
+            {'title': 'Ghana tomato stew', 'url': 'https://example.com/a', 'snippet': 'Facts A'},
+            {'title': 'Tomato stew method', 'url': 'https://example.org/b', 'snippet': 'Facts B'},
+        ]
+        groq.return_value = {
+            'ready': True,
+            'detail': '',
+            'title': 'Ghanaian Tomato Stew',
+            'local_name': '',
+            'description': 'A tomato and onion stew.',
+            'country': 'Nigeria',
+            'region': '',
+            'cuisine': 'Ghanaian',
+            'recipe_category': 'Stew',
+            'meal_type': 'Main',
+            'keywords': ['tomato', 'stew'],
+            'servings': 4,
+            'prep_time': 15,
+            'cook_time': 40,
+            'difficulty': 'easy',
+            'ingredients': [
+                {'name': 'Tomato', 'raw_text': '6 tomatoes', 'quantity': '6', 'unit': 'whole', 'preparation': 'chopped', 'optional': False, 'notes': ''},
+                {'name': 'Onion', 'raw_text': '2 onions', 'quantity': '2', 'unit': 'whole', 'preparation': 'sliced', 'optional': False, 'notes': ''},
+                {'name': 'Oil', 'raw_text': '2 tbsp oil', 'quantity': '2', 'unit': 'tbsp', 'preparation': '', 'optional': False, 'notes': ''},
+            ],
+            'steps': [
+                {'instruction': 'Prepare the vegetables.', 'source_instruction_text': 'Prepare vegetables', 'section': ''},
+                {'instruction': 'Cook until the supplied endpoint.', 'source_instruction_text': 'Cook', 'section': ''},
+            ],
+        }
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            self.url,
+            self.payload(
+                kind='recipe',
+                task='develop',
+                instruction='Tomato stew',
+                country='Ghana',
+                region='',
+                source_url='',
+            ),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['draft']['country'], 'Ghana')
+        self.assertIn('research_sources', response.json()['draft']['provenance'])
+        self.assertEqual(Recipe.objects.count(), 0)
+        record = RecipeImport.objects.get()
+        self.assertEqual(record.status, 'ready')
+        self.assertEqual(record.extraction_method, 'research_ai')
+        research.assert_called_once_with('Tomato stew', 'Ghana', '')
+
+    @patch('legitorganic.writing_assistant.research_recipe')
+    def test_recipe_research_failure_is_recorded_without_creating_recipe(self, research):
+        from recipes.importing import RecipeImportError
+
+        research.side_effect = RecipeImportError('Not enough evidence.', 'thin_research')
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            self.url,
+            self.payload(kind='recipe', task='develop', instruction='Tomato stew', country='Ghana'),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(Recipe.objects.count(), 0)
+        self.assertEqual(RecipeImport.objects.get().status, 'blocked')
+
     @patch('legitorganic.writing_assistant._call_groq')
     def test_incomplete_recipe_brief_returns_actionable_message(self, groq):
         groq.return_value = {
@@ -254,3 +325,6 @@ class WritingAssistantTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'data-writing-assistant')
                 self.assertContains(response, 'What should this say?')
+                if url_name == 'admin:recipes_recipe_add':
+                    self.assertContains(response, 'Research complete recipe')
+                    self.assertContains(response, 'value="Ghana"')

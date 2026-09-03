@@ -142,6 +142,102 @@ class Recipe(models.Model):
         return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
 
 
+class RecipeSource(models.Model):
+    SOURCE_TYPE_CHOICES = [
+        ('publisher', 'Recipe publisher'),
+        ('institution', 'Public institution'),
+        ('partner', 'Partner or contributor'),
+        ('other', 'Other'),
+    ]
+    name = models.CharField(max_length=200)
+    base_url = models.URLField(unique=True)
+    enabled = models.BooleanField(default=False)
+    source_type = models.CharField(
+        max_length=30, choices=SOURCE_TYPE_CHOICES, default='publisher'
+    )
+    terms_url = models.URLField(blank=True)
+    license_name = models.CharField(max_length=200, blank=True)
+    attribution_required = models.BooleanField(default=True)
+    allows_recipe_reuse = models.BooleanField(default=False)
+    allows_images = models.BooleanField(default=False)
+    reuse_reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recipe_sources_reviewed',
+    )
+    reuse_reviewed_at = models.DateTimeField(null=True, blank=True)
+    robots_checked_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class RecipeImport(models.Model):
+    STATUS_CHOICES = [
+        ('started', 'Started'),
+        ('ready', 'Ready for review'),
+        ('blocked', 'Blocked'),
+        ('failed', 'Failed'),
+        ('applied', 'Applied to form'),
+    ]
+    EXTRACTION_CHOICES = [
+        ('research_ai', 'Web research and AI'),
+        ('json_ld', 'Schema.org Recipe JSON-LD'),
+        ('ai_fallback', 'AI extraction from source'),
+    ]
+    requested_idea = models.CharField(max_length=300, blank=True)
+    requested_country = models.CharField(max_length=100, default='Ghana')
+    requested_region = models.CharField(max_length=100, blank=True)
+    requested_url = models.URLField(blank=True)
+    source = models.ForeignKey(
+        RecipeSource, on_delete=models.SET_NULL, null=True, blank=True, related_name='imports'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.SET_NULL, null=True, blank=True, related_name='imports'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='started')
+    extraction_method = models.CharField(max_length=30, choices=EXTRACTION_CHOICES, blank=True)
+    content_hash = models.CharField(max_length=64, blank=True)
+    source_title = models.CharField(max_length=300, blank=True)
+    source_author = models.CharField(max_length=200, blank=True)
+    source_license = models.CharField(max_length=200, blank=True)
+    sources = models.JSONField(default=list, blank=True)
+    draft_payload = models.JSONField(default=dict, blank=True)
+    warnings = models.JSONField(default=list, blank=True)
+    duplicate_recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='duplicate_imports',
+    )
+    error_code = models.CharField(max_length=80, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recipe_imports',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        subject = self.requested_idea or self.requested_url or 'Recipe draft'
+        return f'{subject} · {self.get_status_display()}'
+
+
 class RecipeIngredient(models.Model):
     NUTRITION_MATCH_CHOICES = [
         ('exact', 'Exact'),

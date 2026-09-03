@@ -12,7 +12,9 @@ from .models import (
     Recipe,
     RecipeIngredient,
     RecipeIngredientProductMatch,
+    RecipeImport,
     RecipeNutrition,
+    RecipeSource,
     RecipeStep,
     RecipePairing,
     RegionalNutritionCandidate,
@@ -213,12 +215,37 @@ class RecipeAdmin(ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         old_published = Recipe.objects.get(pk=obj.pk).is_published if change else None
+        import_record = None
+        import_id = request.POST.get('recipe_import_id')
+        if import_id:
+            import_record = RecipeImport.objects.filter(
+                pk=import_id,
+                created_by=request.user,
+                status='ready',
+            ).select_related('source').first()
+        if import_record:
+            obj.source_name = import_record.source.name if import_record.source else 'Reviewed web research'
+            obj.source_url = import_record.requested_url
+            obj.source_author = import_record.source_author
+            obj.source_license = import_record.source_license
+            obj.source_retrieved_at = import_record.completed_at or timezone.now()
+            obj.source_content_hash = import_record.content_hash
+            obj.extraction_method = import_record.extraction_method
+            obj.status = 'needs_review'
+            obj.is_published = False
+            if not obj.created_by_id:
+                obj.created_by = request.user
         if obj.is_published and obj.status not in {'approved', 'ready', 'published'}:
             obj.is_published = False
             self.message_user(
                 request, 'This recipe remains private until it passes review.', level='warning'
             )
         super().save_model(request, obj, form, change)
+        if import_record:
+            import_record.recipe = obj
+            import_record.status = 'applied'
+            import_record.completed_at = timezone.now()
+            import_record.save(update_fields=['recipe', 'status', 'completed_at'])
         if change:
             from security.audit import record_boolean_state_change
 
@@ -230,6 +257,36 @@ class RecipeAdmin(ModelAdmin):
                 new_value=obj.is_published,
                 action='recipe.publication_changed',
             )
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        import_id = request.POST.get('recipe_import_id')
+        if not import_id:
+            return
+        import_record = RecipeImport.objects.filter(
+            pk=import_id,
+            recipe=form.instance,
+            created_by=request.user,
+        ).first()
+        if not import_record:
+            return
+        suggestions = {
+            str(item.get('name', '')).casefold(): item.get('product_id')
+            for item in import_record.draft_payload.get('ingredients', [])
+            if item.get('product_id')
+        }
+        for ingredient in form.instance.ingredients.all():
+            product_id = suggestions.get(ingredient.name.casefold())
+            if product_id:
+                RecipeIngredientProductMatch.objects.update_or_create(
+                    recipe_ingredient=ingredient,
+                    product_id=product_id,
+                    defaults={
+                        'match_type': 'exact',
+                        'confidence': 1,
+                        'manually_verified': False,
+                    },
+                )
 
     @admin.action(description='Normalise and prepare for review')
     def prepare_for_review(self, request, queryset):
@@ -386,6 +443,103 @@ class RecipeAdmin(ModelAdmin):
 class IngredientAliasAdmin(ModelAdmin):
     list_display = ['alias', 'canonical_name', 'lookup_name', 'updated_at']
     search_fields = ['alias', 'canonical_name', 'lookup_name']
+
+
+@admin.register(RecipeSource)
+class RecipeSourceAdmin(ModelAdmin):
+    list_display = [
+        'name',
+        'source_type',
+        'enabled',
+        'allows_recipe_reuse',
+        'allows_images',
+        'robots_checked_at',
+    ]
+    list_filter = ['enabled', 'allows_recipe_reuse', 'allows_images', 'source_type']
+    search_fields = ['name', 'base_url', 'notes']
+    fieldsets = (
+        ('Source', {'fields': ('name', 'base_url', 'source_type', 'enabled')}),
+        (
+            'Reviewed permissions',
+            {
+                'fields': (
+                    'terms_url',
+                    'license_name',
+                    'attribution_required',
+                    'allows_recipe_reuse',
+                    'allows_images',
+                    'notes',
+                    'reuse_reviewed_by',
+                    'reuse_reviewed_at',
+                )
+            },
+        ),
+        ('Checks', {'fields': ('robots_checked_at', 'created_at', 'updated_at')}),
+    )
+    readonly_fields = [
+        'reuse_reviewed_by',
+        'reuse_reviewed_at',
+        'robots_checked_at',
+        'created_at',
+        'updated_at',
+    ]
+
+    def save_model(self, request, obj, form, change):
+        reuse_changed = 'allows_recipe_reuse' in form.changed_data
+        if obj.allows_recipe_reuse and (reuse_changed or not obj.reuse_reviewed_at):
+            obj.reuse_reviewed_by = request.user
+            obj.reuse_reviewed_at = timezone.now()
+        elif not obj.allows_recipe_reuse:
+            obj.reuse_reviewed_by = None
+            obj.reuse_reviewed_at = None
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(RecipeImport)
+class RecipeImportAdmin(ModelAdmin):
+    list_display = [
+        'requested_idea',
+        'requested_country',
+        'status',
+        'extraction_method',
+        'source',
+        'duplicate_recipe',
+        'created_by',
+        'created_at',
+    ]
+    list_filter = ['status', 'extraction_method', 'requested_country', 'source']
+    search_fields = ['requested_idea', 'requested_url', 'source_title', 'error_code']
+    readonly_fields = [
+        'requested_idea',
+        'requested_country',
+        'requested_region',
+        'requested_url',
+        'source',
+        'recipe',
+        'status',
+        'extraction_method',
+        'content_hash',
+        'source_title',
+        'source_author',
+        'source_license',
+        'sources',
+        'draft_payload',
+        'warnings',
+        'duplicate_recipe',
+        'error_code',
+        'created_by',
+        'created_at',
+        'completed_at',
+    ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.has_perm('recipes.view_recipeimport')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class IngredientMeasurementConversionInline(TabularInline):

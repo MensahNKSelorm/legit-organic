@@ -443,7 +443,7 @@ input.bg-primary-600:hover {
     grid-column: 1 / -1;
   }
 }
-/* Groq writing assistant — one restrained editorial workbench, never a chat UI. */
+/* Editorial assistant — one restrained workbench, never a chat UI. */
 .lo-writing-assistant {
   display: grid;
   grid-template-columns: minmax(13rem, .65fr) minmax(18rem, 1fr) minmax(18rem, 1.35fr);
@@ -496,6 +496,7 @@ input.bg-primary-600:hover {
   grid-column: 1 / -1;
 }
 .lo-writing-assistant__work select,
+.lo-writing-assistant__work input,
 .lo-writing-assistant__work textarea {
   grid-column: 1 / -1;
   width: 100%;
@@ -505,6 +506,37 @@ input.bg-primary-600:hover {
   background: transparent !important;
   color: #fff !important;
   box-shadow: none !important;
+}
+.lo-writing-assistant__work input {
+  padding: .55rem 0 !important;
+}
+.lo-writing-assistant__work :is(input, select, textarea):focus-visible,
+.lo-writing-assistant button:focus-visible {
+  outline: 2px solid #f4c430 !important;
+  outline-offset: 3px;
+}
+.lo-recipe-origin {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+.lo-recipe-origin > div {
+  display: grid;
+  gap: .3rem;
+}
+.lo-writing-assistant__work label span,
+.lo-writing-assistant__hint {
+  color: rgba(255,255,255,.52);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.lo-writing-assistant__hint {
+  grid-column: 1 / -1;
+  margin: -.1rem 0 .2rem;
+  font-size: .72rem;
+  line-height: 1.4;
 }
 .lo-writing-assistant__work textarea {
   min-height: 4.25rem;
@@ -572,6 +604,22 @@ input.bg-primary-600:hover {
   margin: .45rem 0 0 1.1rem;
   list-style: revert;
 }
+.lo-writing-assistant [data-writing-preview] details,
+.lo-writing-warnings {
+  margin-top: .85rem;
+  padding-top: .75rem;
+  border-top: 1px solid rgba(255,255,255,.13);
+}
+.lo-writing-assistant [data-writing-preview] summary {
+  color: #f4c430;
+  cursor: pointer;
+  font-weight: 700;
+}
+.lo-writing-assistant [data-writing-preview] a {
+  color: #b9d9c7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .lo-writing-assistant [data-writing-status] {
   margin: .75rem 0 0;
   color: rgba(255,255,255,.52);
@@ -608,5 +656,8 @@ input.bg-primary-600:hover {
   }
   .lo-writing-assistant__result {
     grid-column: auto;
+  }
+  .lo-recipe-origin {
+    grid-template-columns: 1fr;
   }
 }

@@ -307,12 +307,23 @@
       p.textContent = draft.text;
       container.appendChild(p);
     } else if (draft.ingredients && draft.steps) {
+      if (draft.title) {
+        const heading = document.createElement("h2");
+        heading.textContent = draft.title;
+        container.appendChild(heading);
+        if (draft.description) {
+          const description = document.createElement("p");
+          description.textContent = draft.description;
+          container.appendChild(description);
+        }
+      }
       const ingredients = document.createElement("div");
       ingredients.innerHTML = `<strong>Ingredients · ${draft.ingredients.length}</strong>`;
       const ingredientList = document.createElement("ul");
       draft.ingredients.forEach((item) => {
         const li = document.createElement("li");
         li.textContent = [item.quantity, item.unit, item.name].filter(Boolean).join(" ");
+        if (item.product_label) li.textContent += ` · Market suggestion: ${item.product_label}`;
         ingredientList.appendChild(li);
       });
       ingredients.appendChild(ingredientList);
@@ -326,6 +337,38 @@
       });
       steps.appendChild(stepList);
       container.append(ingredients, steps);
+      if (draft.warnings?.length) {
+        const warnings = document.createElement("div");
+        warnings.className = "lo-writing-warnings";
+        const label = document.createElement("strong");
+        label.textContent = "Review before saving";
+        const list = document.createElement("ul");
+        draft.warnings.forEach((warning) => {
+          const item = document.createElement("li");
+          item.textContent = warning;
+          list.appendChild(item);
+        });
+        warnings.append(label, list);
+        container.appendChild(warnings);
+      }
+      if (draft.provenance?.research_sources?.length) {
+        const sources = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = `${draft.provenance.research_sources.length} research sources`;
+        const list = document.createElement("ul");
+        draft.provenance.research_sources.forEach((source) => {
+          const item = document.createElement("li");
+          const link = document.createElement("a");
+          link.href = source.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = source.title || source.url;
+          item.appendChild(link);
+          list.appendChild(item);
+        });
+        sources.append(summary, list);
+        container.appendChild(sources);
+      }
     }
   };
 
@@ -379,18 +422,20 @@
       const index = inlineSlot("ingredients", "name");
       if (index === null) return;
       fillInput(`ingredients-${index}-name`, item.name);
+      fillInput(`ingredients-${index}-raw_text`, item.raw_text);
       fillInput(`ingredients-${index}-quantity`, item.quantity);
       fillInput(`ingredients-${index}-unit`, item.unit);
       fillInput(`ingredients-${index}-preparation`, item.preparation);
       const optional = document.querySelector(`[name="ingredients-${index}-optional"]`);
       if (optional) optional.checked = item.optional === true;
       fillInput(`ingredients-${index}-notes`, item.notes);
-      if (item.product_id) fillInput(`ingredients-${index}-product`, String(item.product_id));
     });
     draft.steps.forEach((item, position) => {
       const index = inlineSlot("steps", "instruction");
       if (index === null) return;
       fillInput(`steps-${index}-step_number`, String(position + 1));
+      fillInput(`steps-${index}-section`, item.section);
+      fillInput(`steps-${index}-source_instruction_text`, item.source_instruction_text);
       const id = `id_steps-${index}-instruction`;
       const html = paragraph(item.instruction);
       const input = field(id);
@@ -412,6 +457,26 @@
     const preview = panel.querySelector("[data-writing-preview]");
     const status = panel.querySelector("[data-writing-status]");
     const apply = panel.querySelector("[data-writing-apply]");
+    const origin = panel.querySelector("[data-recipe-origin]");
+    const country = panel.querySelector("[data-recipe-country]");
+    const region = panel.querySelector("[data-recipe-region]");
+    const source = panel.querySelector("[data-recipe-source]");
+
+    const syncRecipeMode = () => {
+      if (!origin) return;
+      const developing = task.value === "develop";
+      origin.hidden = !developing;
+      panel
+        .querySelector('label[for="lo-recipe-source"]')
+        ?.toggleAttribute("hidden", !developing);
+      if (source) source.hidden = !developing;
+      source?.nextElementSibling?.toggleAttribute("hidden", !developing);
+      instruction.placeholder = developing
+        ? "For example: Tomato stew"
+        : "Give the assistant a short, factual brief.";
+    };
+    task.addEventListener("change", syncRecipeMode);
+    syncRecipeMode();
 
     generate.addEventListener("click", async () => {
       status.textContent = "";
@@ -436,12 +501,16 @@
             task: task.value,
             instruction: instruction.value,
             context: collectContext(kind),
+            country: country?.value || "",
+            region: region?.value || "",
+            source_url: source?.value || "",
           }),
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.detail || "The draft could not be generated.");
         panel._draft = data.draft;
         panel._draftTask = task.value;
+        panel._importId = data.import_id || "";
         renderPreview(preview, data.draft);
         apply.hidden = false;
         status.textContent = "Nothing has been saved.";
@@ -475,8 +544,41 @@
       } else if (draftTask === "description") {
         applied = setField("id_description", paragraph(draft.text), true);
       } else {
+        if (draftTask === "develop") {
+          setField("id_title", draft.title);
+          setField("id_local_name", draft.local_name);
+          setField("id_description", paragraph(draft.description), true);
+          fillInput("country", draft.country);
+          fillInput("region", draft.region);
+          fillInput("cuisine", draft.cuisine);
+          fillInput("recipe_category", draft.recipe_category);
+          fillInput("meal_type", draft.meal_type);
+          fillInput("keywords", JSON.stringify(draft.keywords || []));
+          fillInput("servings", String(draft.servings || 1));
+          fillInput("prep_time", String(draft.prep_time || 0));
+          fillInput("cook_time", String(draft.cook_time || 0));
+          fillInput("difficulty", draft.difficulty);
+          const provenance = draft.provenance || {};
+          fillInput("source_name", provenance.source_name);
+          fillInput("source_url", provenance.source_url);
+          fillInput("source_author", provenance.source_author);
+          fillInput("source_license", provenance.source_license);
+          fillInput("source_content_hash", provenance.source_content_hash);
+          let importInput = document.querySelector('[name="recipe_import_id"]');
+          if (!importInput) {
+            importInput = document.createElement("input");
+            importInput.type = "hidden";
+            importInput.name = "recipe_import_id";
+            document.querySelector("#recipe_form")?.appendChild(importInput);
+          }
+          if (importInput) importInput.value = panel._importId || "";
+        }
         applied = applyRecipeMethod(draft);
-        if (applied) fillInput("extraction_method", "ai_assisted");
+        if (applied)
+          fillInput(
+            "extraction_method",
+            draft.provenance?.extraction_method || "ai_assisted"
+          );
       }
       status.textContent = applied
         ? "Applied to the form. Review it, then save when ready."

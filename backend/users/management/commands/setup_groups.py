@@ -36,6 +36,8 @@ class Command(BaseCommand):
         content_perms += list(get_perms('recipes', 'recipeingredient', ['add', 'change', 'view']))
         content_perms += list(get_perms('recipes', 'recipestep', ['add', 'change', 'view']))
         content_perms += list(get_perms('recipes', 'recipepairing', ['add', 'change', 'view']))
+        content_perms += list(get_perms('recipes', 'recipesource', ['add', 'change', 'view']))
+        content_perms += list(get_perms('recipes', 'recipeimport', ['view']))
 
         content_team.permissions.set(content_perms)
         self.stdout.write(self.style.SUCCESS(f'✓ Content Team — {len(content_perms)} permissions'))
@@ -138,7 +140,14 @@ class Command(BaseCommand):
         business_models = {
             'products': ['product', 'productimage', 'category', 'region', 'badge'],
             'blog': ['blogpost', 'blogcategory'],
-            'recipes': ['recipe', 'recipeingredient', 'recipestep', 'recipepairing'],
+            'recipes': [
+                'recipe',
+                'recipeingredient',
+                'recipestep',
+                'recipepairing',
+                'recipesource',
+                'recipeimport',
+            ],
             'orders': ['order', 'orderitem', 'promocode', 'driver'],
             'sales': ['salesrep', 'referredcustomer'],
             'users': [

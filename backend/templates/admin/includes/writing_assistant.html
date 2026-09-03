@@ -4,7 +4,7 @@
     <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
     <div>
       <p>Writing assistant</p>
-      <span>Prepare a review-only draft from the facts you provide.</span>
+      <span>{% if opts.model_name == 'recipe' %}Research or import a private recipe draft for review.{% else %}Prepare a review-only draft from the facts you provide.{% endif %}</span>
     </div>
   </div>
   <div class="lo-writing-assistant__work">
@@ -20,10 +20,33 @@
         <option value="outline">Article outline</option>
         <option value="draft">Complete first draft</option>
       {% elif opts.model_name == 'recipe' %}
+        <option value="develop">Research complete recipe</option>
         <option value="description">Dish description</option>
         <option value="method">Ingredients &amp; steps</option>
       {% endif %}
     </select>
+    {% if opts.model_name == 'recipe' %}
+      <div class="lo-recipe-origin" data-recipe-origin>
+        <div>
+          <label for="lo-recipe-country">Country</label>
+          <input id="lo-recipe-country" data-recipe-country value="Ghana" maxlength="100" />
+        </div>
+        <div>
+          <label for="lo-recipe-region">Region <span>(optional)</span></label>
+          <input id="lo-recipe-region" data-recipe-region maxlength="100" placeholder="Greater Accra" />
+        </div>
+      </div>
+      <label for="lo-recipe-source">Source URL <span>(optional)</span></label>
+      <input
+        id="lo-recipe-source"
+        data-recipe-source
+        type="url"
+        inputmode="url"
+        autocomplete="url"
+        placeholder="https://approved-source.example/recipe"
+      />
+      <p class="lo-writing-assistant__hint">Leave the URL empty to research the idea online. Direct imports only use sources approved under Recipe sources.</p>
+    {% endif %}
     <label for="lo-writing-instruction">What should this say?</label>
     {% if opts.model_name == 'blogpost' %}
       <textarea
@@ -39,7 +62,7 @@
         data-writing-instruction
         rows="2"
         maxlength="800"
-        placeholder="Give the assistant a short, factual brief."
+        placeholder="{% if opts.model_name == 'recipe' %}For example: Tomato stew{% else %}Give the assistant a short, factual brief.{% endif %}"
       ></textarea>
     {% endif %}
     <button type="button" data-writing-generate>Generate draft</button>

@@ -4,7 +4,7 @@
 
 Phase 1 provides reviewed recipes, ingredient normalisation, nutrition profiles, USDA candidate lookup, ingredient-specific weight conversions, estimated nutrition, Market matching, cart actions, and public recipe pages.
 
-Web crawling, JSON-LD extraction, AI extraction, robots handling, SSRF controls, and import-source review belong to Phase 2. The recipe model already carries source and extraction metadata so Phase 2 will not require a domain rewrite.
+The review-first Phase 2 importer is now available to staff. It supports grounded idea research and direct imports from explicitly approved sources. It does not crawl sites or discover URLs automatically.
 
 ## Publication workflow
 
@@ -33,6 +33,27 @@ calculate nutrition or verify a Market match. Staff must review the form and sav
 The assistant may suggest an exact Market product only when its ingredient name matches an
 available catalogue item. It never substitutes a different food. Nutrition remains entirely
 outside the language model and follows the verified source priority below.
+
+### Research or import a complete recipe
+
+On a new recipe, choose **Research complete recipe** and enter a short idea. Country defaults
+to Ghana; staff can choose another country and optionally name a region. With no URL, the
+server gathers web-search evidence and asks the model to structure only supported facts. The
+evidence links remain attached to the import record for review.
+
+When a URL is supplied, its domain must first exist under **Recipe sources**, be enabled, and
+be marked as permitting recipe reuse after staff review its terms. Retrieval observes robots.txt,
+uses a conservative size and timeout limit, pins the validated public IP address, blocks private
+networks and non-standard ports, and revalidates every redirect. Schema.org Recipe JSON-LD is
+used first. AI fallback receives only the useful page text when the structured record is absent.
+
+Imports record their method, source, retrieval hash, evidence, warnings and staff member. Exact
+source, content and probable title duplicates are flagged before the draft is applied. Applying
+the draft fills the unsaved form and links its import audit record when staff save. The saved
+recipe is forced back to `needs_review` and remains private until the separate approval and
+publication actions are used.
+
+Source photographs are never imported. Nutrition is never accepted from the source page or AI.
 
 ## Nutrition architecture
 
