@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.urls import reverse
 from django.utils.html import format_html
@@ -115,6 +116,7 @@ class RecipeAdmin(ModelAdmin):
         'nutrition_calculated_at',
         'ingredients_hash',
         'permanent_delete_control',
+        'nutrition_summary',
     ]
     inlines = [RecipeIngredientInline, RecipeStepInline, RecipePairingInline]
     fieldsets = (
@@ -150,10 +152,11 @@ class RecipeAdmin(ModelAdmin):
             },
         ),
         (
-            'Nutrition note',
+            'Nutrition review',
             {
                 'fields': (
                     'nutrition_status',
+                    'nutrition_summary',
                     'nutrition_calculated_at',
                     'ingredients_hash',
                     'nutritional_score',
@@ -202,6 +205,28 @@ class RecipeAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in {'created_by', 'reviewed_by'}:
+            kwargs['queryset'] = get_user_model().objects.filter(is_staff=True).order_by(
+                'first_name', 'last_name', 'email'
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    @admin.display(description='Calculated nutrition')
+    def nutrition_summary(self, obj):
+        if not obj or not obj.pk:
+            return 'Save the recipe first. Nutrition is calculated from verified ingredient profiles.'
+        try:
+            nutrition = obj.nutrition
+        except RecipeNutrition.DoesNotExist:
+            unresolved = obj.ingredients.filter(nutrition_profile__isnull=True).count()
+            if unresolved:
+                return f'{unresolved} ingredient(s) still need a verified nutrition match.'
+            return 'Nutrition will calculate after the recipe is saved.'
+        completeness = 'Complete' if nutrition.is_complete else 'Partial'
+        calories = nutrition.calories
+        return f'{completeness}. {calories} kcal per serving.' if calories is not None else completeness
 
     @admin.display(description='Exceptional deletion')
     def permanent_delete_control(self, obj):
@@ -260,6 +285,18 @@ class RecipeAdmin(ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
+        normalize_recipe(form.instance)
+        review_warnings(form.instance)
+        ingredients = form.instance.ingredients.all()
+        if ingredients.exists() and not ingredients.filter(nutrition_profile__isnull=True).exists():
+            try:
+                calculate_nutrition(form.instance, force=True)
+            except (NutritionConfigurationError, NutritionProviderError):
+                form.instance.nutrition_status = 'failed'
+                form.instance.save(update_fields=['nutrition_status', 'updated_at'])
+        elif ingredients.exists():
+            form.instance.nutrition_status = 'pending'
+            form.instance.save(update_fields=['nutrition_status', 'updated_at'])
         import_id = request.POST.get('recipe_import_id')
         if not import_id:
             return

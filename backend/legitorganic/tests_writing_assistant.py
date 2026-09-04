@@ -204,10 +204,16 @@ class WritingAssistantTests(TestCase):
         self.assertIn('ready', schema['required'])
         self.assertEqual(schema['properties']['ingredients']['maxItems'], 15)
         self.assertEqual(schema['properties']['steps']['maxItems'], 12)
+        develop_schema = _response_schema('recipe', 'develop')['json_schema']['schema']
+        self.assertIn('pairings', develop_schema['required'])
+        self.assertEqual(develop_schema['properties']['pairings']['maxItems'], 4)
 
     @patch('legitorganic.writing_assistant.research_recipe')
     @patch('legitorganic.writing_assistant._call_groq')
     def test_researches_country_specific_recipe_as_private_review_draft(self, groq, research):
+        pairing = Recipe.objects.create(
+            title='Boiled Yam', status='published', is_published=True
+        )
         research.return_value = [
             {'title': 'Ghana tomato stew', 'url': 'https://example.com/a', 'snippet': 'Facts A'},
             {'title': 'Tomato stew method', 'url': 'https://example.org/b', 'snippet': 'Facts B'},
@@ -237,6 +243,10 @@ class WritingAssistantTests(TestCase):
                 {'instruction': 'Prepare the vegetables.', 'source_instruction_text': 'Prepare vegetables', 'section': ''},
                 {'instruction': 'Cook until the supplied endpoint.', 'source_instruction_text': 'Cook', 'section': ''},
             ],
+            'pairings': [
+                {'recipe_title': 'Boiled Yam', 'label': 'Serve with'},
+                {'recipe_title': 'Invented Dish', 'label': 'Serve with'},
+            ],
         }
         self.client.force_login(self.owner)
         response = self.client.post(
@@ -253,8 +263,12 @@ class WritingAssistantTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['draft']['country'], 'Ghana')
+        self.assertEqual(
+            response.json()['draft']['pairings'],
+            [{'recipe_id': pairing.pk, 'recipe_title': 'Boiled Yam', 'label': 'Serve with'}],
+        )
         self.assertIn('research_sources', response.json()['draft']['provenance'])
-        self.assertEqual(Recipe.objects.count(), 0)
+        self.assertEqual(list(Recipe.objects.values_list('title', flat=True)), ['Boiled Yam'])
         record = RecipeImport.objects.get()
         self.assertEqual(record.status, 'ready')
         self.assertEqual(record.extraction_method, 'research_ai')

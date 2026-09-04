@@ -24,7 +24,7 @@ from recipes.importing import (
     find_duplicate,
     research_recipe,
 )
-from recipes.models import RecipeImport
+from recipes.models import Recipe, RecipeImport
 
 
 logger = logging.getLogger(__name__)
@@ -115,6 +115,15 @@ def _response_schema(kind, task):
             'required': ['instruction', 'source_instruction_text', 'section'],
             'additionalProperties': False,
         }
+        pairing = {
+            'type': 'object',
+            'properties': {
+                'recipe_title': {'type': 'string'},
+                'label': {'type': 'string'},
+            },
+            'required': ['recipe_title', 'label'],
+            'additionalProperties': False,
+        }
         properties = {
             'ready': {'type': 'boolean'},
             'detail': {'type': 'string'},
@@ -148,6 +157,11 @@ def _response_schema(kind, task):
                     'prep_time': {'type': 'integer', 'minimum': 0, 'maximum': 1440},
                     'cook_time': {'type': 'integer', 'minimum': 0, 'maximum': 1440},
                     'difficulty': {'type': 'string', 'enum': ['easy', 'medium', 'hard']},
+                    'pairings': {
+                        'type': 'array',
+                        'maxItems': 4,
+                        'items': pairing,
+                    },
                 }
             )
             required.extend(
@@ -165,6 +179,7 @@ def _response_schema(kind, task):
                     'prep_time',
                     'cook_time',
                     'difficulty',
+                    'pairings',
                 ]
             )
         schema = {
@@ -285,11 +300,12 @@ def _prompt(kind, task, instruction, context, products):
         ('recipe', 'develop'): (
             'Return a complete recipe draft using the requested country and region. Include ready, detail, title, '
             'local_name, description, country, region, cuisine, recipe_category, meal_type, keywords, servings, '
-            'prep_time, cook_time, difficulty, ingredients and steps. Each ingredient must include name, raw_text, '
+            'prep_time, cook_time, difficulty, ingredients, steps and pairings. Each ingredient must include name, raw_text, '
             'quantity, unit, preparation, optional and notes. Use 3-15 ingredients and 2-12 steps. Use only facts '
             'supported by the supplied web research or extracted source data. Reconcile minor differences conservatively; '
             'do not invent missing quantities, timings, cultural claims, substitutions or nutrition. If the evidence is '
             'not sufficient for a usable recipe, return ready=false with a short explanation and empty ingredients and steps. '
+            'Only suggest pairings from the available Legit Organic recipe titles supplied in the current form. '
             'Each step must include instruction, source_instruction_text and section. Preserve source wording only in '
             'source_instruction_text; instruction must be a concise original presentation of the supported cooking fact.'
         ),
@@ -360,7 +376,7 @@ def _call_groq(prompt, response_schema=None):
     return json.loads(response.json()['choices'][0]['message']['content'])
 
 
-def _validate(kind, task, draft, product_lookup):
+def _validate(kind, task, draft, product_lookup, pairing_lookup=None):
     if not isinstance(draft, dict):
         raise ValueError('invalid_draft')
     if task == 'titles':
@@ -447,6 +463,20 @@ def _validate(kind, task, draft, product_lookup):
                         if draft.get('difficulty') in {'easy', 'medium', 'hard'}
                         else 'easy'
                     ),
+                    'pairings': [
+                        {
+                            'recipe_id': match['id'],
+                            'recipe_title': match['title'],
+                            'label': _plain(item.get('label'), 100) or 'Usually served with',
+                        }
+                        for item in draft.get('pairings', [])[:4]
+                        if isinstance(item, dict)
+                        and (
+                            match := (pairing_lookup or {}).get(
+                                _plain(item.get('recipe_title'), 300).casefold()
+                            )
+                        )
+                    ],
                 }
             )
         return result
@@ -496,6 +526,12 @@ def writing_assistant(request):
         Product.objects.filter(is_available=True).order_by('name').values('id', 'name')[:150]
     )
     lookup = {product['name'].casefold(): product for product in products}
+    pairing_recipes = list(
+        Recipe.objects.filter(is_published=True)
+        .order_by('title')
+        .values('id', 'title')[:150]
+    )
+    pairing_lookup = {recipe['title'].casefold(): recipe for recipe in pairing_recipes}
     context = _context(payload)
     import_record = None
     provenance = {}
@@ -519,6 +555,9 @@ def writing_assistant(request):
             created_by=request.user,
         )
         context.update({'requested_country': country, 'requested_region': region})
+        context['available_recipe_pairings'] = json.dumps(
+            [recipe['title'] for recipe in pairing_recipes], ensure_ascii=False
+        )
         try:
             if source_url:
                 fetched = fetch_approved_recipe(source_url)
@@ -565,7 +604,13 @@ def writing_assistant(request):
 
     prompt = _prompt(kind, task, instruction, context, [p['name'] for p in products])
     try:
-        draft = _validate(kind, task, _call_groq(prompt, _response_schema(kind, task)), lookup)
+        draft = _validate(
+            kind,
+            task,
+            _call_groq(prompt, _response_schema(kind, task)),
+            lookup,
+            pairing_lookup,
+        )
     except RuntimeError:
         if import_record:
             import_record.status = 'failed'

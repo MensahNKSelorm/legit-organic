@@ -4,6 +4,8 @@ from pathlib import Path
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.core.exceptions import ValidationError
+from django.contrib import admin
+from django.test import RequestFactory
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -26,6 +28,8 @@ from .models import (
     RegionalNutritionCandidate,
     RecipeSource,
 )
+from users.models import User
+from .admin import RecipeAdmin
 from .importing import RecipeImportError, extract_recipe_json_ld, source_for_url, validate_public_url
 from .services import (
     calculate_nutrition,
@@ -36,6 +40,22 @@ from .services import (
     search_usda_candidates,
 )
 from .wafct import DATA_SHEET, iter_wafct_rows
+
+
+class RecipeAdminStaffFieldsTests(TestCase):
+    def test_creator_and_reviewer_choices_exclude_customers(self):
+        staff = User.objects.create_user(email='editor@example.com', is_staff=True)
+        customer = User.objects.create_user(email='customer@example.com')
+        request = RequestFactory().get('/admin/recipes/recipe/add/')
+        request.user = staff
+        model_admin = RecipeAdmin(Recipe, admin.site)
+
+        for field_name in ('created_by', 'reviewed_by'):
+            formfield = model_admin.formfield_for_foreignkey(
+                Recipe._meta.get_field(field_name), request
+            )
+            self.assertIn(staff, formfield.queryset)
+            self.assertNotIn(customer, formfield.queryset)
 
 
 class DefaultRecipeSearchTests(TestCase):

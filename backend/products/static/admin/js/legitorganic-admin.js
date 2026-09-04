@@ -372,7 +372,19 @@
     }
   };
 
-  const inlineSlot = (prefix, fieldName) => {
+  const waitForInline = (prefix, expectedTotal) =>
+    new Promise((resolve) => {
+      let attempts = 0;
+      const check = () => {
+        const total = Number(field(`id_${prefix}-TOTAL_FORMS`)?.value || 0);
+        if (total >= expectedTotal || attempts >= 20) return resolve(total);
+        attempts += 1;
+        window.setTimeout(check, 25);
+      };
+      check();
+    });
+
+  const inlineSlot = async (prefix, fieldName) => {
     const total = field(`id_${prefix}-TOTAL_FORMS`);
     if (!total) return null;
     for (let index = 0; index < Number(total.value); index += 1) {
@@ -382,8 +394,10 @@
     }
     const add = document.querySelector(`#${prefix}-group .add-row a`);
     if (!add) return null;
+    const previousTotal = Number(total.value);
     add.click();
-    return Number(total.value) - 1;
+    const nextTotal = await waitForInline(prefix, previousTotal + 1);
+    return nextTotal > previousTotal ? nextTotal - 1 : null;
   };
 
   const fillInput = (name, nextValue) => {
@@ -394,13 +408,19 @@
     input.dispatchEvent(new Event("change", { bubbles: true }));
   };
 
-  const applyRecipeMethod = (draft) => {
-    const existing = ["ingredients", "steps"].some((prefix) =>
+  const applyRecipeMethod = async (draft) => {
+    const existing = ["ingredients", "steps", "pairings"].some((prefix) =>
       Array.from(document.querySelectorAll(`[name^="${prefix}-"][name$="-id"]`)).some(
         (input) => {
           const rowPrefix = input.name.replace(/-id$/, "");
           const content = document.querySelector(
-            `[name="${rowPrefix}-${prefix === "ingredients" ? "name" : "instruction"}"]`
+            `[name="${rowPrefix}-${
+              prefix === "ingredients"
+                ? "name"
+                : prefix === "steps"
+                  ? "instruction"
+                  : "suggested_recipe"
+            }"]`
           );
           return content && value(content.id).replace(/<[^>]*>/g, "").trim();
         }
@@ -408,19 +428,19 @@
     );
     if (
       existing &&
-      !window.confirm("Replace the existing ingredients and instructions with this draft?")
+      !window.confirm("Replace the existing ingredients, instructions and pairings with this draft?")
     )
       return false;
     if (existing) {
-      ["ingredients", "steps"].forEach((prefix) => {
+      ["ingredients", "steps", "pairings"].forEach((prefix) => {
         document.querySelectorAll(`[name^="${prefix}-"][name$="-DELETE"]`).forEach((input) => {
           input.checked = true;
         });
       });
     }
-    draft.ingredients.forEach((item) => {
-      const index = inlineSlot("ingredients", "name");
-      if (index === null) return;
+    for (const item of draft.ingredients) {
+      const index = await inlineSlot("ingredients", "name");
+      if (index === null) return false;
       fillInput(`ingredients-${index}-name`, item.name);
       fillInput(`ingredients-${index}-raw_text`, item.raw_text);
       fillInput(`ingredients-${index}-quantity`, item.quantity);
@@ -429,10 +449,10 @@
       const optional = document.querySelector(`[name="ingredients-${index}-optional"]`);
       if (optional) optional.checked = item.optional === true;
       fillInput(`ingredients-${index}-notes`, item.notes);
-    });
-    draft.steps.forEach((item, position) => {
-      const index = inlineSlot("steps", "instruction");
-      if (index === null) return;
+    }
+    for (const [position, item] of draft.steps.entries()) {
+      const index = await inlineSlot("steps", "instruction");
+      if (index === null) return false;
       fillInput(`steps-${index}-step_number`, String(position + 1));
       fillInput(`steps-${index}-section`, item.section);
       fillInput(`steps-${index}-source_instruction_text`, item.source_instruction_text);
@@ -441,7 +461,14 @@
       const input = field(id);
       if (input) input.value = html;
       if (window.editors && window.editors[id]) window.editors[id].setData(html);
-    });
+    }
+    for (const [position, item] of (draft.pairings || []).entries()) {
+      const index = await inlineSlot("pairings", "suggested_recipe");
+      if (index === null) return false;
+      fillInput(`pairings-${index}-suggested_recipe`, String(item.recipe_id));
+      fillInput(`pairings-${index}-label`, item.label);
+      fillInput(`pairings-${index}-order`, String(position));
+    }
     return true;
   };
 
@@ -523,7 +550,7 @@
       }
     });
 
-    apply.addEventListener("click", () => {
+    apply.addEventListener("click", async () => {
       const draft = panel._draft;
       if (!draft) return;
       const draftTask = panel._draftTask;
@@ -573,7 +600,7 @@
           }
           if (importInput) importInput.value = panel._importId || "";
         }
-        applied = applyRecipeMethod(draft);
+        applied = await applyRecipeMethod(draft);
         if (applied)
           fillInput(
             "extraction_method",
@@ -581,7 +608,7 @@
           );
       }
       status.textContent = applied
-        ? "Applied to the form. Review it, then save when ready."
+        ? "Applied to the form. Review it, then save. Nutrition calculates from verified ingredient matches."
         : "The existing field was left unchanged.";
     });
   });
