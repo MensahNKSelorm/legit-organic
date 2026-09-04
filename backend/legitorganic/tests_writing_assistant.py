@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from pathlib import Path
 
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
@@ -342,3 +343,12 @@ class WritingAssistantTests(TestCase):
                 if url_name == 'admin:recipes_recipe_add':
                     self.assertContains(response, 'Research complete recipe')
                     self.assertContains(response, 'value="Ghana"')
+
+    def test_recipe_form_script_targets_unfold_inline_add_link(self):
+        script_path = (
+            Path(__file__).resolve().parents[1]
+            / 'products/static/admin/js/legitorganic-admin.js'
+        )
+        script = script_path.read_text()
+        self.assertIn('`#${prefix}-group a.add-row`', script)
+        self.assertNotIn('`#${prefix}-group .add-row a`', script)

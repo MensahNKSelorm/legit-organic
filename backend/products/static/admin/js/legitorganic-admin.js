@@ -392,7 +392,7 @@
       const deleted = document.querySelector(`[name="${prefix}-${index}-DELETE"]`)?.checked;
       if (input && !deleted && !input.value.trim()) return index;
     }
-    const add = document.querySelector(`#${prefix}-group .add-row a`);
+    const add = document.querySelector(`#${prefix}-group a.add-row`);
     if (!add) return null;
     const previousTotal = Number(total.value);
     add.click();

@@ -184,10 +184,10 @@ UNFOLD = {
     "SITE_SYMBOL": "eco",
     "DASHBOARD_CALLBACK": "legitorganic.dashboard.dashboard_callback",
     "STYLES": [
-        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260904-2',
+        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260904-3',
     ],
     "SCRIPTS": [
-        lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260904-2',
+        lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260904-3',
     ],
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
