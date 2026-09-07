@@ -1,9 +1,10 @@
 {% extends "unfold/layouts/base_simple.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block extrahead %}
 {{ block.super }}
 <style>
+    /* Hallmark · genre: modern-minimal · macrostructure: Workbench · tone: calm-operations · anchor hue: forest */
     .lo-dashboard {
       --forest: #0d3b2a;
       --leaf: #82c68a;
@@ -26,20 +27,20 @@
     .lo-hero {
       display: grid;
       grid-template-columns: minmax(0,1.45fr) minmax(18rem,.55fr);
-      min-height: 12rem;
+      min-height: 8.5rem;
       background: var(--forest);
       color: white;
     }
     .lo-hero-main {
-      padding: 1.75rem 2rem;
+      padding: 1.25rem 1.5rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
     .lo-hero h1 {
       max-width: 50rem;
-      margin-top: .65rem;
-      font-size: clamp(2rem,3vw,3.4rem);
+      margin-top: .35rem;
+      font-size: clamp(1.55rem,2.3vw,2.35rem);
       line-height: 1;
       letter-spacing: -.035em;
     }
@@ -55,7 +56,7 @@
       text-transform: uppercase;
     }
     .lo-owner-card {
-      padding: 1.5rem 1.75rem;
+      padding: 1.1rem 1.25rem;
       background: var(--gold);
       color: var(--forest);
       display: flex;
@@ -207,18 +208,27 @@
     }
     .lo-attention {
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(10rem,1fr));
+      grid-template-columns: repeat(auto-fit,minmax(15rem,1fr));
       border-top: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-left: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
     }
     .lo-attention a {
-      padding: 1.2rem 1rem;
+      min-height: 8.25rem;
+      padding: 1rem;
       border-right: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
       border-bottom: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
       color: var(--ink);
       text-decoration: none;
+      transition: background-color .16s ease,color .16s ease;
     }
-    .lo-attention a:last-child {
-      border-right: 0;
+    .lo-attention a:hover {
+      background: color-mix(in srgb,var(--gold) 12%,transparent);
+    }
+    .lo-attention a[data-priority="critical"] {
+      box-shadow: inset 3px 0 #ef6b63;
+    }
+    .lo-attention a[data-priority="high"] {
+      box-shadow: inset 3px 0 var(--gold);
     }
     .lo-attention strong {
       display: block;
@@ -233,6 +243,50 @@
       margin-top: .55rem;
       color: var(--muted);
       font-size: .75rem;
+    }
+    .lo-attention small {
+      display: block;
+      margin-top: .4rem;
+      color: color-mix(in srgb,var(--muted) 82%,transparent);
+      font-size: .68rem;
+      line-height: 1.45;
+    }
+    .lo-priority {
+      display: inline-block;
+      margin-bottom: .8rem;
+      color: var(--gold);
+      font-size: .62rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .lo-delta {
+      display: block;
+      margin-top: .55rem;
+      color: rgba(255,255,255,.72);
+      font-size: .68rem;
+      font-weight: 600;
+    }
+    .lo-empty-work {
+      border: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      padding: 1.25rem;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    .lo-sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .lo-dashboard a:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
     }
     .lo-main-grid {
       display: grid;
@@ -322,14 +376,8 @@
       .lo-hero,.lo-main-grid,.lo-analytics {
         grid-template-columns: 1fr;
       }
-      .lo-attention {
-        grid-template-columns: repeat(2,1fr);
-      }
-      .lo-attention a:last-child {
-        grid-column: span 2;
-      }
       .lo-owner-card {
-        min-height: 11rem;
+        min-height: 7rem;
       }
       .lo-dashboard {
         padding: .75rem;
@@ -347,9 +395,6 @@
       }
       .lo-snapshot-item strong {
         white-space: normal;
-      }
-      .lo-attention a:last-child {
-        grid-column: auto;
       }
       .lo-hero-main {
         padding: 1.5rem;
@@ -378,24 +423,48 @@
     </div>
   </header>
 
+  <section class="lo-section" aria-labelledby="attention-heading">
+    <div class="lo-section-head">
+      <div>
+        <h2 class="lo-display" id="attention-heading">Today’s work</h2>
+        <p>Only queues you can act on are shown, ordered by urgency.</p>
+      </div>
+      {% if attention_total %}<span class="lo-kicker">{{ attention_total }} open</span>{% else %}<span class="lo-kicker">Clear</span>{% endif %}
+    </div>
+    {% if attention_items %}
+    <div class="lo-attention">
+      {% for item in attention_items %}
+      <a href="{{ item.href }}" data-priority="{{ item.priority }}">
+        <span class="lo-priority">{{ item.priority }}</span>
+        <strong>{{ item.count }}</strong>
+        <span>{{ item.label }}</span>
+        <small>{{ item.detail }}</small>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="lo-empty-work">No open work is waiting in your permitted queues.</p>
+    {% endif %}
+  </section>
+
   {% if can_see_finance or dashboard_role == 'owner' %}
   <section class="lo-section">
     <div class="lo-section-head"><h2 class="lo-display">Business overview</h2><span class="lo-kicker">Live view</span></div>
     <div class="lo-snapshot">
-      <div class="lo-snapshot-item"><span>Revenue · month</span><strong>{{ kpi.this_month_revenue }}</strong></div>
-      <div class="lo-snapshot-item"><span>Orders · month</span><strong>{{ kpi.orders_this_month }}</strong></div>
+      <div class="lo-snapshot-item"><span>Revenue · month</span><strong>{{ kpi.this_month_revenue }}</strong><small class="lo-delta">{{ kpi.revenue_change|stringformat:"+.1f" }}% vs last month</small></div>
+      <div class="lo-snapshot-item"><span>Orders · month</span><strong>{{ kpi.orders_this_month }}</strong><small class="lo-delta">{{ kpi.orders_change|stringformat:"+.1f" }}% vs last month</small></div>
       <div class="lo-snapshot-item"><span>Average order</span><strong>{{ kpi.avg_order_value }}</strong></div>
       <div class="lo-snapshot-item"><span>Payments won</span><strong>{{ analytics.payment_success_rate }}%</strong></div>
       <div class="lo-snapshot-item"><span>Repeat customers</span><strong>{{ analytics.repeat_customer_rate }}%</strong></div>
     </div>
     <div class="lo-analytics" style="margin-top:1.25rem">
-      <div class="lo-chart lo-chart-featured"><div class="lo-chart-head"><h3>Sales movement</h3><span>30 days</span></div><div class="lo-chart-wrap"><canvas id="revenueChart"></canvas></div></div>
-      <div class="lo-chart"><div class="lo-chart-head"><h3>Order status</h3><span>Now</span></div><div class="lo-chart-wrap">{% if has_order_status_data %}<canvas id="statusChart"></canvas>{% else %}<div class="lo-chart-empty"><span>No orders to sort yet.</span></div>{% endif %}</div></div>
+      <div class="lo-chart lo-chart-featured"><div class="lo-chart-head"><h3>Sales movement</h3><span>30 days · through today</span></div><div class="lo-chart-wrap"><canvas id="revenueChart" role="img" aria-label="Revenue and order count for each of the last 30 days"></canvas></div></div>
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Order status</h3><span>Now</span></div><div class="lo-chart-wrap">{% if has_order_status_data %}<canvas id="statusChart" role="img" aria-label="Current orders grouped by fulfilment status"></canvas>{% else %}<div class="lo-chart-empty"><span>No orders to sort yet.</span></div>{% endif %}</div></div>
     </div>
     <div class="lo-analytics-secondary">
-      <div class="lo-chart"><div class="lo-chart-head"><h3>Best sellers</h3><span>Units</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_product_sales_data %}<canvas id="productsChart"></canvas>{% else %}<div class="lo-chart-empty"><span>Product rankings begin with the first order.</span></div>{% endif %}</div></div>
-      <div class="lo-chart"><div class="lo-chart-head"><h3>Customer growth</h3><span>6 months</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_customer_growth_data %}<canvas id="customersChart"></canvas>{% else %}<div class="lo-chart-empty"><span>New customers will appear here.</span></div>{% endif %}</div></div>
-      <div class="lo-chart"><div class="lo-chart-head"><h3>Order channels</h3><span>{{ analytics.promo_orders }} promo orders</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_channel_data %}<canvas id="channelChart"></canvas>{% else %}<div class="lo-chart-empty"><span>Channel share begins with the first order.</span></div>{% endif %}</div></div>
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Best sellers</h3><span>Units</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_product_sales_data %}<canvas id="productsChart" role="img" aria-label="Seven best-selling products ranked by units sold"></canvas>{% else %}<div class="lo-chart-empty"><span>Product rankings begin with the first order.</span></div>{% endif %}</div></div>
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Customer growth</h3><span>6 months</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_customer_growth_data %}<canvas id="customersChart" role="img" aria-label="New customer registrations during the last six months"></canvas>{% else %}<div class="lo-chart-empty"><span>New customers will appear here.</span></div>{% endif %}</div></div>
+      <div class="lo-chart"><div class="lo-chart-head"><h3>Order channels</h3><span>{{ analytics.promo_orders }} paid promo orders</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_channel_data %}<canvas id="channelChart" role="img" aria-label="Orders grouped by sales channel"></canvas>{% else %}<div class="lo-chart-empty"><span>Channel share begins with the first order.</span></div>{% endif %}</div></div>
     </div>
   </section>
   {% endif %}
@@ -405,24 +474,6 @@
     <div class="lo-section-head"><h2 class="lo-display">Quick actions</h2></div>
     <div class="lo-actions">
       {% for action in quick_actions %}<a class="lo-action" href="{{ action.href }}"><span class="material-symbols-outlined">{{ action.icon }}</span><strong>{{ action.label }} ↗</strong></a>{% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  {% if dashboard_role == 'owner' or dashboard_role == 'executive' or dashboard_role == 'operations' or dashboard_role == 'content' or dashboard_role == 'product' %}
-  <section class="lo-section">
-    <div class="lo-section-head"><h2 class="lo-display">Needs attention</h2><span class="lo-kicker">Now</span></div>
-    <div class="lo-attention">
-      <a href="/admin/orders/order/?status__exact=whatsapp_pending"><strong>{{ attention.awaiting_payment }}</strong><span>Awaiting payment</span></a>
-      <a href="/admin/orders/order/?status__exact=processing"><strong>{{ attention.processing }}</strong><span>Orders processing</span></a>
-      <a href="/admin/users/b2bprofile/?status__exact=pending"><strong>{{ attention.b2b_pending }}</strong><span>B2B applications</span></a>
-      <a href="/admin/subscriptions/subscriptionweek/?status__exact=payment_due"><strong>{{ attention.renewals_due }}</strong><span>Renewal payments due</span></a>
-      <a href="/admin/subscriptions/subscriptionpricenotice/?status__exact=failed"><strong>{{ attention.failed_price_notices }}</strong><span>Price notices failed</span></a>
-      <a href="/admin/subscriptions/subscriptionplanpricechange/?status__exact=scheduled"><strong>{{ attention.scheduled_price_changes }}</strong><span>Scheduled prices</span></a>
-      <a href="/admin/recipes/recipe/?status__exact=needs_review"><strong>{{ attention.recipes_for_review }}</strong><span>Recipes to review</span></a>
-      <a href="/admin/recipes/recipe/"><strong>{{ attention.unresolved_ingredients }}</strong><span>Recipes with unresolved nutrition</span></a>
-      <a href="/admin/products/product/?is_available__exact=0"><strong>{{ attention.unavailable_products }}</strong><span>Unavailable products</span></a>
-      <a href="/admin/blog/blogpost/?is_published__exact=0"><strong>{{ attention.draft_posts }}</strong><span>Draft stories</span></a>
     </div>
   </section>
   {% endif %}
@@ -454,23 +505,42 @@
 </div>
 
 {% if can_see_finance or dashboard_role == 'owner' %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ chart_revenue_labels|json_script:"chart-revenue-labels" }}
+{{ chart_revenue_data|json_script:"chart-revenue-data" }}
+{{ chart_orders_data|json_script:"chart-orders-data" }}
+{{ chart_donut_labels|json_script:"chart-donut-labels" }}
+{{ chart_donut_data|json_script:"chart-donut-data" }}
+{{ chart_donut_colors|json_script:"chart-donut-colors" }}
+{{ chart_top_product_labels|json_script:"chart-product-labels" }}
+{{ chart_top_product_data|json_script:"chart-product-data" }}
+{{ chart_customer_labels|json_script:"chart-customer-labels" }}
+{{ chart_customer_data|json_script:"chart-customer-data" }}
+{{ chart_channel_labels|json_script:"chart-channel-labels" }}
+{{ chart_channel_data|json_script:"chart-channel-data" }}
+<script src="{% static 'admin/vendor/chart.umd.min.js' %}"></script>
 <script>
 (function () {
+  if (typeof Chart === 'undefined') {
+    document.querySelectorAll('.lo-chart-wrap').forEach((wrap) => {
+      if (wrap.querySelector('canvas')) wrap.innerHTML = '<div class="lo-chart-empty"><span>Chart data is temporarily unavailable.</span></div>';
+    });
+    return;
+  }
+  const read = (id) => JSON.parse(document.getElementById(id).textContent);
   const ink = '#E7E9E4';
   const grid = 'rgba(255,255,255,.08)';
   const salesInk = '#F8F4E9';
   const salesGrid = 'rgba(255,255,255,.13)';
   const common = { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:ink,boxWidth:10,font:{family:'Inter',size:11}}}} };
-  new Chart(document.getElementById('revenueChart'), {type:'line',data:{labels:{{ chart_revenue_labels|safe }},datasets:[{label:'Revenue',data:{{ chart_revenue_data|safe }},borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,fill:true,tension:.35,pointRadius:2,pointBackgroundColor:'#F4C430',yAxisID:'y'},{label:'Orders',data:{{ chart_orders_data|safe }},borderColor:'#82C68A',borderWidth:2,tension:.35,pointRadius:2,pointBackgroundColor:'#82C68A',yAxisID:'y1'}]},options:{...common,plugins:{legend:{labels:{color:salesInk,boxWidth:10,font:{family:'Inter',size:11}}}},scales:{x:{ticks:{color:salesInk,maxTicksLimit:8},grid:{display:false}},y:{ticks:{color:salesInk,callback:v=>'GH₵'+v},grid:{color:salesGrid}},y1:{position:'right',ticks:{color:salesInk,stepSize:1},grid:{display:false}}}}});
+  new Chart(document.getElementById('revenueChart'), {type:'line',data:{labels:read('chart-revenue-labels'),datasets:[{label:'Revenue',data:read('chart-revenue-data'),borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,fill:true,tension:.35,pointRadius:2,pointBackgroundColor:'#F4C430',yAxisID:'y'},{label:'Orders',data:read('chart-orders-data'),borderColor:'#82C68A',borderWidth:2,tension:.35,pointRadius:2,pointBackgroundColor:'#82C68A',yAxisID:'y1'}]},options:{...common,plugins:{legend:{labels:{color:salesInk,boxWidth:10,font:{family:'Inter',size:11}}}},scales:{x:{ticks:{color:salesInk,maxTicksLimit:8},grid:{display:false}},y:{ticks:{color:salesInk,callback:v=>'GH₵'+v},grid:{color:salesGrid}},y1:{position:'right',ticks:{color:salesInk,stepSize:1},grid:{display:false}}}}});
   const statusCanvas = document.getElementById('statusChart');
-  if (statusCanvas) new Chart(statusCanvas, {type:'doughnut',data:{labels:{{ chart_donut_labels|safe }},datasets:[{data:{{ chart_donut_data|safe }},backgroundColor:{{ chart_donut_colors|safe }},borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}});
+  if (statusCanvas) new Chart(statusCanvas, {type:'doughnut',data:{labels:read('chart-donut-labels'),datasets:[{data:read('chart-donut-data'),backgroundColor:read('chart-donut-colors'),borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}});
   const productsCanvas = document.getElementById('productsChart');
-  if (productsCanvas) new Chart(productsCanvas, {type:'bar',data:{labels:{{ chart_top_product_labels|safe }},datasets:[{data:{{ chart_top_product_data|safe }},backgroundColor:'#F4C430',borderRadius:0}]},options:{...common,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}},y:{ticks:{color:ink},grid:{display:false}}}}});
+  if (productsCanvas) new Chart(productsCanvas, {type:'bar',data:{labels:read('chart-product-labels'),datasets:[{data:read('chart-product-data'),backgroundColor:'#F4C430',borderRadius:0}]},options:{...common,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}},y:{ticks:{color:ink},grid:{display:false}}}}});
   const customersCanvas = document.getElementById('customersChart');
-  if (customersCanvas) new Chart(customersCanvas, {type:'line',data:{labels:{{ chart_customer_labels|safe }},datasets:[{data:{{ chart_customer_data|safe }},borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,pointRadius:4,pointBackgroundColor:'#F4C430',fill:true,tension:.3}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:ink,maxRotation:0},grid:{display:false}},y:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}}}}});
+  if (customersCanvas) new Chart(customersCanvas, {type:'line',data:{labels:read('chart-customer-labels'),datasets:[{data:read('chart-customer-data'),borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,pointRadius:4,pointBackgroundColor:'#F4C430',fill:true,tension:.3}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:ink,maxRotation:0},grid:{display:false}},y:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}}}}});
   const channelCanvas = document.getElementById('channelChart');
-  if (channelCanvas) new Chart(channelCanvas, {type:'doughnut',data:{labels:{{ chart_channel_labels|safe }},datasets:[{data:{{ chart_channel_data|safe }},backgroundColor:['#82C68A','#F4C430'],borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}});
+  if (channelCanvas) new Chart(channelCanvas, {type:'doughnut',data:{labels:read('chart-channel-labels'),datasets:[{data:read('chart-channel-data'),backgroundColor:['#82C68A','#F4C430','#5EA3D8','#C78DE0','#E68A5C'],borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}});
 })();
 </script>
 {% endif %}

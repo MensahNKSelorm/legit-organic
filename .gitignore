@@ -39,6 +39,10 @@ frontend/.hallmark/
 # Django collected static files
 staticfiles/
 static/
+!backend/products/static/
+!backend/products/static/admin/
+!backend/products/static/admin/vendor/
+!backend/products/static/admin/vendor/chart.umd.min.js
 
 # ====================================
 # Angular

@@ -192,7 +192,7 @@ function CustomerStatusBadge({ status }: { status: ReferredCustomer["status"] })
   return (
     <span
       className={[
-        "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
+        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
         isConverted ? "bg-[#FFFBEB] text-[#C59F2C]" : "bg-[#F0FFF4] text-[#2E7D32]",
       ].join(" ")}
     >
@@ -210,7 +210,7 @@ function CommissionStatusBadge({ status }: { status: "pending" | "approved" | "p
   return (
     <span
       className={[
-        "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap",
+        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
         config.cls,
       ].join(" ")}
     >
@@ -221,9 +221,9 @@ function CommissionStatusBadge({ status }: { status: "pending" | "approved" | "p
 
 function CardSkeleton() {
   return (
-    <div className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-5 animate-pulse">
-      <div className="h-4 w-1/3 bg-[#F5F0E6] dark:bg-[#374151] rounded mb-3" />
-      <div className="h-3 w-1/2 bg-[#F5F0E6] dark:bg-[#374151] rounded" />
+    <div className="animate-pulse rounded-2xl border border-[#E6D8BD] bg-white p-5 dark:border-[#374151] dark:bg-[#1f2937]">
+      <div className="mb-3 h-4 w-1/3 rounded bg-[#F5F0E6] dark:bg-[#374151]" />
+      <div className="h-3 w-1/2 rounded bg-[#F5F0E6] dark:bg-[#374151]" />
     </div>
   );
 }
@@ -235,6 +235,20 @@ export default function SalesRepDashboardPage() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<Tab>("customers");
+
+  const moveTabFocus = (event: React.KeyboardEvent<HTMLButtonElement>, current: Tab) => {
+    const currentIndex = TABS.findIndex((tab) => tab.id === current);
+    let nextIndex = currentIndex;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % TABS.length;
+    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + TABS.length) % TABS.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = TABS.length - 1;
+    else return;
+    event.preventDefault();
+    const nextTab = TABS[nextIndex].id;
+    setActiveTab(nextTab);
+    document.getElementById(`sales-tab-${nextTab}`)?.focus();
+  };
 
   useEffect(() => {
     if (!isLoading && !isSalesRep) {
@@ -440,55 +454,66 @@ export default function SalesRepDashboardPage() {
 
   if (isLoading || !isSalesRep || !salesRepProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF7F0] dark:bg-[#111827]">
-        <span className="w-8 h-8 border-2 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-[#FAF7F0] dark:bg-[#111827]">
+        <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#F4C430] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="bg-[#FAF7F0] dark:bg-[#111827] min-h-screen">
+    <div className="min-h-screen bg-[#FAF7F0] dark:bg-[#111827]">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "#0D3B2A", paddingTop: "5.5rem", paddingBottom: "2rem" }}>
-        <div className="max-w-5xl mx-auto px-6 lg:px-8">
-          <p className="text-[#F4C430] text-xs font-bold uppercase tracking-widest mb-1">
+        <div className="mx-auto max-w-5xl px-6 lg:px-8">
+          <p className="mb-1 text-xs font-bold tracking-widest text-[#F4C430] uppercase">
             Sales Rep Portal
           </p>
-          <h1 className="font-display text-3xl lg:text-4xl font-bold text-white">
+          <h1 className="font-display text-3xl font-bold text-white lg:text-4xl">
             {salesRepProfile.first_name} {salesRepProfile.last_name}
           </h1>
-          <div className="flex flex-wrap items-center gap-3 mt-3">
-            <span className="inline-flex items-center gap-1.5 bg-[#2E7D32]/30 text-[#A7C4A0] text-xs font-semibold px-3 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80]" />
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2E7D32]/30 px-3 py-1 text-xs font-semibold text-[#A7C4A0]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80]" />
               Active Sales Rep
             </span>
-            <span className="text-white/70 text-xs font-medium">
+            <span className="text-xs font-medium text-white/70">
               Referral code:{" "}
-              <span className="text-[#F4C430] font-bold">{salesRepProfile.referral_code}</span>
+              <span className="font-bold text-[#F4C430]">{salesRepProfile.referral_code}</span>
             </span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 lg:px-8 py-6 space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6 px-6 py-6 lg:px-8">
         <ConnectionStatus />
 
         {/* ── Tab bar ──────────────────────────────────────────────────── */}
-        <div className="-mx-6 px-6 lg:mx-0 lg:px-0 overflow-x-auto">
-          <div className="flex gap-2 min-w-max lg:min-w-0 lg:grid lg:grid-cols-4">
+        <div className="-mx-6 overflow-x-auto px-6 lg:mx-0 lg:px-0">
+          <div
+            role="tablist"
+            aria-label="Sales dashboard sections"
+            className="flex min-w-max gap-2 lg:grid lg:min-w-0 lg:grid-cols-4"
+          >
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
+                  type="button"
+                  role="tab"
+                  id={`sales-tab-${tab.id}`}
+                  aria-selected={active}
+                  aria-controls={`sales-panel-${tab.id}`}
+                  tabIndex={active ? 0 : -1}
                   onClick={() => setActiveTab(tab.id)}
+                  onKeyDown={(event) => moveTabFocus(event, tab.id)}
                   className={[
-                    "flex items-center justify-center gap-2 px-4 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap",
-                    "min-h-[44px]",
+                    "flex items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-colors",
+                    "min-h-[44px] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:outline-none",
                     active
                       ? "bg-[#0D3B2A] text-white"
-                      : "bg-white dark:bg-[#1f2937] text-[#5B3E31] dark:text-[#9ca3af] border border-[#E6D8BD] dark:border-[#374151]",
+                      : "border border-[#E6D8BD] bg-white text-[#5B3E31] dark:border-[#374151] dark:bg-[#1f2937] dark:text-[#9ca3af]",
                   ].join(" ")}
                 >
                   <Icon />
@@ -501,7 +526,12 @@ export default function SalesRepDashboardPage() {
 
         {/* ── Tab 1: My Customers ──────────────────────────────────────── */}
         {activeTab === "customers" && (
-          <section className="space-y-3">
+          <section
+            role="tabpanel"
+            id="sales-panel-customers"
+            aria-labelledby="sales-tab-customers"
+            className="space-y-3"
+          >
             {customersLoading && (
               <div className="space-y-3">
                 <CardSkeleton />
@@ -511,13 +541,23 @@ export default function SalesRepDashboardPage() {
             )}
 
             {!customersLoading && customersError && (
-              <div className="p-5 bg-white dark:bg-[#1f2937] rounded-2xl border border-red-200 dark:border-red-900/40 text-sm text-red-600">
-                {customersError}
+              <div
+                role="alert"
+                className="rounded-2xl border border-red-200 bg-white p-5 text-sm text-red-600 dark:border-red-900/40 dark:bg-[#1f2937]"
+              >
+                <p>{customersError}</p>
+                <button
+                  type="button"
+                  onClick={loadCustomers}
+                  className="mt-3 min-h-[44px] font-semibold underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none"
+                >
+                  Try again
+                </button>
               </div>
             )}
 
             {!customersLoading && !customersError && customers.length === 0 && (
-              <div className="p-8 bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] text-center">
+              <div className="rounded-2xl border border-[#E6D8BD] bg-white p-8 text-center dark:border-[#374151] dark:bg-[#1f2937]">
                 <p className="text-sm text-[#5B3E31] dark:text-[#9ca3af]">
                   No customers yet. Add one below or share your referral link.
                 </p>
@@ -529,21 +569,21 @@ export default function SalesRepDashboardPage() {
               customers.map((c) => (
                 <div
                   key={c.id}
-                  className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-5"
+                  className="rounded-2xl border border-[#E6D8BD] bg-white p-5 dark:border-[#374151] dark:bg-[#1f2937]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-semibold text-sm text-[#0D3B2A] dark:text-white truncate">
+                      <p className="truncate text-sm font-semibold text-[#0D3B2A] dark:text-white">
                         {c.customer_name || c.customer_email}
                       </p>
-                      <p className="text-xs text-[#5B3E31] dark:text-[#9ca3af] mt-0.5 truncate">
+                      <p className="mt-0.5 truncate text-xs text-[#5B3E31] dark:text-[#9ca3af]">
                         {c.customer_email}
                       </p>
                     </div>
                     <CustomerStatusBadge status={c.status} />
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F5F0E6] dark:bg-[#374151] text-[#5B3E31] dark:text-[#d1d5db]">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-[#F5F0E6] px-2.5 py-1 text-xs font-semibold text-[#5B3E31] dark:bg-[#374151] dark:text-[#d1d5db]">
                       {SOURCE_LABEL[c.source]}
                     </span>
                     <span
@@ -562,26 +602,31 @@ export default function SalesRepDashboardPage() {
 
         {/* ── Tab 2: My Commissions ────────────────────────────────────── */}
         {activeTab === "commissions" && (
-          <section className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#C59F2C] mb-1">
+          <section
+            role="tabpanel"
+            id="sales-panel-commissions"
+            aria-labelledby="sales-tab-commissions"
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-[#E6D8BD] bg-white p-5 dark:border-[#374151] dark:bg-[#1f2937]">
+                <p className="mb-1 text-xs font-semibold tracking-wide text-[#C59F2C] uppercase">
                   Pending
                 </p>
                 <p className="text-2xl font-bold text-[#0D3B2A] dark:text-white">
                   GH₵ {parseFloat(commissionData?.summary.pending ?? "0").toFixed(2)}
                 </p>
               </div>
-              <div className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#2E7D32] mb-1">
+              <div className="rounded-2xl border border-[#E6D8BD] bg-white p-5 dark:border-[#374151] dark:bg-[#1f2937]">
+                <p className="mb-1 text-xs font-semibold tracking-wide text-[#2E7D32] uppercase">
                   Approved
                 </p>
                 <p className="text-2xl font-bold text-[#0D3B2A] dark:text-white">
                   GH₵ {parseFloat(commissionData?.summary.approved ?? "0").toFixed(2)}
                 </p>
               </div>
-              <div className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#0D3B2A] dark:text-[#F4C430] mb-1">
+              <div className="rounded-2xl border border-[#E6D8BD] bg-white p-5 dark:border-[#374151] dark:bg-[#1f2937]">
+                <p className="mb-1 text-xs font-semibold tracking-wide text-[#0D3B2A] uppercase dark:text-[#F4C430]">
                   Paid
                 </p>
                 <p className="text-2xl font-bold text-[#0D3B2A] dark:text-white">
@@ -599,15 +644,25 @@ export default function SalesRepDashboardPage() {
             )}
 
             {!commissionsLoading && commissionsError && (
-              <div className="p-5 bg-white dark:bg-[#1f2937] rounded-2xl border border-red-200 dark:border-red-900/40 text-sm text-red-600">
-                {commissionsError}
+              <div
+                role="alert"
+                className="rounded-2xl border border-red-200 bg-white p-5 text-sm text-red-600 dark:border-red-900/40 dark:bg-[#1f2937]"
+              >
+                <p>{commissionsError}</p>
+                <button
+                  type="button"
+                  onClick={loadCommissions}
+                  className="mt-3 min-h-[44px] font-semibold underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none"
+                >
+                  Try again
+                </button>
               </div>
             )}
 
             {!commissionsLoading &&
               !commissionsError &&
               (commissionData?.commissions.length ?? 0) === 0 && (
-                <div className="p-8 bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] text-center">
+                <div className="rounded-2xl border border-[#E6D8BD] bg-white p-8 text-center dark:border-[#374151] dark:bg-[#1f2937]">
                   <p className="text-sm text-[#5B3E31] dark:text-[#9ca3af]">No commissions yet.</p>
                 </div>
               )}
@@ -617,21 +672,21 @@ export default function SalesRepDashboardPage() {
               commissionData?.commissions.map((com) => (
                 <div
                   key={com.id}
-                  className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-5 flex items-center justify-between gap-3"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-[#E6D8BD] bg-white p-5 dark:border-[#374151] dark:bg-[#1f2937]"
                 >
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm text-[#0D3B2A] dark:text-white truncate">
+                    <p className="truncate text-sm font-semibold text-[#0D3B2A] dark:text-white">
                       {com.customer_name}
                     </p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#F5F0E6] dark:bg-[#374151] text-[#5B3E31] dark:text-[#d1d5db]">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-[#F5F0E6] px-2 py-0.5 text-[11px] font-semibold text-[#5B3E31] dark:bg-[#374151] dark:text-[#d1d5db]">
                         {COMMISSION_TYPE_LABEL[com.type]}
                       </span>
                       <span className="text-xs text-[#9ca3af]">{formatDate(com.created_at)}</span>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-sm text-[#0D3B2A] dark:text-white">
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-bold text-[#0D3B2A] dark:text-white">
                       GH₵ {parseFloat(com.amount).toFixed(2)}
                     </p>
                     <div className="mt-1.5">
@@ -646,6 +701,9 @@ export default function SalesRepDashboardPage() {
         {/* ── Tab 3: My Referral Link ──────────────────────────────────── */}
         {activeTab === "referral" && (
           <section
+            role="tabpanel"
+            id="sales-panel-referral"
+            aria-labelledby="sales-tab-referral"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -774,7 +832,7 @@ export default function SalesRepDashboardPage() {
                         style={{ width: "100%", height: "100%", objectFit: "contain" }}
                       />
                     ) : (
-                      <span className="w-6 h-6 border-2 border-[#F4C430] border-t-transparent rounded-full animate-spin" />
+                      <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#F4C430] border-t-transparent" />
                     )}
                   </div>
 
@@ -925,7 +983,7 @@ export default function SalesRepDashboardPage() {
                 }}
               >
                 {downloadingFlyer ? (
-                  <span className="w-4 h-4 border-2 border-[#0D3B2A]/40 border-t-[#0D3B2A] rounded-full animate-spin" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#0D3B2A]/40 border-t-[#0D3B2A]" />
                 ) : (
                   <DownloadIcon />
                 )}
@@ -962,52 +1020,63 @@ export default function SalesRepDashboardPage() {
 
         {/* ── Tab 4: Add Customer ──────────────────────────────────────── */}
         {activeTab === "add" && (
-          <section className="bg-white dark:bg-[#1f2937] rounded-2xl border border-[#E6D8BD] dark:border-[#374151] p-6 max-w-[480px] mx-auto">
+          <section
+            role="tabpanel"
+            id="sales-panel-add"
+            aria-labelledby="sales-tab-add"
+            className="mx-auto max-w-[480px] rounded-2xl border border-[#E6D8BD] bg-white p-6 dark:border-[#374151] dark:bg-[#1f2937]"
+          >
             {successMessage && (
-              <div className="mb-5 p-4 rounded-xl bg-[#F0FFF4] dark:bg-[#0a1f14] border border-[#2E7D32]/20 text-sm text-[#2E7D32] dark:text-[#81C784]">
+              <div
+                role="status"
+                className="mb-5 rounded-xl border border-[#2E7D32]/20 bg-[#F0FFF4] p-4 text-sm text-[#2E7D32] dark:bg-[#0a1f14] dark:text-[#81C784]"
+              >
                 {successMessage}
               </div>
             )}
 
             {submitError && (
-              <div className="mb-5 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 text-sm text-red-600">
+              <div
+                role="alert"
+                className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-900/40 dark:bg-red-900/20"
+              >
                 {submitError}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db] mb-1.5">
+                <label className="mb-1.5 block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db]">
                   First Name
                 </label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full min-h-[44px] px-4 rounded-xl border border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827] text-[#0D3B2A] dark:text-white text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32]"
+                  className="min-h-[44px] w-full rounded-xl border border-[#E6D8BD] bg-[#FAF7F0] px-4 text-sm text-[#0D3B2A] focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] focus:outline-none dark:border-[#374151] dark:bg-[#111827] dark:text-white"
                 />
                 {formErrors.firstName && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.firstName}</p>
+                  <p className="mt-1 text-xs text-red-600">{formErrors.firstName}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db] mb-1.5">
+                <label className="mb-1.5 block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db]">
                   Last Name
                 </label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full min-h-[44px] px-4 rounded-xl border border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827] text-[#0D3B2A] dark:text-white text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32]"
+                  className="min-h-[44px] w-full rounded-xl border border-[#E6D8BD] bg-[#FAF7F0] px-4 text-sm text-[#0D3B2A] focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] focus:outline-none dark:border-[#374151] dark:bg-[#111827] dark:text-white"
                 />
                 {formErrors.lastName && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.lastName}</p>
+                  <p className="mt-1 text-xs text-red-600">{formErrors.lastName}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db] mb-1.5">
+                <label className="mb-1.5 block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db]">
                   Phone Number
                 </label>
                 <input
@@ -1015,25 +1084,25 @@ export default function SalesRepDashboardPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+233244123456 or 0244123456"
-                  className="w-full min-h-[44px] px-4 rounded-xl border border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827] text-[#0D3B2A] dark:text-white text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32]"
+                  className="min-h-[44px] w-full rounded-xl border border-[#E6D8BD] bg-[#FAF7F0] px-4 text-sm text-[#0D3B2A] focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] focus:outline-none dark:border-[#374151] dark:bg-[#111827] dark:text-white"
                 />
                 {formErrors.phone && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.phone}</p>
+                  <p className="mt-1 text-xs text-red-600">{formErrors.phone}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db] mb-1.5">
+                <label className="mb-1.5 block text-sm font-semibold text-[#0D3B2A] dark:text-[#d1d5db]">
                   Email <span className="font-normal text-[#9ca3af]">(optional)</span>
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full min-h-[44px] px-4 rounded-xl border border-[#E6D8BD] dark:border-[#374151] bg-[#FAF7F0] dark:bg-[#111827] text-[#0D3B2A] dark:text-white text-sm focus:outline-none focus:ring-1 focus:ring-[#2E7D32] focus:border-[#2E7D32]"
+                  className="min-h-[44px] w-full rounded-xl border border-[#E6D8BD] bg-[#FAF7F0] px-4 text-sm text-[#0D3B2A] focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] focus:outline-none dark:border-[#374151] dark:bg-[#111827] dark:text-white"
                 />
                 {formErrors.email && (
-                  <p className="text-xs text-red-600 mt-1">{formErrors.email}</p>
+                  <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>
                 )}
               </div>
 
@@ -1055,10 +1124,10 @@ export default function SalesRepDashboardPage() {
               <button
                 type="submit"
                 disabled={submitting || !isOnline}
-                className="w-full min-h-[44px] rounded-xl bg-[#0D3B2A] text-white font-semibold text-sm hover:bg-[#0D3B2A]/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#0D3B2A] text-sm font-semibold text-white transition-colors hover:bg-[#0D3B2A]/90 disabled:opacity-60"
               >
                 {submitting && (
-                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
                 )}
                 {submitting ? "Adding Customer…" : "Add Customer"}
               </button>

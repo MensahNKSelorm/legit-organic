@@ -1,16 +1,16 @@
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, DecimalField, ExpressionWrapper, F
 from django.db.models.functions import TruncDay, TruncMonth
 from django.utils import timezone
 from datetime import timedelta
 from collections import Counter
-import json
 
 
 def dashboard_callback(request, context):
     now = timezone.now()
     today = now.date()
 
-    last_30_days = today - timedelta(days=30)
+    # Inclusive 30-day window: today plus the preceding 29 calendar days.
+    last_30_days = today - timedelta(days=29)
     this_month_start = today.replace(day=1)
     last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
     last_month_end = this_month_start - timedelta(days=1)
@@ -23,13 +23,15 @@ def dashboard_callback(request, context):
     from recipes.models import Recipe
     from recipes.models import RecipeIngredient
     from subscriptions.models import (
-        SubscriptionPlanPriceChange,
         SubscriptionPriceNotice,
         SubscriptionWeek,
     )
 
     all_orders = Order.objects.filter(is_test=False)
-    paid_orders = all_orders.exclude(status__in=['whatsapp_pending', 'cancelled'])
+    # Revenue is recognised only after the payment provider or an authorised
+    # staff workflow has marked the payment successful. Order status alone is
+    # not a reliable financial signal.
+    paid_orders = all_orders.filter(payment_status='success').exclude(status='cancelled')
 
     # ── Revenue KPIs ─────────────────────────────────────────────────────────
     total_revenue = paid_orders.aggregate(t=Sum('total_amount'))['t'] or 0
@@ -77,7 +79,7 @@ def dashboard_callback(request, context):
     avg_order_value = paid_orders.aggregate(a=Avg('total_amount'))['a'] or 0
 
     successful_payments = all_orders.filter(payment_status='success').count()
-    payment_attempts = all_orders.exclude(payment_status='pending').count()
+    payment_attempts = all_orders.filter(payment_status__in=['success', 'failed', 'expired']).count()
     payment_success_rate = (
         round(successful_payments / payment_attempts * 100) if payment_attempts else 0
     )
@@ -92,7 +94,7 @@ def dashboard_callback(request, context):
         else 0
     )
 
-    promo_orders = all_orders.filter(promo_code__isnull=False).count()
+    promo_orders = paid_orders.filter(promo_code__isnull=False).count()
 
     # ── Customer KPIs ────────────────────────────────────────────────────────
     total_customers = User.objects.filter(is_staff=False).count()
@@ -109,11 +111,21 @@ def dashboard_callback(request, context):
 
     # ── Order source split ───────────────────────────────────────────────────
     source_counts = all_orders.values('order_source').annotate(count=Count('id'))
-    whatsapp_orders = next(
-        (s['count'] for s in source_counts if s['order_source'] == 'whatsapp'), 0
-    )
-    paystack_orders = next(
-        (s['count'] for s in source_counts if s['order_source'] == 'paystack'), 0
+    source_labels = {
+        'seevcash': 'Online checkout',
+        'subscription': 'Subscriptions',
+        'business_supply': 'Business supply',
+        'paystack': 'Paystack (legacy)',
+        'whatsapp': 'WhatsApp',
+    }
+    source_map = {row['order_source']: row['count'] for row in source_counts}
+    channel_keys = [key for key in source_labels if source_map.get(key)]
+    channel_labels = [source_labels[key] for key in channel_keys]
+    channel_data = [source_map[key] for key in channel_keys]
+    whatsapp_orders = source_map.get('whatsapp', 0)
+    online_orders = sum(
+        source_map.get(key, 0)
+        for key in ('seevcash', 'subscription', 'business_supply', 'paystack')
     )
 
     # ── Revenue chart — last 30 days ─────────────────────────────────────────
@@ -173,12 +185,16 @@ def dashboard_callback(request, context):
             donut_colors.append(STATUS_COLORS.get(item['status'], '#9E9E9E'))
 
     # ── Top products ─────────────────────────────────────────────────────────
+    line_revenue = ExpressionWrapper(
+        F('quantity') * F('unit_price'),
+        output_field=DecimalField(max_digits=14, decimal_places=2),
+    )
     top_products = (
         OrderItem.objects.filter(product__isnull=False)
         .values('product__name')
         .annotate(
             total_qty=Sum('quantity'),
-            total_revenue=Sum('unit_price'),
+            total_revenue=Sum(line_revenue),
         )
         .order_by('-total_qty')[:7]
     )
@@ -221,24 +237,127 @@ def dashboard_callback(request, context):
         dashboard_role, role_label = 'staff', 'Staff'
 
     recent_orders = all_orders.select_related('user').order_by('-created_at')[:6]
-    attention = {
-        'awaiting_payment': all_orders.filter(status='whatsapp_pending').count(),
-        'processing': all_orders.filter(status='processing').count(),
-        'b2b_pending': B2BProfile.objects.filter(status='pending').count(),
-        'unavailable_products': Product.objects.filter(is_available=False).count(),
-        'draft_posts': BlogPost.objects.filter(is_published=False).count(),
-        'renewals_due': SubscriptionWeek.objects.filter(status='payment_due').count(),
-        'expired_renewals': SubscriptionWeek.objects.filter(status='expired').count(),
-        'failed_price_notices': SubscriptionPriceNotice.objects.filter(status='failed').count(),
-        'scheduled_price_changes': SubscriptionPlanPriceChange.objects.filter(
-            status='scheduled'
-        ).count(),
-        'recipes_for_review': Recipe.objects.filter(status='needs_review').count(),
-        'unresolved_ingredients': RecipeIngredient.objects.filter(nutrition_profile__isnull=True)
-        .values('recipe_id')
-        .distinct()
-        .count(),
-    }
+    attention_items = []
+
+    def add_attention(*, permission, label, href, count, priority, detail):
+        if request.user.has_perm(permission) and count:
+            attention_items.append(
+                {
+                    'label': label,
+                    'href': href,
+                    'count': count,
+                    'priority': priority,
+                    'detail': detail,
+                }
+            )
+
+    add_attention(
+        permission='subscriptions.view_subscriptionpricenotice',
+        label='Price notices failed',
+        href='/admin/subscriptions/subscriptionpricenotice/?status__exact=failed',
+        count=SubscriptionPriceNotice.objects.filter(status='failed').count()
+        if request.user.has_perm('subscriptions.view_subscriptionpricenotice')
+        else 0,
+        priority='critical',
+        detail='Customers may not know about a scheduled price change.',
+    )
+    add_attention(
+        permission='subscriptions.view_subscriptionweek',
+        label='Renewal payments expired',
+        href='/admin/subscriptions/subscriptionweek/?status__exact=expired',
+        count=SubscriptionWeek.objects.filter(status='expired').count()
+        if request.user.has_perm('subscriptions.view_subscriptionweek')
+        else 0,
+        priority='critical',
+        detail='Recover or close these renewal cycles.',
+    )
+    add_attention(
+        permission='orders.view_order',
+        label='Awaiting payment',
+        href='/admin/orders/order/?status__exact=whatsapp_pending',
+        count=all_orders.filter(status='whatsapp_pending').count()
+        if request.user.has_perm('orders.view_order')
+        else 0,
+        priority='high',
+        detail='Follow up before these orders go stale.',
+    )
+    add_attention(
+        permission='subscriptions.view_subscriptionweek',
+        label='Renewal payments due',
+        href='/admin/subscriptions/subscriptionweek/?status__exact=payment_due',
+        count=SubscriptionWeek.objects.filter(status='payment_due').count()
+        if request.user.has_perm('subscriptions.view_subscriptionweek')
+        else 0,
+        priority='high',
+        detail='Payment is required before the next delivery.',
+    )
+    add_attention(
+        permission='orders.view_order',
+        label='Orders in preparation',
+        href='/admin/orders/order/?status__exact=processing',
+        count=all_orders.filter(status='processing').count()
+        if request.user.has_perm('orders.view_order')
+        else 0,
+        priority='normal',
+        detail='Keep packing and dispatch moving.',
+    )
+    add_attention(
+        permission='users.view_b2bprofile',
+        label='B2B applications',
+        href='/admin/users/b2bprofile/?status__exact=pending',
+        count=B2BProfile.objects.filter(status='pending').count()
+        if request.user.has_perm('users.view_b2bprofile')
+        else 0,
+        priority='normal',
+        detail='Review documents and approve eligible businesses.',
+    )
+    add_attention(
+        permission='recipes.view_recipe',
+        label='Recipes to review',
+        href='/admin/recipes/recipe/?status__exact=needs_review',
+        count=Recipe.objects.filter(status='needs_review').count()
+        if request.user.has_perm('recipes.view_recipe')
+        else 0,
+        priority='normal',
+        detail='Check sources, instructions, and publication readiness.',
+    )
+    add_attention(
+        permission='recipes.view_recipe',
+        label='Nutrition unresolved',
+        href='/admin/recipes/recipe/',
+        count=(
+            RecipeIngredient.objects.filter(nutrition_profile__isnull=True)
+            .values('recipe_id')
+            .distinct()
+            .count()
+            if request.user.has_perm('recipes.view_recipe')
+            else 0
+        ),
+        priority='normal',
+        detail='Resolve ingredient matches before nutrition can be trusted.',
+    )
+    add_attention(
+        permission='products.view_product',
+        label='Unavailable products',
+        href='/admin/products/product/?is_available__exact=0',
+        count=Product.objects.filter(is_available=False).count()
+        if request.user.has_perm('products.view_product')
+        else 0,
+        priority='low',
+        detail='Confirm stock status or restore catalogue availability.',
+    )
+    add_attention(
+        permission='blog.view_blogpost',
+        label='Draft stories',
+        href='/admin/blog/blogpost/?is_published__exact=0',
+        count=BlogPost.objects.filter(is_published=False).count()
+        if request.user.has_perm('blog.view_blogpost')
+        else 0,
+        priority='low',
+        detail='Continue editing when the publishing schedule allows.',
+    )
+    priority_order = {'critical': 0, 'high': 1, 'normal': 2, 'low': 3}
+    attention_items.sort(key=lambda item: (priority_order[item['priority']], -item['count']))
     quick_actions = []
     if request.user.has_perm('orders.view_order'):
         quick_actions.append(
@@ -305,29 +424,32 @@ def dashboard_callback(request, context):
                 'total_blog_posts': total_blog_posts,
                 'total_recipes': total_recipes,
                 'whatsapp_orders': whatsapp_orders,
-                'paystack_orders': paystack_orders,
+                'paystack_orders': source_map.get('paystack', 0),
+                'online_orders': online_orders,
             },
-            'chart_revenue_labels': json.dumps(revenue_labels),
-            'chart_revenue_data': json.dumps(revenue_data),
-            'chart_orders_data': json.dumps(orders_data),
-            'chart_donut_labels': json.dumps(donut_labels),
-            'chart_donut_data': json.dumps(donut_data),
-            'chart_donut_colors': json.dumps(donut_colors),
-            'chart_top_product_labels': json.dumps(top_product_labels),
-            'chart_top_product_data': json.dumps(top_product_data),
-            'chart_customer_labels': json.dumps(customer_labels),
-            'chart_customer_data': json.dumps(customer_data),
-            'chart_channel_labels': json.dumps(['WhatsApp', 'Online checkout']),
-            'chart_channel_data': json.dumps([whatsapp_orders, paystack_orders]),
+            'chart_revenue_labels': revenue_labels,
+            'chart_revenue_data': revenue_data,
+            'chart_orders_data': orders_data,
+            'chart_donut_labels': donut_labels,
+            'chart_donut_data': donut_data,
+            'chart_donut_colors': donut_colors,
+            'chart_top_product_labels': top_product_labels,
+            'chart_top_product_data': top_product_data,
+            'chart_customer_labels': customer_labels,
+            'chart_customer_data': customer_data,
+            'chart_channel_labels': channel_labels,
+            'chart_channel_data': channel_data,
             'has_order_status_data': bool(donut_data),
             'has_product_sales_data': bool(top_product_data),
-            'has_channel_data': bool(whatsapp_orders or paystack_orders),
+            'has_channel_data': bool(channel_data),
             'has_customer_growth_data': bool(customer_data),
             'analytics': {
                 'payment_success_rate': payment_success_rate,
                 'repeat_customer_rate': repeat_customer_rate,
                 'promo_orders': promo_orders,
             },
+            'attention_items': attention_items,
+            'attention_total': sum(item['count'] for item in attention_items),
             'dashboard_role': dashboard_role,
             'role_label': role_label,
             'today_label': now.strftime('%A, %d %B'),
@@ -337,7 +459,6 @@ def dashboard_callback(request, context):
                 else ('Good afternoon' if now.hour < 18 else 'Good evening')
             ),
             'recent_orders': recent_orders,
-            'attention': attention,
             'quick_actions': quick_actions,
             'can_see_finance': request.user.is_superuser
             or bool({'Finance', 'Executive Admin'} & group_names),

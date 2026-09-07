@@ -85,7 +85,7 @@ export default function B2BDashboardPage() {
 
   if (b2bProfile.status !== "approved") {
     return (
-      <div className="min-h-screen bg-[#F4EFE4] pb-24 pt-32 text-[#173C2A] dark:bg-[#171B18] dark:text-white">
+      <div className="min-h-screen bg-[#F4EFE4] pt-32 pb-24 text-[#173C2A] dark:bg-[#171B18] dark:text-white">
         <div className="page-container max-w-3xl">
           <p className="text-sm font-bold text-[#2E7D32] dark:text-[#F4C430]">Business account</p>
           <h1 className="display-organic mt-3 text-5xl leading-[.92] md:text-7xl">
@@ -107,7 +107,7 @@ export default function B2BDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4EFE4] pb-24 pt-28 text-[#173C2A] dark:bg-[#171B18] dark:text-white md:pt-36">
+    <div className="min-h-screen bg-[#F4EFE4] pt-28 pb-24 text-[#173C2A] md:pt-36 dark:bg-[#171B18] dark:text-white">
       <div className="page-container">
         <header className="grid gap-10 border-b border-[#C9BEAA] pb-10 lg:grid-cols-[1fr_auto] lg:items-end dark:border-white/15">
           <div>
@@ -138,12 +138,15 @@ export default function B2BDashboardPage() {
         </header>
 
         {dataError && (
-          <div className="flex flex-col gap-3 border-b border-[#C9BEAA] py-4 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-white/15">
+          <div
+            role="alert"
+            className="flex flex-col gap-3 border-b border-[#C9BEAA] py-4 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-white/15"
+          >
             <p>{dataError}</p>
             <button
               type="button"
               onClick={loadDashboard}
-              className="w-fit border-b border-current font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]"
+              className="w-fit border-b border-current font-bold focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none"
             >
               Retry
             </button>
@@ -152,43 +155,45 @@ export default function B2BDashboardPage() {
 
         <section className="grid gap-px border-b border-[#C9BEAA] bg-[#C9BEAA] py-px sm:grid-cols-4 dark:border-white/15 dark:bg-white/15">
           <div className="bg-[#F4EFE4] py-8 sm:px-6 dark:bg-[#171B18]">
-            <p className="text-xs uppercase tracking-[.14em] text-[#756D61] dark:text-[#98A59B]">
+            <p className="text-xs tracking-[.14em] text-[#756D61] uppercase dark:text-[#98A59B]">
               Price list
             </p>
             <p className="mt-2 text-xl font-semibold">
-              {prices?.name || "Standard business prices"}
+              {dataLoading ? "Loading…" : prices?.name || "Standard business prices"}
             </p>
           </div>
           <div className="bg-[#F4EFE4] py-8 sm:px-6 dark:bg-[#171B18]">
-            <p className="text-xs uppercase tracking-[.14em] text-[#756D61] dark:text-[#98A59B]">
+            <p className="text-xs tracking-[.14em] text-[#756D61] uppercase dark:text-[#98A59B]">
               Open quotes
             </p>
             <p className="mt-2 text-xl font-semibold">
-              {
-                quotes.filter(
-                  (quote) => !["declined", "expired", "converted"].includes(quote.status)
-                ).length
-              }
+              {dataLoading
+                ? "—"
+                : quotes.filter(
+                    (quote) => !["declined", "expired", "converted"].includes(quote.status)
+                  ).length}
             </p>
           </div>
           <div className="bg-[#F4EFE4] py-8 sm:px-6 dark:bg-[#171B18]">
-            <p className="text-xs uppercase tracking-[.14em] text-[#756D61] dark:text-[#98A59B]">
+            <p className="text-xs tracking-[.14em] text-[#756D61] uppercase dark:text-[#98A59B]">
               Supply agreements
             </p>
             <p className="mt-2 text-xl font-semibold">
-              {agreements.filter((row) => row.status === "active").length} active
+              {dataLoading
+                ? "—"
+                : `${agreements.filter((row) => row.status === "active").length} active`}
             </p>
           </div>
           <div className="bg-[#F4EFE4] py-8 sm:px-6 dark:bg-[#171B18]">
-            <p className="text-xs uppercase tracking-[.14em] text-[#756D61] dark:text-[#98A59B]">
+            <p className="text-xs tracking-[.14em] text-[#756D61] uppercase dark:text-[#98A59B]">
               Payments due
             </p>
             <p className="mt-2 text-xl font-semibold">
-              {
-                agreements
-                  .flatMap((row) => row.cycles)
-                  .filter((cycle) => cycle.status === "payment_due").length
-              }
+              {dataLoading
+                ? "—"
+                : agreements
+                    .flatMap((row) => row.cycles)
+                    .filter((cycle) => cycle.status === "payment_due").length}
             </p>
           </div>
         </section>
@@ -197,7 +202,9 @@ export default function B2BDashboardPage() {
           <section>
             <div className="flex items-end justify-between border-b border-[#C9BEAA] pb-4 dark:border-white/15">
               <div>
-                <h2 className="text-2xl font-semibold tracking-[-.03em]">Tomatoes and onions</h2>
+                <h2 className="text-2xl font-semibold tracking-[-.03em]">
+                  {prices?.name || "Business catalogue"}
+                </h2>
                 <p className="mt-1 text-xs text-[#756D61] dark:text-[#98A59B]">
                   Approved pack sizes and business pricing.
                 </p>
@@ -241,7 +248,7 @@ export default function B2BDashboardPage() {
                         {quote.items.length} items
                       </p>
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-[.12em]">
+                    <span className="text-xs font-bold tracking-[.12em] uppercase">
                       {quote.status}
                     </span>
                   </div>
@@ -271,14 +278,14 @@ export default function B2BDashboardPage() {
             </div>
             <Link
               href="/b2b/supply"
-              className="bg-[#173C2A] px-5 py-3 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:bg-[#F4C430] dark:text-[#173C2A]"
+              className="bg-[#173C2A] px-5 py-3 text-sm font-bold text-white focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none dark:bg-[#F4C430] dark:text-[#173C2A]"
             >
               Create request
             </Link>
           </div>
           {dataLoading ? (
             <p className="py-8 text-sm text-[#675E52] dark:text-[#AFC0B2]">
-              Loading supply agreements…
+              <span role="status">Loading supply agreements…</span>
             </p>
           ) : agreements.length ? (
             <div className="divide-y divide-[#D8CEBC] dark:divide-white/15">
@@ -307,7 +314,7 @@ export default function B2BDashboardPage() {
                   </div>
                   <Link
                     href={`/b2b/supply/manage?id=${row.id}`}
-                    className="text-sm font-bold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]"
+                    className="text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none"
                   >
                     Manage
                   </Link>
@@ -345,7 +352,9 @@ export default function B2BDashboardPage() {
             </p>
           )}
           {dataLoading ? (
-            <p className="py-8 text-sm text-[#675E52] dark:text-[#AFC0B2]">Loading orders…</p>
+            <p role="status" className="py-8 text-sm text-[#675E52] dark:text-[#AFC0B2]">
+              Loading orders…
+            </p>
           ) : orders.length ? (
             <div className="divide-y divide-[#D8CEBC] dark:divide-white/15">
               {orders.slice(0, 6).map((order) => (
@@ -369,7 +378,7 @@ export default function B2BDashboardPage() {
                     type="button"
                     disabled={receiptBusy === order.reference}
                     onClick={() => downloadReceipt(order)}
-                    className="w-fit text-sm font-bold underline-offset-4 hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430]"
+                    className="w-fit text-sm font-bold underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none disabled:opacity-50"
                   >
                     {receiptBusy === order.reference ? "Preparing…" : "Receipt"}
                   </button>
