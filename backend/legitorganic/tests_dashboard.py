@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth.models import Permission
+from django.conf import settings
 from django.test import RequestFactory, TestCase
 
 from legitorganic.dashboard import dashboard_callback
@@ -126,3 +127,6 @@ class DashboardCallbackTests(TestCase):
         self.assertContains(response, 'Today’s work')
         self.assertContains(response, '/static/admin/vendor/chart.umd.min.js')
         self.assertContains(response, 'id="chart-revenue-labels"')
+
+    def test_admin_theme_defaults_to_the_staff_device_preference(self):
+        self.assertEqual(settings.UNFOLD['THEME'], 'auto')

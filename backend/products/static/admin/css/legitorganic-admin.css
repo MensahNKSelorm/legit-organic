@@ -1,10 +1,34 @@
 /* Legit Organic control-room shell */
+:root {
+  --lo-canvas: #f7f4ec;
+  --lo-surface: #fffdf8;
+  --lo-surface-raised: #ffffff;
+  --lo-input: #f2eee4;
+  --lo-ink: #173126;
+  --lo-muted: #66756d;
+  --lo-faint: #89958e;
+  --lo-rule: rgba(13, 59, 42, .16);
+  --lo-hover: rgba(13, 59, 42, .055);
+  --lo-panel-shadow: 0 0 0 1px rgba(13,59,42,.07), 0 12px 32px rgba(13,59,42,.10);
+}
+.dark {
+  --lo-canvas: #111827;
+  --lo-surface: #171b18;
+  --lo-surface-raised: #1d241f;
+  --lo-input: #17211c;
+  --lo-ink: #f8f4e9;
+  --lo-muted: #b8c3ba;
+  --lo-faint: #8f9b93;
+  --lo-rule: rgba(255,255,255,.12);
+  --lo-hover: rgba(244,196,48,.07);
+  --lo-panel-shadow: 0 0 0 1px rgba(255,255,255,.08);
+}
 html,
 body,
 #page,
 #main {
-  background: #111827 !important;
-  color: #f8f4e9 !important;
+  background: var(--lo-canvas) !important;
+  color: var(--lo-ink) !important;
   font-family: "Inter", Arial, sans-serif !important;
 }
 .lo-admin-notifications {
@@ -20,9 +44,9 @@ body,
   width: 2.5rem;
   height: 2.5rem;
   place-items: center;
-  border: 1px solid rgba(255,255,255,.18);
-  background: #17211c;
-  color: #f8f4e9;
+  border: 1px solid var(--lo-rule);
+  background: var(--lo-surface-raised);
+  color: var(--lo-ink);
 }
 .lo-admin-bell:hover {
   border-color: #f4c430;
@@ -50,9 +74,9 @@ body,
   max-height: min(32rem, calc(100vh - 5rem));
   overflow: auto;
   border: 1px solid rgba(244,196,48,.3);
-  background: #111827;
-  color: #f8f4e9;
-  box-shadow: 0 18px 45px rgba(0,0,0,.35);
+  background: var(--lo-surface-raised);
+  color: var(--lo-ink);
+  box-shadow: var(--lo-panel-shadow);
 }
 .lo-admin-notification-panel > header {
   position: sticky;
@@ -62,8 +86,8 @@ body,
   align-items: center;
   justify-content: space-between;
   padding: .85rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,.12);
-  background: #111827;
+  border-bottom: 1px solid var(--lo-rule);
+  background: var(--lo-surface-raised);
 }
 .lo-admin-notification-panel > header button,
 .lo-admin-push button {
@@ -77,15 +101,15 @@ body,
   display: grid;
   gap: .3rem;
   padding: .9rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,.12);
-  background: #17211c;
+  border-bottom: 1px solid var(--lo-rule);
+  background: var(--lo-surface);
   font-size: .75rem;
 }
 .lo-admin-push[hidden] {
   display: none;
 }
 .lo-admin-push span {
-  color: #b8c3ba;
+  color: var(--lo-muted);
 }
 .lo-admin-push button {
   width: max-content;
@@ -102,30 +126,30 @@ body,
   gap: .28rem;
   padding: .9rem 1rem;
   border: 0;
-  border-bottom: 1px solid rgba(255,255,255,.09);
+  border-bottom: 1px solid var(--lo-rule);
   background: transparent;
-  color: #f8f4e9;
+  color: var(--lo-ink);
   text-align: left;
 }
 .lo-admin-notification-row:hover {
-  background: rgba(244,196,48,.07);
+  background: var(--lo-hover);
 }
 .lo-admin-notification-row.is-unread {
   box-shadow: inset 3px 0 #f4c430;
   background: rgba(244,196,48,.045);
 }
 .lo-admin-notification-row span {
-  color: #b8c3ba;
+  color: var(--lo-muted);
   font-size: .76rem;
   line-height: 1.45;
 }
 .lo-admin-notification-row small {
-  color: #8f9b93;
+  color: var(--lo-faint);
   font-size: .68rem;
 }
 .lo-admin-notification-state {
   padding: 2rem 1rem;
-  color: #b8c3ba;
+  color: var(--lo-muted);
   font-size: .8rem;
   text-align: center;
 }
@@ -154,14 +178,14 @@ body,
 }
 #main > .bg-white,
 #main > [class*="border-b"] {
-  background: #111827 !important;
-  border-color: rgba(255, 255, 255, .12) !important;
-  color: #f8f4e9 !important;
+  background: var(--lo-canvas) !important;
+  border-color: var(--lo-rule) !important;
+  color: var(--lo-ink) !important;
 }
 #header-inner h1,
 #header-inner a,
 #header-inner span {
-  color: #f8f4e9;
+  color: var(--lo-ink);
 }
 nav.bg-base-50.flex.flex-col.min-h-screen {
   background: #092f22 !important;
@@ -264,18 +288,18 @@ input.bg-primary-600:hover {
 #main .text-base-400,
 #main .help,
 #main .helptext {
-  color: #b8c3ba !important;
+  color: var(--lo-muted) !important;
 }
 #main input:not([type="checkbox"]):not([type="radio"]),
 #main select,
 #main textarea {
-  background-color: #17211c !important;
-  border-color: rgba(248, 244, 233, .24) !important;
-  color: #f8f4e9 !important;
+  background-color: var(--lo-input) !important;
+  border-color: var(--lo-rule) !important;
+  color: var(--lo-ink) !important;
 }
 #main input::placeholder,
 #main textarea::placeholder {
-  color: #9ba79e !important;
+  color: var(--lo-faint) !important;
   opacity: 1;
 }
 #main :is(a, button, input, select, textarea):focus-visible {
@@ -283,7 +307,7 @@ input.bg-primary-600:hover {
   outline-offset: 2px !important;
 }
 #main table tbody tr:hover {
-  background: rgba(244, 196, 48, .055) !important;
+  background: var(--lo-hover) !important;
 }
 #main .errorlist,
 #main .text-red-600,

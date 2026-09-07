@@ -9,14 +9,27 @@
       --forest: #0d3b2a;
       --leaf: #82c68a;
       --gold: #f4c430;
-      --paper: #171b18;
-      --ink: #f8f4e9;
-      --muted: #b8c3ba;
+      --paper: #fffdf8;
+      --surface: #ffffff;
+      --ink: #173126;
+      --muted: #66756d;
+      --rule: rgba(13,59,42,.16);
+      --soft-gold: rgba(244,196,48,.14);
       margin: 0 -1rem;
       padding: 1.25rem 2.25rem 3rem;
-      background: #111827;
+      background: #f7f4ec;
       color: var(--ink);
       font-family: "Inter",Arial,sans-serif;
+      color-scheme: light;
+    }
+    .dark .lo-dashboard {
+      --paper: #171b18;
+      --surface: #1d241f;
+      --ink: #f8f4e9;
+      --muted: #b8c3ba;
+      --rule: rgba(255,255,255,.15);
+      --soft-gold: rgba(244,196,48,.1);
+      background: #111827;
       color-scheme: dark;
     }
     .lo-display {
@@ -67,7 +80,7 @@
       font-size: 1.4rem;
     }
     .lo-rule {
-      border-top: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-top: 1px solid var(--rule);
     }
     .lo-section {
       margin-top: 2rem;
@@ -77,7 +90,7 @@
       align-items: end;
       justify-content: space-between;
       gap: 1rem;
-      border-bottom: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1rem;
       margin-bottom: 1.2rem;
     }
@@ -135,7 +148,8 @@
     }
     .lo-chart {
       min-width: 0;
-      border: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border: 1px solid var(--rule);
+      background: var(--surface);
       padding: 1.25rem;
     }
     .lo-chart-featured {
@@ -172,7 +186,7 @@
       height: 100%;
       display: grid;
       place-items: center;
-      border-top: 1px solid color-mix(in srgb,var(--ink) 12%,transparent);
+      border-top: 1px solid var(--rule);
       color: var(--muted);
       text-align: center;
     }
@@ -184,14 +198,14 @@
     .lo-actions {
       display: grid;
       grid-template-columns: repeat(auto-fit,minmax(10rem,1fr));
-      border-top: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
-      border-left: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-top: 1px solid var(--rule);
+      border-left: 1px solid var(--rule);
     }
     .lo-action {
       min-height: 8.5rem;
       padding: 1.2rem;
-      border-right: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
-      border-bottom: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-right: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -209,20 +223,20 @@
     .lo-attention {
       display: grid;
       grid-template-columns: repeat(auto-fit,minmax(15rem,1fr));
-      border-top: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
-      border-left: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-top: 1px solid var(--rule);
+      border-left: 1px solid var(--rule);
     }
     .lo-attention a {
       min-height: 8.25rem;
       padding: 1rem;
-      border-right: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
-      border-bottom: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border-right: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
       color: var(--ink);
       text-decoration: none;
       transition: background-color .16s ease,color .16s ease;
     }
     .lo-attention a:hover {
-      background: color-mix(in srgb,var(--gold) 12%,transparent);
+      background: var(--soft-gold);
     }
     .lo-attention a[data-priority="critical"] {
       box-shadow: inset 3px 0 #ef6b63;
@@ -261,7 +275,7 @@
       font-weight: 600;
     }
     .lo-empty-work {
-      border: 1px solid color-mix(in srgb,var(--ink) 20%,transparent);
+      border: 1px solid var(--rule);
       padding: 1.25rem;
       color: var(--muted);
       font-size: .82rem;
@@ -292,7 +306,7 @@
     }
     .lo-orders th {
       padding: .75rem .5rem;
-      border-bottom: 1px solid color-mix(in srgb,var(--ink) 25%,transparent);
+      border-bottom: 1px solid var(--rule);
       color: var(--muted);
       text-align: left;
       font-size: .66rem;
@@ -301,7 +315,7 @@
     }
     .lo-orders td {
       padding: 1rem .5rem;
-      border-bottom: 1px solid color-mix(in srgb,var(--ink) 14%,transparent);
+      border-bottom: 1px solid var(--rule);
       font-size: .82rem;
       vertical-align: top;
     }
@@ -516,20 +530,40 @@
     return;
   }
   const read = (id) => JSON.parse(document.getElementById(id).textContent);
-  const ink = '#E7E9E4';
-  const grid = 'rgba(255,255,255,.08)';
+  const isDark = () => document.documentElement.classList.contains('dark');
+  const palette = () => isDark() ? {
+    ink:'#E7E9E4', grid:'rgba(255,255,255,.08)', panel:'#111827'
+  } : {
+    ink:'#40564b', grid:'rgba(13,59,42,.10)', panel:'#ffffff'
+  };
+  let {ink, grid, panel} = palette();
   const salesInk = '#F8F4E9';
   const salesGrid = 'rgba(255,255,255,.13)';
   const common = { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:ink,boxWidth:10,font:{family:'Inter',size:11}}}} };
-  new Chart(document.getElementById('revenueChart'), {type:'line',data:{labels:read('chart-revenue-labels'),datasets:[{label:'Revenue',data:read('chart-revenue-data'),borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,fill:true,tension:.35,pointRadius:2,pointBackgroundColor:'#F4C430',yAxisID:'y'},{label:'Orders',data:read('chart-orders-data'),borderColor:'#82C68A',borderWidth:2,tension:.35,pointRadius:2,pointBackgroundColor:'#82C68A',yAxisID:'y1'}]},options:{...common,plugins:{legend:{labels:{color:salesInk,boxWidth:10,font:{family:'Inter',size:11}}}},scales:{x:{ticks:{color:salesInk,maxTicksLimit:8},grid:{display:false}},y:{ticks:{color:salesInk,callback:v=>'GH₵'+v},grid:{color:salesGrid}},y1:{position:'right',ticks:{color:salesInk,stepSize:1},grid:{display:false}}}}});
+  const charts = [];
+  charts.push(new Chart(document.getElementById('revenueChart'), {type:'line',data:{labels:read('chart-revenue-labels'),datasets:[{label:'Revenue',data:read('chart-revenue-data'),borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,fill:true,tension:.35,pointRadius:2,pointBackgroundColor:'#F4C430',yAxisID:'y'},{label:'Orders',data:read('chart-orders-data'),borderColor:'#82C68A',borderWidth:2,tension:.35,pointRadius:2,pointBackgroundColor:'#82C68A',yAxisID:'y1'}]},options:{...common,plugins:{legend:{labels:{color:salesInk,boxWidth:10,font:{family:'Inter',size:11}}}},scales:{x:{ticks:{color:salesInk,maxTicksLimit:8},grid:{display:false}},y:{ticks:{color:salesInk,callback:v=>'GH₵'+v},grid:{color:salesGrid}},y1:{position:'right',ticks:{color:salesInk,stepSize:1},grid:{display:false}}}}}));
   const statusCanvas = document.getElementById('statusChart');
-  if (statusCanvas) new Chart(statusCanvas, {type:'doughnut',data:{labels:read('chart-donut-labels'),datasets:[{data:read('chart-donut-data'),backgroundColor:read('chart-donut-colors'),borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}});
+  if (statusCanvas) charts.push(new Chart(statusCanvas, {type:'doughnut',data:{labels:read('chart-donut-labels'),datasets:[{data:read('chart-donut-data'),backgroundColor:read('chart-donut-colors'),borderColor:panel,borderWidth:3}]},options:{...common,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}}));
   const productsCanvas = document.getElementById('productsChart');
-  if (productsCanvas) new Chart(productsCanvas, {type:'bar',data:{labels:read('chart-product-labels'),datasets:[{data:read('chart-product-data'),backgroundColor:'#F4C430',borderRadius:0}]},options:{...common,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}},y:{ticks:{color:ink},grid:{display:false}}}}});
+  if (productsCanvas) charts.push(new Chart(productsCanvas, {type:'bar',data:{labels:read('chart-product-labels'),datasets:[{data:read('chart-product-data'),backgroundColor:'#F4C430',borderRadius:0}]},options:{...common,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}},y:{ticks:{color:ink},grid:{display:false}}}}}));
   const customersCanvas = document.getElementById('customersChart');
-  if (customersCanvas) new Chart(customersCanvas, {type:'line',data:{labels:read('chart-customer-labels'),datasets:[{data:read('chart-customer-data'),borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,pointRadius:4,pointBackgroundColor:'#F4C430',fill:true,tension:.3}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:ink,maxRotation:0},grid:{display:false}},y:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}}}}});
+  if (customersCanvas) charts.push(new Chart(customersCanvas, {type:'line',data:{labels:read('chart-customer-labels'),datasets:[{data:read('chart-customer-data'),borderColor:'#F4C430',backgroundColor:'rgba(244,196,48,.16)',borderWidth:3,pointRadius:4,pointBackgroundColor:'#F4C430',fill:true,tension:.3}]},options:{...common,plugins:{legend:{display:false}},scales:{x:{ticks:{color:ink,maxRotation:0},grid:{display:false}},y:{beginAtZero:true,ticks:{color:ink,precision:0},grid:{color:grid}}}}}));
   const channelCanvas = document.getElementById('channelChart');
-  if (channelCanvas) new Chart(channelCanvas, {type:'doughnut',data:{labels:read('chart-channel-labels'),datasets:[{data:read('chart-channel-data'),backgroundColor:['#82C68A','#F4C430','#5EA3D8','#C78DE0','#E68A5C'],borderColor:'#111827',borderWidth:3}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}});
+  if (channelCanvas) charts.push(new Chart(channelCanvas, {type:'doughnut',data:{labels:read('chart-channel-labels'),datasets:[{data:read('chart-channel-data'),backgroundColor:['#82C68A','#F4C430','#5EA3D8','#C78DE0','#E68A5C'],borderColor:panel,borderWidth:3}]},options:{...common,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:ink,boxWidth:8,padding:12,font:{family:'Inter',size:10}}}}}}));
+
+  new MutationObserver(() => {
+    ({ink, grid, panel} = palette());
+    charts.forEach((chart) => {
+      if (chart.canvas.id === 'revenueChart') return;
+      if (chart.options.plugins.legend.labels) chart.options.plugins.legend.labels.color = ink;
+      Object.values(chart.options.scales || {}).forEach((scale) => {
+        if (scale.ticks) scale.ticks.color = ink;
+        if (scale.grid && scale.grid.display !== false) scale.grid.color = grid;
+      });
+      if (chart.config.type === 'doughnut') chart.data.datasets[0].borderColor = panel;
+      chart.update('none');
+    });
+  }).observe(document.documentElement, {attributes:true, attributeFilter:['class']});
 })();
 </script>
 {% endif %}
