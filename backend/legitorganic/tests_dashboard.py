@@ -118,6 +118,34 @@ class DashboardCallbackTests(TestCase):
         self.assertEqual(priorities, sorted(priorities, key=priority_order.get))
         self.assertEqual(priorities, ['high', 'low'])
 
+    def test_operational_views_are_permission_aware_and_keep_zero_count_queues(self):
+        preparing = self.create_order('PREP-1', payment_status='success')
+        Order.objects.filter(pk=preparing.pk).update(status='processing')
+        self.create_order('FAILED-1', payment_status='failed')
+
+        owner_context = dashboard_callback(self.request_for(self.owner), {})
+        order_views = {
+            item['label']: item for item in owner_context['operational_views'][:3]
+        }
+
+        self.assertEqual(order_views['Orders to prepare']['count'], 1)
+        self.assertEqual(order_views['Ready for delivery']['count'], 0)
+        self.assertEqual(order_views['Payment problems']['count'], 1)
+        self.assertIn('payment_status__in=failed%2Cexpired', order_views['Payment problems']['href'])
+        self.client.force_login(self.owner)
+        for item in order_views.values():
+            self.assertEqual(self.client.get(item['href']).status_code, 200)
+
+        staff = User.objects.create_user(
+            email='content@legitorganic.com', password='test-pass', is_staff=True
+        )
+        staff.user_permissions.add(Permission.objects.get(codename='view_recipe'))
+        staff_context = dashboard_callback(self.request_for(staff), {})
+        self.assertEqual(
+            [item['label'] for item in staff_context['operational_views']],
+            ['Recipes awaiting review'],
+        )
+
     def test_admin_dashboard_renders_local_chart_asset_and_safe_chart_data(self):
         self.client.force_login(self.owner)
 
@@ -127,6 +155,7 @@ class DashboardCallbackTests(TestCase):
         self.assertContains(response, 'Today’s work')
         self.assertContains(response, '/static/admin/vendor/chart.umd.min.js')
         self.assertContains(response, 'id="chart-revenue-labels"')
+        self.assertContains(response, 'Work views')
         self.assertContains(response, "switchTheme('light')")
         self.assertContains(response, "switchTheme('dark')")
         self.assertContains(response, "switchTheme('auto')")

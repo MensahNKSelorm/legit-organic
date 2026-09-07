@@ -347,6 +347,58 @@ def dashboard_callback(request, context):
     )
     priority_order = {'critical': 0, 'high': 1, 'normal': 2, 'low': 3}
     attention_items.sort(key=lambda item: (priority_order[item['priority']], -item['count']))
+
+    operational_views = []
+
+    def add_operational_view(*, permission, label, href, count, icon):
+        if request.user.has_perm(permission):
+            operational_views.append(
+                {'label': label, 'href': href, 'count': count, 'icon': icon}
+            )
+
+    add_operational_view(
+        permission='orders.view_order',
+        label='Orders to prepare',
+        href='/admin/orders/order/?status__exact=processing&is_test__exact=0',
+        count=all_orders.filter(status='processing').count(),
+        icon='inventory',
+    )
+    add_operational_view(
+        permission='orders.view_order',
+        label='Ready for delivery',
+        href='/admin/orders/order/?status__exact=ready_for_dispatch&is_test__exact=0',
+        count=all_orders.filter(status='ready_for_dispatch').count(),
+        icon='local_shipping',
+    )
+    add_operational_view(
+        permission='orders.view_order',
+        label='Payment problems',
+        href='/admin/orders/order/?payment_status__in=failed%2Cexpired&is_test__exact=0',
+        count=all_orders.filter(payment_status__in=['failed', 'expired']).count(),
+        icon='credit_card_off',
+    )
+    add_operational_view(
+        permission='subscriptions.view_subscriptionweek',
+        label="Today’s subscription deliveries",
+        href=f'/admin/subscriptions/subscriptionweek/?delivery_date__exact={today.isoformat()}',
+        count=SubscriptionWeek.objects.filter(delivery_date=today).count(),
+        icon='event_available',
+    )
+    add_operational_view(
+        permission='users.view_b2bprofile',
+        label='Pending B2B applications',
+        href='/admin/users/b2bprofile/?status__exact=pending',
+        count=B2BProfile.objects.filter(status='pending').count(),
+        icon='domain_verification',
+    )
+    add_operational_view(
+        permission='recipes.view_recipe',
+        label='Recipes awaiting review',
+        href='/admin/recipes/recipe/?status__exact=needs_review',
+        count=Recipe.objects.filter(status='needs_review').count(),
+        icon='fact_check',
+    )
+
     quick_actions = []
     if request.user.has_perm('orders.view_order'):
         quick_actions.append(
@@ -439,6 +491,7 @@ def dashboard_callback(request, context):
             },
             'attention_items': attention_items,
             'attention_total': sum(item['count'] for item in attention_items),
+            'operational_views': operational_views,
             'dashboard_role': dashboard_role,
             'role_label': role_label,
             'today_label': now.strftime('%A, %d %B'),
