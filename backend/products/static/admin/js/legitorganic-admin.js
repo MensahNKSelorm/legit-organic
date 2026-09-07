@@ -658,7 +658,9 @@
           );
       }
       status.textContent = applied
-        ? "Applied to the form. Review it, then save. Nutrition calculates from verified ingredient matches."
+        ? kind === "recipe" && draftTask !== "description"
+          ? "Published instructions filled. Review every step, then save."
+          : "Applied to the form. Review it, then save. Nutrition calculates from verified ingredient matches."
         : "The existing field was left unchanged.";
     });
   });

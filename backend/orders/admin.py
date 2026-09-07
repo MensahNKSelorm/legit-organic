@@ -18,6 +18,20 @@ from .models import (
 )
 from .promo_models import PromoCode
 from .forms import OrderAdminForm
+from .queries import payment_exception_q
+
+
+class PaymentExceptionFilter(admin.SimpleListFilter):
+    title = 'payment exception'
+    parameter_name = 'payment_exception'
+
+    def lookups(self, request, model_admin):
+        return [('yes', 'Needs investigation')]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(payment_exception_q())
+        return queryset
 
 
 @admin.action(description='Export selected orders to Excel')
@@ -196,7 +210,14 @@ class OrderAdmin(ModelAdmin):
         'total_amount',
         'created_at',
     ]
-    list_filter = ['is_test', 'status', 'payment_status', 'order_source', 'created_at']
+    list_filter = [
+        PaymentExceptionFilter,
+        'is_test',
+        'status',
+        'payment_status',
+        'order_source',
+        'created_at',
+    ]
     search_fields = [
         'reference',
         'user__email',

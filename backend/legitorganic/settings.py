@@ -187,7 +187,7 @@ UNFOLD = {
         lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260907-6',
     ],
     "SCRIPTS": [
-        lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260907-3',
+        lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260907-4',
     ],
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,

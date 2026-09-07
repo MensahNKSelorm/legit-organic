@@ -17,6 +17,7 @@ def dashboard_callback(request, context):
     six_months_ago = today - timedelta(days=180)
 
     from orders.models import Order, OrderItem
+    from orders.queries import payment_exception_q
     from products.models import Product
     from users.models import User, B2BProfile
     from blog.models import BlogPost
@@ -372,9 +373,9 @@ def dashboard_callback(request, context):
     )
     add_operational_view(
         permission='orders.view_order',
-        label='Payment problems',
-        href='/admin/orders/order/?payment_status__in=failed%2Cexpired&is_test__exact=0',
-        count=all_orders.filter(payment_status__in=['failed', 'expired']).count(),
+        label='Payment exceptions',
+        href='/admin/orders/order/?payment_exception=yes&is_test__exact=0',
+        count=all_orders.filter(payment_exception_q()).count(),
         icon='credit_card_off',
     )
     add_operational_view(

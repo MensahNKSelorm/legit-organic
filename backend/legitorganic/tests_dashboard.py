@@ -121,7 +121,9 @@ class DashboardCallbackTests(TestCase):
     def test_operational_views_are_permission_aware_and_keep_zero_count_queues(self):
         preparing = self.create_order('PREP-1', payment_status='success')
         Order.objects.filter(pk=preparing.pk).update(status='processing')
-        self.create_order('FAILED-1', payment_status='failed')
+        self.create_order('ABANDONED-1', payment_status='failed')
+        mismatch = self.create_order('MISMATCH-1', payment_status='failed')
+        Order.objects.filter(pk=mismatch.pk).update(status='paid')
 
         owner_context = dashboard_callback(self.request_for(self.owner), {})
         order_views = {
@@ -130,8 +132,8 @@ class DashboardCallbackTests(TestCase):
 
         self.assertEqual(order_views['Orders to prepare']['count'], 1)
         self.assertEqual(order_views['Ready for delivery']['count'], 0)
-        self.assertEqual(order_views['Payment problems']['count'], 1)
-        self.assertIn('payment_status__in=failed%2Cexpired', order_views['Payment problems']['href'])
+        self.assertEqual(order_views['Payment exceptions']['count'], 1)
+        self.assertIn('payment_exception=yes', order_views['Payment exceptions']['href'])
         self.client.force_login(self.owner)
         for item in order_views.values():
             self.assertEqual(self.client.get(item['href']).status_code, 200)
