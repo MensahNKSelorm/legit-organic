@@ -29,7 +29,7 @@ from .models import (
     RecipeSource,
 )
 from users.models import User
-from .admin import RecipeAdmin
+from .admin import RecipeAdmin, RecipeIngredientInline, RecipeStepInline
 from .forms import RecipeStepForm
 from .importing import RecipeImportError, extract_recipe_json_ld, source_for_url, validate_public_url
 from .services import (
@@ -45,6 +45,17 @@ from .wafct import DATA_SHEET, iter_wafct_rows
 
 
 class RecipeAdminStaffFieldsTests(TestCase):
+    def test_recipe_edit_does_not_add_an_empty_instruction_row(self):
+        self.assertEqual(RecipeStepInline.extra, 0)
+
+    def test_recipe_edit_does_not_add_an_empty_ingredient_row(self):
+        self.assertEqual(RecipeIngredientInline.extra, 0)
+
+    def test_nutrition_status_is_system_managed(self):
+        model_admin = RecipeAdmin(Recipe, admin.site)
+
+        self.assertIn('nutrition_status', model_admin.readonly_fields)
+
     def test_creator_and_reviewer_choices_exclude_customers(self):
         staff = User.objects.create_user(email='editor@example.com', is_staff=True)
         customer = User.objects.create_user(email='customer@example.com')

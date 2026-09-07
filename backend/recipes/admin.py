@@ -40,7 +40,7 @@ from .services import (
 
 class RecipeIngredientInline(TabularInline):
     model = RecipeIngredient
-    extra = 1
+    extra = 0
     fields = [
         'position',
         'raw_text',
@@ -66,7 +66,7 @@ class RecipeIngredientInline(TabularInline):
 class RecipeStepInline(TabularInline):
     model = RecipeStep
     form = RecipeStepForm
-    extra = 1
+    extra = 0
     ordering = ['step_number']
     fields = ['step_number', 'section', 'source_instruction_text', 'instruction', 'image']
 
@@ -117,6 +117,7 @@ class RecipeAdmin(ModelAdmin):
         'ingredients_hash',
         'permanent_delete_control',
         'nutrition_summary',
+        'nutrition_status',
     ]
     inlines = [RecipeIngredientInline, RecipeStepInline, RecipePairingInline]
     fieldsets = (
