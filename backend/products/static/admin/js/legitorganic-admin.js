@@ -1,3 +1,50 @@
+(function initialiseAdminThemeControl() {
+  const ready = (callback) => {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", callback);
+    else callback();
+  };
+
+  ready(() => {
+    if (!document.querySelector("#header-inner")) return;
+    const control = document.createElement("div");
+    control.className = "lo-admin-theme";
+    control.setAttribute("role", "group");
+    control.setAttribute("aria-label", "Dashboard appearance");
+    control.innerHTML = `
+      <span>Theme</span>
+      <button type="button" data-theme-choice="light" aria-label="Use light theme" title="Light">
+        <span class="material-symbols-outlined" aria-hidden="true">light_mode</span>
+      </button>
+      <button type="button" data-theme-choice="dark" aria-label="Use dark theme" title="Dark">
+        <span class="material-symbols-outlined" aria-hidden="true">dark_mode</span>
+      </button>
+      <button type="button" data-theme-choice="auto" aria-label="Use system theme" title="System">
+        <span class="material-symbols-outlined" aria-hidden="true">computer</span>
+      </button>`;
+    document.body.appendChild(control);
+
+    const themeData = () =>
+      window.Alpine?.$data(document.documentElement) || document.documentElement._x_dataStack?.[0];
+    const sync = () => {
+      const selected = themeData()?.adminTheme || "auto";
+      control.querySelectorAll("[data-theme-choice]").forEach((button) => {
+        const active = button.dataset.themeChoice === selected;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+    };
+    control.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-theme-choice]");
+      if (!button) return;
+      const data = themeData();
+      if (data?.switchTheme) data.switchTheme(button.dataset.themeChoice);
+      sync();
+    });
+    document.addEventListener("alpine:initialized", sync);
+    window.setTimeout(sync, 0);
+  });
+})();
+
 (function initialiseAdminNotifications() {
   const ready = (callback) => {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", callback);

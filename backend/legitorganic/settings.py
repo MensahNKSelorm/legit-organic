@@ -184,14 +184,16 @@ UNFOLD = {
     "SITE_SYMBOL": "eco",
     "DASHBOARD_CALLBACK": "legitorganic.dashboard.dashboard_callback",
     "STYLES": [
-        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260907-4',
+        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260907-5',
     ],
     "SCRIPTS": [
-        lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260907-2',
+        lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260907-3',
     ],
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
-    "THEME": "auto",
+    # None keeps System as the default while allowing staff to choose
+    # Light, Dark, or System from Unfold's theme controls.
+    "THEME": None,
     "COLORS": {
         "primary": {
             "50": "240 253 244",

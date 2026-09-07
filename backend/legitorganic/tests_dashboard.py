@@ -127,6 +127,9 @@ class DashboardCallbackTests(TestCase):
         self.assertContains(response, 'Today’s work')
         self.assertContains(response, '/static/admin/vendor/chart.umd.min.js')
         self.assertContains(response, 'id="chart-revenue-labels"')
+        self.assertContains(response, "switchTheme('light')")
+        self.assertContains(response, "switchTheme('dark')")
+        self.assertContains(response, "switchTheme('auto')")
 
-    def test_admin_theme_defaults_to_the_staff_device_preference(self):
-        self.assertEqual(settings.UNFOLD['THEME'], 'auto')
+    def test_admin_theme_allows_staff_to_choose_their_preference(self):
+        self.assertIsNone(settings.UNFOLD['THEME'])
