@@ -10,6 +10,13 @@
   --lo-rule: rgba(13, 59, 42, .16);
   --lo-hover: rgba(13, 59, 42, .055);
   --lo-panel-shadow: 0 0 0 1px rgba(13,59,42,.07), 0 12px 32px rgba(13,59,42,.10);
+  --lo-nav: #f1ede3;
+  --lo-nav-raised: #fffdf8;
+  --lo-nav-ink: #173126;
+  --lo-nav-muted: #65736c;
+  --lo-nav-rule: rgba(13,59,42,.14);
+  --lo-nav-hover: rgba(13,59,42,.08);
+  --lo-danger: #b42318;
 }
 .dark {
   --lo-canvas: #111827;
@@ -22,6 +29,13 @@
   --lo-rule: rgba(255,255,255,.12);
   --lo-hover: rgba(244,196,48,.07);
   --lo-panel-shadow: 0 0 0 1px rgba(255,255,255,.08);
+  --lo-nav: #09291d;
+  --lo-nav-raised: #17211c;
+  --lo-nav-ink: #f8f4e9;
+  --lo-nav-muted: #aebbb2;
+  --lo-nav-rule: rgba(255,255,255,.13);
+  --lo-nav-hover: rgba(244,196,48,.11);
+  --lo-danger: #ff9d9d;
 }
 html,
 body,
@@ -245,6 +259,15 @@ body,
 #command-results-list li.active a span {
   color: #fff !important;
 }
+#command-results,
+#command-history,
+#command-results-note {
+  color: var(--lo-ink);
+}
+#command-history a:hover,
+#command-history li.active a {
+  background: var(--lo-hover) !important;
+}
 #main h1,
 #main h2,
 #main h3,
@@ -267,42 +290,54 @@ body,
   color: var(--lo-ink);
 }
 nav.bg-base-50.flex.flex-col.min-h-screen {
-  background: #092f22 !important;
-  color: #f8f4e9 !important;
-  border-right: 0 !important;
+  background: var(--lo-nav) !important;
+  color: var(--lo-nav-ink) !important;
+  border-right: 1px solid var(--lo-nav-rule) !important;
   font-family: "Inter", Arial, sans-serif;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen img {
-  filter: brightness(0) invert(1);
+  filter: brightness(0) saturate(100%);
   opacity: .94;
+}
+.dark nav.bg-base-50.flex.flex-col.min-h-screen img {
+  filter: brightness(0) invert(1);
 }
 nav.bg-base-50.flex.flex-col.min-h-screen > div:nth-last-child(2) {
   padding-bottom: 1rem;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen > div:first-child {
-  border-bottom-color: rgba(255, 255, 255, .14) !important;
+  border-bottom-color: var(--lo-nav-rule) !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen input {
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
-  color: #fff !important;
+  color: var(--lo-nav-ink) !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen input + * {
-  color: rgba(255,255,255,.55) !important;
+  color: var(--lo-nav-muted) !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen div:has(> input[placeholder*="Search"]) {
-  background: rgba(255, 255, 255, .055) !important;
-  border: 1px solid rgba(244, 196, 48, .32) !important;
+  background: var(--lo-nav-raised) !important;
+  border: 1px solid var(--lo-nav-rule) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen input::placeholder {
-  color: rgba(255, 255, 255, .5) !important;
+  color: var(--lo-nav-muted) !important;
+}
+nav.bg-base-50.flex.flex-col.min-h-screen > div.mb-2\.5 > div {
+  background: var(--lo-nav-raised) !important;
+  border-color: var(--lo-nav-rule) !important;
+  color: var(--lo-nav-muted) !important;
+}
+nav.bg-base-50.flex.flex-col.min-h-screen > div.mb-2\.5 > div:hover {
+  border-color: #2e7d32 !important;
+  color: var(--lo-nav-ink) !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen h3,
 nav.bg-base-50.flex.flex-col.min-h-screen [class*="uppercase"] {
-  color: #f4c430 !important;
+  color: #2e7d32 !important;
   font-size: .65rem !important;
   font-weight: 800 !important;
   letter-spacing: .14em !important;
@@ -310,37 +345,64 @@ nav.bg-base-50.flex.flex-col.min-h-screen [class*="uppercase"] {
 nav.bg-base-50.flex.flex-col.min-h-screen h3 {
   margin-top: .4rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255,255,255,.11);
+  border-top: 1px solid var(--lo-nav-rule);
 }
 nav.bg-base-50.flex.flex-col.min-h-screen a[href^="/admin/"] {
   min-height: 2.65rem;
   border-radius: 0 !important;
-  color: rgba(255, 255, 255, .78) !important;
+  color: var(--lo-nav-ink) !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen a[href^="/admin/"]:hover {
-  background: rgba(244, 196, 48, .12) !important;
-  color: #fff !important;
+  background: var(--lo-nav-hover) !important;
+  color: #0d3b2a !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen a[href="/admin/"],
 nav.bg-base-50.flex.flex-col.min-h-screen a[class*="bg-primary"] {
-  color: #f4c430 !important;
+  color: #0d3b2a !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen .material-symbols-outlined {
-  color: #f4c430;
+  color: #2e7d32;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen [class*="border-base"] {
-  border-color: rgba(255, 255, 255, .14) !important;
+  border-color: var(--lo-nav-rule) !important;
 }
-.dark nav.bg-base-50.flex.flex-col.min-h-screen {
-  background: #09291d !important;
+.dark nav.bg-base-50.flex.flex-col.min-h-screen h3,
+.dark nav.bg-base-50.flex.flex-col.min-h-screen [class*="uppercase"],
+.dark nav.bg-base-50.flex.flex-col.min-h-screen a[href="/admin/"],
+.dark nav.bg-base-50.flex.flex-col.min-h-screen a[class*="bg-primary"],
+.dark nav.bg-base-50.flex.flex-col.min-h-screen .material-symbols-outlined {
+  color: #f4c430 !important;
+}
+.dark nav.bg-base-50.flex.flex-col.min-h-screen a[href^="/admin/"]:hover {
+  color: #fff !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen > div:last-child {
-  background: rgba(0,0,0,.12);
-  border-color: rgba(255,255,255,.12) !important;
+  background: var(--lo-nav);
+  border-color: var(--lo-nav-rule) !important;
 }
 nav.bg-base-50.flex.flex-col.min-h-screen > div:last-child .text-subtle,
 nav.bg-base-50.flex.flex-col.min-h-screen > div:last-child .text-font-subtle-dark {
-  display: none;
+  color: var(--lo-nav-muted) !important;
+}
+#nav-sidebar-inner > div:last-child > nav {
+  background: var(--lo-nav-raised) !important;
+  border-color: var(--lo-nav-rule) !important;
+  color: var(--lo-nav-ink) !important;
+}
+#nav-sidebar-inner > div:last-child > nav a,
+#nav-sidebar-inner > div:last-child > nav button {
+  color: var(--lo-nav-ink);
+}
+#nav-sidebar-inner > div:last-child > nav a:hover,
+#nav-sidebar-inner > div:last-child > nav button:hover {
+  background: var(--lo-nav-hover) !important;
+  color: var(--lo-nav-ink) !important;
+}
+#nav-sidebar-inner > div:last-child > nav form button {
+  color: #b42318 !important;
+}
+.dark #nav-sidebar-inner > div:last-child > nav form button {
+  color: #ff9d9d !important;
 }
 /* Quiet the generic shell and use the brand controls consistently. */
 a.bg-primary-600,
@@ -391,7 +453,7 @@ input.bg-primary-600:hover {
 #main .errorlist,
 #main .text-red-600,
 #main .dark\:text-red-500 {
-  color: #ff9d9d !important;
+  color: var(--lo-danger) !important;
 }
 /* Boolean controls: a checkbox is a check, a switch is a switch. The generic
    square-input rule above must never flatten a switch track around its knob. */
@@ -399,9 +461,9 @@ input.bg-primary-600:hover {
   width: 2.25rem !important;
   min-width: 2.25rem !important;
   height: 1.25rem !important;
-  border: 1px solid rgba(248, 244, 233, .28) !important;
+  border: 1px solid var(--lo-rule) !important;
   border-radius: 999px !important;
-  background: #374151 !important;
+  background: var(--lo-muted) !important;
   box-shadow: none !important;
 }
 #main input[type="checkbox"][class~="w-8"]::after {
@@ -410,7 +472,7 @@ input.bg-primary-600:hover {
   width: .75rem !important;
   height: .75rem !important;
   border-radius: 50% !important;
-  background: #f8f4e9 !important;
+  background: var(--lo-surface-raised) !important;
   box-shadow: none !important;
 }
 #main input[type="checkbox"][class~="w-8"]:checked {
@@ -423,7 +485,7 @@ input.bg-primary-600:hover {
 }
 #main input[type="checkbox"][class~="w-4"] {
   border-radius: 2px !important;
-  border-color: rgba(248, 244, 233, .35) !important;
+  border-color: var(--lo-rule) !important;
   box-shadow: none !important;
 }
 #main input[type="checkbox"][class~="w-4"]:checked {
@@ -443,6 +505,48 @@ input.bg-primary-600:hover {
   background: #fffdf8 !important;
   color: #173126 !important;
   border-color: rgba(13,59,42,.22) !important;
+}
+.dark .ck.ck-toolbar {
+  background: #202721 !important;
+  border-color: var(--lo-rule) !important;
+}
+.dark .ck.ck-editor__editable_inline {
+  background: var(--lo-input) !important;
+  color: var(--lo-ink) !important;
+  border-color: var(--lo-rule) !important;
+}
+.dark .ck.ck-button,
+.dark .ck.ck-button .ck-icon {
+  color: var(--lo-ink) !important;
+}
+.dark .ck.ck-button:hover,
+.dark .ck.ck-button.ck-on {
+  background: var(--lo-hover) !important;
+}
+
+/* Menus rendered at the document root do not inherit #main form colors. */
+.select2-container--admin-autocomplete .select2-dropdown,
+.select2-container--default .select2-dropdown {
+  background: var(--lo-surface-raised) !important;
+  border-color: var(--lo-rule) !important;
+  color: var(--lo-ink) !important;
+}
+.select2-container--admin-autocomplete .select2-results__option,
+.select2-container--default .select2-results__option {
+  color: var(--lo-ink) !important;
+}
+.select2-container--admin-autocomplete .select2-results__option--highlighted,
+.select2-container--default .select2-results__option--highlighted {
+  background: #2e7d32 !important;
+  color: #fff !important;
+}
+.select2-search__field {
+  background: var(--lo-input) !important;
+  border-color: var(--lo-rule) !important;
+  color: var(--lo-ink) !important;
+}
+.select2-results__message {
+  color: var(--lo-muted) !important;
 }
 /* Editorial content forms */
 :is(#product_form, #blogpost_form, #recipe_form) {
