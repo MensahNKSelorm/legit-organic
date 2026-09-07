@@ -239,7 +239,7 @@ def dashboard_callback(request, context):
     recent_orders = all_orders.select_related('user').order_by('-created_at')[:6]
     attention_items = []
 
-    def add_attention(*, permission, label, href, count, priority, detail):
+    def add_attention(*, permission, label, href, count, priority):
         if request.user.has_perm(permission) and count:
             attention_items.append(
                 {
@@ -247,7 +247,6 @@ def dashboard_callback(request, context):
                     'href': href,
                     'count': count,
                     'priority': priority,
-                    'detail': detail,
                 }
             )
 
@@ -259,7 +258,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('subscriptions.view_subscriptionpricenotice')
         else 0,
         priority='critical',
-        detail='Customers may not know about a scheduled price change.',
     )
     add_attention(
         permission='subscriptions.view_subscriptionweek',
@@ -269,7 +267,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('subscriptions.view_subscriptionweek')
         else 0,
         priority='critical',
-        detail='Recover or close these renewal cycles.',
     )
     add_attention(
         permission='orders.view_order',
@@ -279,7 +276,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('orders.view_order')
         else 0,
         priority='high',
-        detail='Follow up before these orders go stale.',
     )
     add_attention(
         permission='subscriptions.view_subscriptionweek',
@@ -289,7 +285,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('subscriptions.view_subscriptionweek')
         else 0,
         priority='high',
-        detail='Payment is required before the next delivery.',
     )
     add_attention(
         permission='orders.view_order',
@@ -299,7 +294,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('orders.view_order')
         else 0,
         priority='normal',
-        detail='Keep packing and dispatch moving.',
     )
     add_attention(
         permission='users.view_b2bprofile',
@@ -309,7 +303,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('users.view_b2bprofile')
         else 0,
         priority='normal',
-        detail='Review documents and approve eligible businesses.',
     )
     add_attention(
         permission='recipes.view_recipe',
@@ -319,7 +312,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('recipes.view_recipe')
         else 0,
         priority='normal',
-        detail='Check sources, instructions, and publication readiness.',
     )
     add_attention(
         permission='recipes.view_recipe',
@@ -334,7 +326,6 @@ def dashboard_callback(request, context):
             else 0
         ),
         priority='normal',
-        detail='Resolve ingredient matches before nutrition can be trusted.',
     )
     add_attention(
         permission='products.view_product',
@@ -344,7 +335,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('products.view_product')
         else 0,
         priority='low',
-        detail='Confirm stock status or restore catalogue availability.',
     )
     add_attention(
         permission='blog.view_blogpost',
@@ -354,7 +344,6 @@ def dashboard_callback(request, context):
         if request.user.has_perm('blog.view_blogpost')
         else 0,
         priority='low',
-        detail='Continue editing when the publishing schedule allows.',
     )
     priority_order = {'critical': 0, 'high': 1, 'normal': 2, 'low': 3}
     attention_items.sort(key=lambda item: (priority_order[item['priority']], -item['count']))

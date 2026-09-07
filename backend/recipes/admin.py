@@ -347,6 +347,7 @@ class RecipeAdmin(ModelAdmin):
             blocking = {
                 'No ingredients',
                 'No instructions',
+                'Published instruction missing',
                 'Missing servings',
                 'Ingredient quantity missing',
             }
@@ -419,6 +420,9 @@ class RecipeAdmin(ModelAdmin):
         eligible = queryset.filter(status__in=['approved', 'ready', 'published'])
         updated = 0
         for recipe in eligible:
+            warnings = review_warnings(recipe)
+            if {'No instructions', 'Published instruction missing'}.intersection(warnings):
+                continue
             old_published = recipe.is_published
             recipe.is_published = True
             recipe.published_at = recipe.published_at or timezone.now()

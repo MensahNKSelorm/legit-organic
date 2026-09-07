@@ -244,13 +244,6 @@
       color: var(--muted);
       font-size: .75rem;
     }
-    .lo-attention small {
-      display: block;
-      margin-top: .4rem;
-      color: color-mix(in srgb,var(--muted) 82%,transparent);
-      font-size: .68rem;
-      line-height: 1.45;
-    }
     .lo-priority {
       display: inline-block;
       margin-bottom: .8rem;
@@ -425,10 +418,7 @@
 
   <section class="lo-section" aria-labelledby="attention-heading">
     <div class="lo-section-head">
-      <div>
-        <h2 class="lo-display" id="attention-heading">Today’s work</h2>
-        <p>Only queues you can act on are shown, ordered by urgency.</p>
-      </div>
+      <h2 class="lo-display" id="attention-heading">Today’s work</h2>
       {% if attention_total %}<span class="lo-kicker">{{ attention_total }} open</span>{% else %}<span class="lo-kicker">Clear</span>{% endif %}
     </div>
     {% if attention_items %}
@@ -438,7 +428,6 @@
         <span class="lo-priority">{{ item.priority }}</span>
         <strong>{{ item.count }}</strong>
         <span>{{ item.label }}</span>
-        <small>{{ item.detail }}</small>
       </a>
       {% endfor %}
     </div>
@@ -449,7 +438,7 @@
 
   {% if can_see_finance or dashboard_role == 'owner' %}
   <section class="lo-section">
-    <div class="lo-section-head"><h2 class="lo-display">Business overview</h2><span class="lo-kicker">Live view</span></div>
+    <div class="lo-section-head"><h2 class="lo-display">Business overview</h2></div>
     <div class="lo-snapshot">
       <div class="lo-snapshot-item"><span>Revenue · month</span><strong>{{ kpi.this_month_revenue }}</strong><small class="lo-delta">{{ kpi.revenue_change|stringformat:"+.1f" }}% vs last month</small></div>
       <div class="lo-snapshot-item"><span>Orders · month</span><strong>{{ kpi.orders_this_month }}</strong><small class="lo-delta">{{ kpi.orders_change|stringformat:"+.1f" }}% vs last month</small></div>

@@ -408,6 +408,23 @@
     input.dispatchEvent(new Event("change", { bubbles: true }));
   };
 
+  const fillRichText = async (id, html) => {
+    const input = field(id);
+    if (!input) return false;
+    input.value = html;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const editor = window.editors && window.editors[id];
+      if (editor) {
+        editor.setData(html);
+        return true;
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 50));
+    }
+    return true;
+  };
+
   const applyRecipeMethod = async (draft) => {
     const existing = ["ingredients", "steps", "pairings"].some((prefix) =>
       Array.from(document.querySelectorAll(`[name^="${prefix}-"][name$="-id"]`)).some(
@@ -458,9 +475,7 @@
       fillInput(`steps-${index}-source_instruction_text`, item.source_instruction_text);
       const id = `id_steps-${index}-instruction`;
       const html = paragraph(item.instruction);
-      const input = field(id);
-      if (input) input.value = html;
-      if (window.editors && window.editors[id]) window.editors[id].setData(html);
+      if (!(await fillRichText(id, html))) return false;
     }
     for (const [position, item] of (draft.pairings || []).entries()) {
       const index = await inlineSlot("pairings", "suggested_recipe");

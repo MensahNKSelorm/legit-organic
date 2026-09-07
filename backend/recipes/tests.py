@@ -30,12 +30,14 @@ from .models import (
 )
 from users.models import User
 from .admin import RecipeAdmin
+from .forms import RecipeStepForm
 from .importing import RecipeImportError, extract_recipe_json_ld, source_for_url, validate_public_url
 from .services import (
     calculate_nutrition,
     confirm_regional_candidate,
     normalize_ingredient,
     parse_quantity,
+    review_warnings,
     search_regional_candidates,
     search_usda_candidates,
 )
@@ -56,6 +58,41 @@ class RecipeAdminStaffFieldsTests(TestCase):
             )
             self.assertIn(staff, formfield.queryset)
             self.assertNotIn(customer, formfield.queryset)
+
+
+class RecipeStepEditorialFieldsTests(TestCase):
+    def test_source_wording_is_reference_only_and_labels_are_specific(self):
+        form = RecipeStepForm()
+
+        self.assertTrue(form.fields['source_instruction_text'].widget.attrs['readonly'])
+        self.assertEqual(form.fields['source_instruction_text'].label, 'Original source wording')
+        self.assertEqual(form.fields['instruction'].label, 'Published instruction')
+
+    def test_blank_published_instruction_is_rejected(self):
+        recipe = Recipe.objects.create(title='Instruction validation')
+        form = RecipeStepForm(
+            data={
+                'recipe': recipe.pk,
+                'step_number': 1,
+                'section': '',
+                'source_instruction_text': 'Simmer the sauce.',
+                'instruction': '<p>&nbsp;</p>',
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('instruction', form.errors)
+
+    def test_review_warns_when_a_saved_step_has_no_published_instruction(self):
+        recipe = Recipe.objects.create(title='Review validation')
+        RecipeStep.objects.create(
+            recipe=recipe,
+            step_number=1,
+            source_instruction_text='Simmer the sauce.',
+            instruction='',
+        )
+
+        self.assertIn('Published instruction missing', review_warnings(recipe))
 
 
 class DefaultRecipeSearchTests(TestCase):

@@ -6,9 +6,10 @@ from decimal import Decimal, InvalidOperation
 
 import requests
 from django.conf import settings
-from django.db import transaction
 from django.db.models import Case, IntegerField, Q, Value, When
+from django.db import transaction
 from django.utils import timezone
+from django.utils.html import strip_tags
 
 from products.models import Product
 from .models import (
@@ -277,12 +278,15 @@ def normalize_recipe(recipe):
 def review_warnings(recipe):
     warnings = []
     ingredients = list(recipe.ingredients.all())
+    steps = list(recipe.steps.all())
     if not recipe.servings:
         warnings.append('Missing servings')
     if not ingredients:
         warnings.append('No ingredients')
-    if not recipe.steps.exists():
+    if not steps:
         warnings.append('No instructions')
+    elif any(not strip_tags(step.instruction or '').replace('&nbsp;', ' ').strip() for step in steps):
+        warnings.append('Published instruction missing')
     if any(not item.quantity for item in ingredients):
         warnings.append('Ingredient quantity missing')
     if any(item.quantity and parse_quantity(item.quantity)[0] is None for item in ingredients):
