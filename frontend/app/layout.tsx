@@ -10,6 +10,7 @@ import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import JsonLd from "@/components/seo/JsonLd";
+import { GrowthTracker } from "@/components/GrowthTracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://legitorganic.com"),
@@ -152,6 +153,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Suspense fallback={null}>
           <ServiceWorkerRegistration />
         </Suspense>
+        <GrowthTracker />
       </body>
     </html>
   );

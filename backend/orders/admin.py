@@ -15,7 +15,26 @@ from .models import (
     OrderItem,
     OrderNotificationDelivery,
     OrderStatusEvent,
+    GrowthEvent,
 )
+
+
+@admin.register(GrowthEvent)
+class GrowthEventAdmin(ModelAdmin):
+    list_display = ['created_at', 'event', 'source', 'campaign', 'path', 'object_label']
+    list_filter = ['event', 'source', 'campaign', 'created_at']
+    search_fields = ['campaign', 'source', 'path', 'object_label']
+    readonly_fields = [field.name for field in GrowthEvent._meta.fields]
+    ordering = ['-created_at']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 from .promo_models import PromoCode
 from .forms import OrderAdminForm
 from .queries import payment_exception_q

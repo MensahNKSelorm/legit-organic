@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers
-from .models import Cart, CartItem, Order, OrderItem
+from .models import Cart, CartItem, GrowthEvent, Order, OrderItem
 from .promo_models import PromoCode
 from products.models import Product
 
@@ -211,6 +211,21 @@ class CreateOrderSerializer(serializers.Serializer):
     street_address = serializers.CharField(required=False, allow_blank=True, write_only=True)
     city = serializers.CharField(required=False, allow_blank=True, write_only=True)
     delivery_region = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    growth_session = serializers.CharField(
+        required=False, allow_blank=True, max_length=80, write_only=True
+    )
+    growth_source = serializers.CharField(
+        required=False, allow_blank=True, max_length=100, write_only=True
+    )
+    growth_medium = serializers.CharField(
+        required=False, allow_blank=True, max_length=100, write_only=True
+    )
+    growth_campaign = serializers.CharField(
+        required=False, allow_blank=True, max_length=160, write_only=True
+    )
+    growth_content = serializers.CharField(
+        required=False, allow_blank=True, max_length=160, write_only=True
+    )
 
     def validate(self, attrs):
         request = self.context['request']
@@ -266,6 +281,9 @@ class CreateOrderSerializer(serializers.Serializer):
         return items
 
     def create(self, validated_data):
+        import hashlib
+        from django.conf import settings
+
         request = self.context['request']
         is_auth = request.user.is_authenticated
         items_data = validated_data['items']
@@ -280,6 +298,13 @@ class CreateOrderSerializer(serializers.Serializer):
         street_address = validated_data.pop('street_address', '')
         city = validated_data.pop('city', '')
         delivery_region = validated_data.pop('delivery_region', '')
+        growth_session = validated_data.pop('growth_session', '')
+        growth = {
+            'source': validated_data.pop('growth_source', ''),
+            'medium': validated_data.pop('growth_medium', ''),
+            'campaign': validated_data.pop('growth_campaign', ''),
+            'content': validated_data.pop('growth_content', ''),
+        }
 
         if is_auth:
             user = request.user
@@ -314,6 +339,7 @@ class CreateOrderSerializer(serializers.Serializer):
                 for p in Product.objects.filter(
                     id__in=product_ids,
                     is_available=True,
+                    price__gt=0,
                 )
             }
             missing = [pid for pid in product_ids if pid not in products]
@@ -368,6 +394,21 @@ class CreateOrderSerializer(serializers.Serializer):
                     pass
 
             order.save(update_fields=update_fields)
+
+            if growth_session:
+                session_hash = hashlib.sha256(
+                    f'{settings.SECRET_KEY}:{growth_session}'.encode()
+                ).hexdigest()
+                GrowthEvent.objects.create(
+                    event='order_created',
+                    session_hash=session_hash,
+                    user=request.user if is_auth else None,
+                    path='/checkout',
+                    object_type='order',
+                    object_id=str(order.pk),
+                    object_label=order.reference,
+                    **growth,
+                )
 
             if order_source == 'whatsapp' and not order.is_test:
                 order_id = order.pk

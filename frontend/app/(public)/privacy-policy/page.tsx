@@ -70,7 +70,9 @@ export default function PrivacyPolicyPage() {
                 Payment credentials are handled by SeevCash and are not stored by us
               </li>
               <li>
-                <strong>Usage data:</strong> pages visited, time spent, device type
+                <strong>Usage data:</strong> pages visited, shopping steps completed, and campaign
+                source. We use a temporary session identifier and do not store your IP address or
+                browser user-agent in growth analytics
               </li>
               <li>
                 <strong>Communications:</strong> messages sent to us via contact form or email
@@ -138,7 +140,9 @@ export default function PrivacyPolicyPage() {
             </h2>
             <p className="text-[#333333] dark:text-gray-300 leading-relaxed mb-4">
               We use essential cookies to keep you logged in and remember your preferences. We do
-              not use advertising or tracking cookies.
+              not use advertising or tracking cookies. First-party journey measurement uses
+              temporary browser session storage, stays within Legit Organic, and respects browser
+              Do Not Track settings.
             </p>
           </section>
 

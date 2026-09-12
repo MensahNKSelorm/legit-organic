@@ -5,6 +5,7 @@ import json
 import time
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -15,7 +16,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
-from .models import Cart, CartItem, Order, OrderStatusEvent, SeevCashWebhookEvent
+from .models import Cart, CartItem, GrowthEvent, Order, OrderStatusEvent, SeevCashWebhookEvent
 from .promo_models import PromoCode
 from .serializers import (
     CartSerializer,
@@ -83,6 +84,48 @@ class CartClearView(APIView):
         cart = Cart.objects.prefetch_related('items__product__images').get(pk=cart.pk)
         serializer = CartSerializer(cart, context={'request': request})
         return Response(serializer.data)
+
+
+class GrowthEventView(APIView):
+    permission_classes = [AllowAny]
+    throttle_scope = 'growth_event'
+
+    def post(self, request):
+        import hashlib
+        from datetime import timedelta
+        from urllib.parse import urlparse
+
+        event = str(request.data.get('event', ''))[:32]
+        session = str(request.data.get('session', ''))[:80]
+        valid_events = {choice[0] for choice in GrowthEvent.EVENT_CHOICES}
+        if event not in valid_events or not session:
+            return Response({'detail': 'Invalid growth event.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if cache.add('growth-event-retention-cleanup', True, timeout=86400):
+            GrowthEvent.objects.filter(created_at__lt=timezone.now() - timedelta(days=180)).delete()
+
+        def clean(key, limit):
+            return str(request.data.get(key, '') or '').strip()[:limit]
+
+        referrer = clean('referrer', 500)
+        referrer_host = urlparse(referrer).hostname or '' if referrer else ''
+        GrowthEvent.objects.create(
+            event=event,
+            session_hash=hashlib.sha256(
+                f'{settings.SECRET_KEY}:{session}'.encode()
+            ).hexdigest(),
+            user=request.user if request.user.is_authenticated else None,
+            path=clean('path', 300),
+            object_type=clean('object_type', 30),
+            object_id=clean('object_id', 80),
+            object_label=clean('object_label', 200),
+            source=clean('source', 100),
+            medium=clean('medium', 100),
+            campaign=clean('campaign', 160),
+            content=clean('content', 160),
+            referrer_host=referrer_host[:200],
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CreateOrderView(APIView):

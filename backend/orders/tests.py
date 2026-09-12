@@ -26,12 +26,50 @@ from .models import (
     OrderNotificationDelivery,
     OrderStatusEvent,
     SeevCashWebhookEvent,
+    GrowthEvent,
 )
 from .promo_models import PromoCode
 from .access import issue_guest_order_token
 
 CREATE_URL = '/api/orders/create/'
 VERIFY_URL = '/api/orders/verify-payment/'
+
+
+class GrowthEventTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+
+    def test_anonymous_event_is_hashed_and_data_minimal(self):
+        response = self.client.post(
+            '/api/orders/growth-events/',
+            {
+                'event': 'page_view',
+                'session': 'browser-session-123',
+                'path': '/products',
+                'source': 'instagram',
+                'campaign': 'weekly-basket',
+                'referrer': 'https://instagram.com/post/1',
+            },
+            format='json',
+            HTTP_USER_AGENT='Sensitive browser string',
+        )
+
+        self.assertEqual(response.status_code, 204)
+        event = GrowthEvent.objects.get()
+        self.assertNotEqual(event.session_hash, 'browser-session-123')
+        self.assertEqual(len(event.session_hash), 64)
+        self.assertEqual(event.referrer_host, 'instagram.com')
+        self.assertFalse(hasattr(event, 'ip_address'))
+        self.assertFalse(hasattr(event, 'user_agent'))
+
+    def test_unknown_event_is_rejected(self):
+        response = self.client.post(
+            '/api/orders/growth-events/',
+            {'event': 'made_up', 'session': 'browser-session-123'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 400)
 
 
 def seevcash_ok(reference='SEEV-SESSION', amount=5000, currency='GHS', txn_id='txn-99'):
@@ -509,6 +547,27 @@ class AtomicOrderCreationTests(TestCase):
         order = Order.objects.get(reference=resp.data['reference'])
         self.assertEqual(order.total_amount, Decimal('30.00'))
         self.assertEqual(order.items.count(), 1)
+
+    def test_order_keeps_hashed_campaign_attribution(self):
+        resp = self.client.post(
+            CREATE_URL,
+            self._payload(
+                [{'product_id': self.product.id, 'quantity': 1}],
+                growth_session='temporary-browser-id',
+                growth_source='instagram',
+                growth_medium='creator',
+                growth_campaign='starter-basket',
+            ),
+            format='json',
+        )
+
+        self.assertEqual(resp.status_code, 201)
+        event = GrowthEvent.objects.get(event='order_created')
+        self.assertEqual(event.object_label, resp.data['reference'])
+        self.assertEqual(event.source, 'instagram')
+        self.assertEqual(event.medium, 'creator')
+        self.assertEqual(event.campaign, 'starter-basket')
+        self.assertNotEqual(event.session_hash, 'temporary-browser-id')
 
     def test_valid_promo_increments_usage_once(self):
         promo = PromoCode.objects.create(

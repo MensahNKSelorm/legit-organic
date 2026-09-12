@@ -5,7 +5,7 @@ from django.conf import settings
 from django.test import RequestFactory, TestCase, override_settings
 
 from legitorganic.dashboard import dashboard_callback
-from orders.models import Order, OrderItem
+from orders.models import GrowthEvent, Order, OrderItem
 from products.models import Product
 from users.models import User
 
@@ -165,6 +165,26 @@ class DashboardCallbackTests(TestCase):
 
     def test_admin_theme_allows_staff_to_choose_their_preference(self):
         self.assertIsNone(settings.UNFOLD['THEME'])
+
+    def test_growth_funnel_is_visible_to_sales_but_not_content_staff(self):
+        GrowthEvent.objects.create(event='page_view', session_hash='visit')
+        GrowthEvent.objects.create(event='add_to_cart', session_hash='visit')
+        sales = User.objects.create_user(
+            email='growth@legitorganic.com', password='test-pass', is_staff=True
+        )
+        sales.groups.add(Group.objects.create(name='Sales & Marketing'))
+        content = User.objects.create_user(
+            email='writer@legitorganic.com', password='test-pass', is_staff=True
+        )
+        content.groups.add(Group.objects.create(name='Content Team'))
+
+        sales_context = dashboard_callback(self.request_for(sales), {})
+        content_context = dashboard_callback(self.request_for(content), {})
+
+        self.assertTrue(sales_context['can_see_growth'])
+        self.assertEqual(sales_context['growth_funnel'][0]['count'], 1)
+        self.assertFalse(content_context['can_see_growth'])
+        self.assertEqual(content_context['growth_funnel'], [])
 
     def test_sensitive_sidebar_links_are_role_focused_and_owner_keeps_access(self):
         staff = User.objects.create_user(

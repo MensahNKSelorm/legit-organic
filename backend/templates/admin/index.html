@@ -195,6 +195,33 @@
       font-size: .78rem;
       line-height: 1.45;
     }
+    .lo-growth-grid {
+      display: grid;
+      grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr);
+      gap: 1.25rem;
+    }
+    .lo-funnel {
+      border: 1px solid var(--rule);
+      background: var(--surface);
+    }
+    .lo-funnel-row {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.15rem;
+      border-bottom: 1px solid var(--rule);
+    }
+    .lo-funnel-row:last-child { border-bottom: 0; }
+    .lo-funnel-row span { color: var(--muted); font-size: .78rem; }
+    .lo-funnel-row strong { color: var(--forest); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+    .dark .lo-funnel-row strong { color: var(--gold); }
+    .lo-funnel-row small { grid-column: 1/-1; color: var(--muted); font-size: .68rem; }
+    .lo-campaigns { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+    .lo-campaigns table { width: 100%; border-collapse: collapse; }
+    .lo-campaigns th,.lo-campaigns td { padding: .85rem 1rem; border-bottom: 1px solid var(--rule); text-align: left; font-size: .76rem; }
+    .lo-campaigns th { color: var(--muted); font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; }
+    .lo-campaigns td:last-child,.lo-campaigns th:last-child { text-align: right; }
     .lo-work-views {
       display: grid;
       grid-template-columns: repeat(3,minmax(0,1fr));
@@ -433,7 +460,7 @@
       }
     }
     @media(max-width:900px) {
-      .lo-hero,.lo-main-grid,.lo-analytics {
+      .lo-hero,.lo-main-grid,.lo-analytics,.lo-growth-grid {
         grid-template-columns: 1fr;
       }
       .lo-owner-card {
@@ -536,6 +563,24 @@
       <div class="lo-chart"><div class="lo-chart-head"><h3>Best sellers</h3><span>Units</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_product_sales_data %}<canvas id="productsChart" role="img" aria-label="Seven best-selling products ranked by units sold"></canvas>{% else %}<div class="lo-chart-empty"><span>Product rankings begin with the first order.</span></div>{% endif %}</div></div>
       <div class="lo-chart"><div class="lo-chart-head"><h3>Customer growth</h3><span>6 months</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_customer_growth_data %}<canvas id="customersChart" role="img" aria-label="New customer registrations during the last six months"></canvas>{% else %}<div class="lo-chart-empty"><span>New customers will appear here.</span></div>{% endif %}</div></div>
       <div class="lo-chart"><div class="lo-chart-head"><h3>Order channels</h3><span>{{ analytics.promo_orders }} paid promo orders</span></div><div class="lo-chart-wrap lo-chart-compact">{% if has_channel_data %}<canvas id="channelChart" role="img" aria-label="Orders grouped by sales channel"></canvas>{% else %}<div class="lo-chart-empty"><span>Channel share begins with the first order.</span></div>{% endif %}</div></div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if can_see_growth %}
+  <section class="lo-section" aria-labelledby="growth-heading">
+    <div class="lo-section-head"><h2 class="lo-display" id="growth-heading">Growth funnel</h2><span class="lo-kicker">Last 30 days</span></div>
+    <div class="lo-growth-grid">
+      <div class="lo-funnel">
+        {% for stage in growth_funnel %}
+        <div class="lo-funnel-row"><span>{{ stage.label }}</span><strong>{{ stage.count }}</strong>{% if stage.conversion != None %}<small>{{ stage.conversion }}% from the previous step</small>{% endif %}</div>
+        {% empty %}<div class="lo-chart-empty"><span>Funnel data begins with the next visit.</span></div>{% endfor %}
+      </div>
+      <div class="lo-campaigns">
+        <table><thead><tr><th>Campaign</th><th>Source</th><th>Orders</th><th>Paid</th><th>Revenue</th></tr></thead><tbody>
+        {% for campaign in growth_campaigns %}<tr><td><strong>{{ campaign.label }}</strong><br><small>{{ campaign.medium }}</small></td><td>{{ campaign.source }}</td><td>{{ campaign.orders }}</td><td>{{ campaign.paid_orders }}</td><td>GH₵ {{ campaign.revenue|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="5">Campaign results begin with the next attributed order.</td></tr>{% endfor %}
+        </tbody></table>
+      </div>
     </div>
   </section>
   {% endif %}

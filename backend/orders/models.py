@@ -480,3 +480,45 @@ class OrderNotificationDelivery(models.Model):
 
     def __str__(self):
         return f'{self.order.reference} · {self.event} · {self.channel}: {self.status}'
+
+
+class GrowthEvent(models.Model):
+    EVENT_CHOICES = [
+        ('page_view', 'Page view'),
+        ('product_view', 'Product view'),
+        ('recipe_view', 'Recipe view'),
+        ('add_to_cart', 'Add to cart'),
+        ('checkout_started', 'Checkout started'),
+        ('order_created', 'Order created'),
+    ]
+
+    event = models.CharField(max_length=32, choices=EVENT_CHOICES)
+    session_hash = models.CharField(max_length=64, db_index=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='growth_events',
+    )
+    path = models.CharField(max_length=300, blank=True)
+    object_type = models.CharField(max_length=30, blank=True)
+    object_id = models.CharField(max_length=80, blank=True)
+    object_label = models.CharField(max_length=200, blank=True)
+    source = models.CharField(max_length=100, blank=True, db_index=True)
+    medium = models.CharField(max_length=100, blank=True)
+    campaign = models.CharField(max_length=160, blank=True, db_index=True)
+    content = models.CharField(max_length=160, blank=True)
+    referrer_host = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(
+                fields=['event', '-created_at'], name='orders_grow_event_946f3f_idx'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.event} · {self.created_at:%Y-%m-%d %H:%M}'

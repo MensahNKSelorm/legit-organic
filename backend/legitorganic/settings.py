@@ -313,6 +313,14 @@ UNFOLD = {
                         "link": "/admin/orders/promocode/",
                         "permission": admin_permission("orders.view_promocode"),
                     },
+                    {
+                        "title": "Growth Events",
+                        "icon": "conversion_path",
+                        "link": "/admin/orders/growthevent/",
+                        "permission": admin_permission_for_roles(
+                            "orders.view_growthevent", "Sales & Marketing", "Executive Admin"
+                        ),
+                    },
                 ],
             },
             {
@@ -716,6 +724,7 @@ REST_FRAMEWORK = {
         "guest_order": "20/hour",
         "promo_validate": "30/hour",
         "order_tracking": "30/min",
+        "growth_event": "120/hour",
     },
 }
 

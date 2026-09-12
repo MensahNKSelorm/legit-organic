@@ -16,7 +16,7 @@ def dashboard_callback(request, context):
     last_month_end = this_month_start - timedelta(days=1)
     six_months_ago = today - timedelta(days=180)
 
-    from orders.models import Order, OrderItem
+    from orders.models import GrowthEvent, Order, OrderItem
     from orders.queries import payment_exception_q
     from products.models import Product
     from users.models import User, B2BProfile
@@ -236,6 +236,63 @@ def dashboard_callback(request, context):
         dashboard_role, role_label = 'sales', 'Sales & Marketing'
     else:
         dashboard_role, role_label = 'staff', 'Staff'
+
+    can_see_growth = request.user.is_superuser or dashboard_role in {'owner', 'executive', 'sales'}
+    growth_funnel = []
+    growth_campaigns = []
+    if can_see_growth:
+        growth_events = GrowthEvent.objects.filter(created_at__date__gte=last_30_days)
+        stages = [
+            ('Visits', growth_events.filter(event='page_view')),
+            (
+                'Product or recipe views',
+                growth_events.filter(event__in=['product_view', 'recipe_view']),
+            ),
+            ('Added to basket', growth_events.filter(event='add_to_cart')),
+            ('Checkout started', growth_events.filter(event='checkout_started')),
+            ('Orders created', growth_events.filter(event='order_created')),
+        ]
+        previous = None
+        for label, queryset in stages:
+            count = queryset.values('session_hash').distinct().count()
+            growth_funnel.append(
+                {
+                    'label': label,
+                    'count': count,
+                    'conversion': round(count / previous * 100) if previous else None,
+                }
+            )
+            previous = count
+
+        paid_by_reference = {
+            row['reference']: float(row['total_amount'])
+            for row in paid_orders.filter(created_at__date__gte=last_30_days).values(
+                'reference', 'total_amount'
+            )
+        }
+        campaign_map = {}
+        for event in growth_events.filter(event='order_created').values(
+            'source', 'medium', 'campaign', 'object_label'
+        ):
+            label = event['campaign'] or event['source'] or 'Direct / untagged'
+            row = campaign_map.setdefault(
+                label,
+                {
+                    'label': label,
+                    'source': event['source'] or 'Direct',
+                    'medium': event['medium'] or '—',
+                    'orders': 0,
+                    'paid_orders': 0,
+                    'revenue': 0,
+                },
+            )
+            row['orders'] += 1
+            if event['object_label'] in paid_by_reference:
+                row['paid_orders'] += 1
+                row['revenue'] += paid_by_reference[event['object_label']]
+        growth_campaigns = sorted(
+            campaign_map.values(), key=lambda row: (row['paid_orders'], row['orders']), reverse=True
+        )[:8]
 
     recent_orders = all_orders.select_related('user').order_by('-created_at')[:6]
     attention_items = []
@@ -505,6 +562,9 @@ def dashboard_callback(request, context):
             'quick_actions': quick_actions,
             'can_see_finance': request.user.is_superuser
             or bool({'Finance', 'Executive Admin'} & group_names),
+            'can_see_growth': can_see_growth,
+            'growth_funnel': growth_funnel,
+            'growth_campaigns': growth_campaigns,
         }
     )
     return context

@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 import { api } from "@/lib/api";
 import type { PromoCode } from "@/types";
+import { trackGrowth } from "@/lib/growth";
 import AddressModal, { type AddressData } from "./AddressModal";
 import GuestOrderModal, { type GuestData } from "./GuestOrderModal";
 
@@ -165,6 +166,7 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
   };
 
   const handleWhatsAppOrder = async () => {
+    trackGrowth("checkout_started", { object_type: "checkout", object_label: "whatsapp" });
     setCheckoutMode("whatsapp");
     if (!user) {
       setShowGuestModal(true);
@@ -218,6 +220,7 @@ export default function CheckoutButton({ promoCode, appliedPromo }: CheckoutButt
   };
 
   const handleSeevCashOrder = async () => {
+    trackGrowth("checkout_started", { object_type: "checkout", object_label: "seevcash" });
     setCheckoutMode("seevcash");
     setCheckoutError("");
     if (pendingSeevOrder) {

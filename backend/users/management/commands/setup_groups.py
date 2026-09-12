@@ -112,6 +112,7 @@ class Command(BaseCommand):
         sales_perms += list(get_perms('sales', 'referredcustomer', ['add', 'change', 'view']))
         sales_perms += list(get_perms('sales', 'commission', ['view']))
         sales_perms += list(get_perms('orders', 'order', ['view']))
+        sales_perms += list(get_perms('orders', 'growthevent', ['view']))
         sales_perms += list(get_perms('users', 'user', ['view']))
         sales_perms += list(get_perms('users', 'customer', ['view']))
         sales_perms += list(get_perms('products', 'product', ['view']))
@@ -148,7 +149,7 @@ class Command(BaseCommand):
                 'recipesource',
                 'recipeimport',
             ],
-            'orders': ['order', 'orderitem', 'promocode', 'driver'],
+            'orders': ['order', 'orderitem', 'promocode', 'driver', 'growthevent'],
             'sales': ['salesrep', 'referredcustomer'],
             'users': [
                 'b2bprofile',

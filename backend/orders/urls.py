@@ -13,9 +13,11 @@ from .views import (
     ExportOrdersView,
     OrderReceiptView,
     PublicOrderTrackingView,
+    GrowthEventView,
 )
 
 urlpatterns = [
+    path('growth-events/', GrowthEventView.as_view(), name='growth-event'),
     path('cart/', CartView.as_view(), name='cart'),
     path('cart/items/', CartItemViewSet.as_view(), name='cart-items'),
     path('cart/clear/', CartClearView.as_view(), name='cart-clear'),

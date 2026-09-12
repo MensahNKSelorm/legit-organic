@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import type { Product, CartItem } from "@/types";
+import { trackGrowth } from "@/lib/growth";
 
 interface CartContextType {
   items: CartItem[];
@@ -122,6 +123,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           );
         }
         return [...prev, { product, quantity }];
+      });
+      trackGrowth("add_to_cart", {
+        object_type: "product",
+        object_id: product.id,
+        object_label: product.name,
       });
 
       if (user) {

@@ -24,6 +24,7 @@ import type {
   AppNotification,
   NotificationResponse,
 } from "@/types";
+import { orderGrowthFields } from "@/lib/growth";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -467,7 +468,7 @@ export const api = {
     }) =>
       fetchWithAuth<Order>("/api/orders/create/", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, ...orderGrowthFields() }),
       }),
     createGuest: (data: {
       items: { product_id: number; quantity: number }[];
@@ -485,7 +486,7 @@ export const api = {
     }) =>
       fetchAPI<Order & { guest_access_token: string }>("/api/orders/create/", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, ...orderGrowthFields() }),
       }),
     initializePayment: (reference: string) =>
       fetchWithAuth<{ checkout_url: string; reference: string }>(
