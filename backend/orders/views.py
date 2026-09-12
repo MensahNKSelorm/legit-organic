@@ -50,7 +50,7 @@ class CartItemViewSet(APIView):
         quantity = int(request.data.get('quantity', 1))
 
         try:
-            product = Product.objects.get(id=product_id)
+            product = Product.objects.get(id=product_id, is_available=True, price__gt=0)
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 

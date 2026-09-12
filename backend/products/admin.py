@@ -46,6 +46,7 @@ class ProductAdmin(ModelAdmin):
         'business_supply_category',
         'is_featured',
         'is_available',
+        'storefront_ready',
         'created_at',
     ]
     list_filter = ['category', 'business_supply_category', 'is_featured', 'is_available', 'region']
@@ -53,6 +54,10 @@ class ProductAdmin(ModelAdmin):
     list_editable = ['is_featured', 'is_available']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created_at', 'updated_at', 'image']
+
+    @admin.display(boolean=True, description='Ready to sell')
+    def storefront_ready(self, obj):
+        return bool(obj.is_available and obj.price > 0 and obj.unit.strip())
     fieldsets = (
         (
             'Product identity',

@@ -5,6 +5,11 @@ from .models import Badge, Category, Product, Region
 from .serializers import BadgeSerializer, CategorySerializer, ProductSerializer, RegionSerializer
 
 
+def storefront_products():
+    """Only expose products customers can genuinely purchase."""
+    return Product.objects.filter(is_available=True, price__gt=0)
+
+
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -28,7 +33,7 @@ class ProductListView(generics.ListAPIView):
     permission_classes = []
 
     def get_queryset(self):
-        qs = Product.objects.filter(is_available=True).select_related('category', 'region', 'badge')
+        qs = storefront_products().select_related('category', 'region', 'badge')
         featured = self.request.query_params.get('featured')
         category = self.request.query_params.get('category')
         business_supply = self.request.query_params.get('business_supply')
@@ -42,7 +47,7 @@ class ProductListView(generics.ListAPIView):
 
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.filter(is_available=True).select_related(
+    queryset = storefront_products().select_related(
         'category', 'region', 'badge'
     )
     serializer_class = ProductSerializer
@@ -51,7 +56,7 @@ class ProductDetailView(generics.RetrieveAPIView):
 
 
 class FeaturedProductsView(generics.ListAPIView):
-    queryset = Product.objects.filter(is_featured=True, is_available=True).select_related(
+    queryset = storefront_products().filter(is_featured=True).select_related(
         'category', 'region', 'badge'
     )
     serializer_class = ProductSerializer
@@ -70,7 +75,7 @@ class ProductSearchView(generics.ListAPIView):
             return Product.objects.none()
 
         return (
-            Product.objects.filter(is_available=True)
+            storefront_products()
             .filter(
                 Q(name__icontains=query)
                 | Q(description__icontains=query)
@@ -100,7 +105,7 @@ class ProductSearchView(generics.ListAPIView):
         related = []
         if len(results) < 3 and query:
             related_qs = (
-                Product.objects.filter(is_available=True)
+                storefront_products()
                 .exclude(id__in=[p['id'] for p in results])
                 .select_related('category', 'region', 'badge')
                 .order_by('?')[:6]

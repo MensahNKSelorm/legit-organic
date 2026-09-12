@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from django.db import models
+from django.core.validators import MinValueValidator
 from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 
@@ -57,7 +60,11 @@ class Product(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = CKEditor5Field(blank=True, config_name='extends')
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'), message='Enter a confirmed price above zero.')],
+    )
     unit = models.CharField(max_length=50, blank=True, help_text='e.g. 5kg bag')
     region = models.ForeignKey(
         Region, on_delete=models.SET_NULL, null=True, blank=True, related_name='products'
