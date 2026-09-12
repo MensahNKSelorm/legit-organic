@@ -60,6 +60,12 @@ export default function RecipeShopIngredients({
     [ingredients, selected]
   );
   const available = shoppable.filter((item) => item.product);
+  const missingCount = shoppable.length - available.length;
+  const estimatedTotal = Array.from(
+    new Map(
+      available.flatMap(({ product }) => (product ? [[product.id, product] as const] : []))
+    ).values()
+  ).reduce((sum, product) => sum + Number(product.price), 0);
 
   const add = (product: IngredientProduct) => {
     addItem(asCartProduct(product), 1);
@@ -72,11 +78,24 @@ export default function RecipeShopIngredients({
     unique.forEach(add);
   };
 
+  const shareBasket = () => {
+    const names = available
+      .map(({ product }) => product?.name)
+      .filter(Boolean)
+      .join(", ");
+    const message = `I’m planning this Ghanaian meal with Legit Organic: ${names}. ${window.location.href}`;
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
   return (
     <section className="border-y border-[#0D3B2A]/20 py-7 dark:border-white/15">
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.18em] text-[#2E7D32] dark:text-[#9FC5A4]">
+          <p className="text-xs font-bold tracking-[.18em] text-[#2E7D32] uppercase dark:text-[#9FC5A4]">
             From the Market
           </p>
           <h2 className="display-organic mt-2 text-3xl text-[#0D3B2A] dark:text-white">
@@ -86,14 +105,26 @@ export default function RecipeShopIngredients({
             Recipe quantities are cooking guidance. Market items are added as one purchasable pack
             each.
           </p>
+          <p className="mt-3 text-xs font-semibold text-[#0D3B2A] dark:text-white">
+            {available.length} matched · {missingCount} unavailable · estimated GH₵{" "}
+            {estimatedTotal.toFixed(2)}
+          </p>
         </div>
         {available.length > 0 && (
-          <button
-            onClick={addAll}
-            className="inline-flex items-center gap-2 bg-[#F4C430] px-5 py-3 text-sm font-bold text-[#0D3B2A] transition-transform hover:-translate-y-0.5"
-          >
-            <span aria-hidden="true">＋</span> Add available ingredients
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={addAll}
+              className="inline-flex items-center gap-2 bg-[#F4C430] px-5 py-3 text-sm font-bold text-[#0D3B2A] transition-transform hover:-translate-y-0.5"
+            >
+              <span aria-hidden="true">＋</span> Add available ingredients
+            </button>
+            <button
+              onClick={shareBasket}
+              className="border border-[#0D3B2A]/25 px-5 py-3 text-sm font-bold text-[#0D3B2A] hover:bg-[#E6D8BD] dark:border-white/25 dark:text-white dark:hover:bg-white/10"
+            >
+              Share on WhatsApp
+            </button>
+          </div>
         )}
       </div>
       <div className="mt-7 divide-y divide-[#0D3B2A]/12 dark:divide-white/10">

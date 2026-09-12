@@ -85,10 +85,10 @@ export default function HeroSection() {
                 </span>
               </Link>
               <Link
-                href="/subscriptions"
+                href="/starter-basket"
                 className="inline-flex min-h-14 items-center border-b border-white/60 px-1 font-bold whitespace-nowrap text-white transition-colors duration-200 hover:border-[#F4C430] hover:text-[#F4C430] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F4C430]"
               >
-                Plan my week
+                Start with 3 meals
               </Link>
             </div>
           </div>

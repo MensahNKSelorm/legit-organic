@@ -9,6 +9,7 @@ import { PRODUCT_BLUR_DATA_URL } from "@/lib/image-placeholders";
 import { api } from "@/lib/api";
 import type { PromoCode } from "@/types";
 import CheckoutButton from "./CheckoutButton";
+import DeliveryPromise from "@/components/delivery/DeliveryPromise";
 
 interface CartDrawerProps {
   open: boolean;
@@ -102,7 +103,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
       <div
         className={[
           "fixed inset-0 z-40 bg-black/50 transition-opacity duration-300",
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
         onClick={onClose}
         aria-hidden
@@ -125,9 +126,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         ].join(" ")}
       >
         {/* 1. Header — flex-shrink-0 */}
-        <div className="flex shrink-0 items-start justify-between border-b border-[#0D3B2A]/20 px-6 py-7 dark:border-white/15 md:px-8">
+        <div className="flex shrink-0 items-start justify-between border-b border-[#0D3B2A]/20 px-6 py-7 md:px-8 dark:border-white/15">
           <div>
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#2E7D32] dark:text-[#F4C430]">
+            <p className="mb-1 text-[10px] font-bold tracking-[.16em] text-[#2E7D32] uppercase dark:text-[#F4C430]">
               Current harvest
             </p>
             <div className="flex flex-wrap items-baseline gap-x-2">
@@ -145,7 +146,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close cart"
-            className="w-11 h-11 flex items-center justify-center border border-[#0D3B2A]/20 hover:bg-[#0D3B2A] hover:text-white dark:border-white/20 dark:hover:bg-white dark:hover:text-[#0D3B2A] transition-colors text-[#0D3B2A] dark:text-[#faf7f0]"
+            className="flex h-11 w-11 items-center justify-center border border-[#0D3B2A]/20 text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white dark:border-white/20 dark:text-[#faf7f0] dark:hover:bg-white dark:hover:text-[#0D3B2A]"
           >
             <svg
               width="16"
@@ -183,7 +184,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                   <path d="M8.5 8.5c0-2.7 1.3-4.5 3.5-4.5s3.5 1.8 3.5 4.5" />
                   <path d="M8 13h8" />
                 </svg>
-                <span className="absolute -bottom-2 -right-2 h-5 w-5 bg-[#F4C430]" aria-hidden />
+                <span className="absolute -right-2 -bottom-2 h-5 w-5 bg-[#F4C430]" aria-hidden />
               </div>
               <h3 className="display-organic text-3xl text-[#0D3B2A] dark:text-white">
                 Your bag is waiting.
@@ -194,7 +195,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               <Link
                 href="/products"
                 onClick={onClose}
-                className="bg-[#F4C430] px-6 py-3 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 dark:hover:bg-white dark:hover:text-[#0D3B2A]"
+                className="bg-[#F4C430] px-6 py-3 text-sm font-bold text-[#0D3B2A] transition-colors hover:bg-[#0D3B2A] hover:text-white focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:bg-white dark:hover:text-[#0D3B2A]"
               >
                 Browse Products
               </Link>
@@ -217,10 +218,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 return (
                   <li
                     key={item.product.id}
-                    className="flex gap-4 py-4 border-b border-[#E6D8BD] dark:border-[#374151] last:border-0"
+                    className="flex gap-4 border-b border-[#E6D8BD] py-4 last:border-0 dark:border-[#374151]"
                   >
                     {/* Product image */}
-                    <div className="relative w-[76px] h-[88px] overflow-hidden bg-[#F5F0E6] dark:bg-[#273029] shrink-0">
+                    <div className="relative h-[88px] w-[76px] shrink-0 overflow-hidden bg-[#F5F0E6] dark:bg-[#273029]">
                       <Image
                         src={imageSrc}
                         alt={item.product.name}
@@ -233,30 +234,30 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                     </div>
 
                     {/* Details */}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold text-[#0D3B2A] dark:text-[#faf7f0] leading-snug line-clamp-2">
+                        <p className="line-clamp-2 text-sm leading-snug font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
                           {item.product.name}
                         </p>
                         <button
                           onClick={() => removeItem(item.product.id)}
                           aria-label={`Remove ${item.product.name}`}
-                          className="shrink-0 w-11 h-11 flex items-center justify-center text-[#9ca3af] hover:text-red-500 transition-colors text-lg leading-none"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center text-lg leading-none text-[#9ca3af] transition-colors hover:text-red-500"
                         >
                           ×
                         </button>
                       </div>
-                      <p className="text-xs text-[#5B3E31] dark:text-[#9ca3af] mt-0.5">
+                      <p className="mt-0.5 text-xs text-[#5B3E31] dark:text-[#9ca3af]">
                         GH₵ {parseFloat(item.product.price).toFixed(2)} · {item.product.unit}
                       </p>
 
-                      <div className="flex items-center justify-between mt-2">
+                      <div className="mt-2 flex items-center justify-between">
                         {/* Quantity controls */}
-                        <div className="flex items-center gap-1 border border-[#E6D8BD] dark:border-white/20 overflow-hidden">
+                        <div className="flex items-center gap-1 overflow-hidden border border-[#E6D8BD] dark:border-white/20">
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                             aria-label={`Decrease ${item.product.name} quantity`}
-                            className="w-9 h-9 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
+                            className="flex h-9 w-9 items-center justify-center font-bold text-[#0D3B2A] transition-colors hover:bg-[#F5F0E6] dark:text-[#faf7f0] dark:hover:bg-[#374151]"
                           >
                             −
                           </button>
@@ -266,7 +267,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                           <button
                             onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                             aria-label={`Increase ${item.product.name} quantity`}
-                            className="w-9 h-9 flex items-center justify-center text-[#0D3B2A] dark:text-[#faf7f0] hover:bg-[#F5F0E6] dark:hover:bg-[#374151] transition-colors font-bold"
+                            className="flex h-9 w-9 items-center justify-center font-bold text-[#0D3B2A] transition-colors hover:bg-[#F5F0E6] dark:text-[#faf7f0] dark:hover:bg-[#374151]"
                           >
                             +
                           </button>
@@ -286,7 +287,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
         {/* 3. Promo code section — shrink-0, above footer */}
         {items.length > 0 && (
-          <div className="shrink-0 px-6 py-4 border-t border-[#E6D8BD] dark:border-white/15 md:px-8">
+          <div className="shrink-0 border-t border-[#E6D8BD] px-6 py-4 md:px-8 dark:border-white/15">
             <div className="flex gap-2">
               <input
                 aria-label="Promo code"
@@ -303,12 +304,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 }}
                 placeholder="Promo code"
                 disabled={!!appliedPromo}
-                className="flex-1 border border-[#E6D8BD] bg-transparent px-3 py-2 text-sm text-[#0D3B2A] placeholder:text-[#5B3E31]/45 focus:border-[#2E7D32] focus:outline-none focus:ring-1 focus:ring-[#2E7D32] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/25 dark:text-[#faf7f0] dark:placeholder:text-white/40 dark:focus:border-[#F4C430] dark:focus:ring-[#F4C430]"
+                className="flex-1 border border-[#E6D8BD] bg-transparent px-3 py-2 text-sm text-[#0D3B2A] placeholder:text-[#5B3E31]/45 focus:border-[#2E7D32] focus:ring-1 focus:ring-[#2E7D32] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/25 dark:text-[#faf7f0] dark:placeholder:text-white/40 dark:focus:border-[#F4C430] dark:focus:ring-[#F4C430]"
               />
               <button
                 onClick={handleApplyPromo}
                 disabled={promoLoading || !!appliedPromo || !promoCode.trim()}
-                className="bg-[#0D3B2A] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#24553D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F4C430] dark:text-[#0D3B2A]"
+                className="bg-[#0D3B2A] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#24553D] focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#F4C430] dark:text-[#0D3B2A]"
               >
                 {promoLoading ? "…" : "Apply"}
               </button>
@@ -320,12 +321,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             )}
             {appliedPromo && (
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-[#2E7D32] dark:text-[#81C784] font-medium">
+                <span className="text-xs font-medium text-[#2E7D32] dark:text-[#81C784]">
                   {appliedPromo.code}: {appliedPromo.message}
                 </span>
                 <button
                   onClick={handleRemovePromo}
-                  className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors ml-2 shrink-0"
+                  className="ml-2 shrink-0 text-xs text-[#9ca3af] transition-colors hover:text-red-500"
                 >
                   Remove
                 </button>
@@ -335,7 +336,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         )}
 
         {/* 4. Footer — flex-shrink-0, always at bottom */}
-        <div className="shrink-0 min-h-fit px-6 pt-5 pb-6 border-t border-[#E6D8BD] dark:border-white/15 bg-[#F5F0E6] dark:bg-[#202621] md:px-8">
+        <div className="min-h-fit shrink-0 border-t border-[#E6D8BD] bg-[#F5F0E6] px-6 pt-5 pb-6 md:px-8 dark:border-white/15 dark:bg-[#202621]">
           {appliedPromo ? (
             <div className="mb-4 space-y-1.5">
               <div className="flex items-center justify-between">
@@ -352,7 +353,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                   −GH₵ {appliedPromo.discount_amount.toFixed(2)}
                 </span>
               </div>
-              <div className="flex items-center justify-between pt-1.5 border-t border-[#E6D8BD] dark:border-[#374151]">
+              <div className="flex items-center justify-between border-t border-[#E6D8BD] pt-1.5 dark:border-[#374151]">
                 <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
                   Products after discount
                 </span>
@@ -362,7 +363,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <span className="text-base font-semibold text-[#0D3B2A] dark:text-[#faf7f0]">
                 Product subtotal
               </span>
@@ -371,10 +372,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               </span>
             </div>
           )}
-          <p className="mb-4 border-l-2 border-[#F4C430] pl-3 text-xs leading-5 text-[#5B3E31] dark:text-[#B8D4BD]">
-            Delivery arrangements and any applicable charge are confirmed using the address you
-            provide.
-          </p>
+          <div className="mb-4">
+            <DeliveryPromise compact subtotal={appliedPromo ? appliedPromo.final_amount : total} />
+          </div>
           <CheckoutButton
             onClose={onClose}
             promoCode={appliedPromo?.code}
@@ -383,7 +383,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           <Link
             href="/products"
             onClick={onClose}
-            className="mt-3 block text-center text-sm font-medium text-[#5B3E31] underline decoration-transparent underline-offset-4 transition-colors hover:text-[#0D3B2A] hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F4C430] dark:text-[#B8C0B9] dark:hover:text-white"
+            className="mt-3 block text-center text-sm font-medium text-[#5B3E31] underline decoration-transparent underline-offset-4 transition-colors hover:text-[#0D3B2A] hover:decoration-current focus-visible:ring-2 focus-visible:ring-[#F4C430] focus-visible:outline-none dark:text-[#B8C0B9] dark:hover:text-white"
           >
             Continue Shopping
           </Link>

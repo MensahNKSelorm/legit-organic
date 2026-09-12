@@ -9,6 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "", changeFrequency: "daily" as const, priority: 1 },
     { path: "/products", changeFrequency: "daily" as const, priority: 0.9 },
     { path: "/subscriptions", changeFrequency: "weekly" as const, priority: 0.8 },
+    { path: "/starter-basket", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/b2b", changeFrequency: "monthly" as const, priority: 0.8 },
     { path: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/recipes", changeFrequency: "weekly" as const, priority: 0.8 },
@@ -19,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/photo-credits", changeFrequency: "yearly" as const, priority: 0.1 },
   ].map(({ path, ...entry }) => ({ url: `${baseUrl}${path}`, ...entry }));
 
-  const list = <T,>(payload: T[] | { results?: T[] }): T[] =>
+  const list = <T>(payload: T[] | { results?: T[] }): T[] =>
     Array.isArray(payload) ? payload : payload.results || [];
 
   const validDate = (value?: string) => {
