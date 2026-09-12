@@ -140,6 +140,7 @@ class NutritionReadinessFilter(admin.SimpleListFilter):
 @admin.register(Recipe)
 class RecipeAdmin(ModelAdmin):
     change_form_before_template = 'admin/includes/writing_assistant.html'
+    change_list_template = 'admin/recipes/recipe/change_list.html'
     view_on_site = True
     list_display = [
         'title',

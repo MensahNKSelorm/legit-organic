@@ -214,6 +214,82 @@ body,
   font-size: .8rem;
   text-align: center;
 }
+
+/* Purposeful empty states for staff-owned records. */
+.lo-record-empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  min-height: 11rem;
+  padding: 1.5rem;
+  border: 1px solid var(--lo-rule);
+  background: var(--lo-surface-raised);
+  color: var(--lo-ink);
+  box-shadow: var(--lo-panel-shadow);
+}
+.lo-record-empty__icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  background: #0d3b2a;
+  color: #f4c430;
+  font-size: 1.4rem;
+}
+.lo-record-empty__copy {
+  max-width: 38rem;
+}
+.lo-record-empty__eyebrow {
+  margin: 0 0 .35rem;
+  color: var(--lo-muted);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.lo-record-empty__copy h2 {
+  margin: 0;
+  color: var(--lo-ink);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.lo-record-empty__copy p:last-child {
+  margin: .45rem 0 0;
+  color: var(--lo-muted);
+  font-size: .82rem;
+  line-height: 1.55;
+}
+.lo-record-empty__action {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .45rem;
+  padding: .65rem .9rem;
+  background: #f4c430;
+  color: #0d3b2a !important;
+  font-size: .78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.lo-record-empty__action:hover {
+  background: #0d3b2a;
+  color: #fff !important;
+}
+.lo-record-empty__action:focus-visible {
+  outline: 2px solid #f4c430;
+  outline-offset: 3px;
+}
+@media (max-width: 700px) {
+  .lo-record-empty {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .lo-record-empty__action {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
 @media (max-width: 640px) {
   .lo-admin-theme {
     top: .75rem;

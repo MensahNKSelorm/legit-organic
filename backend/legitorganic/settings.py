@@ -168,6 +168,28 @@ def staff_access(request):
     return request.user.is_authenticated and request.user.is_staff
 
 
+def owner_access(request):
+    return request.user.is_authenticated and request.user.is_superuser
+
+
+def staff_role_access(*roles):
+    def check(request):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return False
+        return request.user.is_superuser or request.user.groups.filter(name__in=roles).exists()
+
+    return check
+
+
+def admin_permission_for_roles(permission, *roles):
+    role_access = staff_role_access(*roles)
+
+    def check(request):
+        return request.user.has_perm(permission) and role_access(request)
+
+    return check
+
+
 UNFOLD = {
     "SITE_TITLE": "Legit Organic Control Room",
     "SITE_HEADER": "Legit Organic",
@@ -184,7 +206,7 @@ UNFOLD = {
     "SITE_SYMBOL": "eco",
     "DASHBOARD_CALLBACK": "legitorganic.dashboard.dashboard_callback",
     "STYLES": [
-        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260907-6',
+        lambda request: f'{static("admin/css/legitorganic-admin.css")}?v=20260912-1',
     ],
     "SCRIPTS": [
         lambda request: f'{static("admin/js/legitorganic-admin.js")}?v=20260907-4',
@@ -281,7 +303,9 @@ UNFOLD = {
                         "title": "Carts",
                         "icon": "shopping_cart",
                         "link": "/admin/orders/cart/",
-                        "permission": admin_permission("orders.view_cart"),
+                        "permission": admin_permission_for_roles(
+                            "orders.view_cart", "Operations", "Executive Admin"
+                        ),
                     },
                     {
                         "title": "Promo Codes",
@@ -313,8 +337,11 @@ UNFOLD = {
                         "title": "Price notices",
                         "icon": "mark_email_read",
                         "link": "/admin/subscriptions/subscriptionpricenotice/",
-                        "permission": admin_permission(
-                            "subscriptions.view_subscriptionpricenotice"
+                        "permission": admin_permission_for_roles(
+                            "subscriptions.view_subscriptionpricenotice",
+                            "Operations",
+                            "Finance",
+                            "Executive Admin",
                         ),
                     },
                     {
@@ -363,7 +390,7 @@ UNFOLD = {
                         "title": "Security audit",
                         "icon": "policy",
                         "link": "/admin/security/auditevent/",
-                        "permission": staff_access,
+                        "permission": owner_access,
                     },
                     {
                         "title": "Staff Accounts",
@@ -393,7 +420,9 @@ UNFOLD = {
                         "title": "B2B Review History",
                         "icon": "history",
                         "link": "/admin/users/b2breviewevent/",
-                        "permission": admin_permission("users.view_b2breviewevent"),
+                        "permission": admin_permission_for_roles(
+                            "users.view_b2breviewevent", "Operations", "Executive Admin"
+                        ),
                     },
                     {
                         "title": "Business Prices",
@@ -419,13 +448,21 @@ UNFOLD = {
                         "title": "Supply Revisions",
                         "icon": "difference",
                         "link": "/admin/subscriptions/businesssupplyrevision/",
-                        "permission": admin_permission("subscriptions.view_businesssupplyrevision"),
+                        "permission": admin_permission_for_roles(
+                            "subscriptions.view_businesssupplyrevision",
+                            "Operations",
+                            "Executive Admin",
+                        ),
                     },
                     {
                         "title": "Supply Cycles",
                         "icon": "event_repeat",
                         "link": "/admin/subscriptions/businesssupplycycle/",
-                        "permission": admin_permission("subscriptions.view_businesssupplycycle"),
+                        "permission": admin_permission_for_roles(
+                            "subscriptions.view_businesssupplycycle",
+                            "Operations",
+                            "Executive Admin",
+                        ),
                     },
                 ],
             },
@@ -468,24 +505,37 @@ UNFOLD = {
                         "icon": "storefront",
                         "link": "https://legitorganic.com/products",
                         "target": "_blank",
+                        "permission": staff_role_access(
+                            "Content Team",
+                            "Product Manager",
+                            "Sales & Marketing",
+                            "Executive Admin",
+                        ),
                     },
                     {
                         "title": "View Journal",
                         "icon": "article",
                         "link": "https://legitorganic.com/blog",
                         "target": "_blank",
+                        "permission": staff_role_access(
+                            "Content Team", "Sales & Marketing", "Executive Admin"
+                        ),
                     },
                     {
                         "title": "View Recipes",
                         "icon": "restaurant_menu",
                         "link": "https://legitorganic.com/recipes",
                         "target": "_blank",
+                        "permission": staff_role_access("Content Team", "Executive Admin"),
                     },
                     {
                         "title": "Wigal SMS Dashboard",
                         "icon": "sms",
                         "link": "https://frog.wigal.com.gh/dashboard",
                         "target": "_blank",
+                        "permission": staff_role_access(
+                            "Operations", "Sales & Marketing", "Executive Admin"
+                        ),
                     },
                 ],
             },

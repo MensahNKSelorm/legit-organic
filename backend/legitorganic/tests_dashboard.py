@@ -1,8 +1,8 @@
 from decimal import Decimal
 
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.conf import settings
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from legitorganic.dashboard import dashboard_callback
 from orders.models import Order, OrderItem
@@ -10,6 +10,7 @@ from products.models import Product
 from users.models import User
 
 
+@override_settings(STAFF_2FA_MODE='enroll', STAFF_OWNER_2FA_REQUIRED=False)
 class DashboardCallbackTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -164,3 +165,36 @@ class DashboardCallbackTests(TestCase):
 
     def test_admin_theme_allows_staff_to_choose_their_preference(self):
         self.assertIsNone(settings.UNFOLD['THEME'])
+
+    def test_sensitive_sidebar_links_are_role_focused_and_owner_keeps_access(self):
+        staff = User.objects.create_user(
+            email='content-nav@legitorganic.com', password='test-pass', is_staff=True
+        )
+        staff.groups.add(Group.objects.create(name='Content Team'))
+        request = self.request_for(staff)
+
+        sections = settings.UNFOLD['SIDEBAR']['navigation']
+        items = {
+            item['title']: item
+            for section in sections
+            for item in section['items']
+        }
+
+        self.assertFalse(items['Security audit']['permission'](request))
+        self.assertFalse(items['Wigal SMS Dashboard']['permission'](request))
+        self.assertTrue(items['View Recipes']['permission'](request))
+
+        owner_request = self.request_for(self.owner)
+        self.assertTrue(items['Security audit']['permission'](owner_request))
+        self.assertTrue(items['Wigal SMS Dashboard']['permission'](owner_request))
+        self.assertTrue(items['View Recipes']['permission'](owner_request))
+
+    def test_recipe_list_uses_a_purposeful_empty_state(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get('/admin/recipes/recipe/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No recipes yet')
+        self.assertContains(response, 'Create recipe')
+        self.assertNotContains(response, '0 recipes')
