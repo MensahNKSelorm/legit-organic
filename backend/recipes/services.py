@@ -17,6 +17,8 @@ from .models import (
     IngredientMeasurementConversion,
     IngredientNutritionProfile,
     NutritionSourceRecord,
+    Recipe,
+    RecipeIngredient,
     RecipeIngredientProductMatch,
     RecipeNutrition,
     RegionalNutritionCandidate,
@@ -63,6 +65,13 @@ USDA_NUTRIENTS = {
 }
 logger = logging.getLogger(__name__)
 
+IRREGULAR_INGREDIENT_SINGULARS = {
+    'leaves': 'leaf',
+    'loaves': 'loaf',
+    'potatoes': 'potato',
+    'tomatoes': 'tomato',
+}
+
 SOURCE_PRIORITY = {
     'manual_verified': 1,
     'wafct_2019': 2,
@@ -88,6 +97,20 @@ class NutritionProviderError(RuntimeError):
 def normalize_unit(value):
     cleaned = re.sub(r'[.]$', '', (value or '').strip().lower())
     return UNIT_ALIASES.get(cleaned, cleaned)
+
+
+def canonicalize_ingredient_name(value):
+    words = re.sub(r'\s+', ' ', (value or '').strip().lower()).split()
+    if not words:
+        return ''
+    last = words[-1]
+    if last in IRREGULAR_INGREDIENT_SINGULARS:
+        words[-1] = IRREGULAR_INGREDIENT_SINGULARS[last]
+    elif last.endswith('ies') and len(last) > 4:
+        words[-1] = f'{last[:-3]}y'
+    elif last.endswith('s') and not last.endswith(('ss', 'us', 'is')) and len(last) > 3:
+        words[-1] = last[:-1]
+    return ' '.join(words)
 
 
 def parse_quantity(value):
@@ -122,7 +145,7 @@ def _fraction(text):
 def normalize_ingredient(ingredient):
     name = re.sub(r'\s+', ' ', ingredient.name.strip().lower())
     alias = IngredientAlias.objects.filter(alias__iexact=name).first()
-    canonical = alias.canonical_name.strip().lower() if alias else name
+    canonical = alias.canonical_name.strip().lower() if alias else canonicalize_ingredient_name(name)
     _, quantity_max = parse_quantity(ingredient.quantity)
     ingredient.normalized_ingredient_name = canonical
     ingredient.normalized_unit = normalize_unit(ingredient.unit)
@@ -201,11 +224,32 @@ def search_regional_candidates(ingredient, limit=12):
                 matches.append(candidate)
                 if len(matches) >= limit:
                     return matches
+    if not matches:
+        descriptor_words = {
+            'chopped', 'crushed', 'diced', 'dried', 'fresh', 'ground', 'minced', 'powder',
+            'sliced', 'whole',
+        }
+        fallback_tokens = [
+            token
+            for token in re.findall(r'[a-z0-9]+', ingredient.name.casefold())
+            if token not in descriptor_words and len(token) > 2
+        ]
+        for token in fallback_tokens:
+            for record in queryset.filter(original_food_name__icontains=token)[:limit]:
+                candidate, _ = RegionalNutritionCandidate.objects.get_or_create(
+                    recipe_ingredient=ingredient,
+                    source_record=record,
+                )
+                matches.append(candidate)
+                if len(matches) >= limit:
+                    return matches
     return matches
 
 
 @transaction.atomic
 def confirm_regional_candidate(candidate, user):
+    if candidate.status != 'candidate':
+        raise NutritionConfigurationError('This nutrition candidate has already been reviewed.')
     record = candidate.source_record
     dataset = record.dataset
     if not settings.DEBUG and (
@@ -215,38 +259,40 @@ def confirm_regional_candidate(candidate, user):
         raise NutritionConfigurationError(
             f'Commercial-use permission is not recorded for {dataset.code}.'
         )
-    canonical = (
+    canonical = canonicalize_ingredient_name(
         (
             record.canonical_name
             or candidate.recipe_ingredient.normalized_ingredient_name
             or candidate.recipe_ingredient.name
         )
-        .strip()
-        .lower()
     )
-    values = profile_values_from_record(record)
-    profile, _ = IngredientNutritionProfile.objects.update_or_create(
-        source='wafct_2019',
-        normalized_name=canonical,
-        defaults={
-            'ingredient_name': record.original_food_name,
-            'source_reference': dataset.citation,
-            'source_metadata': {
-                'dataset_code': dataset.code,
-                'dataset_version': dataset.version,
-                'food_code': record.food_code,
-                'original_food_name': record.original_food_name,
-                'preparation_state': record.preparation_state,
-                'source_identifiers': record.source_identifiers,
-                'quality_indicators': record.quality_indicators,
-                'workbook_sha256': dataset.workbook_sha256,
+    profile = record.nutrition_profile
+    if profile:
+        canonical = profile.normalized_name
+    else:
+        values = profile_values_from_record(record)
+        profile, _ = IngredientNutritionProfile.objects.update_or_create(
+            source='wafct_2019',
+            normalized_name=canonical,
+            defaults={
+                'ingredient_name': record.original_food_name,
+                'source_reference': dataset.citation,
+                'source_metadata': {
+                    'dataset_code': dataset.code,
+                    'dataset_version': dataset.version,
+                    'food_code': record.food_code,
+                    'original_food_name': record.original_food_name,
+                    'preparation_state': record.preparation_state,
+                    'source_identifiers': record.source_identifiers,
+                    'quality_indicators': record.quality_indicators,
+                    'workbook_sha256': dataset.workbook_sha256,
+                },
+                'verified': True,
+                'verified_by': user,
+                'verified_at': timezone.now(),
+                **values,
             },
-            'verified': True,
-            'verified_by': user,
-            'verified_at': timezone.now(),
-            **values,
-        },
-    )
+        )
     record.status = 'verified'
     record.verified_by = user
     record.verified_at = timezone.now()
@@ -260,12 +306,33 @@ def confirm_regional_candidate(candidate, user):
             'updated_at',
         ]
     )
+    ingredient = candidate.recipe_ingredient
     candidate.status = 'accepted'
     candidate.save(update_fields=['status'])
-    ingredient = candidate.recipe_ingredient
+    ingredient.regional_candidates.exclude(pk=candidate.pk).update(status='rejected')
     ingredient.nutrition_profile = profile
     ingredient.nutrition_match_status = 'wafct_verified'
     ingredient.save(update_fields=['nutrition_profile', 'nutrition_match_status'])
+    alias_name = ingredient.name.strip().lower()
+    if alias_name and alias_name != canonical and not IngredientAlias.objects.filter(
+        alias__iexact=alias_name
+    ).exists():
+        IngredientAlias.objects.create(alias=alias_name, canonical_name=canonical)
+    reusable_ingredients = RecipeIngredient.objects.filter(
+        normalized_ingredient_name__iexact=canonical,
+        nutrition_profile__isnull=True,
+    )
+    affected_recipe_ids = set(reusable_ingredients.values_list('recipe_id', flat=True))
+    reusable_ingredients.update(
+        nutrition_profile=profile,
+        nutrition_match_status='wafct_verified',
+    )
+    affected_recipe_ids.add(ingredient.recipe_id)
+    for recipe in Recipe.objects.filter(pk__in=affected_recipe_ids):
+        if recipe.ingredients.exists() and not recipe.ingredients.filter(
+            nutrition_profile__isnull=True
+        ).exists():
+            calculate_nutrition(recipe, force=True)
     return profile
 
 
@@ -273,6 +340,17 @@ def normalize_recipe(recipe):
     for ingredient in recipe.ingredients.all():
         normalize_ingredient(ingredient)
     return recipe.current_ingredients_hash()
+
+
+def ensure_regional_candidates(recipe):
+    """Create review suggestions for unresolved ingredients without approving any match."""
+    created_for = 0
+    for ingredient in recipe.ingredients.filter(nutrition_profile__isnull=True):
+        if ingredient.regional_candidates.exists():
+            continue
+        if search_regional_candidates(ingredient):
+            created_for += 1
+    return created_for
 
 
 def review_warnings(recipe):

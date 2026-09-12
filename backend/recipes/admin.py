@@ -1,8 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404, redirect
+from django.template.response import TemplateResponse
 from django.utils import timezone
-from django.urls import reverse
+from django.urls import path, reverse
 from django.utils.html import format_html
+from urllib.parse import urlencode
 from unfold.admin import ModelAdmin, TabularInline
 from .models import (
     IngredientAlias,
@@ -30,8 +34,11 @@ from .services import (
     calculate_nutrition,
     confirm_regional_candidate,
     confirm_usda_candidate,
+    ensure_regional_candidates,
     match_products,
+    normalize_unit,
     normalize_recipe,
+    parse_quantity,
     review_warnings,
     search_regional_candidates,
     search_usda_candidates,
@@ -43,24 +50,39 @@ class RecipeIngredientInline(TabularInline):
     extra = 0
     fields = [
         'position',
-        'raw_text',
         'name',
         'quantity',
-        'quantity_max',
         'unit',
-        'normalized_unit',
-        'normalized_ingredient_name',
         'preparation',
         'optional',
         'product',
-        'nutrition_profile',
-        'nutrition_match_status',
-        'grams_estimate',
-        'grams_source',
-        'grams_confidence',
-        'notes',
+        'nutrition_match_summary',
     ]
-    readonly_fields = ['normalized_unit', 'normalized_ingredient_name', 'nutrition_match_status']
+    readonly_fields = ['nutrition_match_summary']
+
+    @admin.display(description='Nutrition')
+    def nutrition_match_summary(self, obj):
+        if not obj or not obj.pk:
+            return 'Available after save'
+        if obj.nutrition_profile_id:
+            profile_url = reverse(
+                'admin:recipes_ingredientnutritionprofile_change', args=[obj.nutrition_profile_id]
+            )
+            return format_html(
+                '<a href="{}">Matched: {}</a>', profile_url, obj.nutrition_profile.ingredient_name
+            )
+        candidate_url = '{}?{}'.format(
+            reverse('admin:recipes_regionalnutritioncandidate_changelist'),
+            urlencode(
+                {
+                    'q': f'{obj.recipe.title} {obj.name}',
+                    'status__exact': 'candidate',
+                }
+            ),
+        )
+        count = obj.regional_candidates.filter(status='candidate').count()
+        label = f'Review {count} candidate(s)' if count else 'No WAFCT candidate'
+        return format_html('<a href="{}">{}</a>', candidate_url, label)
 
 
 class RecipeStepInline(TabularInline):
@@ -76,6 +98,43 @@ class RecipePairingInline(TabularInline):
     fk_name = 'base_recipe'
     extra = 2
     fields = ['suggested_recipe', 'label', 'order']
+
+
+def _weight_issue(ingredient):
+    if not ingredient.nutrition_profile_id:
+        return 'Nutrition match required'
+    quantity, quantity_max = parse_quantity(ingredient.quantity)
+    if quantity is None:
+        return 'Use a numeric quantity'
+    if quantity_max is not None:
+        return 'Replace the range or record a reviewed weight'
+    unit = ingredient.normalized_unit or normalize_unit(ingredient.unit)
+    if unit in {'gram', 'kilogram'}:
+        return ''
+    if any(
+        conversion.unit == unit and conversion.verified
+        for conversion in ingredient.nutrition_profile.conversions.all()
+    ):
+        return ''
+    return f'Verified “{unit or "unit"}” weight required'
+
+
+class NutritionReadinessFilter(admin.SimpleListFilter):
+    title = 'nutrition readiness'
+    parameter_name = 'nutrition_readiness'
+
+    def lookups(self, request, model_admin):
+        return [('attention', 'Needs attention'), ('ready', 'Ready to calculate')]
+
+    def queryset(self, request, queryset):
+        if self.value() not in {'attention', 'ready'}:
+            return queryset
+        ids = [
+            ingredient.pk
+            for ingredient in queryset.select_related('nutrition_profile')
+            if bool(_weight_issue(ingredient)) == (self.value() == 'attention')
+        ]
+        return queryset.filter(pk__in=ids)
 
 
 @admin.register(Recipe)
@@ -287,6 +346,7 @@ class RecipeAdmin(ModelAdmin):
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
         normalize_recipe(form.instance)
+        ensure_regional_candidates(form.instance)
         review_warnings(form.instance)
         ingredients = form.instance.ingredients.all()
         if ingredients.exists() and not ingredients.filter(nutrition_profile__isnull=True).exists():
@@ -634,6 +694,71 @@ class IngredientNutritionProfileAdmin(ModelAdmin):
         formset.save_m2m()
 
 
+@admin.register(RecipeIngredient)
+class RecipeIngredientAdmin(ModelAdmin):
+    list_display = [
+        'recipe',
+        'name',
+        'recipe_amount',
+        'nutrition_match_status',
+        'weight_readiness',
+        'review_action',
+    ]
+    list_filter = [NutritionReadinessFilter, 'nutrition_match_status', 'recipe']
+    search_fields = ['name', 'normalized_ingredient_name', 'recipe__title']
+    list_select_related = ['recipe', 'nutrition_profile']
+    ordering = ['recipe__title', 'position', 'id']
+    readonly_fields = [
+        'recipe',
+        'name',
+        'quantity',
+        'unit',
+        'normalized_unit',
+        'normalized_ingredient_name',
+        'nutrition_profile',
+        'nutrition_match_status',
+        'grams_estimate',
+        'grams_source',
+        'grams_confidence',
+    ]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('nutrition_profile__conversions')
+
+    @admin.display(description='Amount')
+    def recipe_amount(self, obj):
+        return f'{obj.quantity} {obj.unit}'.strip()
+
+    @admin.display(description='Weight readiness')
+    def weight_readiness(self, obj):
+        return _weight_issue(obj) or 'Ready'
+
+    @admin.display(description='Next action')
+    def review_action(self, obj):
+        if not obj.nutrition_profile_id:
+            url = '{}?{}'.format(
+                reverse('admin:recipes_regionalnutritioncandidate_changelist'),
+                urlencode({'q': f'{obj.recipe.title} {obj.name}', 'status__exact': 'candidate'}),
+            )
+            return format_html('<a href="{}">Review matches</a>', url)
+        issue = _weight_issue(obj)
+        if issue:
+            if issue.startswith(('Use a numeric', 'Replace the range')) or not obj.unit.strip():
+                url = reverse('admin:recipes_recipe_change', args=[obj.recipe_id])
+                return format_html('<a href="{}">Edit recipe amount</a>', url)
+            url = reverse(
+                'admin:recipes_ingredientnutritionprofile_change', args=[obj.nutrition_profile_id]
+            )
+            return format_html('<a href="{}">Add verified weight</a>', url)
+        return '—'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(NutritionSourceDataset)
 class NutritionSourceDatasetAdmin(ModelAdmin):
     list_display = [
@@ -689,15 +814,53 @@ class NutritionSourceRecordAdmin(ModelAdmin):
 @admin.register(RegionalNutritionCandidate)
 class RegionalNutritionCandidateAdmin(ModelAdmin):
     list_display = [
-        'source_record',
-        'recipe_ingredient',
-        'dataset_name',
+        'recipe_name',
+        'ingredient_name',
+        'recipe_amount',
+        'source_food',
         'preparation_state',
+        'nutrient_summary',
         'status',
+        'review_actions',
     ]
-    list_filter = ['status', 'source_record__dataset']
-    search_fields = ['source_record__original_food_name', 'recipe_ingredient__name']
+    list_filter = ['status', 'recipe_ingredient__recipe', 'source_record__dataset']
+    search_fields = [
+        'source_record__original_food_name',
+        'source_record__food_code',
+        'recipe_ingredient__name',
+        'recipe_ingredient__recipe__title',
+    ]
     actions = ['confirm_selected', 'reject_selected']
+    list_select_related = ['source_record__dataset', 'recipe_ingredient__recipe']
+    ordering = ['recipe_ingredient__recipe__title', 'recipe_ingredient__position', 'id']
+    list_per_page = 50
+    readonly_fields = ['recipe_ingredient', 'source_record', 'status', 'created_at']
+
+    def get_urls(self):
+        custom_urls = [
+            path(
+                '<int:candidate_id>/review/<str:decision>/',
+                self.admin_site.admin_view(self.review_candidate_view),
+                name='recipes_regionalnutritioncandidate_review',
+            )
+        ]
+        return custom_urls + super().get_urls()
+
+    @admin.display(description='Recipe', ordering='recipe_ingredient__recipe__title')
+    def recipe_name(self, obj):
+        return obj.recipe_ingredient.recipe.title
+
+    @admin.display(description='Ingredient', ordering='recipe_ingredient__name')
+    def ingredient_name(self, obj):
+        return obj.recipe_ingredient.name
+
+    @admin.display(description='Amount')
+    def recipe_amount(self, obj):
+        return f'{obj.recipe_ingredient.quantity} {obj.recipe_ingredient.unit}'.strip()
+
+    @admin.display(description='WAFCT food', ordering='source_record__original_food_name')
+    def source_food(self, obj):
+        return f'{obj.source_record.food_code} — {obj.source_record.original_food_name}'
 
     @admin.display(description='Dataset')
     def dataset_name(self, obj):
@@ -705,10 +868,87 @@ class RegionalNutritionCandidateAdmin(ModelAdmin):
 
     @admin.display(description='Preparation')
     def preparation_state(self, obj):
-        return obj.source_record.preparation_state
+        return obj.source_record.preparation_state or '—'
+
+    @admin.display(description='Per 100 g')
+    def nutrient_summary(self, obj):
+        values = obj.source_record.nutrient_values
+        calories = values.get('ENERC:kcal', {}).get('value')
+        protein = values.get('PROTCNT:g', {}).get('value')
+        parts = []
+        if calories is not None:
+            parts.append(f'{calories} kcal')
+        if protein is not None:
+            parts.append(f'{protein} g protein')
+        return ' · '.join(parts) or 'See source record'
+
+    @admin.display(description='Actions')
+    def review_actions(self, obj):
+        if obj.status != 'candidate':
+            return 'Reviewed'
+        base = reverse('admin:recipes_regionalnutritioncandidate_review', args=[obj.pk, 'approve'])
+        reject = reverse('admin:recipes_regionalnutritioncandidate_review', args=[obj.pk, 'reject'])
+        return format_html(
+            '<a class="button" href="{}">Approve</a> <a href="{}">Reject</a>', base, reject
+        )
+
+    def review_candidate_view(self, request, candidate_id, decision):
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+        if decision not in {'approve', 'reject'}:
+            raise PermissionDenied
+        candidate = get_object_or_404(
+            RegionalNutritionCandidate.objects.select_related(
+                'source_record__dataset', 'recipe_ingredient__recipe'
+            ),
+            pk=candidate_id,
+        )
+        if request.method == 'POST':
+            if candidate.status != 'candidate':
+                self.message_user(request, 'This candidate has already been reviewed.', level='warning')
+            elif decision == 'approve':
+                try:
+                    confirm_regional_candidate(candidate, request.user)
+                    self.message_user(request, 'Nutrition mapping approved and made reusable.')
+                except NutritionConfigurationError as exc:
+                    self.message_user(request, str(exc), level='warning')
+            else:
+                candidate.status = 'rejected'
+                candidate.save(update_fields=['status'])
+                self.message_user(request, 'Nutrition candidate rejected.')
+            return redirect('admin:recipes_regionalnutritioncandidate_changelist')
+        context = {
+            **self.admin_site.each_context(request),
+            'opts': self.model._meta,
+            'candidate': candidate,
+            'decision': decision,
+            'title': f'{decision.title()} nutrition match',
+        }
+        return TemplateResponse(
+            request,
+            'admin/recipes/regionalnutritioncandidate/review.html',
+            context,
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.has_perm('recipes.change_recipeingredient')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     @admin.action(description='Confirm selected regional mappings')
     def confirm_selected(self, request, queryset):
+        ingredient_ids = list(queryset.values_list('recipe_ingredient_id', flat=True))
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            self.message_user(
+                request,
+                'Select only one candidate for each ingredient.',
+                level='warning',
+            )
+            return
         confirmed = 0
         for candidate in queryset.select_related('source_record__dataset', 'recipe_ingredient'):
             try:

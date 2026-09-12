@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div style="max-width:760px">
+    <div style="border:1px solid rgba(127,127,127,.35);padding:20px">
+      <dl style="display:grid;grid-template-columns:minmax(120px,180px) 1fr;gap:12px 18px;margin:0">
+        <dt><strong>Recipe</strong></dt>
+        <dd style="margin:0">{{ candidate.recipe_ingredient.recipe.title }}</dd>
+        <dt><strong>Ingredient</strong></dt>
+        <dd style="margin:0">{{ candidate.recipe_ingredient.quantity }} {{ candidate.recipe_ingredient.unit }} {{ candidate.recipe_ingredient.name }}</dd>
+        <dt><strong>WAFCT match</strong></dt>
+        <dd style="margin:0">{{ candidate.source_record.food_code }} — {{ candidate.source_record.original_food_name }}</dd>
+        <dt><strong>Preparation</strong></dt>
+        <dd style="margin:0">{{ candidate.source_record.preparation_state|default:"—" }}</dd>
+        <dt><strong>Source</strong></dt>
+        <dd style="margin:0">{{ candidate.source_record.dataset.name }} {{ candidate.source_record.dataset.version }}</dd>
+      </dl>
+    </div>
+
+    <form method="post" style="display:flex;align-items:center;gap:12px;margin-top:20px">
+      {% csrf_token %}
+      <button type="submit" class="button">
+        {% if decision == "approve" %}Approve match{% else %}Reject candidate{% endif %}
+      </button>
+      <a href="{% url 'admin:recipes_regionalnutritioncandidate_changelist' %}">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

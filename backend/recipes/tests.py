@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import admin
 from django.test import RequestFactory
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
 from products.models import Product
@@ -29,12 +30,14 @@ from .models import (
     RecipeSource,
 )
 from users.models import User
-from .admin import RecipeAdmin, RecipeIngredientInline, RecipeStepInline
+from .admin import RecipeAdmin, RecipeIngredientInline, RecipeStepInline, _weight_issue
 from .forms import RecipeStepForm
 from .importing import RecipeImportError, extract_recipe_json_ld, source_for_url, validate_public_url
 from .services import (
     calculate_nutrition,
+    canonicalize_ingredient_name,
     confirm_regional_candidate,
+    ensure_regional_candidates,
     normalize_ingredient,
     parse_quantity,
     review_warnings,
@@ -56,6 +59,12 @@ class RecipeAdminStaffFieldsTests(TestCase):
 
         self.assertIn('nutrition_status', model_admin.readonly_fields)
 
+    def test_recipe_ingredient_inline_hides_system_managed_fields(self):
+        self.assertNotIn('normalized_ingredient_name', RecipeIngredientInline.fields)
+        self.assertNotIn('grams_estimate', RecipeIngredientInline.fields)
+        self.assertNotIn('nutrition_profile', RecipeIngredientInline.fields)
+        self.assertIn('nutrition_match_summary', RecipeIngredientInline.fields)
+
     def test_creator_and_reviewer_choices_exclude_customers(self):
         staff = User.objects.create_user(email='editor@example.com', is_staff=True)
         customer = User.objects.create_user(email='customer@example.com')
@@ -69,6 +78,49 @@ class RecipeAdminStaffFieldsTests(TestCase):
             )
             self.assertIn(staff, formfield.queryset)
             self.assertNotIn(customer, formfield.queryset)
+
+
+class IngredientNameCanonicalisationTests(TestCase):
+    def test_common_plural_forms_share_one_nutrition_identity(self):
+        self.assertEqual(canonicalize_ingredient_name('Tomatoes'), 'tomato')
+        self.assertEqual(canonicalize_ingredient_name('Bay Leaves'), 'bay leaf')
+        self.assertEqual(canonicalize_ingredient_name('Onions'), 'onion')
+
+    def test_non_plural_food_names_are_unchanged(self):
+        self.assertEqual(canonicalize_ingredient_name('Couscous'), 'couscous')
+
+
+class NutritionWeightReadinessTests(TestCase):
+    def test_verified_conversion_resolves_weight_issue(self):
+        recipe = Recipe.objects.create(title='Cup conversion')
+        profile = IngredientNutritionProfile.objects.create(
+            ingredient_name='Tomato',
+            normalized_name='tomato',
+            source='manual_verified',
+            source_reference='Reviewed source',
+            verified=True,
+        )
+        ingredient = RecipeIngredient.objects.create(
+            recipe=recipe,
+            name='Tomato',
+            quantity='2',
+            unit='cups',
+            normalized_unit='cup',
+            nutrition_profile=profile,
+        )
+        self.assertIn('cup', _weight_issue(ingredient))
+
+        IngredientMeasurementConversion.objects.create(
+            profile=profile,
+            unit='cup',
+            quantity=1,
+            grams=180,
+            source_reference='Reviewed kitchen measurement',
+            confidence=Decimal('1'),
+            verified=True,
+        )
+
+        self.assertEqual(_weight_issue(ingredient), '')
 
 
 class RecipeStepEditorialFieldsTests(TestCase):
@@ -589,6 +641,126 @@ class RegionalNutritionReviewTests(TestCase):
         self.assertEqual(profile.source_metadata['food_code'], '02_039')
         self.record.refresh_from_db()
         self.assertEqual(self.record.status, 'verified')
+
+    @override_settings(DEBUG=False)
+    def test_confirmation_reuses_mapping_and_recalculates_eligible_recipes(self):
+        second_recipe = Recipe.objects.create(title='Another gari recipe')
+        second_ingredient = RecipeIngredient.objects.create(
+            recipe=second_recipe,
+            name='Gari',
+            quantity='50',
+            unit='g',
+            normalized_ingredient_name='gari',
+        )
+        candidate = RegionalNutritionCandidate.objects.create(
+            recipe_ingredient=self.ingredient,
+            source_record=self.record,
+        )
+
+        profile = confirm_regional_candidate(candidate, None)
+
+        second_ingredient.refresh_from_db()
+        second_recipe.refresh_from_db()
+        self.assertEqual(second_ingredient.nutrition_profile, profile)
+        self.assertEqual(second_recipe.nutrition_status, 'ready')
+        self.assertEqual(second_recipe.nutrition.calories, Decimal('178.5'))
+
+    @override_settings(DEBUG=False)
+    def test_confirmation_rejects_other_candidates_for_same_ingredient(self):
+        other_record = NutritionSourceRecord.objects.create(
+            dataset=self.dataset,
+            food_code='02_040',
+            original_food_name='Cassava, raw',
+            nutrient_values=self.record.nutrient_values,
+            source_sheet=DATA_SHEET,
+            source_row=6,
+        )
+        selected = RegionalNutritionCandidate.objects.create(
+            recipe_ingredient=self.ingredient,
+            source_record=self.record,
+        )
+        other = RegionalNutritionCandidate.objects.create(
+            recipe_ingredient=self.ingredient,
+            source_record=other_record,
+        )
+
+        confirm_regional_candidate(selected, None)
+
+        other.refresh_from_db()
+        self.assertEqual(other.status, 'rejected')
+
+    @override_settings(DEBUG=False)
+    def test_one_source_record_reuses_its_existing_verified_profile(self):
+        first = RegionalNutritionCandidate.objects.create(
+            recipe_ingredient=self.ingredient,
+            source_record=self.record,
+        )
+        profile = confirm_regional_candidate(first, None)
+        another_recipe = Recipe.objects.create(title='Alternate spelling')
+        another_ingredient = RecipeIngredient.objects.create(
+            recipe=another_recipe,
+            name='Gari powder',
+            quantity='25',
+            unit='g',
+            normalized_ingredient_name='gari powder',
+        )
+        second = RegionalNutritionCandidate.objects.create(
+            recipe_ingredient=another_ingredient,
+            source_record=self.record,
+        )
+
+        reused = confirm_regional_candidate(second, None)
+
+        self.assertEqual(reused, profile)
+        self.assertEqual(IngredientNutritionProfile.objects.count(), 1)
+        self.assertTrue(
+            IngredientAlias.objects.filter(alias='gari powder', canonical_name='gari').exists()
+        )
+
+    def test_candidate_generation_never_approves_a_match(self):
+        created_for = ensure_regional_candidates(self.recipe)
+
+        self.assertEqual(created_for, 1)
+        self.ingredient.refresh_from_db()
+        self.assertIsNone(self.ingredient.nutrition_profile)
+        self.assertEqual(
+            list(self.ingredient.regional_candidates.values_list('status', flat=True)),
+            ['candidate'],
+        )
+
+    def test_candidate_generation_ignores_preparation_descriptor_as_fallback(self):
+        self.ingredient.name = 'Gari powder'
+        self.ingredient.normalized_ingredient_name = 'gari powder'
+        self.ingredient.save(update_fields=['name', 'normalized_ingredient_name'])
+
+        candidates = search_regional_candidates(self.ingredient)
+
+        self.assertEqual([candidate.source_record for candidate in candidates], [self.record])
+
+    @override_settings(STAFF_2FA_MODE='enroll', STAFF_OWNER_2FA_REQUIRED=False)
+    def test_per_row_reject_control_requires_confirmation_post(self):
+        user = User.objects.create_superuser(email='owner@example.com', password='test-pass')
+        candidate = RegionalNutritionCandidate.objects.create(
+            recipe_ingredient=self.ingredient,
+            source_record=self.record,
+        )
+        self.client.force_login(user)
+        url = reverse(
+            'admin:recipes_regionalnutritioncandidate_review', args=[candidate.pk, 'reject']
+        )
+
+        get_response = self.client.get(url)
+        candidate.refresh_from_db()
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(candidate.status, 'candidate')
+
+        post_response = self.client.post(url)
+        candidate.refresh_from_db()
+        self.assertRedirects(
+            post_response,
+            reverse('admin:recipes_regionalnutritioncandidate_changelist'),
+        )
+        self.assertEqual(candidate.status, 'rejected')
 
     def test_source_priority_prefers_manual_then_wafct_then_usda(self):
         IngredientNutritionProfile.objects.create(
